@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mapora
 
-## Getting Started
+Mapora is a global, multi-tenant directory and interactive map SaaS platform. Tenants can create configurable directories for industries, communities, cities, regions, countries, or global audiences.
 
-First, run the development server:
+## Status
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Phase 9 is in progress: public submissions, moderation, claims, CSV imports, advertising/payment foundations, platform analytics, configurable plans, public SEO metadata, sitemap, robots, locale-aware formatters, configurable maps, and browser security headers are implemented. Provider checkout, rate limiting, observability, and full production hardening remain.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Planned stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js App Router and TypeScript
+- Supabase Auth, PostgreSQL, Storage, and Row Level Security
+- Tailwind CSS and shadcn/ui
+- Leaflet with provider abstractions for maps and geocoding
+- Zod validation
+- Stripe/Razorpay-compatible payment abstraction
+- Vercel-compatible deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Development
 
-## Learn More
+See [DEVELOPMENT.md](DEVELOPMENT.md) for local setup, [ARCHITECTURE.md](ARCHITECTURE.md) for system decisions, and [TESTING.md](TESTING.md) for verification commands.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Never place Supabase service-role credentials in browser code. All tenant-scoped mutations require server-side authorization and database RLS.

@@ -1,0 +1,1 @@
+-- Development seed data will be added after local Auth and RLS execution is available.
