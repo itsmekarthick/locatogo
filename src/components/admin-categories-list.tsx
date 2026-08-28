@@ -64,20 +64,31 @@ export function AdminCategoriesList({
 
       <div className="grid gap-3 sm:grid-cols-2">
         {paginated.length > 0 ? (
-          paginated.map((category) => (
-            <article
-              key={category.id}
-              className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-5 shadow-xs"
-            >
-              <div>
-                <h3 className="font-semibold text-sm text-[var(--foreground)]">{category.name}</h3>
-                <p className="mt-1 font-mono text-xs text-[var(--ink-muted)]">/{category.slug}</p>
-              </div>
-              <span className="rounded-full bg-[var(--leaf)] px-3 py-1 text-xs font-semibold text-[var(--leaf-dark)]">
-                {domainMap.get(category.domain_id) || "Unknown"}
-              </span>
-            </article>
-          ))
+          paginated.map((category) => {
+            const icon =
+              category.name.includes("School") || category.name.includes("Education")
+                ? "🏫"
+                : category.name.includes("Hospital") || category.name.includes("Health")
+                ? "🏥"
+                : "🏷️";
+            return (
+              <article
+                key={category.id}
+                className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-5 shadow-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{icon}</span>
+                  <div>
+                    <h3 className="font-semibold text-sm text-[var(--foreground)]">{category.name}</h3>
+                    <p className="mt-0.5 font-mono text-xs text-[var(--ink-muted)]">/{category.slug}</p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-[var(--background)] px-2.5 py-1 text-[11px] font-medium text-[var(--ink-muted)]">
+                  Active
+                </span>
+              </article>
+            );
+          })
         ) : (
           <div className="sm:col-span-2 rounded-2xl border border-dashed border-[var(--line)] p-10 text-center text-sm text-[var(--ink-muted)]">
             No categories found matching criteria.

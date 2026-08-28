@@ -26,12 +26,12 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     supabase
       .from("listings")
       .select(
-        "id, domain_id, category_id, title, slug, short_description, description, address_line_1, address_line_2, locality, city, administrative_area, country_code, postal_code, latitude, longitude, website, email, phone, status, verification_status, is_featured, domains(name, slug)"
+        "id, domain_id, category_id, title, slug, short_description, description, address_line_1, address_line_2, locality, city, administrative_area, country_code, postal_code, latitude, longitude, website, email, phone, status, verification_status, is_featured"
       )
       .eq("id", id)
       .eq("tenant_id", tenant.id)
-      .single(),
-    supabase.from("domains").select("id, name").eq("tenant_id", tenant.id).order("name"),
+      .maybeSingle(),
+    supabase.from("domains").select("id, name, slug").eq("tenant_id", tenant.id).order("name"),
     supabase.from("categories").select("id, name").eq("tenant_id", tenant.id).order("name"),
     supabase
       .from("listing_hours")
@@ -61,17 +61,24 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   if (!listing) {
     return (
-      <div>
-        <p className="text-[var(--coral)] font-semibold">Listing not found or you do not have permission to view it.</p>
-        <Link href="/admin/listings" className="mt-4 inline-block text-xs font-bold text-[var(--foreground)] hover:underline">
-          ← Back to listings
+      <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-8 text-center">
+        <p className="text-3xl">📍</p>
+        <h2 className="mt-3 font-display text-xl font-bold text-[var(--foreground)]">Listing Not Found</h2>
+        <p className="mt-1 text-xs text-[var(--ink-muted)]">
+          This listing could not be found or does not belong to your active workspace.
+        </p>
+        <Link
+          href="/admin/listings"
+          className="mt-5 inline-block rounded-full bg-[var(--foreground)] px-5 py-2 text-xs font-semibold text-[var(--paper)]"
+        >
+          ← Back to all listings
         </Link>
       </div>
     );
   }
 
   const duplicates = await findDuplicateListings(listing.title, listing.phone ?? undefined);
-  const domain = Array.isArray(listing.domains) ? listing.domains[0] : (listing.domains as { name?: string; slug?: string } | null);
+  const domain = domains?.find((d) => d.id === listing.domain_id);
 
   return (
     <div className="space-y-10">
@@ -106,9 +113,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </p>
           </div>
 
-          {domain?.slug && listing.slug && (
+          {listing.slug && (
             <Link
-              href={`/${domain.slug}/listing/${listing.slug}`}
+              href={`/listing/${listing.slug}`}
               target="_blank"
               className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-4 py-2 text-xs font-semibold text-[var(--coral)] hover:bg-[var(--line)]/50 transition-colors shadow-xs"
             >
@@ -132,6 +139,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
         <form action={updateListing} className="mt-6 space-y-6">
           <input type="hidden" name="listingId" value={listing.id} />
+          <input type="hidden" name="domainId" value={listing.domain_id} />
 
           {/* Identification */}
           <div className="grid gap-4 sm:grid-cols-2">
@@ -161,26 +169,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </div>
           </div>
 
-          {/* Directory, Category & Status */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                Directory (Domain) <span className="text-[var(--coral)]">*</span>
-              </label>
-              <select
-                name="domainId"
-                required
-                defaultValue={listing.domain_id}
-                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-sm focus:outline-none"
-              >
-                {domains?.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+          {/* Category & Status */}
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
                 Category <span className="text-[var(--coral)]">*</span>

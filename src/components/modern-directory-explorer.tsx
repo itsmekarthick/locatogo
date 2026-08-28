@@ -2,21 +2,17 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Pagination } from "@/components/ui/pagination";
 
-const PAGE_SIZE = 6;
-
+// Dynamically import interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
   () => import("@/components/interactive-leaflet-canvas"),
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-[#f4efe8]">
-        <div className="flex items-center gap-3 rounded-full border border-[var(--line)] bg-[var(--paper)] px-5 py-2.5 text-xs font-semibold shadow-xs">
-          <span className="h-3 w-3 rounded-full bg-[var(--coral)] animate-ping" />
-          <span>Rendering interactive map...</span>
-        </div>
+      <div className="flex h-full w-full items-center justify-center bg-[#f4efe8] text-xs font-semibold text-[var(--ink-muted)]">
+        <span className="animate-pulse">Loading Interactive Map & Coordinates...</span>
       </div>
     ),
   }
@@ -39,6 +35,7 @@ export type PlaceListing = {
   category_name?: string | null;
   phone?: string | null;
   website?: string | null;
+  distanceKm?: number | null;
 };
 
 export type Category = {
@@ -48,10 +45,10 @@ export type Category = {
 };
 
 type Props = {
-  domain: {
-    id: string;
-    name: string;
-    slug: string;
+  domain?: {
+    id?: string;
+    name?: string;
+    slug?: string;
     description?: string | null;
   };
   initialListings: PlaceListing[];
@@ -61,6 +58,22 @@ type Props = {
   initialLocation?: string;
   initialQuery?: string;
 };
+
+const PAGE_SIZE = 6;
+
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 export function ModernDirectoryExplorer({
   domain,
@@ -75,17 +88,66 @@ export function ModernDirectoryExplorer({
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
+  
+  // Default: FULL SCREEN MAP (drawer opens when a category/filter/marker is selected)
+  const [isPanelOpen, setIsPanelOpen] = useState(Boolean(initialCategory || initialQuery || initialLocation));
   const [currentPage, setCurrentPage] = useState(1);
+
+  // User Geolocation State
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [flyToUserTrigger, setFlyToUserTrigger] = useState(0);
+
+  // Auto-detect user current location on mount
+  const handleLocateMe = useCallback(() => {
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(loc);
+          setIsLocating(false);
+          setFlyToUserTrigger((prev) => prev + 1);
+        },
+        (err) => {
+          console.log("Geolocation permission skipped or unavailable:", err.message);
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    handleLocateMe();
+  }, [handleLocateMe]);
 
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, selectedLocation]);
 
-  // Filter listings in memory for instant sub-millisecond search & filtering
+  // Category select handler: selects category AND opens the drawer
+  const handleSelectCategory = (catId: string) => {
+    if (selectedCategory === catId) {
+      setSelectedCategory("");
+    } else {
+      setSelectedCategory(catId);
+      setIsPanelOpen(true); // Open drawer on selection
+    }
+  };
+
+  // Marker click handler: selects place AND opens the drawer
+  const handleSelectPlace = (id: string | null) => {
+    setActivePlaceId(id);
+    if (id) {
+      setIsPanelOpen(true);
+    }
+  };
+
+  // Filter and calculate distances
   const filteredListings = useMemo(() => {
-    return initialListings.filter((place) => {
+    const list = initialListings.filter((place) => {
       // 1. Text Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -111,7 +173,26 @@ export function ModernDirectoryExplorer({
 
       return true;
     });
-  }, [initialListings, searchQuery, selectedCategory, selectedLocation]);
+
+    // Add distance if user location is known
+    return list
+      .map((place): PlaceListing => {
+        let distanceKm: number | null = null;
+        if (userLocation && place.latitude && place.longitude) {
+          distanceKm = calculateDistanceKm(userLocation.lat, userLocation.lng, place.latitude, place.longitude);
+        }
+        return {
+          ...place,
+          distanceKm,
+        };
+      })
+      .sort((a, b) => {
+        if (typeof a.distanceKm === "number" && typeof b.distanceKm === "number") {
+          return a.distanceKm - b.distanceKm;
+        }
+        return 0;
+      });
+  }, [initialListings, searchQuery, selectedCategory, selectedLocation, userLocation]);
 
   const locatedListings = useMemo(
     () =>
@@ -149,7 +230,7 @@ export function ModernDirectoryExplorer({
       {/* Top Glassmorphic Navigation Header */}
       <header className="z-30 shrink-0 border-b border-[var(--line)] bg-[var(--paper)]/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-[1720px] items-center justify-between px-4 py-2.5 sm:px-6">
-          {/* Logo & Directory Name */}
+          {/* Logo & Platform Tag */}
           <div className="flex items-center gap-3">
             <Link href="/" className="font-display text-xl font-bold tracking-tight text-[var(--foreground)]">
               mapora<span className="text-[var(--coral)]">.</span>
@@ -157,7 +238,7 @@ export function ModernDirectoryExplorer({
             <span className="hidden text-sm text-[var(--line)] sm:inline">/</span>
             <div className="hidden items-center gap-1.5 rounded-full bg-[var(--leaf)] px-3 py-0.5 text-xs font-semibold text-[var(--leaf-dark)] sm:flex">
               <span>📍</span>
-              <span className="font-bold">{domain.name}</span>
+              <span className="font-bold">Bangalore Atlas</span>
             </div>
           </div>
 
@@ -168,7 +249,10 @@ export function ModernDirectoryExplorer({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value.trim()) setIsPanelOpen(true);
+                }}
                 placeholder="Search places, schools, hospitals in Bangalore..."
                 className="w-full rounded-full border border-[var(--line)] bg-[var(--background)] pl-9 pr-8 py-2 text-xs text-[var(--foreground)] placeholder-[var(--ink-muted)] transition-all focus:border-[var(--foreground)] focus:bg-[var(--paper)] focus:outline-none"
               />
@@ -185,7 +269,10 @@ export function ModernDirectoryExplorer({
             {/* Location Select Dropdown */}
             <select
               value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
+              onChange={(e) => {
+                setSelectedLocation(e.target.value);
+                if (e.target.value) setIsPanelOpen(true);
+              }}
               className="hidden md:block rounded-full border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs font-semibold text-[var(--foreground)] focus:border-[var(--foreground)] focus:outline-none cursor-pointer"
             >
               <option value="">All Locations</option>
@@ -201,12 +288,16 @@ export function ModernDirectoryExplorer({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsPanelOpen(!isPanelOpen)}
-              className="md:hidden rounded-full border border-[var(--line)] bg-[var(--paper)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)]"
+              className={`rounded-full border border-[var(--line)] px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                isPanelOpen
+                  ? "bg-[var(--foreground)] text-[var(--paper)] shadow-xs"
+                  : "bg-[var(--paper)] text-[var(--foreground)] hover:bg-[var(--background)]"
+              }`}
             >
-              {isPanelOpen ? "🗺️ Hide List" : "📋 Show List"}
+              {isPanelOpen ? "🗺️ Full Map" : `📋 Places (${filteredListings.length})`}
             </button>
             <Link
-              href={`/${domain.slug}/submit`}
+              href="/submit"
               className="rounded-full bg-[var(--coral)] px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[var(--coral)]/90 hover:shadow-sm"
             >
               + Add Place
@@ -223,20 +314,22 @@ export function ModernDirectoryExplorer({
 
       {/* Main Full-Height App View */}
       <div className="relative flex flex-1 overflow-hidden">
-        {/* LEFT CANVAS: Interactive Full Map */}
+        {/* LEFT/MAIN CANVAS: Interactive Full Map */}
         <main className="relative flex-1 h-full w-full bg-[#f4efe8]">
           <InteractiveLeafletCanvas
             locatedListings={locatedListings}
             activePlaceId={activePlaceId}
-            setActivePlaceId={setActivePlaceId}
-            domainSlug={domain.slug}
+            setActivePlaceId={handleSelectPlace}
+            userLocation={userLocation}
+            onLocateMe={handleLocateMe}
+            flyToUserTrigger={flyToUserTrigger}
           />
 
-          {/* Floating Floating Category Tabs on Top-Right / Map Overlay */}
-          <div className="absolute top-4 left-4 z-[400] hidden lg:flex items-center gap-1.5 rounded-full border border-[var(--line)]/80 bg-[var(--paper)]/90 p-1.5 shadow-lg backdrop-blur-md">
+          {/* Floating Category Tabs on Top-Left of Map */}
+          <div className="absolute top-4 left-4 z-[400] flex items-center gap-1.5 overflow-x-auto max-w-[calc(100vw-32px)] sm:max-w-max rounded-full border border-[var(--line)]/80 bg-[var(--paper)]/95 p-1.5 shadow-lg backdrop-blur-md scrollbar-none">
             <button
-              onClick={() => setSelectedCategory("")}
-              className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+              onClick={() => handleSelectCategory("")}
+              className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                 !selectedCategory
                   ? "bg-[var(--foreground)] text-[var(--paper)] shadow-xs"
                   : "text-[var(--ink-muted)] hover:text-[var(--foreground)] hover:bg-[var(--line)]/40"
@@ -247,8 +340,8 @@ export function ModernDirectoryExplorer({
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategory(selectedCategory === cat.id ? "" : cat.id)}
-                className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer ${
+                onClick={() => handleSelectCategory(cat.id)}
+                className={`rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                   selectedCategory === cat.id
                     ? "bg-[var(--foreground)] text-[var(--paper)] shadow-xs"
                     : "text-[var(--ink-muted)] hover:text-[var(--foreground)] hover:bg-[var(--line)]/40"
@@ -259,9 +352,28 @@ export function ModernDirectoryExplorer({
               </button>
             ))}
           </div>
+
+          {/* Floating "Show Places List" Button when Drawer is Closed */}
+          {!isPanelOpen && (
+            <button
+              onClick={() => setIsPanelOpen(true)}
+              className="absolute top-4 right-4 z-[400] flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper)]/95 px-4 py-2 text-xs font-bold text-[var(--foreground)] shadow-xl backdrop-blur-md hover:bg-[var(--background)] hover:scale-105 transition-all cursor-pointer"
+            >
+              <span>📋</span>
+              <span>Explore Places ({filteredListings.length})</span>
+            </button>
+          )}
+
+          {/* Location Detection Status Pill */}
+          {userLocation && (
+            <div className="absolute bottom-5 left-5 z-[400] hidden sm:flex items-center gap-2 rounded-full border border-blue-200 bg-white/95 px-3.5 py-1.5 text-[11px] font-semibold text-blue-700 shadow-md backdrop-blur-md">
+              <span className="h-2 w-2 rounded-full bg-blue-600 animate-ping" />
+              <span>Location active</span>
+            </div>
+          )}
         </main>
 
-        {/* RIGHT SIDE PANEL: Category Tabs & Place Cards Drawer */}
+        {/* RIGHT SIDE DRAWER: Category Tabs & Place Cards (Shown when selected) */}
         <aside
           className={`z-20 flex h-full flex-col border-l border-[var(--line)] bg-[var(--background)] transition-all duration-300 shrink-0 ${
             isPanelOpen
@@ -269,11 +381,21 @@ export function ModernDirectoryExplorer({
               : "hidden"
           }`}
         >
-          {/* Top Category Tab Selector Strip */}
+          {/* Drawer Top Header with Category Tabs & Close Button */}
           <div className="border-b border-[var(--line)] bg-[var(--paper)] p-3">
-            <p className="px-1 text-[10px] font-bold uppercase tracking-wider text-[var(--coral)]">
-              Category Tabs
-            </p>
+            <div className="flex items-center justify-between px-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--coral)]">
+                Category Selection
+              </p>
+              <button
+                onClick={() => setIsPanelOpen(false)}
+                title="Minimize to Full Map"
+                className="rounded-full bg-[var(--background)] px-2 py-0.5 text-[11px] font-bold text-[var(--ink-muted)] hover:text-[var(--foreground)] hover:bg-[var(--line)] transition-colors cursor-pointer"
+              >
+                ✕ Full Map
+              </button>
+            </div>
+
             <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setSelectedCategory("")}
@@ -329,7 +451,7 @@ export function ModernDirectoryExplorer({
             )}
           </div>
 
-          {/* Tab Place Cards Feed */}
+          {/* Scrollable Listings Cards Feed */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
             {paginatedListings.length > 0 ? (
               <>
@@ -338,23 +460,30 @@ export function ModernDirectoryExplorer({
                   return (
                     <article
                       key={place.id}
-                      onMouseEnter={() => setActivePlaceId(place.id)}
                       onClick={() => setActivePlaceId(place.id)}
-                      className={`group relative rounded-3xl border p-4 sm:p-5 transition-all cursor-pointer ${
+                      className={`group cursor-pointer rounded-2xl border bg-[var(--paper)] p-4 transition-all duration-200 shadow-xs hover:shadow-md ${
                         isSelected
-                          ? "border-[var(--coral)] bg-[var(--paper)] shadow-md ring-2 ring-[var(--coral)]/20 -translate-y-0.5"
-                          : "border-[var(--line)] bg-[var(--paper)] shadow-xs hover:border-[var(--foreground)]/25 hover:shadow-sm hover:-translate-y-0.5"
+                          ? "border-[var(--coral)] ring-2 ring-[var(--coral)]/20 shadow-md bg-[var(--paper-subtle)]"
+                          : "border-[var(--line)] hover:border-[var(--foreground)]/30"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          {place.category_name && (
-                            <span className="mb-1 inline-block rounded-full bg-[var(--leaf)] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--leaf-dark)]">
-                              {place.category_name}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2 mb-1">
+                            {place.category_name && (
+                              <span className="inline-block rounded-full bg-[var(--leaf)] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--leaf-dark)]">
+                                {place.category_name}
+                              </span>
+                            )}
+                            {place.distanceKm !== null && place.distanceKm !== undefined && (
+                              <span className="inline-block rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                                📍 {place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`} away
+                              </span>
+                            )}
+                          </div>
+
                           <h3 className="font-display text-lg font-bold text-[var(--foreground)] group-hover:text-[var(--coral)] transition-colors">
-                            <Link href={`/${domain.slug}/listing/${place.slug}`}>
+                            <Link href={`/listing/${place.slug}`}>
                               {place.title}
                             </Link>
                           </h3>
@@ -367,14 +496,14 @@ export function ModernDirectoryExplorer({
                         </div>
 
                         {place.is_featured && (
-                          <span className="rounded-full bg-[var(--coral-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--coral)]">
+                          <span className="rounded bg-[var(--coral-soft)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--coral)] uppercase">
                             ★ Featured
                           </span>
                         )}
                       </div>
 
                       {place.short_description && (
-                        <p className="mt-2.5 text-xs leading-5 text-[var(--ink-muted)] line-clamp-2">
+                        <p className="mt-2 text-xs text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
                           {place.short_description}
                         </p>
                       )}
@@ -416,7 +545,7 @@ export function ModernDirectoryExplorer({
                         </div>
 
                         <Link
-                          href={`/${domain.slug}/listing/${place.slug}`}
+                          href={`/listing/${place.slug}`}
                           className="font-bold text-[var(--coral)] hover:underline flex items-center gap-1"
                         >
                           <span>Details</span>
@@ -438,21 +567,21 @@ export function ModernDirectoryExplorer({
                 />
               </>
             ) : (
-              <div className="rounded-3xl border border-dashed border-[var(--line)] bg-[var(--paper)] p-8 text-center">
-                <p className="text-3xl">📍</p>
-                <h4 className="mt-3 font-display text-base font-bold text-[var(--foreground)]">No places found</h4>
-                <p className="mt-1 text-xs text-[var(--ink-muted)]">
-                  Try clearing the search query or selecting a different category tab.
+              <div className="rounded-2xl border border-dashed border-[var(--line)] p-8 text-center">
+                <span className="text-2xl">🔍</span>
+                <p className="mt-2 text-xs font-semibold text-[var(--foreground)]">No places found</p>
+                <p className="mt-1 text-[11px] text-[var(--ink-muted)]">
+                  Try clearing the category filter or searching for another keyword.
                 </p>
                 <button
                   onClick={() => {
-                    setSearchQuery("");
                     setSelectedCategory("");
                     setSelectedLocation("");
+                    setSearchQuery("");
                   }}
-                  className="mt-4 rounded-full bg-[var(--foreground)] px-4 py-1.5 text-xs font-semibold text-[var(--paper)] cursor-pointer"
+                  className="mt-3 rounded-full bg-[var(--foreground)] px-4 py-1.5 text-xs font-bold text-[var(--paper)] cursor-pointer"
                 >
-                  Reset all filters
+                  Show all places
                 </button>
               </div>
             )}

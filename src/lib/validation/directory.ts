@@ -9,14 +9,14 @@ export const domainInputSchema = z.object({
 });
 
 export const categoryInputSchema = z.object({
-  domainId: z.string().uuid(),
+  domainId: z.string().uuid().optional(),
   name: z.string().trim().min(2).max(120),
   slug,
   description: z.string().trim().max(500).optional(),
 });
 
 export const listingInputSchema = z.object({
-  domainId: z.string().uuid(),
+  domainId: z.string().uuid().optional(),
   categoryId: z.string().uuid(),
   title: z.string().trim().min(2).max(180),
   slug,
@@ -39,7 +39,7 @@ export const listingInputSchema = z.object({
 });
 
 export const customFieldInputSchema = z.object({
-  domainId: z.string().uuid(),
+  domainId: z.string().uuid().optional(),
   name: z.string().trim().min(2).max(120),
   key: z.string().trim().regex(/^[a-z][a-z0-9_]*$/),
   fieldType: z.enum(["text", "long_text", "number", "currency", "boolean", "date", "select", "multi_select", "url", "email", "phone", "image", "file"]),

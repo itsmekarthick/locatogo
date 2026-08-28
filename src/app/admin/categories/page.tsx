@@ -21,36 +21,19 @@ export default async function CategoriesPage() {
 
       <div className="mt-8 rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6">
         <h2 className="font-display text-xl font-bold">Add a Category</h2>
-        <p className="mt-1 text-sm text-[var(--ink-muted)]">Assign categories to specific directories under your workspace.</p>
+        <p className="mt-1 text-sm text-[var(--ink-muted)]">Categories power discovery filters, search tags, and map icons.</p>
 
         <form action={createCategory} className="mt-6 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                Target Directory <span className="text-[var(--coral)]">*</span>
-              </label>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Which directory this category belongs to</p>
-              <select
-                name="domainId"
-                required
-                className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
-              >
-                <option value="">Choose directory</option>
-                {domains?.map((domain) => (
-                  <option key={domain.id} value={domain.id}>{domain.name}</option>
-                ))}
-              </select>
-            </div>
-
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
                 Category Name <span className="text-[var(--coral)]">*</span>
               </label>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">e.g. "Specialty Coffee Roasters"</p>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">e.g. "Schools & Education", "Hospitals & Healthcare"</p>
               <input
                 name="name"
                 required
-                placeholder="e.g. Coffee Roasters"
+                placeholder="e.g. Schools & Education"
                 className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
               />
             </div>
@@ -59,12 +42,12 @@ export default async function CategoriesPage() {
               <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
                 URL Slug <span className="text-[var(--coral)]">*</span>
               </label>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">e.g. "coffee-roasters"</p>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">e.g. "schools-education"</p>
               <input
                 name="slug"
                 required
                 pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                placeholder="e.g. coffee-roasters"
+                placeholder="e.g. schools-education"
                 className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
               />
             </div>
@@ -72,8 +55,7 @@ export default async function CategoriesPage() {
 
           <div className="flex justify-end pt-2">
             <button
-              disabled={!domains?.length}
-              className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-sm font-semibold text-[var(--paper)] shadow transition-transform hover:-translate-y-0.5 disabled:opacity-50"
+              className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-sm font-semibold text-[var(--paper)] shadow transition-transform hover:-translate-y-0.5 cursor-pointer"
             >
               Add category
             </button>

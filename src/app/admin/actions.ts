@@ -48,11 +48,39 @@ export async function archiveDomain(formData: FormData): Promise<void> {
   revalidatePath("/admin/domains");
 }
 
+async function getDefaultDomainId(
+  supabase: Awaited<ReturnType<typeof requireTenantContext>>["supabase"],
+  tenantId: string,
+  explicitDomainId?: string
+): Promise<string> {
+  if (explicitDomainId && /^[0-9a-f-]{36}$/i.test(explicitDomainId)) {
+    return explicitDomainId;
+  }
+  const { data: domain } = await supabase
+    .from("domains")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (domain?.id) return domain.id;
+
+  const { data: newDomain } = await supabase
+    .from("domains")
+    .insert({ tenant_id: tenantId, name: "Default Atlas", slug: "default" })
+    .select("id")
+    .single();
+
+  return newDomain?.id ?? "";
+}
+
 export async function createCategory(formData: FormData): Promise<void> {
   const { supabase, tenant } = await requireTenantContext();
-  const parsed = categoryInputSchema.safeParse({ domainId: text(formData, "domainId"), name: text(formData, "name"), slug: text(formData, "slug"), description: text(formData, "description") });
+  const domainId = await getDefaultDomainId(supabase, tenant.id, text(formData, "domainId"));
+  const parsed = categoryInputSchema.safeParse({ domainId, name: text(formData, "name"), slug: text(formData, "slug"), description: text(formData, "description") });
   if (!parsed.success) throw new Error("Invalid category details.");
-  const { error } = await supabase.from("categories").insert({ tenant_id: tenant.id, domain_id: parsed.data.domainId, name: parsed.data.name, slug: parsed.data.slug, description: parsed.data.description || null });
+  const { error } = await supabase.from("categories").insert({ tenant_id: tenant.id, domain_id: domainId, name: parsed.data.name, slug: parsed.data.slug, description: parsed.data.description || null });
   if (error) throw new Error("The category could not be created.");
   revalidatePath("/admin/categories");
   redirect("/admin/categories");
@@ -61,9 +89,10 @@ export async function createCategory(formData: FormData): Promise<void> {
 export async function updateCategory(formData: FormData): Promise<void> {
   const { supabase, tenant } = await requireTenantContext();
   const categoryId = id(formData, "categoryId");
-  const parsed = categoryInputSchema.safeParse({ domainId: text(formData, "domainId"), name: text(formData, "name"), slug: text(formData, "slug"), description: text(formData, "description") });
+  const domainId = await getDefaultDomainId(supabase, tenant.id, text(formData, "domainId"));
+  const parsed = categoryInputSchema.safeParse({ domainId, name: text(formData, "name"), slug: text(formData, "slug"), description: text(formData, "description") });
   if (!parsed.success) throw new Error("Invalid category details.");
-  const { error } = await supabase.from("categories").update({ name: parsed.data.name, slug: parsed.data.slug, description: parsed.data.description || null }).eq("id", categoryId).eq("tenant_id", tenant.id).eq("domain_id", parsed.data.domainId);
+  const { error } = await supabase.from("categories").update({ name: parsed.data.name, slug: parsed.data.slug, description: parsed.data.description || null }).eq("id", categoryId).eq("tenant_id", tenant.id);
   if (error) throw new Error("The category could not be updated.");
   revalidatePath("/admin/categories");
   redirect("/admin/categories");
@@ -81,9 +110,10 @@ export async function createListing(formData: FormData): Promise<void> {
   const { supabase, tenant, user } = await requireTenantContext();
   const latVal = text(formData, "latitude");
   const lngVal = text(formData, "longitude");
+  const domainId = await getDefaultDomainId(supabase, tenant.id, text(formData, "domainId"));
 
   const parsed = listingInputSchema.safeParse({
-    domainId: text(formData, "domainId"),
+    domainId,
     categoryId: text(formData, "categoryId"),
     title: text(formData, "title"),
     slug: text(formData, "slug"),
@@ -111,7 +141,7 @@ export async function createListing(formData: FormData): Promise<void> {
 
   const { error } = await supabase.from("listings").insert({
     tenant_id: tenant.id,
-    domain_id: parsed.data.domainId,
+    domain_id: domainId,
     category_id: parsed.data.categoryId,
     owner_user_id: user.id,
     title: parsed.data.title,
@@ -157,9 +187,10 @@ export async function updateListing(formData: FormData): Promise<void> {
   const listingId = id(formData, "listingId");
   const latVal = text(formData, "latitude");
   const lngVal = text(formData, "longitude");
+  const domainId = await getDefaultDomainId(supabase, tenant.id, text(formData, "domainId"));
 
   const parsed = listingInputSchema.safeParse({
-    domainId: text(formData, "domainId"),
+    domainId,
     categoryId: text(formData, "categoryId"),
     title: text(formData, "title"),
     slug: text(formData, "slug"),
@@ -189,7 +220,7 @@ export async function updateListing(formData: FormData): Promise<void> {
   const { error } = await supabase
     .from("listings")
     .update({
-      domain_id: parsed.data.domainId,
+      domain_id: domainId,
       category_id: parsed.data.categoryId,
       title: parsed.data.title,
       slug: parsed.data.slug,

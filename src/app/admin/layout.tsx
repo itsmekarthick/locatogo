@@ -12,7 +12,6 @@ const navSections = [
   {
     title: "Structure & Taxonomy",
     items: [
-      { label: "Directories (Domains)", href: "/admin/domains", icon: "🌐" },
       { label: "Categories", href: "/admin/categories", icon: "🏷️" },
       { label: "Custom Fields", href: "/admin/custom-fields", icon: "⚙️" },
     ],
