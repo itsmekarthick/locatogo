@@ -506,6 +506,8 @@ export default async function ListingDetailPage({ params }: Props) {
               rating={placeDetails.rating}
               userRatingCount={placeDetails.userRatingCount}
               placeTitle={listing.title}
+              categoryName={categoryName}
+              locality={listing.locality}
             />
 
             {/* DETAILED CATEGORY SECTIONS (Schools, Hospitals, Tech Parks) */}

@@ -462,6 +462,8 @@ export default async function DomainListingDetailPage({ params }: Props) {
               rating={placeDetails.rating}
               userRatingCount={placeDetails.userRatingCount}
               placeTitle={listing.title}
+              categoryName={categoryName}
+              locality={listing.locality}
             />
           </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth's radius in km
+  const R = 6371; // Earth radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -40,11 +40,8 @@ export function PlaceDistanceBadge({
             longitude
           );
 
-          // Road factor approx 1.3x for Bangalore city traffic
           const roadKm = directKm * 1.3;
-          // Avg Bangalore speed ~22 km/h in urban traffic
           const driveMins = Math.max(2, Math.round((roadKm / 22) * 60));
-          // Avg walking speed ~4.5 km/h
           const walkMins = Math.round((directKm / 4.5) * 60);
 
           setDistanceInfo({
@@ -53,9 +50,7 @@ export function PlaceDistanceBadge({
             walkMins,
           });
         },
-        () => {
-          // Geolocation not granted or unavailable
-        },
+        () => {},
         { timeout: 8000 }
       );
     }
