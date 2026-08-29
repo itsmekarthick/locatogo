@@ -187,7 +187,7 @@ function LocationController({
 }) {
   const map = useMap();
 
-  const handleLocateMe = useCallback(async () => {
+  const handleLocateMe = useCallback(() => {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -195,25 +195,14 @@ function LocationController({
           onLocationFound(loc);
           map.flyTo([loc.lat, loc.lng], 15, { duration: 1.5 });
         },
-        async () => {
-          // Fallback to IP geolocation if browser permission skipped or timing out
-          try {
-            const res = await fetch("https://ipapi.co/json/");
-            if (res.ok) {
-              const data = await res.json();
-              if (data.latitude && data.longitude) {
-                const loc = { lat: data.latitude, lng: data.longitude };
-                onLocationFound(loc);
-                map.flyTo([loc.lat, loc.lng], 14, { duration: 1.5 });
-                return;
-              }
-            }
-          } catch {
-            // Default center on Bangalore
-            map.flyTo([12.9716, 77.5946], 14, { duration: 1.5 });
-          }
+        (err) => {
+          console.warn("Browser GPS permission not granted or unavailable:", err.message);
+          // Gracefully center on Central Bangalore (MG Road / Brigade Rd)
+          const bangaloreCenter = { lat: 12.9716, lng: 77.5946 };
+          onLocationFound(bangaloreCenter);
+          map.flyTo([bangaloreCenter.lat, bangaloreCenter.lng], 14, { duration: 1.5 });
         },
-        { enableHighAccuracy: false, timeout: 6000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
       );
     }
   }, [map, onLocationFound]);

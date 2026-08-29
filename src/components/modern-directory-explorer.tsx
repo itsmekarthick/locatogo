@@ -112,7 +112,7 @@ export function ModernDirectoryExplorer({
   const [isLocating, setIsLocating] = useState(false);
   const [flyToUserTrigger, setFlyToUserTrigger] = useState(0);
 
-  // Auto-detect user current location on mount (with fast fallback)
+  // Handle user clicking 'My Location'
   const handleLocateMe = useCallback(() => {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       setIsLocating(true);
@@ -123,30 +123,17 @@ export function ModernDirectoryExplorer({
           setIsLocating(false);
           setFlyToUserTrigger((prev) => prev + 1);
         },
-        async () => {
-          try {
-            const res = await fetch("https://ipapi.co/json/");
-            if (res.ok) {
-              const data = await res.json();
-              if (data.latitude && data.longitude) {
-                const loc = { lat: data.latitude, lng: data.longitude };
-                setUserLocation(loc);
-                setFlyToUserTrigger((prev) => prev + 1);
-              }
-            }
-          } catch {
-            // Default center
-          }
+        (err) => {
+          console.warn("Location permission not granted or unavailable:", err.message);
           setIsLocating(false);
+          // Gently center on central Bangalore if location is denied
+          setUserLocation({ lat: 12.9716, lng: 77.5946 });
+          setFlyToUserTrigger((prev) => prev + 1);
         },
-        { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
       );
     }
   }, []);
-
-  useEffect(() => {
-    handleLocateMe();
-  }, [handleLocateMe]);
 
   // Reset to page 1 whenever filters change
   useEffect(() => {
