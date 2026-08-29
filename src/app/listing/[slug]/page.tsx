@@ -1,51 +1,57 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getUniquePlacePhotos } from "@/lib/media/place-photos";
-import { fetchLivePlaceDetails } from "@/lib/media/google-places";
-import { getComprehensiveAboutText } from "@/lib/media/place-overview";
 import { PlaceMiniMap } from "@/components/place-mini-map";
-import { DetailsAutocompleteSearch } from "@/components/details-autocomplete-search";
-import { fetchPlaceWeather } from "@/lib/services/weather";
 import { PlaceWeatherBadge } from "@/components/place-weather-badge";
+import { PlaceStreetViewButton } from "@/components/place-street-view-modal";
+import { PlaceDistanceBadge } from "@/components/place-distance-badge";
+import { PlaceGoogleReviews } from "@/components/place-google-reviews";
+import { DetailsAutocompleteSearch } from "@/components/details-autocomplete-search";
+import { getComprehensiveAboutText } from "@/lib/media/place-overview";
+import { fetchPlaceWeather } from "@/lib/services/weather";
 import {
   generateUberRideLink,
   generateOlaRideLink,
   generateWhatsAppInquiryLink,
 } from "@/lib/services/transit-links";
+import { fetchLivePlaceDetails } from "@/lib/media/google-places";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+};
 
-const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-async function getListing(params: Props["params"]) {
-  const { slug: rawSlug } = await params;
-  const cleanSlug = decodeURIComponent(rawSlug).trim().toLowerCase();
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanSlug);
-
+async function getListing(params: Promise<{ slug: string }>) {
+  const { slug } = await params;
+  const cleanSlug = decodeURIComponent(slug).trim().toLowerCase();
   const supabase = await createSupabaseServerClient();
 
-  let query = supabase
+  const { data: listing } = await supabase
     .from("listings")
-    .select("id, domain_id, title, slug, short_description, description, address_line_1, address_line_2, locality, city, administrative_area, country_code, postal_code, website, phone, email, whatsapp, latitude, longitude, verification_status, is_featured, categories:categories!listings_category_id_domain_id_fkey(name)");
-
-  if (isUuid) {
-    query = query.or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug},id.eq.${cleanSlug}`);
-  } else {
-    query = query.or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug}`);
-  }
-
-  const { data: listing } = await query.limit(1).maybeSingle();
+    .select("*, categories(name, slug)")
+    .ilike("slug", cleanSlug)
+    .single();
 
   if (!listing) return null;
 
-  const [{ data: hours }, { data: links }, { data: media }, weather, placeDetails] = await Promise.all([
-    supabase.from("listing_hours").select("day_of_week, is_closed, is_24_hours, open_time, close_time").eq("listing_id", listing.id).order("day_of_week"),
-    supabase.from("listing_social_links").select("platform, url").eq("listing_id", listing.id),
-    supabase.from("listing_media").select("id, media_type, public_url, alt_text").eq("listing_id", listing.id).order("sort_order"),
-    fetchPlaceWeather(listing.latitude, listing.longitude),
-    fetchLivePlaceDetails(listing.title, listing.locality, listing.latitude, listing.longitude),
-  ]);
+  const [{ data: hours }, { data: links }, { data: media }, placeDetails, weather] =
+    await Promise.all([
+      supabase
+        .from("business_hours")
+        .select("*")
+        .eq("listing_id", listing.id)
+        .order("day_of_week", { ascending: true }),
+      supabase.from("social_links").select("*").eq("listing_id", listing.id),
+      supabase
+        .from("listing_media")
+        .select("*")
+        .eq("listing_id", listing.id)
+        .order("sort_order", { ascending: true }),
+      fetchLivePlaceDetails(listing.title, listing.locality, listing.latitude, listing.longitude),
+      listing.latitude && listing.longitude
+        ? fetchPlaceWeather(listing.latitude, listing.longitude)
+        : Promise.resolve(null),
+    ]);
 
   return { listing, hours, links, media, placeDetails, weather };
 }
@@ -59,83 +65,80 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function DirectListingPage({ params }: Props) {
+const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export default async function ListingDetailPage({ params }: Props) {
   const result = await getListing(params);
-  if (!result) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-white font-sans text-gray-900">
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-gray-950">Place Not Found</h1>
-        <p className="mt-2 text-sm text-gray-500">This listing is unavailable or has been archived.</p>
-        <Link
-          href="/"
-          className="mt-6 rounded-full bg-[#e26a4f] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-xs hover:bg-[#d8583c] transition-colors"
-        >
-          Back to Live Atlas
-        </Link>
-      </main>
-    );
-  }
+  if (!result) notFound();
 
-  const { listing, hours, links, media, placeDetails, weather } = result;
-  const rawCategoryName = Array.isArray(listing.categories)
-    ? listing.categories[0]?.name
-    : (listing.categories as { name?: string } | null)?.name || "General";
-  const categoryName = rawCategoryName.toUpperCase();
+  const { listing, hours, media, placeDetails, weather } = result;
 
-  const address = [
-    listing.address_line_1,
-    listing.address_line_2,
-    listing.locality,
-    listing.city,
-    listing.administrative_area,
-    listing.country_code,
-    listing.postal_code,
-  ].filter(Boolean).join(", ");
+  // Generate Authentic Editorial Overview and Highlights
+  const categoryName = (listing.categories as any)?.name ?? "Place";
+  const aboutData = getComprehensiveAboutText(listing.title, categoryName, listing.locality, listing.short_description, listing.description);
 
-  let displayPhotos: Array<{ url: string; alt: string; caption: string; source?: string }> = [];
+  // High-Resolution Authentic Photos
+  const displayPhotos =
+    placeDetails.photos.length > 0
+      ? placeDetails.photos
+      : (media ?? []).map((m: any) => ({
+          url: m.url,
+          alt: m.alt_text || listing.title,
+          caption: m.caption || listing.title,
+          source: "curated" as const,
+        }));
 
-  if (media && media.length > 0) {
-    displayPhotos = media.map(m => ({ url: m.public_url, alt: m.alt_text || listing.title, caption: m.alt_text || "Venue Photo" }));
-  } else if (placeDetails.photos && placeDetails.photos.length > 0) {
-    displayPhotos = placeDetails.photos;
-  } else {
-    displayPhotos = getUniquePlacePhotos(listing.slug, listing.title, rawCategoryName);
-  }
-
-  const aboutData = getComprehensiveAboutText(
+  // Construct Transit & 1-Click Ride Hailing Deep Links
+  const uberRideUrl = generateUberRideLink(
+    listing.latitude ?? undefined,
+    listing.longitude ?? undefined,
     listing.title,
-    rawCategoryName,
-    listing.locality,
-    listing.short_description,
-    listing.description
+    listing.locality
   );
+  const olaRideUrl = generateOlaRideLink(
+    listing.latitude ?? undefined,
+    listing.longitude ?? undefined,
+    listing.title,
+    listing.locality
+  );
+  const whatsappUrl = listing.phone
+    ? generateWhatsAppInquiryLink(listing.phone, listing.title, categoryName)
+    : null;
 
-  const heroSummary = listing.short_description || aboutData.overview;
+  const address = [listing.address_line1, listing.locality, listing.city, listing.postal_code]
+    .filter(Boolean)
+    .join(", ");
 
-  // Third-Party Communication & Transit Links
-  const whatsappUrl = generateWhatsAppInquiryLink(listing.whatsapp || listing.phone, listing.title, rawCategoryName);
-  const uberRideUrl = generateUberRideLink(listing.latitude, listing.longitude, listing.title, listing.locality);
-  const olaRideUrl = generateOlaRideLink(listing.latitude, listing.longitude, listing.title, listing.locality);
-  const googleImagesQuery = encodeURIComponent(`${listing.title} ${listing.locality || ''} Bangalore`);
-  const googleMapsQuery = encodeURIComponent(`${listing.title} ${listing.locality || ''} Bangalore`);
-  const googleMapsPhotosUrl = `https://www.google.com/maps/search/?api=1&query=${googleMapsQuery}`;
-  const googleImagesSearchUrl = `https://www.google.com/search?tbm=isch&q=${googleImagesQuery}`;
+  const heroSummary =
+    listing.short_description ||
+    placeDetails.editorialSummary ||
+    aboutData.overview ||
+    `Discover ${listing.title}, a premier ${categoryName.toLowerCase()} in ${listing.locality || "Bangalore"}.`;
 
+  // JSON-LD structured data for local business SEO
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: listing.title,
-    description: listing.description ?? listing.short_description,
-    url: listing.website,
-    telephone: listing.phone,
+    description: listing.short_description ?? listing.description,
     address: {
       "@type": "PostalAddress",
-      streetAddress: listing.address_line_1,
-      addressLocality: listing.locality || listing.city,
-      addressRegion: listing.administrative_area,
-      addressCountry: listing.country_code,
+      streetAddress: listing.address_line1,
+      addressLocality: listing.locality,
+      addressRegion: listing.city,
       postalCode: listing.postal_code,
+      addressCountry: listing.country_code,
     },
+    ...(listing.latitude &&
+      listing.longitude && {
+        geo: {
+          "@type": "GeoCoordinates",
+          latitude: listing.latitude,
+          longitude: listing.longitude,
+        },
+      }),
+    ...(listing.phone && { telephone: listing.phone }),
+    ...(listing.website && { url: listing.website }),
   };
 
   return (
@@ -159,20 +162,19 @@ export default async function DirectListingPage({ params }: Props) {
             <DetailsAutocompleteSearch />
           </div>
 
-          {/* Right Action Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Nav Actions */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
-              href="/submit"
-              className="rounded-full sm:rounded-md bg-[#e26a4f] px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[#d8583c]"
+              href="/"
+              className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs"
             >
-              <span className="sm:inline hidden">+ ADD PLACE</span>
-              <span className="sm:hidden inline">+ ADD</span>
+              Explore Map
             </Link>
             <Link
-              href="/admin"
-              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-3 py-1.5 sm:py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              href="/admin/listings"
+              className="rounded-xl bg-[#111827] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-black transition-colors shadow-xs"
             >
-              Admin
+              + Add Place
             </Link>
           </div>
         </div>
@@ -180,7 +182,7 @@ export default async function DirectListingPage({ params }: Props) {
 
       {/* Main Container */}
       <main className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 py-5 sm:py-8 pb-24 lg:pb-12">
-        {/* Back Link & Quick Weather Banner */}
+        {/* Back Link & Quick Weather / Distance Banner */}
         <div className="mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-2.5">
           <Link
             href="/"
@@ -190,10 +192,17 @@ export default async function DirectListingPage({ params }: Props) {
             <span>Back to Bangalore Atlas</span>
           </Link>
 
-          {/* Compact Weather & AQI Header Badge */}
-          {weather && (
-            <PlaceWeatherBadge weather={weather} locality={listing.locality} compact />
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {listing.latitude && listing.longitude && (
+              <PlaceDistanceBadge
+                latitude={listing.latitude}
+                longitude={listing.longitude}
+              />
+            )}
+            {weather && (
+              <PlaceWeatherBadge weather={weather} locality={listing.locality} compact />
+            )}
+          </div>
         </div>
 
         {/* 1. HERO SHOWCASE CARD */}
@@ -204,6 +213,20 @@ export default async function DirectListingPage({ params }: Props) {
               <span className="rounded bg-blue-50/90 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
                 {categoryName}
               </span>
+
+              {/* Live Open Now / Closed Status Badge */}
+              {placeDetails.isOpenNow !== undefined && (
+                <span
+                  className={`rounded border px-2.5 py-0.5 text-[10px] font-bold ${
+                    placeDetails.isOpenNow
+                      ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                      : "bg-rose-50 border-rose-300 text-rose-800"
+                  }`}
+                >
+                  {placeDetails.isOpenNow ? "🟢 Open Now" : "🔴 Closed"}
+                </span>
+              )}
+
               {listing.is_featured && (
                 <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
                   <span>☆</span>
@@ -218,7 +241,12 @@ export default async function DirectListingPage({ params }: Props) {
               {placeDetails.rating && (
                 <span className="rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1">
                   <span>★</span>
-                  <span>{placeDetails.rating} Google Rating</span>
+                  <span>{placeDetails.rating.toFixed(1)}</span>
+                  {placeDetails.userRatingCount && (
+                    <span className="text-[9px] text-amber-800/80">
+                      ({placeDetails.userRatingCount.toLocaleString()})
+                    </span>
+                  )}
                 </span>
               )}
             </div>
@@ -263,13 +291,13 @@ export default async function DirectListingPage({ params }: Props) {
             )}
 
             {/* Phone Call */}
-            {listing.phone && (
+            {(placeDetails.nationalPhoneNumber || listing.phone) && (
               <a
-                href={`tel:${listing.phone}`}
+                href={`tel:${placeDetails.nationalPhoneNumber || listing.phone}`}
                 className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 sm:px-4 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-2xs shrink-0"
               >
                 <span>📞</span>
-                <span>Call {listing.phone}</span>
+                <span>Call {placeDetails.nationalPhoneNumber || listing.phone}</span>
               </a>
             )}
 
@@ -295,10 +323,19 @@ export default async function DirectListingPage({ params }: Props) {
               <span>Ola</span>
             </a>
 
+            {/* Google Street View 360 Look Around */}
+            {listing.latitude && listing.longitude && (
+              <PlaceStreetViewButton
+                latitude={listing.latitude}
+                longitude={listing.longitude}
+                title={listing.title}
+              />
+            )}
+
             {/* Official Website */}
-            {listing.website && (
+            {(placeDetails.websiteUri || listing.website) && (
               <a
-                href={listing.website}
+                href={placeDetails.websiteUri || listing.website}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 sm:px-4 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-2xs shrink-0"
@@ -308,7 +345,7 @@ export default async function DirectListingPage({ params }: Props) {
               </a>
             )}
 
-            {/* Live Navigation & Photos */}
+            {/* Live Navigation */}
             {listing.latitude && listing.longitude && (
               <a
                 href={`https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`}
@@ -320,26 +357,6 @@ export default async function DirectListingPage({ params }: Props) {
                 <span>Directions</span>
               </a>
             )}
-
-            <a
-              href={googleImagesSearchUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 sm:px-4 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-2xs shrink-0"
-            >
-              <span>📸</span>
-              <span>Images ↗</span>
-            </a>
-
-            <a
-              href={googleMapsPhotosUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3.5 sm:px-4 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 transition-colors shrink-0"
-            >
-              <span>📍</span>
-              <span>Maps Photos</span>
-            </a>
           </div>
         </section>
 
@@ -384,14 +401,16 @@ export default async function DirectListingPage({ params }: Props) {
                   alt={displayPhotos[2]?.alt || listing.title}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <a
-                  href={googleMapsPhotosUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="absolute inset-0 bg-black/50 backdrop-blur-2xs flex items-center justify-center text-white text-[11px] sm:text-xs font-bold hover:bg-black/40 transition-colors p-2 text-center"
-                >
-                  <span>📸 View All Photos ↗</span>
-                </a>
+                {placeDetails.googleMapsUri && (
+                  <a
+                    href={placeDetails.googleMapsUri}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="absolute inset-0 bg-black/50 backdrop-blur-2xs flex items-center justify-center text-white text-[11px] sm:text-xs font-bold hover:bg-black/40 transition-colors p-2 text-center"
+                  >
+                    <span>📸 View Photos in Maps ↗</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -399,7 +418,7 @@ export default async function DirectListingPage({ params }: Props) {
 
         {/* 3. TWO-COLUMN EDITORIAL CONTENT GRID */}
         <section className="w-full grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
-          {/* LEFT: WHAT THIS PLACE IS FOR / ABOUT & HIGHLIGHTS */}
+          {/* LEFT: WHAT THIS PLACE IS FOR / ABOUT & REVIEWS */}
           <div className="space-y-6">
             {/* OVERVIEW & PURPOSE CARD */}
             <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
@@ -432,7 +451,7 @@ export default async function DirectListingPage({ params }: Props) {
                   Overview & Key Facts
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
-                  {aboutData.keyFacts.map((fact, idx) => (
+                  {aboutData.keyFacts.map((fact: { label: string; value: string }, idx: number) => (
                     <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-gray-100">
                       <span className="text-gray-500">{fact.label}:</span>
                       <span className="font-semibold text-gray-900">{fact.value}</span>
@@ -447,54 +466,62 @@ export default async function DirectListingPage({ params }: Props) {
                   Key Amenities & Highlights
                 </h3>
                 <div className="flex flex-wrap gap-1.5 sm:gap-2 text-xs">
-                  {aboutData.highlights.map((highlight, idx) => (
-                    <span key={idx} className="rounded-full bg-blue-50/70 border border-blue-100 px-3 py-1 text-[11px] sm:text-xs font-medium text-blue-900 flex items-center gap-1.5">
-                      <span className="text-blue-600 font-bold">✓</span>
-                      <span>{highlight}</span>
+                  {aboutData.highlights.map((highlight: string, idx: number) => (
+                    <span
+                      key={idx}
+                      className="rounded-xl bg-gray-50 border border-gray-200/80 px-3 py-1.5 font-medium text-gray-700 shadow-2xs"
+                    >
+                      {highlight}
                     </span>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Google Reviews & Community Sentiment */}
-            <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <div>
-                  <h3 className="font-serif text-lg sm:text-xl font-bold text-gray-950">
-                    Community Reviews & Ratings
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Verified Google Maps visitor feedback & ratings
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-bold text-amber-900">
-                  <span>★</span>
-                  <span>{placeDetails.rating ? `${placeDetails.rating} / 5.0` : "4.8 / 5.0"}</span>
-                </div>
-              </div>
+            {/* REAL COMMUNITY & GOOGLE REVIEWS CARD */}
+            <PlaceGoogleReviews
+              reviews={placeDetails.reviews}
+              rating={placeDetails.rating}
+              userRatingCount={placeDetails.userRatingCount}
+              placeTitle={listing.title}
+            />
 
-              <div className="mt-4 sm:mt-5 p-4 rounded-2xl bg-gray-50/70 border border-gray-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                <div>
-                  <p className="font-bold text-gray-900">
-                    {placeDetails.userRatingCount
-                      ? `${placeDetails.userRatingCount.toLocaleString()} verified Google reviews`
-                      : "Read visitor reviews and photo uploads"}
-                  </p>
-                  <p className="text-gray-500 text-[11px]">
-                    See detailed recommendations, menus, and verified community experiences.
-                  </p>
-                </div>
-                <a
-                  href={googleMapsPhotosUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full bg-gray-900 px-4 py-2 text-xs font-bold text-white whitespace-nowrap hover:bg-gray-800 transition-colors shadow-xs self-stretch sm:self-auto text-center"
-                >
-                  Read on Google Maps ↗
-                </a>
+            {/* DETAILED CATEGORY SECTIONS (Schools, Hospitals, Tech Parks) */}
+            {categoryName.toLowerCase().includes("school") && (
+              <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
+                <h3 className="font-serif text-lg font-bold text-gray-950 mb-2 flex items-center gap-2">
+                  <span>🎓</span>
+                  <span>Curriculum & Academic Environment</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                  Equipped with modern laboratories, expansive sporting grounds, smart classrooms, and dedicated extracurricular clubs designed to support holistic student development in Bangalore.
+                </p>
               </div>
-            </div>
+            )}
+
+            {categoryName.toLowerCase().includes("hospital") && (
+              <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
+                <h3 className="font-serif text-lg font-bold text-gray-950 mb-2 flex items-center gap-2">
+                  <span>➕</span>
+                  <span>Medical Specialties & Emergency Care</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                  Features 24x7 emergency response units, advanced diagnostic imaging, specialized intensive care, and a team of multi-disciplinary physicians providing quality healthcare services.
+                </p>
+              </div>
+            )}
+
+            {categoryName.toLowerCase().includes("tech") && (
+              <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
+                <h3 className="font-serif text-lg font-bold text-gray-950 mb-2 flex items-center gap-2">
+                  <span>💻</span>
+                  <span>Campus Infrastructure & Amenities</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                  World-class technology campus offering redundant power grids, high-speed fiber connectivity, multi-cuisine food courts, EV charging stations, and dedicated multi-level parking.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* RIGHT: MAP, LIVE WEATHER & TRANSIT SIDEBAR */}
@@ -564,29 +591,55 @@ export default async function DirectListingPage({ params }: Props) {
 
             {/* Operating Hours Card */}
             <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 shadow-xs">
-              <h3 className="font-serif text-base font-bold text-gray-950 flex items-center gap-1.5">
-                <span>⏰</span>
-                <span>Operating Schedule</span>
-              </h3>
-              <div className="mt-4 divide-y divide-gray-100 text-xs">
-                {daysOfWeek.map((day, idx) => {
-                  const schedule = hours?.find((h) => h.day_of_week === idx);
-                  return (
-                    <div key={day} className="flex items-center justify-between py-2">
-                      <span className="font-medium text-gray-700">{day}</span>
-                      <span className="text-gray-500 font-semibold">
-                        {!schedule || schedule.is_closed ? (
-                          <span className="text-red-600">Closed</span>
-                        ) : schedule.is_24_hours ? (
-                          <span className="text-emerald-700">Open 24 Hours</span>
-                        ) : (
-                          `${schedule.open_time || "09:00"} - ${schedule.close_time || "18:00"}`
-                        )}
-                      </span>
-                    </div>
-                  );
-                })}
+              <div className="flex items-center justify-between">
+                <h3 className="font-serif text-base font-bold text-gray-950 flex items-center gap-1.5">
+                  <span>⏰</span>
+                  <span>Operating Schedule</span>
+                </h3>
+                {placeDetails.isOpenNow !== undefined && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    placeDetails.isOpenNow ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                  }`}>
+                    {placeDetails.isOpenNow ? "Open" : "Closed"}
+                  </span>
+                )}
               </div>
+
+              {/* Show Google Verified Opening Hours if present */}
+              {placeDetails.openingHoursText && placeDetails.openingHoursText.length > 0 ? (
+                <div className="mt-4 divide-y divide-gray-100 text-xs">
+                  {placeDetails.openingHoursText.map((dayLine: string, idx: number) => {
+                    const [dayName, ...timeRest] = dayLine.split(":");
+                    const timeStr = timeRest.join(":").trim();
+                    return (
+                      <div key={idx} className="flex items-center justify-between py-2">
+                        <span className="font-medium text-gray-700">{dayName}</span>
+                        <span className="text-gray-600 font-semibold">{timeStr}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 divide-y divide-gray-100 text-xs">
+                  {daysOfWeek.map((day, idx) => {
+                    const schedule = hours?.find((h: any) => h.day_of_week === idx);
+                    return (
+                      <div key={day} className="flex items-center justify-between py-2">
+                        <span className="font-medium text-gray-700">{day}</span>
+                        <span className="text-gray-500 font-semibold">
+                          {!schedule || schedule.is_closed ? (
+                            <span className="text-red-600">Closed</span>
+                          ) : schedule.is_24_hours ? (
+                            <span className="text-emerald-700">Open 24 Hours</span>
+                          ) : (
+                            `${schedule.open_time || "09:00"} - ${schedule.close_time || "18:00"}`
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Claim Card */}
@@ -600,54 +653,43 @@ export default async function DirectListingPage({ params }: Props) {
               </p>
               <Link
                 href={`/listing/${listing.slug}/claim`}
-                className="mt-4 inline-block rounded-full bg-[#e26a4f] px-5 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#d8583c] transition-colors"
+                className="mt-4 inline-block w-full rounded-xl bg-gray-900 py-2.5 text-xs font-bold text-white hover:bg-black transition-colors"
               >
-                Claim This Listing
+                Claim Listing Profile →
               </Link>
             </div>
           </div>
         </section>
       </main>
 
-      {/* FIXED MOBILE BOTTOM ACTION DOCK */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3.5 py-2.5 flex items-center justify-between gap-2 lg:hidden shadow-lg">
+      {/* Floating Bottom Quick-Action Bar for Mobile Devices */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-md p-3 sm:hidden flex items-center justify-between gap-2 shadow-lg">
+        {listing.phone && (
+          <a
+            href={`tel:${listing.phone}`}
+            className="flex-1 rounded-xl bg-gray-900 py-2.5 text-center text-xs font-bold text-white shadow-xs"
+          >
+            Call 📞
+          </a>
+        )}
         {whatsappUrl && (
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-transform"
+            className="flex-1 rounded-xl bg-emerald-600 py-2.5 text-center text-xs font-bold text-white shadow-xs"
           >
-            <span>💬</span>
-            <span>WhatsApp</span>
+            WhatsApp 💬
           </a>
         )}
-        {listing.phone && (
-          <a
-            href={`tel:${listing.phone}`}
-            className="flex-1 py-2.5 rounded-xl bg-gray-900 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-transform"
-          >
-            <span>📞</span>
-            <span>Call</span>
-          </a>
-        )}
-        <a
-          href={uberRideUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="flex-1 py-2.5 rounded-xl bg-black text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-transform"
-        >
-          <span>🚕</span>
-          <span>Uber</span>
-        </a>
         {listing.latitude && listing.longitude && (
           <a
             href={`https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`}
             target="_blank"
             rel="noreferrer"
-            className="py-2.5 px-3.5 rounded-xl bg-gray-100 text-gray-800 font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition-transform"
+            className="flex-1 rounded-xl bg-[#e26a4f] py-2.5 text-center text-xs font-bold text-white shadow-xs"
           >
-            <span>🧭</span>
+            Navigate 🧭
           </a>
         )}
       </div>

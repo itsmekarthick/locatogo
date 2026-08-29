@@ -1080,7 +1080,7 @@ export function ModernDirectoryExplorer({
             </div>
 
             <p className="text-gray-400">
-              © 2024 locatogo. All rights reserved.
+              © 2026 locatogo. All rights reserved.
             </p>
           </div>
         </footer>
