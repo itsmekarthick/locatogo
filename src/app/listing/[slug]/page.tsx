@@ -24,24 +24,32 @@ type Props = {
 async function getListing(params: Promise<{ slug: string }>) {
   const { slug } = await params;
   const cleanSlug = decodeURIComponent(slug).trim().toLowerCase();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanSlug);
+
   const supabase = await createSupabaseServerClient();
 
-  const { data: listing } = await supabase
+  let query = supabase
     .from("listings")
-    .select("*, categories(name, slug)")
-    .ilike("slug", cleanSlug)
-    .single();
+    .select("*, categories:categories!listings_category_id_domain_id_fkey(name, slug)");
+
+  if (isUuid) {
+    query = query.or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug},id.eq.${cleanSlug}`);
+  } else {
+    query = query.or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug}`);
+  }
+
+  const { data: listing } = await query.limit(1).maybeSingle();
 
   if (!listing) return null;
 
   const [{ data: hours }, { data: links }, { data: media }, placeDetails, weather] =
     await Promise.all([
       supabase
-        .from("business_hours")
+        .from("listing_hours")
         .select("*")
         .eq("listing_id", listing.id)
         .order("day_of_week", { ascending: true }),
-      supabase.from("social_links").select("*").eq("listing_id", listing.id),
+      supabase.from("listing_social_links").select("*").eq("listing_id", listing.id),
       supabase
         .from("listing_media")
         .select("*")
@@ -75,14 +83,20 @@ export default async function ListingDetailPage({ params }: Props) {
 
   // Generate Authentic Editorial Overview and Highlights
   const categoryName = (listing.categories as any)?.name ?? "Place";
-  const aboutData = getComprehensiveAboutText(listing.title, categoryName, listing.locality, listing.short_description, listing.description);
+  const aboutData = getComprehensiveAboutText(
+    listing.title,
+    categoryName,
+    listing.locality,
+    listing.short_description,
+    listing.description
+  );
 
   // High-Resolution Authentic Photos
   const displayPhotos =
     placeDetails.photos.length > 0
       ? placeDetails.photos
       : (media ?? []).map((m: any) => ({
-          url: m.url,
+          url: m.public_url || m.url,
           alt: m.alt_text || listing.title,
           caption: m.caption || listing.title,
           source: "curated" as const,
@@ -101,11 +115,19 @@ export default async function ListingDetailPage({ params }: Props) {
     listing.title,
     listing.locality
   );
-  const whatsappUrl = listing.phone
-    ? generateWhatsAppInquiryLink(listing.phone, listing.title, categoryName)
-    : null;
+  const whatsappUrl = generateWhatsAppInquiryLink(
+    listing.whatsapp || listing.phone,
+    listing.title,
+    categoryName
+  );
 
-  const address = [listing.address_line1, listing.locality, listing.city, listing.postal_code]
+  const address = [
+    listing.address_line_1,
+    listing.address_line_2,
+    listing.locality,
+    listing.city,
+    listing.postal_code,
+  ]
     .filter(Boolean)
     .join(", ");
 
@@ -123,7 +145,7 @@ export default async function ListingDetailPage({ params }: Props) {
     description: listing.short_description ?? listing.description,
     address: {
       "@type": "PostalAddress",
-      streetAddress: listing.address_line1,
+      streetAddress: listing.address_line_1,
       addressLocality: listing.locality,
       addressRegion: listing.city,
       postalCode: listing.postal_code,
