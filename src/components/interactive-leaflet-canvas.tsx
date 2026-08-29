@@ -107,43 +107,67 @@ const userLocationIcon = L.divIcon({
 });
 
 /**
- * Strict 1-step Mousewheel / Trackpad Zoom Handler with Gesture Cooldown
- * Ensures each flick changes zoom by exactly 1 step without multi-level jumps
+ * Strict Inertia-Locked 1-Step Mousewheel & Trackpad Zoom Handler
+ * Intercepts all wheel events before Leaflet or browser sees them
+ * Guarantees that an entire scroll flick only triggers EXACTLY 1 zoom step
  */
-function StrictSingleStepWheelZoom() {
+function StrictSingleStepWheelZoom({
+  onZoomChange,
+}: {
+  onZoomChange?: (zoomIn: () => void, zoomOut: () => void) => void;
+}) {
   const map = useMap();
 
   useEffect(() => {
-    let isThrottled = false;
-    let timeoutId: any = null;
+    if (onZoomChange) {
+      onZoomChange(
+        () => map.zoomIn(1, { animate: true }),
+        () => map.zoomOut(1, { animate: true })
+      );
+    }
+  }, [map, onZoomChange]);
+
+  useEffect(() => {
+    // Disable Leaflet's built-in wheel handler completely
+    if (map.scrollWheelZoom) {
+      map.scrollWheelZoom.disable();
+    }
+
+    let gestureLocked = false;
+    let inertiaResetTimer: any = null;
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      if (isThrottled) return;
-      isThrottled = true;
+      // Refresh the cooldown timer as long as trackpad/wheel inertia is spinning
+      if (inertiaResetTimer) {
+        clearTimeout(inertiaResetTimer);
+      }
+      inertiaResetTimer = setTimeout(() => {
+        gestureLocked = false;
+      }, 450);
 
-      const currentZoom = map.getZoom();
-      if (e.deltaY < 0) {
-        // Zoom in by exactly 1 step
-        map.setZoom(Math.min(currentZoom + 1, 18), { animate: true });
-      } else if (e.deltaY > 0) {
-        // Zoom out by exactly 1 step
-        map.setZoom(Math.max(currentZoom - 1, 10), { animate: true });
+      // If already zoomed for this gesture flick, discard all inertia sub-events
+      if (gestureLocked) {
+        return;
       }
 
-      timeoutId = setTimeout(() => {
-        isThrottled = false;
-      }, 350);
+      gestureLocked = true;
+
+      if (e.deltaY < 0) {
+        map.zoomIn(1, { animate: true });
+      } else if (e.deltaY > 0) {
+        map.zoomOut(1, { animate: true });
+      }
     };
 
     const container = map.getContainer();
-    container.addEventListener("wheel", handleWheel, { passive: false });
+    container.addEventListener("wheel", handleWheel, { passive: false, capture: true });
 
     return () => {
-      container.removeEventListener("wheel", handleWheel);
-      if (timeoutId) clearTimeout(timeoutId);
+      container.removeEventListener("wheel", handleWheel, { capture: true });
+      if (inertiaResetTimer) clearTimeout(inertiaResetTimer);
     };
   }, [map]);
 
@@ -366,6 +390,9 @@ export default function InteractiveLeafletCanvas({
   initialPerspective?: "street" | "satellite";
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const zoomInRef = useRef<(() => void) | null>(null);
+  const zoomOutRef = useRef<(() => void) | null>(null);
+
   const [mapStyle, setMapStyle] = useState<"street" | "satellite">(
     initialPerspective === "satellite" ? "satellite" : "street"
   );
@@ -383,6 +410,11 @@ export default function InteractiveLeafletCanvas({
 
   const currentTiles = MAP_LAYERS[mapStyle];
 
+  const handleRegisterZoomFunctions = useCallback((zoomIn: () => void, zoomOut: () => void) => {
+    zoomInRef.current = zoomIn;
+    zoomOutRef.current = zoomOut;
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -396,7 +428,7 @@ export default function InteractiveLeafletCanvas({
         className="h-full w-full z-0"
       >
         <TileLayer attribution={currentTiles.attribution} url={currentTiles.url} />
-        <StrictSingleStepWheelZoom />
+        <StrictSingleStepWheelZoom onZoomChange={handleRegisterZoomFunctions} />
         <MapUpdater
           located={locatedListings}
           activePlace={activePlace}
@@ -426,7 +458,7 @@ export default function InteractiveLeafletCanvas({
         />
       </MapContainer>
 
-      {/* Top Floating Map Layer Switcher: Street vs Satellite */}
+      {/* Top Floating Map Layer & Zoom Switcher */}
       <div className="absolute top-4 right-4 z-[400] flex items-center gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md p-1 border border-gray-200/90 shadow-xl text-xs font-semibold">
         <button
           onClick={() => setMapStyle("street")}
@@ -451,6 +483,24 @@ export default function InteractiveLeafletCanvas({
           <span>🛰️</span>
           <span>Satellite</span>
         </button>
+
+        {/* Explicit 1-Step Click Zoom Buttons */}
+        <div className="flex items-center border-l border-gray-200 pl-1.5 gap-1">
+          <button
+            onClick={() => zoomInRef.current?.()}
+            title="Zoom In (1 Step)"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-900 font-bold text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            +
+          </button>
+          <button
+            onClick={() => zoomOutRef.current?.()}
+            title="Zoom Out (1 Step)"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-900 font-bold text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+          >
+            −
+          </button>
+        </div>
 
         {onToggleFullscreen && (
           <button
