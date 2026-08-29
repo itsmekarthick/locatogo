@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { DM_Sans, Space_Grotesk } from "next/font/google";
+import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
 const bodyFont = DM_Sans({
@@ -8,17 +8,17 @@ const bodyFont = DM_Sans({
   subsets: ["latin"],
 });
 
-const displayFont = Space_Grotesk({
+const displayFont = Playfair_Display({
   variable: "--font-display",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  title: "Mapora | Directories with a sense of place",
-  description: "A global directory and interactive map platform.",
+  title: "Locatogo | Directories with a sense of place",
+  description: "A directory and interactive map platform for discovering places, schools, and hospitals.",
   alternates: { canonical: "/" },
-  openGraph: { title: "Mapora | Directories with a sense of place", description: "A global directory and interactive map platform.", type: "website" },
+  openGraph: { title: "Locatogo | Directories with a sense of place", description: "A global directory and interactive map platform.", type: "website" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

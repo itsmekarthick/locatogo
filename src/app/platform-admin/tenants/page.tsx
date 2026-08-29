@@ -16,13 +16,13 @@ export default async function PlatformTenantsPage() {
           Registered Tenants
         </h1>
         <p className="mt-2 text-sm text-[var(--ink-muted)]">
-          Inspect, audit, and monitor all organization workspaces on the Mapora platform.
+          Inspect, audit, and monitor all organization workspaces on the Locatogo platform.
         </p>
       </div>
 
       <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
         <h2 className="font-display text-lg font-bold text-[var(--foreground)] mb-1">Tenant Workspaces</h2>
-        <p className="mb-6 text-xs text-[var(--ink-muted)]">All organization accounts active on the Mapora platform.</p>
+        <p className="mb-6 text-xs text-[var(--ink-muted)]">All organization accounts active on the Locatogo platform.</p>
 
         <PlatformTenantsList tenants={tenants ?? []} />
       </div>

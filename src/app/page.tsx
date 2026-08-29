@@ -7,7 +7,7 @@ import {
 } from "@/components/modern-directory-explorer";
 
 export const metadata: Metadata = {
-  title: "Explore Places & Map Directory | Mapora",
+  title: "Explore Places & Map Directory | Locatogo",
   description: "Live interactive map and location-based directory.",
 };
 

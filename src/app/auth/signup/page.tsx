@@ -9,7 +9,7 @@ export default function SignupPage() {
         {/* Brand Header */}
         <div className="text-center">
           <Link href="/" className="font-display text-2xl font-bold tracking-tight text-[var(--foreground)]">
-            mapora<span className="text-[var(--coral)]">.</span>
+            locatogo<span className="text-[var(--coral)]">.</span>
           </Link>
           <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[var(--ink-muted)]">Directory Platform</p>
         </div>

@@ -3,26 +3,100 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
-import { getMapTileConfiguration } from "@/lib/map/provider";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import Supercluster from "supercluster";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 
-const defaultIcon = L.divIcon({
-  className: "mapora-marker",
-  html: "<span></span>",
-  iconSize: [26, 26],
-  iconAnchor: [13, 13],
-  popupAnchor: [0, -14],
-});
+const MAP_LAYERS = {
+  street: {
+    url: process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    attribution: "&copy; Esri, Maxar, Earthstar Geographics",
+  },
+};
 
-const activeIcon = L.divIcon({
-  className: "mapora-marker is-active",
-  html: "<span></span>",
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-  popupAnchor: [0, -18],
-});
+function getCategoryMarkerIcon(categoryName?: string | null, isSelected?: boolean) {
+  const cat = (categoryName || "").toLowerCase();
+  let colorClass = "marker-default";
+  let iconHtml = "<span></span>";
+
+  if (
+    cat.includes("hospital") ||
+    cat.includes("health") ||
+    cat.includes("clinic") ||
+    cat.includes("medical") ||
+    cat.includes("care")
+  ) {
+    colorClass = "marker-hospital";
+    iconHtml = '<span style="font-size: 11px; line-height: 1;">➕</span>';
+  } else if (
+    cat.includes("school") ||
+    cat.includes("education") ||
+    cat.includes("college") ||
+    cat.includes("academy") ||
+    cat.includes("institute")
+  ) {
+    colorClass = "marker-school";
+    iconHtml = '<span style="font-size: 11px; line-height: 1;">🎓</span>';
+  } else if (
+    cat.includes("cafe") ||
+    cat.includes("restaurant") ||
+    cat.includes("food") ||
+    cat.includes("dine") ||
+    cat.includes("bakery")
+  ) {
+    colorClass = "marker-food";
+    iconHtml = '<span style="font-size: 11px; line-height: 1;">🍽️</span>';
+  } else if (
+    cat.includes("tech") ||
+    cat.includes("cowork") ||
+    cat.includes("startup") ||
+    cat.includes("hub")
+  ) {
+    colorClass = "marker-tech";
+    iconHtml = '<span style="font-size: 11px; line-height: 1;">💻</span>';
+  } else if (
+    cat.includes("retail") ||
+    cat.includes("shop") ||
+    cat.includes("store") ||
+    cat.includes("market")
+  ) {
+    colorClass = "marker-retail";
+    iconHtml = '<span style="font-size: 11px; line-height: 1;">🏬</span>';
+  } else if (
+    cat.includes("art") ||
+    cat.includes("creative") ||
+    cat.includes("design") ||
+    cat.includes("theatre") ||
+    cat.includes("culture")
+  ) {
+    colorClass = "marker-arts";
+    iconHtml = '<span style="font-size: 11px; line-height: 1;">🎨</span>';
+  } else if (
+    cat.includes("petrol") ||
+    cat.includes("fuel") ||
+    cat.includes("bunk") ||
+    cat.includes("pump") ||
+    cat.includes("gas")
+  ) {
+    colorClass = "marker-fuel";
+    iconHtml = '<span style="font-size: 11px; line-height: 1;">⛽</span>';
+  }
+
+  const size = isSelected ? 34 : 28;
+
+  return L.divIcon({
+    className: `mapora-marker ${colorClass} ${isSelected ? "is-active" : ""}`,
+    html: iconHtml,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -(size / 2 + 4)],
+  });
+}
 
 const userLocationIcon = L.divIcon({
   className: "user-location-marker",
@@ -39,34 +113,185 @@ function MapUpdater({
   flyToUserTrigger,
 }: {
   located: (PlaceListing & { latitude: number; longitude: number })[];
-  activePlace: PlaceListing | null;
+  activePlace: (PlaceListing & { latitude: number; longitude: number }) | null;
   userLocation: { lat: number; lng: number } | null;
   flyToUserTrigger: number;
 }) {
   const map = useMap();
+  const prevActiveIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (flyToUserTrigger > 0 && userLocation) {
-      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1 });
-      return;
+      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.5 });
     }
+  }, [flyToUserTrigger, userLocation, map]);
 
-    if (activePlace && activePlace.latitude && activePlace.longitude) {
-      map.flyTo([activePlace.latitude, activePlace.longitude], 15, { duration: 0.8 });
-    } else if (located.length === 1) {
-      map.flyTo([located[0].latitude, located[0].longitude], 14, { duration: 0.8 });
-    } else if (located.length > 1) {
-      const bounds = L.latLngBounds(located.map((l) => [l.latitude, l.longitude]));
-      if (userLocation) {
-        bounds.extend([userLocation.lat, userLocation.lng]);
-      }
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-    } else if (userLocation) {
-      map.flyTo([userLocation.lat, userLocation.lng], 13, { duration: 1 });
+  useEffect(() => {
+    if (activePlace && activePlace.id !== prevActiveIdRef.current) {
+      prevActiveIdRef.current = activePlace.id;
+      map.flyTo([activePlace.latitude, activePlace.longitude], 15, { duration: 1.2 });
     }
-  }, [located, activePlace, userLocation, flyToUserTrigger, map]);
+  }, [activePlace, map]);
+
+  useEffect(() => {
+    if (!activePlace && located.length > 0 && flyToUserTrigger === 0) {
+      if (located.length === 1) {
+        map.setView([located[0].latitude, located[0].longitude], 14);
+      } else {
+        const bounds = L.latLngBounds(located.map((l) => [l.latitude, l.longitude]));
+        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+      }
+    }
+  }, [located, activePlace, flyToUserTrigger, map]);
 
   return null;
+}
+
+function ClusteredMarkersLayer({
+  locatedListings,
+  activePlaceId,
+  setActivePlaceId,
+}: {
+  locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
+  activePlaceId: string | null;
+  setActivePlaceId: (id: string | null) => void;
+}) {
+  const map = useMap();
+  const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
+  const [zoom, setZoom] = useState<number>(map.getZoom());
+
+  const updateBounds = useCallback(() => {
+    const b = map.getBounds();
+    setBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
+    setZoom(map.getZoom());
+  }, [map]);
+
+  useMapEvents({
+    moveend: updateBounds,
+    zoomend: updateBounds,
+  });
+
+  useEffect(() => {
+    updateBounds();
+  }, [updateBounds]);
+
+  const supercluster = useMemo(() => {
+    const sc = new Supercluster({
+      radius: 45,
+      maxZoom: 16,
+      minPoints: 2,
+    });
+
+    const points: Array<GeoJSON.Feature<GeoJSON.Point, PlaceListing & { latitude: number; longitude: number }>> =
+      locatedListings.map((listing) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [listing.longitude, listing.latitude],
+        },
+        properties: listing,
+      }));
+
+    sc.load(points);
+    return sc;
+  }, [locatedListings]);
+
+  const clusters = useMemo(() => {
+    if (!bounds) return [];
+    try {
+      return supercluster.getClusters(bounds, Math.floor(zoom));
+    } catch {
+      return [];
+    }
+  }, [supercluster, bounds, zoom]);
+
+  return (
+    <>
+      {clusters.map((cluster) => {
+        const [longitude, latitude] = cluster.geometry.coordinates;
+        const { cluster: isCluster, point_count: pointCount } = cluster.properties as {
+          cluster?: boolean;
+          point_count?: number;
+        };
+
+        if (isCluster && pointCount) {
+          const clusterIcon = L.divIcon({
+            className: "mapora-cluster-marker",
+            html: `<span>${pointCount}</span>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],
+          });
+
+          return (
+            <Marker
+              key={`cluster-${cluster.id}`}
+              position={[latitude, longitude]}
+              icon={clusterIcon}
+              eventHandlers={{
+                click: () => {
+                  const expansionZoom = Math.min(
+                    supercluster.getClusterExpansionZoom(cluster.id as number),
+                    17
+                  );
+                  map.setView([latitude, longitude], expansionZoom, { animate: true });
+                },
+              }}
+            />
+          );
+        }
+
+        const place = cluster.properties as PlaceListing & { latitude: number; longitude: number };
+        const isSelected = activePlaceId === place.id;
+        const icon = getCategoryMarkerIcon(place.category_name, isSelected);
+
+        return (
+          <Marker
+            key={`place-${place.id}`}
+            position={[place.latitude, place.longitude]}
+            icon={icon}
+            eventHandlers={{
+              click: () => setActivePlaceId(place.id),
+            }}
+          >
+            <Popup className="mapora-popup">
+              <div className="p-1 max-w-[220px]">
+                {place.category_name && (
+                  <span className="mb-1 inline-block rounded-full bg-[var(--leaf)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--leaf-dark)]">
+                    {place.category_name}
+                  </span>
+                )}
+                <h4 className="font-semibold text-sm text-[var(--foreground)]">{place.title}</h4>
+                <p className="text-xs text-[var(--ink-muted)] mt-0.5">
+                  📍 {[place.locality, place.city].filter(Boolean).join(", ")}
+                </p>
+                {place.short_description && (
+                  <p className="text-xs text-[var(--ink-muted)] mt-1.5 line-clamp-2">
+                    {place.short_description}
+                  </p>
+                )}
+                <div className="mt-3 pt-2 border-t border-[var(--line)] flex items-center justify-between">
+                  <Link
+                    href={`/listing/${place.slug}`}
+                    className="text-xs font-bold text-[var(--coral)] hover:underline"
+                  >
+                    View place →
+                  </Link>
+                  {place.phone && (
+                    <a
+                      href={`tel:${place.phone}`}
+                      className="text-xs text-[var(--ink-muted)] hover:text-[var(--foreground)]"
+                    >
+                      📞 Call
+                    </a>
+                  )}
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
+    </>
+  );
 }
 
 export default function InteractiveLeafletCanvas({
@@ -76,6 +301,9 @@ export default function InteractiveLeafletCanvas({
   userLocation,
   onLocateMe,
   flyToUserTrigger = 0,
+  onToggleFullscreen,
+  isFullscreen = false,
+  initialPerspective = "street",
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
@@ -83,8 +311,15 @@ export default function InteractiveLeafletCanvas({
   userLocation?: { lat: number; lng: number } | null;
   onLocateMe?: () => void;
   flyToUserTrigger?: number;
+  onToggleFullscreen?: () => void;
+  isFullscreen?: boolean;
+  initialPerspective?: "street" | "satellite";
 }) {
-  const tiles = getMapTileConfiguration();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mapStyle, setMapStyle] = useState<"street" | "satellite">(
+    initialPerspective === "satellite" ? "satellite" : "street"
+  );
+
   const activePlace = useMemo(
     () => (activePlaceId ? locatedListings.find((p) => p.id === activePlaceId) ?? null : null),
     [activePlaceId, locatedListings]
@@ -94,17 +329,22 @@ export default function InteractiveLeafletCanvas({
     ? [userLocation.lat, userLocation.lng]
     : locatedListings.length
     ? [locatedListings[0].latitude, locatedListings[0].longitude]
-    : [12.7985, 77.7032]; // Chandapura Bangalore default
+    : [12.9716, 77.5946];
+
+  const currentTiles = MAP_LAYERS[mapStyle];
 
   return (
-    <div className="relative h-full w-full">
+    <div
+      ref={containerRef}
+      className="relative h-full w-full overflow-hidden bg-gray-900 select-none"
+    >
       <MapContainer
         center={initialCenter}
         zoom={locatedListings.length ? 13 : 12}
         scrollWheelZoom={true}
         className="h-full w-full z-0"
       >
-        <TileLayer attribution={tiles.attribution} url={tiles.urlTemplate} />
+        <TileLayer attribution={currentTiles.attribution} url={currentTiles.url} />
         <MapUpdater
           located={locatedListings}
           activePlace={activePlace}
@@ -119,79 +359,73 @@ export default function InteractiveLeafletCanvas({
               <div className="p-1 text-center font-sans">
                 <span className="font-bold text-xs text-blue-700">📍 You Are Here</span>
                 <p className="text-[10px] text-[var(--ink-muted)] mt-0.5">
-                  Showing nearby places in Chandapura & Bangalore
+                  Showing nearby places in Bangalore
                 </p>
               </div>
             </Popup>
           </Marker>
         )}
 
-        {/* Listing Place Markers */}
-        {locatedListings.map((place) => {
-          const isSelected = activePlaceId === place.id;
-          return (
-            <Marker
-              key={place.id}
-              position={[place.latitude, place.longitude]}
-              icon={isSelected ? activeIcon : defaultIcon}
-              eventHandlers={{
-                click: () => setActivePlaceId(place.id),
-              }}
-            >
-              <Popup className="mapora-popup">
-                <div className="p-1 max-w-[220px]">
-                  {place.category_name && (
-                    <span className="mb-1 inline-block rounded-full bg-[var(--leaf)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--leaf-dark)]">
-                      {place.category_name}
-                    </span>
-                  )}
-                  <h4 className="font-semibold text-sm text-[var(--foreground)]">{place.title}</h4>
-                  <p className="text-xs text-[var(--ink-muted)] mt-0.5">
-                    📍 {[place.locality, place.city].filter(Boolean).join(", ")}
-                  </p>
-                  {place.short_description && (
-                    <p className="text-xs text-[var(--ink-muted)] mt-1.5 line-clamp-2">
-                      {place.short_description}
-                    </p>
-                  )}
-                  <div className="mt-3 pt-2 border-t border-[var(--line)] flex items-center justify-between">
-                    <Link
-                      href={`/listing/${place.slug}`}
-                      className="text-xs font-bold text-[var(--coral)] hover:underline"
-                    >
-                      View place →
-                    </Link>
-                    {place.phone && (
-                      <a
-                        href={`tel:${place.phone}`}
-                        className="text-xs text-[var(--ink-muted)] hover:text-[var(--foreground)]"
-                      >
-                        📞 Call
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+        {/* Clustered Place Markers for ALL locations in Bangalore */}
+        <ClusteredMarkersLayer
+          locatedListings={locatedListings}
+          activePlaceId={activePlaceId}
+          setActivePlaceId={setActivePlaceId}
+        />
       </MapContainer>
 
-      {/* Floating Action Controls on Map */}
-      <div className="absolute bottom-5 right-5 z-[400] flex items-center gap-2">
+      {/* Top Floating Map Layer Switcher: Street vs Satellite */}
+      <div className="absolute top-4 right-4 z-[400] flex items-center gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md p-1 border border-gray-200/90 shadow-xl text-xs font-semibold">
+        <button
+          onClick={() => setMapStyle("street")}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+            mapStyle === "street"
+              ? "bg-gray-950 text-white font-bold shadow-xs"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <span>🗺️</span>
+          <span>Street</span>
+        </button>
+
+        <button
+          onClick={() => setMapStyle("satellite")}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+            mapStyle === "satellite"
+              ? "bg-[#e26a4f] text-white font-bold shadow-xs"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <span>🛰️</span>
+          <span>Satellite</span>
+        </button>
+
+        {onToggleFullscreen && (
+          <button
+            onClick={onToggleFullscreen}
+            title={isFullscreen ? "Exit Full Screen Map" : "Full Screen Map"}
+            className="border-l border-gray-200 pl-2 pr-1 text-gray-600 hover:text-gray-950 text-xs font-bold cursor-pointer"
+          >
+            {isFullscreen ? "✕" : "⛶"}
+          </button>
+        )}
+      </div>
+
+      {/* Floating Action Controls on Map (Bottom-Right) */}
+      <div className="absolute bottom-5 right-5 z-[400] flex items-center gap-2 pointer-events-auto">
         {onLocateMe && (
           <button
             onClick={onLocateMe}
             title="Auto-detect & Center on My Location"
-            className="flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--paper)]/95 px-3.5 py-2 text-xs font-bold text-[var(--foreground)] shadow-lg backdrop-blur-md hover:bg-[var(--background)] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-lg backdrop-blur-md hover:bg-gray-50 transition-all cursor-pointer"
           >
             <span>🎯</span>
             <span className="hidden sm:inline">My Location</span>
           </button>
         )}
 
-        <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--paper)]/95 px-3.5 py-2 text-xs font-semibold shadow-lg backdrop-blur-md">
-          <span className="h-2.5 w-2.5 rounded-full bg-[var(--coral)] animate-pulse" />
+        <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-semibold text-gray-800 shadow-lg backdrop-blur-md">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#e26a4f] animate-pulse" />
           <span>
             {locatedListings.length} {locatedListings.length === 1 ? "place" : "places"}
           </span>

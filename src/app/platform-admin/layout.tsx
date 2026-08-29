@@ -14,7 +14,7 @@ export default function PlatformAdminLayout({ children }: Readonly<{ children: R
         <div>
           <div className="flex items-center justify-between">
             <Link href="/" className="font-display text-xl font-bold tracking-tight text-white">
-              mapora<span className="text-[var(--coral)]">.</span>
+              locatogo<span className="text-[var(--coral)]">.</span>
             </Link>
             <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--yellow)]">
               Super Admin

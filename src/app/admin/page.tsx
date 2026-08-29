@@ -194,7 +194,7 @@ export default async function AdminPage() {
               Curate with precision.
             </h3>
             <p className="mt-3 text-xs leading-6 text-[var(--ink-muted)]">
-              Mapora lets you power multiple specialized directories with independent branding, categories, custom fields, and monetization rules under one workspace.
+              Locatogo lets you power multiple specialized directories with independent branding, categories, custom fields, and monetization rules under one workspace.
             </p>
           </div>
 

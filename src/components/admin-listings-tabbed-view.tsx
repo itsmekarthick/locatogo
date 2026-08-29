@@ -90,7 +90,7 @@ export function AdminListingsTabbedView({
                 : "border border-[var(--line)] bg-[var(--paper)] text-[var(--ink-muted)] hover:text-[var(--foreground)]"
             }`}
           >
-            🌐 All Places ({listings.length})
+            🌐 All Places
           </button>
 
           {categories.map((cat) => {
@@ -112,7 +112,7 @@ export function AdminListingsTabbedView({
                     : "border border-[var(--line)] bg-[var(--paper)] text-[var(--ink-muted)] hover:text-[var(--foreground)]"
                 }`}
               >
-                {icon} {cat.name} ({categoryCounts[cat.id] || 0})
+                {icon} {cat.name}
               </button>
             );
           })}
