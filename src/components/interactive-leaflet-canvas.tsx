@@ -119,6 +119,8 @@ function MapUpdater({
 }) {
   const map = useMap();
   const prevActiveIdRef = useRef<string | null>(null);
+  const prevCountRef = useRef<number>(-1);
+  const isInitializedRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (flyToUserTrigger > 0 && userLocation) {
@@ -133,13 +135,18 @@ function MapUpdater({
     }
   }, [activePlace, map]);
 
+  // Fit bounds ONLY when filter list count changes or upon first mount
   useEffect(() => {
     if (!activePlace && located.length > 0 && flyToUserTrigger === 0) {
-      if (located.length === 1) {
-        map.setView([located[0].latitude, located[0].longitude], 14);
-      } else {
-        const bounds = L.latLngBounds(located.map((l) => [l.latitude, l.longitude]));
-        map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+      if (!isInitializedRef.current || prevCountRef.current !== located.length) {
+        isInitializedRef.current = true;
+        prevCountRef.current = located.length;
+        if (located.length === 1) {
+          map.setView([located[0].latitude, located[0].longitude], 14);
+        } else {
+          const bounds = L.latLngBounds(located.map((l) => [l.latitude, l.longitude]));
+          map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+        }
       }
     }
   }, [located, activePlace, flyToUserTrigger, map]);
@@ -229,11 +236,11 @@ function ClusteredMarkersLayer({
               icon={clusterIcon}
               eventHandlers={{
                 click: () => {
-                  const expansionZoom = Math.min(
-                    supercluster.getClusterExpansionZoom(cluster.id as number),
-                    17
+                  const targetZoom = Math.min(
+                    map.getZoom() + 2,
+                    supercluster.getClusterExpansionZoom(cluster.id as number) || 16
                   );
-                  map.setView([latitude, longitude], expansionZoom, { animate: true });
+                  map.flyTo([latitude, longitude], targetZoom, { duration: 0.6 });
                 },
               }}
             />
@@ -342,6 +349,10 @@ export default function InteractiveLeafletCanvas({
         center={initialCenter}
         zoom={locatedListings.length ? 13 : 12}
         scrollWheelZoom={true}
+        wheelDebounceTime={100}
+        wheelPxPerZoomLevel={120}
+        zoomDelta={1}
+        zoomSnap={1}
         className="h-full w-full z-0"
       >
         <TileLayer attribution={currentTiles.attribution} url={currentTiles.url} />
