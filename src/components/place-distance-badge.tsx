@@ -79,3 +79,5 @@ export function PlaceDistanceBadge({
     </div>
   );
 }
+
+export default PlaceDistanceBadge;
