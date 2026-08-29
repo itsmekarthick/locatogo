@@ -106,6 +106,50 @@ const userLocationIcon = L.divIcon({
   popupAnchor: [0, -20],
 });
 
+/**
+ * Strict 1-step Mousewheel / Trackpad Zoom Handler with Gesture Cooldown
+ * Ensures each flick changes zoom by exactly 1 step without multi-level jumps
+ */
+function StrictSingleStepWheelZoom() {
+  const map = useMap();
+
+  useEffect(() => {
+    let isThrottled = false;
+    let timeoutId: any = null;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isThrottled) return;
+      isThrottled = true;
+
+      const currentZoom = map.getZoom();
+      if (e.deltaY < 0) {
+        // Zoom in by exactly 1 step
+        map.setZoom(Math.min(currentZoom + 1, 18), { animate: true });
+      } else if (e.deltaY > 0) {
+        // Zoom out by exactly 1 step
+        map.setZoom(Math.max(currentZoom - 1, 10), { animate: true });
+      }
+
+      timeoutId = setTimeout(() => {
+        isThrottled = false;
+      }, 350);
+    };
+
+    const container = map.getContainer();
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", handleWheel);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [map]);
+
+  return null;
+}
+
 function MapUpdater({
   located,
   activePlace,
@@ -135,7 +179,6 @@ function MapUpdater({
     }
   }, [activePlace, map]);
 
-  // Fit bounds ONLY when filter list count changes or upon first mount
   useEffect(() => {
     if (!activePlace && located.length > 0 && flyToUserTrigger === 0) {
       if (!isInitializedRef.current || prevCountRef.current !== located.length) {
@@ -348,14 +391,12 @@ export default function InteractiveLeafletCanvas({
       <MapContainer
         center={initialCenter}
         zoom={locatedListings.length ? 13 : 12}
-        scrollWheelZoom={true}
-        wheelDebounceTime={100}
-        wheelPxPerZoomLevel={120}
-        zoomDelta={1}
-        zoomSnap={1}
+        scrollWheelZoom={false}
+        doubleClickZoom={true}
         className="h-full w-full z-0"
       >
         <TileLayer attribution={currentTiles.attribution} url={currentTiles.url} />
+        <StrictSingleStepWheelZoom />
         <MapUpdater
           located={locatedListings}
           activePlace={activePlace}
