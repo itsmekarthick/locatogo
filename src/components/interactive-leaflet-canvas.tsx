@@ -107,9 +107,9 @@ const userLocationIcon = L.divIcon({
 });
 
 /**
- * Strict Inertia-Locked 1-Step Mousewheel & Trackpad Zoom Handler
- * Intercepts all wheel events before Leaflet or browser sees them
- * Guarantees that an entire scroll flick only triggers EXACTLY 1 zoom step
+ * Responsive 1-Notch Wheel Zoom with Instant Feedback
+ * Accumulates delta so each distinct physical mouse notch or trackpad gesture
+ * triggers exactly 1 zoom step with zero lag or runaway jumping
  */
 function StrictSingleStepWheelZoom({
   onZoomChange,
@@ -128,38 +128,44 @@ function StrictSingleStepWheelZoom({
   }, [map, onZoomChange]);
 
   useEffect(() => {
-    // Disable Leaflet's built-in wheel handler completely
     if (map.scrollWheelZoom) {
       map.scrollWheelZoom.disable();
     }
 
-    let gestureLocked = false;
-    let inertiaResetTimer: any = null;
+    let accumulatedDelta = 0;
+    let resetTimer: any = null;
+    let isAnimating = false;
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      // Refresh the cooldown timer as long as trackpad/wheel inertia is spinning
-      if (inertiaResetTimer) {
-        clearTimeout(inertiaResetTimer);
-      }
-      inertiaResetTimer = setTimeout(() => {
-        gestureLocked = false;
-      }, 450);
-
-      // If already zoomed for this gesture flick, discard all inertia sub-events
-      if (gestureLocked) {
-        return;
+      if (resetTimer) {
+        clearTimeout(resetTimer);
       }
 
-      gestureLocked = true;
+      accumulatedDelta += e.deltaY;
 
-      if (e.deltaY < 0) {
-        map.zoomIn(1, { animate: true });
-      } else if (e.deltaY > 0) {
-        map.zoomOut(1, { animate: true });
+      // Threshold: ~90px is standard 1 physical notch on mousewheel
+      if (!isAnimating && Math.abs(accumulatedDelta) >= 90) {
+        isAnimating = true;
+        if (accumulatedDelta < 0) {
+          map.zoomIn(1, { animate: true });
+        } else {
+          map.zoomOut(1, { animate: true });
+        }
+        accumulatedDelta = 0;
+
+        setTimeout(() => {
+          isAnimating = false;
+        }, 180);
       }
+
+      // Reset accumulation 120ms after user stops scrolling
+      resetTimer = setTimeout(() => {
+        accumulatedDelta = 0;
+        isAnimating = false;
+      }, 120);
     };
 
     const container = map.getContainer();
@@ -167,7 +173,7 @@ function StrictSingleStepWheelZoom({
 
     return () => {
       container.removeEventListener("wheel", handleWheel, { capture: true });
-      if (inertiaResetTimer) clearTimeout(inertiaResetTimer);
+      if (resetTimer) clearTimeout(resetTimer);
     };
   }, [map]);
 
