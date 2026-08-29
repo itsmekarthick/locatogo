@@ -108,8 +108,6 @@ const userLocationIcon = L.divIcon({
 
 /**
  * Responsive 1-Notch Wheel Zoom with Instant Feedback
- * Accumulates delta so each distinct physical mouse notch or trackpad gesture
- * triggers exactly 1 zoom step with zero lag or runaway jumping
  */
 function StrictSingleStepWheelZoom({
   onZoomChange,
@@ -146,7 +144,6 @@ function StrictSingleStepWheelZoom({
 
       accumulatedDelta += e.deltaY;
 
-      // Threshold: ~90px is standard 1 physical notch on mousewheel
       if (!isAnimating && Math.abs(accumulatedDelta) >= 90) {
         isAnimating = true;
         if (accumulatedDelta < 0) {
@@ -161,7 +158,6 @@ function StrictSingleStepWheelZoom({
         }, 180);
       }
 
-      // Reset accumulation 120ms after user stops scrolling
       resetTimer = setTimeout(() => {
         accumulatedDelta = 0;
         isAnimating = false;
@@ -176,6 +172,59 @@ function StrictSingleStepWheelZoom({
       if (resetTimer) clearTimeout(resetTimer);
     };
   }, [map]);
+
+  return null;
+}
+
+/**
+ * Robust Location Controller
+ * Directly handles instant smooth flyTo when user clicks "My Location"
+ */
+function LocationController({
+  onLocationFound,
+}: {
+  onLocationFound: (loc: { lat: number; lng: number }) => void;
+}) {
+  const map = useMap();
+
+  const handleLocateMe = useCallback(async () => {
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          onLocationFound(loc);
+          map.flyTo([loc.lat, loc.lng], 15, { duration: 1.5 });
+        },
+        async () => {
+          // Fallback to IP geolocation if browser permission skipped or timing out
+          try {
+            const res = await fetch("https://ipapi.co/json/");
+            if (res.ok) {
+              const data = await res.json();
+              if (data.latitude && data.longitude) {
+                const loc = { lat: data.latitude, lng: data.longitude };
+                onLocationFound(loc);
+                map.flyTo([loc.lat, loc.lng], 14, { duration: 1.5 });
+                return;
+              }
+            }
+          } catch {
+            // Default center on Bangalore
+            map.flyTo([12.9716, 77.5946], 14, { duration: 1.5 });
+          }
+        },
+        { enableHighAccuracy: false, timeout: 6000 }
+      );
+    }
+  }, [map, onLocationFound]);
+
+  // Expose to window for seamless click triggering
+  useEffect(() => {
+    (window as any).__locatogo_locate_me = handleLocateMe;
+    return () => {
+      delete (window as any).__locatogo_locate_me;
+    };
+  }, [handleLocateMe]);
 
   return null;
 }
@@ -198,7 +247,7 @@ function MapUpdater({
 
   useEffect(() => {
     if (flyToUserTrigger > 0 && userLocation) {
-      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.5 });
+      map.flyTo([userLocation.lat, userLocation.lng], 15, { duration: 1.5 });
     }
   }, [flyToUserTrigger, userLocation, map]);
 
@@ -379,6 +428,7 @@ export default function InteractiveLeafletCanvas({
   activePlaceId,
   setActivePlaceId,
   userLocation,
+  setUserLocation,
   onLocateMe,
   flyToUserTrigger = 0,
   onToggleFullscreen,
@@ -389,6 +439,7 @@ export default function InteractiveLeafletCanvas({
   activePlaceId: string | null;
   setActivePlaceId: (id: string | null) => void;
   userLocation?: { lat: number; lng: number } | null;
+  setUserLocation?: (loc: { lat: number; lng: number }) => void;
   onLocateMe?: () => void;
   flyToUserTrigger?: number;
   onToggleFullscreen?: () => void;
@@ -398,6 +449,9 @@ export default function InteractiveLeafletCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<(() => void) | null>(null);
   const zoomOutRef = useRef<(() => void) | null>(null);
+  const [internalUserLocation, setInternalUserLocation] = useState<{ lat: number; lng: number } | null>(
+    userLocation ?? null
+  );
 
   const [mapStyle, setMapStyle] = useState<"street" | "satellite">(
     initialPerspective === "satellite" ? "satellite" : "street"
@@ -408,8 +462,10 @@ export default function InteractiveLeafletCanvas({
     [activePlaceId, locatedListings]
   );
 
-  const initialCenter: [number, number] = userLocation
-    ? [userLocation.lat, userLocation.lng]
+  const effectiveLocation = userLocation ?? internalUserLocation;
+
+  const initialCenter: [number, number] = effectiveLocation
+    ? [effectiveLocation.lat, effectiveLocation.lng]
     : locatedListings.length
     ? [locatedListings[0].latitude, locatedListings[0].longitude]
     : [12.9716, 77.5946];
@@ -420,6 +476,22 @@ export default function InteractiveLeafletCanvas({
     zoomInRef.current = zoomIn;
     zoomOutRef.current = zoomOut;
   }, []);
+
+  const handleLocationFound = useCallback(
+    (loc: { lat: number; lng: number }) => {
+      setInternalUserLocation(loc);
+      if (setUserLocation) setUserLocation(loc);
+    },
+    [setUserLocation]
+  );
+
+  const handleTriggerLocate = () => {
+    if (typeof window !== "undefined" && (window as any).__locatogo_locate_me) {
+      (window as any).__locatogo_locate_me();
+    } else if (onLocateMe) {
+      onLocateMe();
+    }
+  };
 
   return (
     <div
@@ -435,16 +507,17 @@ export default function InteractiveLeafletCanvas({
       >
         <TileLayer attribution={currentTiles.attribution} url={currentTiles.url} />
         <StrictSingleStepWheelZoom onZoomChange={handleRegisterZoomFunctions} />
+        <LocationController onLocationFound={handleLocationFound} />
         <MapUpdater
           located={locatedListings}
           activePlace={activePlace}
-          userLocation={userLocation ?? null}
+          userLocation={effectiveLocation}
           flyToUserTrigger={flyToUserTrigger}
         />
 
         {/* User Location Radar Marker */}
-        {userLocation && (
-          <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
+        {effectiveLocation && (
+          <Marker position={[effectiveLocation.lat, effectiveLocation.lng]} icon={userLocationIcon}>
             <Popup className="mapora-popup">
               <div className="p-1 text-center font-sans">
                 <span className="font-bold text-xs text-blue-700">📍 You Are Here</span>
@@ -521,16 +594,14 @@ export default function InteractiveLeafletCanvas({
 
       {/* Floating Action Controls on Map (Bottom-Right) */}
       <div className="absolute bottom-5 right-5 z-[400] flex items-center gap-2 pointer-events-auto">
-        {onLocateMe && (
-          <button
-            onClick={onLocateMe}
-            title="Auto-detect & Center on My Location"
-            className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-lg backdrop-blur-md hover:bg-gray-50 transition-all cursor-pointer"
-          >
-            <span>🎯</span>
-            <span className="hidden sm:inline">My Location</span>
-          </button>
-        )}
+        <button
+          onClick={handleTriggerLocate}
+          title="Auto-detect & Center on My Location"
+          className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-lg backdrop-blur-md hover:bg-gray-50 transition-all cursor-pointer"
+        >
+          <span className="text-sm">🎯</span>
+          <span className="hidden sm:inline">My Location</span>
+        </button>
 
         <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-semibold text-gray-800 shadow-lg backdrop-blur-md">
           <span className="h-2.5 w-2.5 rounded-full bg-[#e26a4f] animate-pulse" />

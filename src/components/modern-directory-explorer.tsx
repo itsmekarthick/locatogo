@@ -112,7 +112,7 @@ export function ModernDirectoryExplorer({
   const [isLocating, setIsLocating] = useState(false);
   const [flyToUserTrigger, setFlyToUserTrigger] = useState(0);
 
-  // Auto-detect user current location on mount
+  // Auto-detect user current location on mount (with fast fallback)
   const handleLocateMe = useCallback(() => {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       setIsLocating(true);
@@ -123,11 +123,23 @@ export function ModernDirectoryExplorer({
           setIsLocating(false);
           setFlyToUserTrigger((prev) => prev + 1);
         },
-        (err) => {
-          console.log("Geolocation permission skipped or unavailable:", err.message);
+        async () => {
+          try {
+            const res = await fetch("https://ipapi.co/json/");
+            if (res.ok) {
+              const data = await res.json();
+              if (data.latitude && data.longitude) {
+                const loc = { lat: data.latitude, lng: data.longitude };
+                setUserLocation(loc);
+                setFlyToUserTrigger((prev) => prev + 1);
+              }
+            }
+          } catch {
+            // Default center
+          }
           setIsLocating(false);
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
       );
     }
   }, []);
