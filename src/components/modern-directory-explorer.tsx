@@ -7,6 +7,8 @@ import { Pagination } from "@/components/ui/pagination";
 import { generateUberRideLink, generateWhatsAppInquiryLink } from "@/lib/services/transit-links";
 import { Google3DMap } from "@/components/google-3d-map";
 import { FavoriteButton } from "@/components/favorite-button";
+import { PlaceWeatherBadge } from "@/components/place-weather-badge";
+import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
 
 // Dynamically import interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -113,6 +115,34 @@ export function ModernDirectoryExplorer({
   const [isLocating, setIsLocating] = useState(false);
   const [flyToUserTrigger, setFlyToUserTrigger] = useState(0);
   const [locationErrorNotice, setLocationErrorNotice] = useState<string | null>(null);
+
+  // Live Weather & Weather Atmospheric Simulation
+  const [liveWeather, setLiveWeather] = useState<PlaceWeather | null>(null);
+  const [simulatedWeather, setSimulatedWeather] = useState<WeatherType | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchWeather = async () => {
+      try {
+        const lat = userLocation?.lat || (initialListings[0]?.latitude ?? 12.9716);
+        const lng = userLocation?.lng || (initialListings[0]?.longitude ?? 77.5946);
+        const res = await fetch(`/api/weather?lat=${lat}&lng=${lng}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.success && data.weather) {
+            setLiveWeather(data.weather);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch live weather:", err);
+      }
+    };
+
+    fetchWeather();
+    return () => {
+      isMounted = false;
+    };
+  }, [userLocation, initialListings]);
 
   // Handle user clicking 'My Location' with automatic IP Geolocation fallback
   const handleLocateMe = useCallback(() => {
@@ -363,6 +393,16 @@ export function ModernDirectoryExplorer({
               <span className="text-sm">📍</span>
               <span>{domain?.name ? `${domain.name} Atlas` : "Global Atlas"}</span>
             </div>
+            {liveWeather && (
+              <div className="hidden lg:block">
+                <PlaceWeatherBadge
+                  weather={liveWeather}
+                  compact
+                  onSimulateWeather={setSimulatedWeather}
+                  currentSimulated={simulatedWeather}
+                />
+              </div>
+            )}
           </div>
 
           {/* Center: Top Global Search Bar + Neighborhood Dropdown */}
@@ -462,6 +502,7 @@ export function ModernDirectoryExplorer({
               onToggleFullscreen={handleToggleFullscreen}
               isFullscreen={false}
               initialPerspective={viewMode === "3d" ? "satellite" : "street"}
+              weatherType={simulatedWeather || liveWeather?.weatherType}
               onMapClick={(loc) => {
                 setUserLocation(loc);
                 setFlyToUserTrigger((prev) => prev + 1);
@@ -1002,6 +1043,7 @@ export function ModernDirectoryExplorer({
                   flyToUserTrigger={flyToUserTrigger}
                   onToggleFullscreen={handleToggleFullscreen}
                   isFullscreen={false}
+                  weatherType={simulatedWeather || liveWeather?.weatherType}
                   onMapClick={(loc) => {
                     setUserLocation(loc);
                     setFlyToUserTrigger((prev) => prev + 1);
@@ -1027,6 +1069,7 @@ export function ModernDirectoryExplorer({
               flyToUserTrigger={flyToUserTrigger}
               onToggleFullscreen={handleToggleFullscreen}
               isFullscreen={true}
+              weatherType={simulatedWeather || liveWeather?.weatherType}
               onMapClick={(loc) => {
                 setUserLocation(loc);
                 setFlyToUserTrigger((prev) => prev + 1);

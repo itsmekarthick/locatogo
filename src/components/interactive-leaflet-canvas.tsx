@@ -8,6 +8,8 @@ import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "re
 import Supercluster from "supercluster";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { generateUberRideLink } from "@/lib/services/transit-links";
+import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
+import type { WeatherType } from "@/lib/services/weather";
 
 const MAP_LAYERS = {
   street: {
@@ -507,6 +509,8 @@ export default function InteractiveLeafletCanvas({
   onToggleFullscreen,
   isFullscreen = false,
   initialPerspective = "street",
+  weatherType = null,
+  showWeatherOverlay = true,
   onMapClick,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
@@ -519,11 +523,21 @@ export default function InteractiveLeafletCanvas({
   onToggleFullscreen?: () => void;
   isFullscreen?: boolean;
   initialPerspective?: "street" | "satellite";
+  weatherType?: WeatherType | null;
+  showWeatherOverlay?: boolean;
   onMapClick?: (loc: { lat: number; lng: number }) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<(() => void) | null>(null);
   const zoomOutRef = useRef<(() => void) | null>(null);
+  const [activeWeatherFx, setActiveWeatherFx] = useState<WeatherType | null>(weatherType ?? null);
+  const [isFxEnabled, setIsFxEnabled] = useState(showWeatherOverlay);
+
+  useEffect(() => {
+    if (weatherType !== undefined) {
+      setActiveWeatherFx(weatherType);
+    }
+  }, [weatherType]);
   const [internalUserLocation, setInternalUserLocation] = useState<{ lat: number; lng: number } | null>(
     userLocation ?? null
   );
@@ -615,8 +629,38 @@ export default function InteractiveLeafletCanvas({
         />
       </MapContainer>
 
+      {/* Atmospheric Animated Weather Layer (e.g. Rain, Storm, Sun shimmer) */}
+      {isFxEnabled && activeWeatherFx && (
+        <WeatherAtmosphereOverlay weatherType={activeWeatherFx} />
+      )}
+
       {/* Top Floating Map Layer & Zoom Switcher */}
       <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-[400] flex items-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-md p-1 border border-gray-200/90 shadow-lg text-[11px] sm:text-xs font-semibold">
+        {/* Quick Weather FX Cycle / Toggle */}
+        <button
+          onClick={() => {
+            if (!activeWeatherFx || activeWeatherFx === "clear") {
+              setActiveWeatherFx("rain");
+              setIsFxEnabled(true);
+            } else if (activeWeatherFx === "rain") {
+              setActiveWeatherFx("thunderstorm");
+            } else {
+              setActiveWeatherFx("clear");
+            }
+          }}
+          title={`Weather Effects: ${activeWeatherFx || "Auto"} (Click to cycle Rain/Storm/Sun)`}
+          className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
+            activeWeatherFx === "rain" || activeWeatherFx === "thunderstorm"
+              ? "bg-blue-600 text-white font-bold shadow-xs animate-pulse"
+              : "text-gray-700 hover:bg-gray-100"
+          }`}
+        >
+          <span>{activeWeatherFx === "thunderstorm" ? "⚡" : activeWeatherFx === "rain" ? "🌧️" : "🌦️"}</span>
+          <span className="hidden md:inline">
+            {activeWeatherFx === "thunderstorm" ? "Storm FX" : activeWeatherFx === "rain" ? "Rain FX" : "Weather"}
+          </span>
+        </button>
+
         <button
           onClick={() => setMapStyle("street")}
           className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${

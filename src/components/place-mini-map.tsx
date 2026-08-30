@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
+import type { WeatherType } from "@/lib/services/weather";
 
 const InteractiveLeafletCanvas = dynamic(
   () => import("@/components/interactive-leaflet-canvas"),
@@ -18,8 +19,10 @@ const InteractiveLeafletCanvas = dynamic(
 
 export function PlaceMiniMap({
   listing,
+  weatherType = null,
 }: {
   listing: PlaceListing & { latitude: number; longitude: number };
+  weatherType?: WeatherType | null;
 }) {
   const [mapPerspective, setMapPerspective] = useState<"street" | "satellite">("street");
 
@@ -64,6 +67,7 @@ export function PlaceMiniMap({
           setActivePlaceId={() => {}}
           isFullscreen={false}
           initialPerspective={mapPerspective}
+          weatherType={weatherType}
         />
       </div>
     </div>

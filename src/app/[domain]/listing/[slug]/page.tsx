@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getUniquePlacePhotos } from "@/lib/media/place-photos";
 import { fetchLivePlaceDetails } from "@/lib/media/google-places";
+import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
 import { getComprehensiveAboutText } from "@/lib/media/place-overview";
 import { PlaceMiniMap } from "@/components/place-mini-map";
 import { DetailsAutocompleteSearch } from "@/components/details-autocomplete-search";
@@ -363,7 +364,10 @@ export default async function DomainListingDetailPage({ params }: Props) {
                 alt={displayPhotos[0]?.alt || listing.title}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-4 sm:p-5">
+              {weather?.weatherType && (
+                <WeatherAtmosphereOverlay weatherType={weather.weatherType} />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-4 sm:p-5 pointer-events-none">
                 <div>
                   <span className="rounded bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
                     {displayPhotos[0]?.caption || "Main Venue Facade"}
@@ -488,6 +492,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
                       latitude: listing.latitude,
                       longitude: listing.longitude,
                     }}
+                    weatherType={weather?.weatherType}
                   />
                   <div className="flex items-center justify-between text-xs font-mono bg-gray-50 border border-gray-200 p-2.5 rounded-xl">
                     <span className="text-gray-500">GPS:</span>
