@@ -7,7 +7,7 @@ import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import { getMapTileConfiguration } from "@/lib/map/provider";
 
 const markerIcon = L.divIcon({
-  className: "mapora-marker",
+  className: "locatogo-marker",
   html: "<span></span>",
   iconSize: [22, 22],
   iconAnchor: [11, 11],
@@ -63,7 +63,7 @@ export function DirectoryMap({ listings, domainSlug }: { listings: MapListing[];
 
         {located.map((listing) => (
           <Marker key={listing.id} position={[listing.latitude, listing.longitude]} icon={markerIcon}>
-            <Popup className="mapora-popup">
+            <Popup className="locatogo-popup">
               <div className="p-1 max-w-[200px]">
                 {listing.is_featured && (
                   <span className="mb-1 inline-block rounded-full bg-[var(--coral-soft)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--coral)]">

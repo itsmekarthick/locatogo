@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
         <div>
           <div className="flex items-center justify-between">
             <Link href="/" className="font-display text-2xl font-bold tracking-tight text-[var(--foreground)]">
-              mapora<span className="text-[var(--coral)]">.</span>
+              locatogo<span className="text-[var(--coral)]">.</span>
             </Link>
             <span className="rounded-full bg-[var(--leaf)] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[var(--leaf-dark)]">
               Workspace

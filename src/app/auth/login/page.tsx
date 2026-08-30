@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { login } from "@/app/auth/actions";
 import { AuthForm } from "@/app/auth/auth-form";
+import { GoogleSignInButton } from "@/app/auth/google-sign-in-button";
 
 export default function LoginPage() {
   return (
@@ -23,6 +24,18 @@ export default function LoginPage() {
           <p className="mt-2 mb-6 text-sm text-[var(--ink-muted)]">
             Manage your directories, listings, and moderation queue.
           </p>
+
+          {/* Google SSO Login */}
+          <GoogleSignInButton text="Sign in with Google" next="/admin" />
+
+          {/* OR Divider */}
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+              OR EMAIL
+            </span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
 
           <AuthForm action={login} />
 

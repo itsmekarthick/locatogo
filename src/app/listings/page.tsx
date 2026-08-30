@@ -7,8 +7,8 @@ import {
 } from "@/components/modern-directory-explorer";
 
 export const metadata: Metadata = {
-  title: "Bangalore Places Directory | Mapora",
-  description: "Browse verified Bangalore places, schools, hospitals, cafes, tech parks, and fuel stations on the live interactive map.",
+  title: "Global Places Directory | Locatogo",
+  description: "Browse verified places, schools, hospitals, cafes, tech hubs, and infrastructure worldwide on the live interactive map.",
 };
 
 type Props = {

@@ -212,9 +212,6 @@ function LocationController({
         },
         (err) => {
           console.warn("Browser GPS permission not granted or unavailable:", err.message);
-          const bangaloreCenter = { lat: 12.9716, lng: 77.5946 };
-          onLocationFound(bangaloreCenter);
-          map.flyTo([bangaloreCenter.lat, bangaloreCenter.lng], 14, { duration: 1.5 });
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
@@ -349,7 +346,7 @@ function ClusteredMarkersLayer({
 
         if (isCluster && pointCount) {
           const clusterIcon = L.divIcon({
-            className: "mapora-cluster-marker",
+            className: "locatogo-cluster-marker",
             html: `<span>${pointCount}</span>`,
             iconSize: [34, 34],
             iconAnchor: [17, 17],
@@ -388,7 +385,7 @@ function ClusteredMarkersLayer({
               click: () => setActivePlaceId(place.id),
             }}
           >
-            <Popup className="mapora-popup">
+            <Popup className="locatogo-popup">
               <div className="p-3 max-w-[240px] font-sans">
                 <div className="flex items-center justify-between gap-1.5 mb-1.5">
                   {place.category_name && (
@@ -492,7 +489,7 @@ export default function InteractiveLeafletCanvas({
     ? [effectiveLocation.lat, effectiveLocation.lng]
     : locatedListings.length
     ? [locatedListings[0].latitude, locatedListings[0].longitude]
-    : [12.9716, 77.5946];
+    : [20.0, 0.0];
 
   const currentTiles = MAP_LAYERS[mapStyle];
 
@@ -524,7 +521,7 @@ export default function InteractiveLeafletCanvas({
     >
       <MapContainer
         center={initialCenter}
-        zoom={locatedListings.length ? 13 : 12}
+        zoom={locatedListings.length ? 13 : 2}
         scrollWheelZoom={false}
         doubleClickZoom={true}
         className="h-full w-full z-0 cursor-crosshair"
@@ -543,7 +540,7 @@ export default function InteractiveLeafletCanvas({
         {/* User Location Radar Marker */}
         {effectiveLocation && (
           <Marker position={[effectiveLocation.lat, effectiveLocation.lng]} icon={userLocationIcon}>
-            <Popup className="mapora-popup">
+            <Popup className="locatogo-popup">
               <div className="p-2 text-center font-sans">
                 <span className="font-bold text-xs text-blue-700">📍 You Are Here</span>
                 <p className="text-[10px] text-gray-500 mt-0.5">

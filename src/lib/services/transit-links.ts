@@ -1,17 +1,19 @@
-// Transit & Communication Deep-Link Helpers for Bangalore Atlas
+// Transit & Communication Deep-Link Helpers for Global Directory Atlas
 
 /**
  * Generates an Uber Universal Deep Link that prefills the destination coordinates and formatted address.
- * Formatted to trigger the native Uber app on Mobile (iOS/Android) with destination preselected.
+ * Formatted to trigger the native Uber app on Mobile (iOS/Android) globally with destination preselected.
  */
 export function generateUberRideLink(
   latitude: number | null | undefined,
   longitude: number | null | undefined,
   title: string,
-  locality?: string | null
+  locality?: string | null,
+  city?: string | null
 ): string {
   const cleanTitle = title.replace(/[^\w\s-]/g, "").trim();
-  const fullAddress = `${cleanTitle}${locality ? ', ' + locality : ''}, Bangalore, Karnataka, India`;
+  const addressParts = [cleanTitle, locality, city].filter(Boolean);
+  const fullAddress = addressParts.join(", ");
 
   if (!latitude || !longitude) {
     return `https://m.uber.com/ul/?action=setPickup&pickup[latitude]=my_location&pickup[longitude]=my_location&dropoff[nickname]=${encodeURIComponent(cleanTitle)}&dropoff[formatted_address]=${encodeURIComponent(fullAddress)}`;
@@ -22,17 +24,18 @@ export function generateUberRideLink(
 }
 
 /**
- * Generates an Ola Cabs booking link that seamlessly opens in the Ola App or mobile web with destination prefilled.
+ * Generates an Ola Cabs booking link with destination prefilled.
  */
 export function generateOlaRideLink(
   latitude: number | null | undefined,
   longitude: number | null | undefined,
   title: string,
-  locality?: string | null
+  locality?: string | null,
+  city?: string | null
 ): string {
-  const dropName = `${title}${locality ? ' ' + locality : ''}`;
+  const dropName = [title, locality, city].filter(Boolean).join(" ");
   if (!latitude || !longitude) {
-    return `https://book.olacabs.com/?drop_name=${encodeURIComponent(dropName + ' Bangalore')}&landing_page=bk`;
+    return `https://book.olacabs.com/?drop_name=${encodeURIComponent(dropName)}&landing_page=bk`;
   }
   return `https://book.olacabs.com/?drop_lat=${latitude}&drop_lng=${longitude}&drop_name=${encodeURIComponent(dropName)}&landing_page=bk`;
 }
@@ -51,11 +54,11 @@ export function generateWhatsAppInquiryLink(
   let cleanPhone = phone.replace(/[^0-9]/g, "");
   
   if (cleanPhone.length === 10) {
-    cleanPhone = "91" + cleanPhone; // Prefix India country code
+    cleanPhone = "91" + cleanPhone; // Default country code if 10-digits
   } else if (cleanPhone.startsWith("0") && cleanPhone.length === 11) {
-    cleanPhone = "91" + cleanPhone.slice(1);
+    cleanPhone = cleanPhone.slice(1);
   }
 
-  const message = `Hello, I found ${title} (${categoryName || 'Place'}) on Locatogo Bangalore Atlas. I would like to inquire about your timings and services.`;
+  const message = `Hello, I found ${title} (${categoryName || 'Place'}) on Locatogo. I would like to inquire about your timings and services.`;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }

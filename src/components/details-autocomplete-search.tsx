@@ -118,7 +118,7 @@ export function DetailsAutocompleteSearch() {
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Search places in Bangalore..."
+          placeholder="Search places by name or address..."
           className="w-full rounded-full border border-gray-200 bg-gray-50/70 py-2 pl-9 pr-8 text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:border-[#e26a4f] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#e26a4f]/20 transition-all shadow-2xs"
         />
         {isLoading ? (

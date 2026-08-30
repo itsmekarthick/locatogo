@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signup } from "@/app/auth/actions";
 import { AuthForm } from "@/app/auth/auth-form";
+import { GoogleSignInButton } from "@/app/auth/google-sign-in-button";
 
 export default function SignupPage() {
   return (
@@ -23,6 +24,18 @@ export default function SignupPage() {
           <p className="mt-2 mb-6 text-sm text-[var(--ink-muted)]">
             Create your account and first directory to begin curating places.
           </p>
+
+          {/* Google SSO Sign Up */}
+          <GoogleSignInButton text="Sign up with Google" next="/admin" />
+
+          {/* OR Divider */}
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-200" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+              OR EMAIL
+            </span>
+            <div className="h-px flex-1 bg-gray-200" />
+          </div>
 
           <AuthForm action={signup} signup />
 

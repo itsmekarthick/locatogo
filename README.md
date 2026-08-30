@@ -1,6 +1,6 @@
-# Mapora
+# locatogo
 
-Mapora is a global, multi-tenant directory and interactive map SaaS platform. Tenants can create configurable directories for industries, communities, cities, regions, countries, or global audiences.
+locatogo is a global, multi-tenant directory and interactive map SaaS platform. Tenants can create configurable directories for industries, communities, cities, regions, countries, or global audiences.
 
 ## Status
 

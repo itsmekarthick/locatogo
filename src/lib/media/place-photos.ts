@@ -1,4 +1,4 @@
-// Deterministic Unique Photo Engine for Mapora Places
+// Deterministic Unique Photo Engine for locatogo Places
 
 export type PlacePhoto = {
   url: string;

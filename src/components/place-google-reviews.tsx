@@ -2,7 +2,7 @@ import type { GooglePlaceReview } from "@/lib/media/google-places";
 
 function generateCommunityReviews(placeTitle: string, categoryName?: string, locality?: string): GooglePlaceReview[] {
   const cat = (categoryName || "").toLowerCase();
-  const loc = locality || "Bangalore";
+  const loc = locality || "the neighborhood";
 
   if (cat.includes("school") || cat.includes("education")) {
     return [
@@ -114,7 +114,7 @@ function generateCommunityReviews(placeTitle: string, categoryName?: string, loc
       author: "Suresh Bharadwaj",
       rating: 5,
       relativeTime: "1 week ago",
-      text: `Very well-organized location with convenient road access and helpful staff. Highly reputable place in ${loc}, Bangalore.`,
+      text: `Very well-organized location with convenient road access and helpful staff. Highly reputable place in ${loc}.`,
     },
     {
       author: "Deepa Ramachandran",

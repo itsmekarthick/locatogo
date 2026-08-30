@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "About Us | Locatogo - Bangalore Place & Directory Atlas",
-  description: "Learn more about Locatogo, Bangalore's real-time local directory atlas for verified schools, hospitals, tech parks, cafes, and infrastructure.",
+  title: "About Us | Locatogo - Global Place & Directory Atlas",
+  description: "Learn more about Locatogo, the real-time global directory atlas for verified schools, hospitals, tech hubs, dining destinations, and civic infrastructure.",
 };
 
 export default function AboutPage() {
@@ -18,7 +18,7 @@ export default function AboutPage() {
             </Link>
             <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
               <span className="text-sm">📍</span>
-              <span>Bangalore Atlas</span>
+              <span>Global Atlas</span>
             </div>
           </div>
 
@@ -56,10 +56,10 @@ export default function AboutPage() {
             Our Mission & Platform
           </span>
           <h1 className="mt-4 font-serif text-3xl sm:text-5xl font-bold tracking-tight text-gray-950 leading-tight">
-            Mapping Bangalore with precision, community intelligence, and speed.
+            Mapping the world with precision, community intelligence, and speed.
           </h1>
           <p className="mt-4 text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl">
-            Locatogo is a next-generation local directory and infrastructure atlas. We help residents, newcomers, and visitors discover verified healthcare centers, schools, tech hubs, dining spots, and public amenities with real-time accuracy.
+            Locatogo is a next-generation local directory and infrastructure atlas. We help residents, newcomers, and travelers discover verified healthcare centers, schools, tech hubs, dining spots, and public amenities worldwide with real-time accuracy.
           </p>
         </div>
 
@@ -146,7 +146,7 @@ export default function AboutPage() {
         {/* Bottom Call to Action */}
         <div className="rounded-3xl bg-gray-950 p-8 sm:p-10 text-white text-center shadow-lg">
           <h3 className="font-serif text-2xl sm:text-3xl font-bold">
-            Own a business or manage a place in Bangalore?
+            Own a business or manage a venue?
           </h3>
           <p className="mt-2 text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
             Get your place verified, add opening schedules, photos, contact numbers, and help thousands of visitors discover you.

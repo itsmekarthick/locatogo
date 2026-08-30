@@ -208,7 +208,7 @@ body {
 }
 
 /* Cluster Marker Badge Styling */
-.mapora-cluster-marker {
+.locatogo-cluster-marker {
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -223,7 +223,7 @@ body {
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.mapora-cluster-marker:hover {
+.locatogo-cluster-marker:hover {
   transform: scale(1.18);
   background: #e26a4f !important;
   box-shadow: 0 8px 24px rgba(226, 106, 79, 0.6), 0 0 0 5px rgba(226, 106, 79, 0.35);

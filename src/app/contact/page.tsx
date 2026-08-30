@@ -38,7 +38,7 @@ export default function ContactSupportPage() {
             </Link>
             <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
               <span className="text-sm">📍</span>
-              <span>Bangalore Atlas</span>
+              <span>Global Atlas</span>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export default function ContactSupportPage() {
             How can we assist you today?
           </h1>
           <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-2xl">
-            Have questions about a listing, claiming your business profile, or reporting updated operating hours in Bangalore? We&apos;re here to help.
+            Have questions about a listing, claiming your business profile, or reporting updated operating hours? We&apos;re here to help.
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export default function ContactSupportPage() {
                   Message Received!
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-                  Thank you for reaching out, <strong>{formData.fullName}</strong>. Our local directory operations team in Bangalore will review your inquiry and get back to you at <strong>{formData.email}</strong> within 24 hours.
+                  Thank you for reaching out, <strong>{formData.fullName}</strong>. Our directory operations team will review your inquiry and get back to you at <strong>{formData.email}</strong> within 24 hours.
                 </p>
                 <button
                   onClick={() => {

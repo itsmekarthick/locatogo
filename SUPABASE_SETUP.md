@@ -23,7 +23,7 @@ supabase db push
 ```
 
 5. In **Authentication > URL Configuration**, set the site URL to `http://localhost:3000` and add `http://localhost:3000/**` to redirect URLs.
-6. Start Mapora with `npm run dev` and open `http://localhost:3000/auth/signup`.
+6. Start locatogo with `npm run dev` and open `http://localhost:3000/auth/signup`.
 
 Keep `SUPABASE_SERVICE_ROLE_KEY` server-only. It is required only for signed payment webhook reconciliation and must never be prefixed with `NEXT_PUBLIC_`.
 

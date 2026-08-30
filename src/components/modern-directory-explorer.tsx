@@ -87,19 +87,6 @@ function getCategoryIcon(name: string) {
   return "📍";
 }
 
-const BANGALORE_NEIGHBORHOOD_PRESETS = [
-  { name: "Chandapura", lat: 12.7933, lng: 77.6974 },
-  { name: "Electronic City", lat: 12.8399, lng: 77.6770 },
-  { name: "Koramangala", lat: 12.9352, lng: 77.6245 },
-  { name: "HSR Layout", lat: 12.9121, lng: 77.6446 },
-  { name: "Indiranagar", lat: 12.9784, lng: 77.6408 },
-  { name: "Whitefield", lat: 12.9698, lng: 77.7500 },
-  { name: "JP Nagar", lat: 12.9063, lng: 77.5857 },
-  { name: "Jayanagar", lat: 12.9308, lng: 77.5838 },
-  { name: "Malleshwaram", lat: 13.0031, lng: 77.5643 },
-  { name: "MG Road", lat: 12.9756, lng: 77.6066 },
-];
-
 export function ModernDirectoryExplorer({
   domain,
   initialListings,
@@ -249,6 +236,38 @@ export function ModernDirectoryExplorer({
     return filteredListings.slice(start, start + pageSize);
   }, [filteredListings, currentPage, pageSize]);
 
+  // Dynamic top locations derived from available locations or listings
+  const topLocations = useMemo(() => {
+    if (availableLocations && availableLocations.length > 0) {
+      return availableLocations.slice(0, 10);
+    }
+    const unique = Array.from(
+      new Set(
+        initialListings
+          .map((l) => l.locality || l.city)
+          .filter((loc): loc is string => typeof loc === "string" && loc.trim().length > 0)
+      )
+    );
+    return unique.slice(0, 10);
+  }, [availableLocations, initialListings]);
+
+  const handleSelectQuickLocation = (locName: string) => {
+    if (selectedLocation === locName) {
+      setSelectedLocation("");
+      return;
+    }
+    setSelectedLocation(locName);
+    const targetPlace = locatedListings.find(
+      (p) =>
+        p.locality?.toLowerCase().includes(locName.toLowerCase()) ||
+        p.city?.toLowerCase().includes(locName.toLowerCase())
+    );
+    if (targetPlace) {
+      setUserLocation({ lat: targetPlace.latitude, lng: targetPlace.longitude });
+      setFlyToUserTrigger((prev) => prev + 1);
+    }
+  };
+
   const renderViewSwitcher = (currentMode: string) => (
     <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50/50 p-1 self-start sm:self-auto overflow-x-auto no-scrollbar max-w-full">
       <button
@@ -272,11 +291,11 @@ export function ModernDirectoryExplorer({
       <button
         onClick={() => setViewMode("3d")}
         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-          currentMode === "3d" ? "bg-[#e26a4f] text-white shadow-xs" : "text-gray-600 hover:text-gray-950"
+          currentMode === "3d" ? "bg-[#18181b] text-white shadow-xs" : "text-gray-600 hover:text-gray-950"
         }`}
       >
         <span>🛰️</span>
-        <span>Satellite Map</span>
+        <span>Satellite</span>
       </button>
       <button
         onClick={() => setViewMode("fullscreen")}
@@ -302,7 +321,7 @@ export function ModernDirectoryExplorer({
             </Link>
             <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
               <span className="text-sm">📍</span>
-              <span>Bangalore Atlas</span>
+              <span>{domain?.name ? `${domain.name} Atlas` : "Global Atlas"}</span>
             </div>
           </div>
 
@@ -450,23 +469,28 @@ export function ModernDirectoryExplorer({
                   })}
                 </div>
 
-                {/* Bangalore Quick Neighborhood Jump Presets */}
-                <div className="mt-2.5 pt-2.5 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
-                  <span className="text-gray-400 font-semibold shrink-0">📍 Quick Area:</span>
-                  {BANGALORE_NEIGHBORHOOD_PRESETS.map((area) => (
-                    <button
-                      key={area.name}
-                      onClick={() => {
-                        setUserLocation({ lat: area.lat, lng: area.lng });
-                        setFlyToUserTrigger((prev) => prev + 1);
-                        setLocationErrorNotice(null);
-                      }}
-                      className="shrink-0 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-900 border border-gray-200/80 px-2 py-0.5 font-medium text-gray-700 transition-colors cursor-pointer"
-                    >
-                      {area.name}
-                    </button>
-                  ))}
-                </div>
+                {/* Dynamic Quick Area / City Jump Presets */}
+                {topLocations.length > 0 && (
+                  <div className="mt-2.5 pt-2.5 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
+                    <span className="text-gray-400 font-semibold shrink-0">📍 Popular:</span>
+                    {topLocations.map((locName) => {
+                      const isSelected = selectedLocation.toLowerCase() === locName.toLowerCase();
+                      return (
+                        <button
+                          key={locName}
+                          onClick={() => handleSelectQuickLocation(locName)}
+                          className={`shrink-0 rounded-lg px-2.5 py-0.5 font-medium transition-colors cursor-pointer ${
+                            isSelected
+                              ? "bg-gray-950 text-white shadow-2xs font-bold"
+                              : "bg-gray-100 hover:bg-gray-200 border border-gray-200/80 text-gray-700"
+                          }`}
+                        >
+                          {locName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -538,7 +562,7 @@ export function ModernDirectoryExplorer({
                             <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
                               <span className="text-[#e26a4f]">📍</span>
                               <span>
-                                {[place.locality, place.city].filter(Boolean).join(", ") || "Bangalore, KA"}
+                                {[place.locality, place.city].filter(Boolean).join(", ") || "Verified Location"}
                               </span>
                             </p>
                           </div>
@@ -652,10 +676,10 @@ export function ModernDirectoryExplorer({
                 EXPLORE & DISCOVER
               </p>
               <h1 className="mt-3 font-serif text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl lg:text-[54px] leading-tight">
-                Find Places, Schools & Hospitals in Bangalore
+                Find Places, Schools, Hospitals & Venues
               </h1>
               <p className="mt-3 text-sm text-gray-500 max-w-xl mx-auto leading-relaxed">
-                Interactive map directory with verified GPS coordinates, operating hours, and direct routes.
+                Global interactive map directory with verified GPS coordinates, operating hours, and direct routes.
               </p>
 
               {/* Search Box with Integrated Location Dropdown */}
@@ -800,7 +824,7 @@ export function ModernDirectoryExplorer({
                             <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
                               <span className="text-[#e26a4f]">📍</span>
                               <span>
-                                {[place.locality, place.city].filter(Boolean).join(", ") || "Bangalore, KA"}
+                                {[place.locality, place.city].filter(Boolean).join(", ") || "Verified Location"}
                               </span>
                             </p>
                           </div>
@@ -955,7 +979,7 @@ export function ModernDirectoryExplorer({
                       setSearchQuery(e.target.value);
                       if (e.target.value.trim()) setIsFullscreenDrawerOpen(true);
                     }}
-                    placeholder="Search places in Bangalore..."
+                    placeholder="Search places by name, category or city..."
                     className="w-full bg-transparent px-2.5 py-1 text-xs text-gray-900 placeholder-gray-400 focus:outline-none"
                   />
                   {searchQuery && (

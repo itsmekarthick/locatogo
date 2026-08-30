@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
             </Link>
             <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
               <span className="text-sm">📍</span>
-              <span>Bangalore Atlas</span>
+              <span>Global Atlas</span>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export default function PrivacyPolicyPage() {
               2. Location Data & Geolocation
             </h2>
             <p>
-              Locatogo offers a &ldquo;My Location&rdquo; feature to calculate driving distance, walking time, and nearby places in Bangalore:
+              Locatogo offers a &ldquo;My Location&rdquo; feature to calculate driving distance, walking time, and nearby places around your current position:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-gray-600">
               <li><strong>Client-Side Only:</strong> Your exact GPS coordinates are processed locally within your browser to center the map and calculate relative distances.</li>
@@ -111,7 +111,7 @@ export default function PrivacyPolicyPage() {
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-gray-600">
               <li>Publish and verify accurate local business directory profiles.</li>
-              <li>Provide route estimations and calculate driving distances in Bangalore.</li>
+              <li>Provide route estimations and calculate driving distances in your region.</li>
               <li>Respond to inquiries, support tickets, and business claim verifications.</li>
               <li>Prevent fraud, spam listings, and malicious activity on the platform.</li>
             </ul>
