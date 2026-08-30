@@ -118,14 +118,13 @@ export function ModernDirectoryExplorer({
     setLocationErrorNotice(null);
     setIsLocating(true);
 
-    const fallbackToIp = async (reason?: string) => {
+    const fallbackToIp = async () => {
       try {
         const res = await fetch("/api/geolocation");
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.latitude && data.longitude) {
-            const loc = { lat: data.latitude, lng: data.longitude };
-            setUserLocation(loc);
+            setUserLocation({ lat: data.latitude, lng: data.longitude });
             setIsLocating(false);
             setLocationErrorNotice(null);
             setFlyToUserTrigger((prev) => prev + 1);
@@ -135,10 +134,25 @@ export function ModernDirectoryExplorer({
       } catch (e) {
         console.warn("IP Geolocation fallback failed:", e);
       }
-
       setIsLocating(false);
       setLocationErrorNotice(
         "Could not detect GPS coordinates. Click anywhere on the map to drop a pin and set your location."
+      );
+    };
+
+    const doGpsLookup = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setIsLocating(false);
+          setLocationErrorNotice(null);
+          setFlyToUserTrigger((prev) => prev + 1);
+        },
+        (err) => {
+          console.warn("GPS failed (code " + err.code + "), falling back to IP...");
+          fallbackToIp();
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     };
 
@@ -147,48 +161,29 @@ export function ModernDirectoryExplorer({
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setUserLocation(loc);
-        setIsLocating(false);
-        setLocationErrorNotice(null);
-        setFlyToUserTrigger((prev) => prev + 1);
-      },
-      (err) => {
-        console.warn("Browser GPS failed or blocked (code " + err.code + "), falling back to network IP location...");
-        fallbackToIp(
-          err.code === 1
-            ? "Browser/OS location was restricted. Positioned using your network area instead."
-            : undefined
-        );
-      },
-      { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 }
-    );
-  }, []);
-
-  // Auto-detect user geolocation on initial mount (GPS first, then IP fallback)
-  useEffect(() => {
-    if (typeof window !== "undefined" && "geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        },
-        () => {
-          // Silent fallback to IP on mount
-          fetch("/api/geolocation")
-            .then((r) => r.json())
-            .then((data) => {
-              if (data.success && data.latitude && data.longitude) {
-                setUserLocation({ lat: data.latitude, lng: data.longitude });
-              }
-            })
-            .catch(() => {});
-        },
-        { enableHighAccuracy: false, timeout: 4000, maximumAge: 300000 }
-      );
+    // Use Permissions API to avoid a long GPS timeout when already denied
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: "geolocation" })
+        .then((result) => {
+          if (result.state === "denied") {
+            console.warn("Geolocation permission denied by OS/browser, using IP fallback...");
+            fallbackToIp();
+          } else {
+            // "granted" or "prompt" — trigger the real GPS call (shows popup if "prompt")
+            doGpsLookup();
+          }
+        })
+        .catch(() => doGpsLookup());
+    } else {
+      doGpsLookup();
     }
   }, []);
+
+  // Request browser location immediately on initial mount
+  useEffect(() => {
+    handleLocateMe();
+  }, [handleLocateMe]);
 
   // Reset to page 1 whenever filters change
   useEffect(() => {

@@ -275,14 +275,23 @@ function MapUpdater({
 }) {
   const map = useMap();
   const prevActiveIdRef = useRef<string | null>(null);
-  const prevCountRef = useRef<number>(-1);
-  const isInitializedRef = useRef<boolean>(false);
+  const prevUserLocRef = useRef<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (flyToUserTrigger > 0 && userLocation) {
       map.flyTo([userLocation.lat, userLocation.lng], 15, { duration: 1.5 });
     }
   }, [flyToUserTrigger, userLocation, map]);
+
+  // Also fly to user the first time location is resolved (e.g. on mount auto-detect)
+  useEffect(() => {
+    if (userLocation && !prevUserLocRef.current) {
+      prevUserLocRef.current = userLocation;
+      map.flyTo([userLocation.lat, userLocation.lng], 15, { duration: 1.5 });
+    } else if (userLocation) {
+      prevUserLocRef.current = userLocation;
+    }
+  }, [userLocation, map]);
 
   useEffect(() => {
     if (activePlace && activePlace.id !== prevActiveIdRef.current) {
@@ -291,10 +300,12 @@ function MapUpdater({
     }
   }, [activePlace, map]);
 
+  const prevCountRef = useRef<number>(-1);
+
   useEffect(() => {
-    if (!activePlace && located.length > 0 && flyToUserTrigger === 0) {
-      if (!isInitializedRef.current || prevCountRef.current !== located.length) {
-        isInitializedRef.current = true;
+    // Only fit listing bounds if no user location has been resolved yet
+    if (!activePlace && !userLocation && located.length > 0 && flyToUserTrigger === 0) {
+      if (prevCountRef.current !== located.length) {
         prevCountRef.current = located.length;
         if (located.length === 1) {
           map.setView([located[0].latitude, located[0].longitude], 14);
@@ -304,7 +315,7 @@ function MapUpdater({
         }
       }
     }
-  }, [located, activePlace, flyToUserTrigger, map]);
+  }, [located, activePlace, userLocation, flyToUserTrigger, map]);
 
   return null;
 }
