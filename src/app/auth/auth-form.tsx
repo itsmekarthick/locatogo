@@ -74,6 +74,7 @@ export function AuthForm({ action, signup = false }: { action: AuthAction; signu
           {!signup && (
             <Link
               href="/auth/forgot-password"
+              prefetch={false}
               className="text-xs font-semibold text-[var(--coral)] hover:underline"
             >
               Forgot password?

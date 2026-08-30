@@ -113,15 +113,40 @@ export function ModernDirectoryExplorer({
   const [flyToUserTrigger, setFlyToUserTrigger] = useState(0);
   const [locationErrorNotice, setLocationErrorNotice] = useState<string | null>(null);
 
-  // Handle user clicking 'My Location'
+  // Handle user clicking 'My Location' with automatic IP Geolocation fallback
   const handleLocateMe = useCallback(() => {
     setLocationErrorNotice(null);
+    setIsLocating(true);
+
+    const fallbackToIp = async (reason?: string) => {
+      try {
+        const res = await fetch("/api/geolocation");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.latitude && data.longitude) {
+            const loc = { lat: data.latitude, lng: data.longitude };
+            setUserLocation(loc);
+            setIsLocating(false);
+            setLocationErrorNotice(null);
+            setFlyToUserTrigger((prev) => prev + 1);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("IP Geolocation fallback failed:", e);
+      }
+
+      setIsLocating(false);
+      setLocationErrorNotice(
+        "Could not detect GPS coordinates. Click anywhere on the map to drop a pin and set your location."
+      );
+    };
+
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
-      setLocationErrorNotice("Geolocation is not supported by your browser.");
+      fallbackToIp();
       return;
     }
 
-    setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -131,19 +156,38 @@ export function ModernDirectoryExplorer({
         setFlyToUserTrigger((prev) => prev + 1);
       },
       (err) => {
-        setIsLocating(false);
-        if (err.code === 1) {
-          setLocationErrorNotice(
-            "Location access is blocked. Click the lock icon (🔒) in your browser address bar and set 'Location' to 'Allow', then click 'My Location' again."
-          );
-        } else if (err.code === 2) {
-          setLocationErrorNotice("GPS position unavailable from your device WiFi/network.");
-        } else if (err.code === 3) {
-          setLocationErrorNotice("Location request timed out. Please try clicking 'My Location' again.");
-        }
+        console.warn("Browser GPS failed or blocked (code " + err.code + "), falling back to network IP location...");
+        fallbackToIp(
+          err.code === 1
+            ? "Browser/OS location was restricted. Positioned using your network area instead."
+            : undefined
+        );
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 60000 }
     );
+  }, []);
+
+  // Auto-detect user geolocation on initial mount (GPS first, then IP fallback)
+  useEffect(() => {
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {
+          // Silent fallback to IP on mount
+          fetch("/api/geolocation")
+            .then((r) => r.json())
+            .then((data) => {
+              if (data.success && data.latitude && data.longitude) {
+                setUserLocation({ lat: data.latitude, lng: data.longitude });
+              }
+            })
+            .catch(() => {});
+        },
+        { enableHighAccuracy: false, timeout: 4000, maximumAge: 300000 }
+      );
+    }
   }, []);
 
   // Reset to page 1 whenever filters change
@@ -537,10 +581,22 @@ export function ModernDirectoryExplorer({
                             </span>
 
                             <div className="flex items-center gap-1.5">
-                              {place.distanceKm !== null && place.distanceKm !== undefined && (
-                                <span className="text-[11px] font-bold text-gray-500">
-                                  {place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}
+                              {place.distanceKm !== null && place.distanceKm !== undefined ? (
+                                <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
+                                  <span>🚗</span>
+                                  <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}</span>
                                 </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleLocateMe();
+                                  }}
+                                  className="rounded bg-gray-100 hover:bg-blue-50 hover:text-blue-900 px-1.5 py-0.5 text-[10px] text-gray-500 font-medium cursor-pointer transition-colors"
+                                >
+                                  📍 Distance
+                                </button>
                               )}
                               {place.is_featured && (
                                 <span className="rounded bg-orange-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
@@ -799,10 +855,22 @@ export function ModernDirectoryExplorer({
                             </span>
 
                             <div className="flex items-center gap-1.5">
-                              {place.distanceKm !== null && place.distanceKm !== undefined && (
-                                <span className="text-[11px] font-bold text-gray-500">
-                                  {place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}
+                              {place.distanceKm !== null && place.distanceKm !== undefined ? (
+                                <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
+                                  <span>🚗</span>
+                                  <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}</span>
                                 </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleLocateMe();
+                                  }}
+                                  className="rounded bg-gray-100 hover:bg-blue-50 hover:text-blue-900 px-1.5 py-0.5 text-[10px] text-gray-500 font-medium cursor-pointer transition-colors"
+                                >
+                                  📍 Distance
+                                </button>
                               )}
                               {place.is_featured && (
                                 <span className="rounded bg-orange-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
@@ -1087,10 +1155,22 @@ export function ModernDirectoryExplorer({
                         <span className="rounded bg-blue-50/90 px-2 py-0.5 text-[9px] font-bold tracking-wider text-blue-800 uppercase">
                           {catName}
                         </span>
-                        {place.distanceKm !== null && place.distanceKm !== undefined && (
-                          <span className="text-[10px] font-bold text-gray-500">
-                            {place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}
+                        {place.distanceKm !== null && place.distanceKm !== undefined ? (
+                          <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
+                            <span>🚗</span>
+                            <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}</span>
                           </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLocateMe();
+                            }}
+                            className="rounded bg-gray-100 hover:bg-blue-50 hover:text-blue-900 px-1.5 py-0.5 text-[9px] text-gray-500 font-medium cursor-pointer transition-colors"
+                          >
+                            📍 Distance
+                          </button>
                         )}
                       </div>
 

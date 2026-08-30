@@ -68,7 +68,11 @@ export default function ForgotPasswordPage() {
 
           <div className="mt-6 border-t border-gray-100 pt-5 text-center text-xs text-[var(--ink-muted)]">
             Remember your password?{" "}
-            <Link href="/auth/login" className="font-semibold text-[var(--coral)] hover:underline">
+            <Link
+              href="/auth/login"
+              prefetch={false}
+              className="font-semibold text-[var(--coral)] hover:underline"
+            >
               Back to Sign In
             </Link>
           </div>

@@ -233,7 +233,7 @@ body {
 /* Custom Leaflet Popup Overhaul */
 .leaflet-popup-content-wrapper {
   background: #ffffff !important;
-  color: var(--foreground) !important;
+  color: #111827 !important;
   border-radius: 20px !important;
   padding: 0 !important;
   box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16) !important;
@@ -248,4 +248,28 @@ body {
 }
 .leaflet-container {
   font-family: inherit !important;
+}
+
+/* Fix Leaflet default blue text color on buttons and links inside popups */
+.locatogo-popup a,
+.leaflet-popup-content a {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.locatogo-popup .btn-uber,
+.leaflet-popup-content .btn-uber {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.locatogo-popup .btn-details,
+.leaflet-popup-content .btn-details {
+  background-color: #e26a4f !important;
+  color: #ffffff !important;
+}
+
+.locatogo-popup .btn-uber *,
+.locatogo-popup .btn-details * {
+  color: #ffffff !important;
 }

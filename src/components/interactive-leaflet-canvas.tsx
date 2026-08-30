@@ -20,6 +20,20 @@ const MAP_LAYERS = {
   },
 };
 
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, zoom: number) {
   const cat = (place.category_name || "").toLowerCase();
   let emoji = "📍";
@@ -203,6 +217,23 @@ function LocationController({
   const map = useMap();
 
   const handleLocateMe = useCallback(() => {
+    const fallbackToIp = async () => {
+      try {
+        const res = await fetch("/api/geolocation");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.latitude && data.longitude) {
+            const loc = { lat: data.latitude, lng: data.longitude };
+            onLocationFound(loc);
+            map.flyTo([loc.lat, loc.lng], 14, { duration: 1.5 });
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("Canvas IP fallback error:", e);
+      }
+    };
+
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -211,10 +242,13 @@ function LocationController({
           map.flyTo([loc.lat, loc.lng], 15, { duration: 1.5 });
         },
         (err) => {
-          console.warn("Browser GPS permission not granted or unavailable:", err.message);
+          console.warn("Browser GPS permission not granted or unavailable (" + err.message + "), falling back to network IP location...");
+          fallbackToIp();
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 }
       );
+    } else {
+      fallbackToIp();
     }
   }, [map, onLocationFound]);
 
@@ -393,11 +427,19 @@ function ClusteredMarkersLayer({
                       {place.category_name}
                     </span>
                   )}
-                  {typeof place.distanceKm === "number" && (
-                    <span className="text-[10px] font-bold text-emerald-700">
-                      🚗 {place.distanceKm.toFixed(1)} km
-                    </span>
-                  )}
+                  {(() => {
+                    const dist = typeof place.distanceKm === "number"
+                      ? place.distanceKm
+                      : (userLocation
+                        ? calculateDistanceKm(userLocation.lat, userLocation.lng, place.latitude, place.longitude)
+                        : null);
+                    if (dist === null) return null;
+                    return (
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-md">
+                        🚗 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)} km`}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <h4 className="font-serif font-bold text-sm text-gray-950 leading-tight">
@@ -420,17 +462,18 @@ function ClusteredMarkersLayer({
                     href={uberUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 rounded-full bg-black px-2.5 py-1 text-[10px] font-bold text-white hover:bg-gray-800 transition-colors shadow-2xs"
+                    className="btn-uber flex items-center gap-1 rounded-full !bg-black px-3 py-1.5 text-[11px] font-bold !text-white hover:!bg-gray-800 transition-colors shadow-2xs cursor-pointer"
                   >
                     <span>🚕</span>
-                    <span>Uber</span>
+                    <span className="!text-white font-bold">Uber</span>
                   </a>
 
                   <Link
                     href={`/listing/${place.slug}`}
-                    className="rounded-full bg-[#e26a4f] px-3 py-1 text-[10px] font-bold text-white hover:bg-[#d8583c] transition-colors shadow-xs"
+                    className="btn-details flex items-center gap-1 rounded-full !bg-[#e26a4f] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#d8583c] transition-colors shadow-xs cursor-pointer"
                   >
-                    Details →
+                    <span className="!text-white font-bold">Details</span>
+                    <span className="!text-white font-bold">→</span>
                   </Link>
                 </div>
               </div>
