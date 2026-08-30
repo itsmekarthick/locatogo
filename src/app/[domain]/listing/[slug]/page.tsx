@@ -583,20 +583,16 @@ export default async function DomainListingDetailPage({ params }: Props) {
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
-            <Link href="/" className="hover:text-gray-900 transition-colors">
-              About
+            <Link href="/about" className="hover:text-gray-900 transition-colors">
             </Link>
-            <Link href="/" className="hover:text-gray-900 transition-colors">
+            <Link href="/terms" className="hover:text-gray-900 transition-colors">
               Terms of Service
-            </Link>
-            <Link href="/" className="hover:text-gray-900 transition-colors">
+            <Link href="/privacy" className="hover:text-gray-900 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/" className="hover:text-gray-900 transition-colors">
               Contact Support
             </Link>
           </div>
-
           <p className="text-gray-400">
             © 2024 locatogo. All rights reserved.
           </p>

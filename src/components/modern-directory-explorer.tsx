@@ -87,6 +87,19 @@ function getCategoryIcon(name: string) {
   return "📍";
 }
 
+const BANGALORE_NEIGHBORHOOD_PRESETS = [
+  { name: "Chandapura", lat: 12.7933, lng: 77.6974 },
+  { name: "Electronic City", lat: 12.8399, lng: 77.6770 },
+  { name: "Koramangala", lat: 12.9352, lng: 77.6245 },
+  { name: "HSR Layout", lat: 12.9121, lng: 77.6446 },
+  { name: "Indiranagar", lat: 12.9784, lng: 77.6408 },
+  { name: "Whitefield", lat: 12.9698, lng: 77.7500 },
+  { name: "JP Nagar", lat: 12.9063, lng: 77.5857 },
+  { name: "Jayanagar", lat: 12.9308, lng: 77.5838 },
+  { name: "Malleshwaram", lat: 13.0031, lng: 77.5643 },
+  { name: "MG Road", lat: 12.9756, lng: 77.6066 },
+];
+
 export function ModernDirectoryExplorer({
   domain,
   initialListings,
@@ -111,28 +124,39 @@ export function ModernDirectoryExplorer({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [flyToUserTrigger, setFlyToUserTrigger] = useState(0);
+  const [locationErrorNotice, setLocationErrorNotice] = useState<string | null>(null);
 
   // Handle user clicking 'My Location'
   const handleLocateMe = useCallback(() => {
-    if (typeof window !== "undefined" && "geolocation" in navigator) {
-      setIsLocating(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setUserLocation(loc);
-          setIsLocating(false);
-          setFlyToUserTrigger((prev) => prev + 1);
-        },
-        (err) => {
-          console.warn("Location permission not granted or unavailable:", err.message);
-          setIsLocating(false);
-          // Gently center on central Bangalore if location is denied
-          setUserLocation({ lat: 12.9716, lng: 77.5946 });
-          setFlyToUserTrigger((prev) => prev + 1);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-      );
+    setLocationErrorNotice(null);
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      setLocationErrorNotice("Geolocation is not supported by your browser.");
+      return;
     }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(loc);
+        setIsLocating(false);
+        setLocationErrorNotice(null);
+        setFlyToUserTrigger((prev) => prev + 1);
+      },
+      (err) => {
+        setIsLocating(false);
+        if (err.code === 1) {
+          setLocationErrorNotice(
+            "Location access is blocked. Click the lock icon (🔒) in your browser address bar and set 'Location' to 'Allow', then click 'My Location' again."
+          );
+        } else if (err.code === 2) {
+          setLocationErrorNotice("GPS position unavailable from your device WiFi/network.");
+        } else if (err.code === 3) {
+          setLocationErrorNotice("Location request timed out. Please try clicking 'My Location' again.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
   }, []);
 
   // Reset to page 1 whenever filters change
@@ -313,6 +337,22 @@ export function ModernDirectoryExplorer({
         </div>
       </header>
 
+      {/* Location Permission Guidance Toast */}
+      {locationErrorNotice && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-xs text-amber-900 flex items-center justify-between gap-3 sticky top-14 z-50 shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📍</span>
+            <p className="font-medium">{locationErrorNotice}</p>
+          </div>
+          <button
+            onClick={() => setLocationErrorNotice(null)}
+            className="text-amber-700 hover:text-amber-950 font-bold px-2 py-0.5 rounded-lg hover:bg-amber-100/60"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* VIEW MODE 1: IMMERSIVE HERO MAP / 3D SATELLITE VIEW */}
       {(viewMode === "immersive" || viewMode === "3d") && (
         <>
@@ -329,11 +369,15 @@ export function ModernDirectoryExplorer({
               onToggleFullscreen={handleToggleFullscreen}
               isFullscreen={false}
               initialPerspective={viewMode === "3d" ? "satellite" : "street"}
+              onMapClick={(loc) => {
+                setUserLocation(loc);
+                setFlyToUserTrigger((prev) => prev + 1);
+              }}
             />
 
             {/* Floating Overlapping Search & Categories Card */}
-            <div className="absolute -bottom-24 sm:-bottom-20 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[400]">
-              <div className="rounded-3xl border border-gray-100 bg-white/95 p-5 sm:p-7 shadow-xl backdrop-blur-md">
+            <div className="absolute -bottom-28 sm:-bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[400]">
+              <div className="rounded-3xl border border-gray-100 bg-white/95 p-4 sm:p-6 shadow-xl backdrop-blur-md">
                 {/* Search Bar + Neighborhood Dropdown */}
                 <div className="flex flex-col sm:flex-row items-center rounded-2xl border border-gray-200 bg-white p-1.5 shadow-xs focus-within:border-gray-400 transition-all">
                   <div className="relative flex-1 w-full flex items-center pl-3">
@@ -371,11 +415,11 @@ export function ModernDirectoryExplorer({
                   </div>
                 </div>
 
-                {/* Category Pills Row (Horizontally Scrollable with Momentum on Mobile) */}
-                <div className="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar sm:flex-wrap sm:justify-center pb-1.5 sm:pb-0">
+                {/* Category Pills Row */}
+                <div className="mt-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap sm:justify-center pb-1">
                   <button
                     onClick={() => handleSelectCategory("")}
-                    className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                       !selectedCategory
                         ? "bg-[#18181b] text-white shadow-xs"
                         : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
@@ -393,7 +437,7 @@ export function ModernDirectoryExplorer({
                       <button
                         key={cat.id}
                         onClick={() => handleSelectCategory(cat.id)}
-                        className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                           isSelected
                             ? "bg-[#18181b] text-white shadow-xs"
                             : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
@@ -404,6 +448,24 @@ export function ModernDirectoryExplorer({
                       </button>
                     );
                   })}
+                </div>
+
+                {/* Bangalore Quick Neighborhood Jump Presets */}
+                <div className="mt-2.5 pt-2.5 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
+                  <span className="text-gray-400 font-semibold shrink-0">📍 Quick Area:</span>
+                  {BANGALORE_NEIGHBORHOOD_PRESETS.map((area) => (
+                    <button
+                      key={area.name}
+                      onClick={() => {
+                        setUserLocation({ lat: area.lat, lng: area.lng });
+                        setFlyToUserTrigger((prev) => prev + 1);
+                        setLocationErrorNotice(null);
+                      }}
+                      className="shrink-0 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-900 border border-gray-200/80 px-2 py-0.5 font-medium text-gray-700 transition-colors cursor-pointer"
+                    >
+                      {area.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -850,6 +912,10 @@ export function ModernDirectoryExplorer({
                   flyToUserTrigger={flyToUserTrigger}
                   onToggleFullscreen={handleToggleFullscreen}
                   isFullscreen={false}
+                  onMapClick={(loc) => {
+                    setUserLocation(loc);
+                    setFlyToUserTrigger((prev) => prev + 1);
+                  }}
                 />
               </div>
             </div>
@@ -871,6 +937,10 @@ export function ModernDirectoryExplorer({
               flyToUserTrigger={flyToUserTrigger}
               onToggleFullscreen={handleToggleFullscreen}
               isFullscreen={true}
+              onMapClick={(loc) => {
+                setUserLocation(loc);
+                setFlyToUserTrigger((prev) => prev + 1);
+              }}
             />
 
             {/* Top-Left Floating Unified Search & Category Controls on Map */}
@@ -1064,16 +1134,16 @@ export function ModernDirectoryExplorer({
             </Link>
 
             <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
-              <Link href="/" className="hover:text-gray-900 transition-colors">
+              <Link href="/about" className="hover:text-gray-900 transition-colors">
                 About
               </Link>
-              <Link href="/" className="hover:text-gray-900 transition-colors">
+              <Link href="/terms" className="hover:text-gray-900 transition-colors">
                 Terms of Service
               </Link>
-              <Link href="/" className="hover:text-gray-900 transition-colors">
+              <Link href="/privacy" className="hover:text-gray-900 transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="/" className="hover:text-gray-900 transition-colors">
+              <Link href="/contact" className="hover:text-gray-900 transition-colors">
                 Contact Support
               </Link>
             </div>

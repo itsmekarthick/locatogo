@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import Supercluster from "supercluster";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
+import { generateUberRideLink } from "@/lib/services/transit-links";
 
 const MAP_LAYERS = {
   street: {
@@ -19,91 +20,90 @@ const MAP_LAYERS = {
   },
 };
 
-function getCategoryMarkerIcon(categoryName?: string | null, isSelected?: boolean) {
-  const cat = (categoryName || "").toLowerCase();
-  let colorClass = "marker-default";
-  let iconHtml = "<span></span>";
+function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, zoom: number) {
+  const cat = (place.category_name || "").toLowerCase();
+  let emoji = "📍";
+  let themeColor = "#2563eb";
+  let bgLight = "#eff6ff";
 
-  if (
-    cat.includes("hospital") ||
-    cat.includes("health") ||
-    cat.includes("clinic") ||
-    cat.includes("medical") ||
-    cat.includes("care")
-  ) {
-    colorClass = "marker-hospital";
-    iconHtml = '<span style="font-size: 11px; line-height: 1;">➕</span>';
-  } else if (
-    cat.includes("school") ||
-    cat.includes("education") ||
-    cat.includes("college") ||
-    cat.includes("academy") ||
-    cat.includes("institute")
-  ) {
-    colorClass = "marker-school";
-    iconHtml = '<span style="font-size: 11px; line-height: 1;">🎓</span>';
-  } else if (
-    cat.includes("cafe") ||
-    cat.includes("restaurant") ||
-    cat.includes("food") ||
-    cat.includes("dine") ||
-    cat.includes("bakery")
-  ) {
-    colorClass = "marker-food";
-    iconHtml = '<span style="font-size: 11px; line-height: 1;">🍽️</span>';
-  } else if (
-    cat.includes("tech") ||
-    cat.includes("cowork") ||
-    cat.includes("startup") ||
-    cat.includes("hub")
-  ) {
-    colorClass = "marker-tech";
-    iconHtml = '<span style="font-size: 11px; line-height: 1;">💻</span>';
-  } else if (
-    cat.includes("retail") ||
-    cat.includes("shop") ||
-    cat.includes("store") ||
-    cat.includes("market")
-  ) {
-    colorClass = "marker-retail";
-    iconHtml = '<span style="font-size: 11px; line-height: 1;">🏬</span>';
-  } else if (
-    cat.includes("art") ||
-    cat.includes("creative") ||
-    cat.includes("design") ||
-    cat.includes("theatre") ||
-    cat.includes("culture")
-  ) {
-    colorClass = "marker-arts";
-    iconHtml = '<span style="font-size: 11px; line-height: 1;">🎨</span>';
-  } else if (
-    cat.includes("petrol") ||
-    cat.includes("fuel") ||
-    cat.includes("bunk") ||
-    cat.includes("pump") ||
-    cat.includes("gas")
-  ) {
-    colorClass = "marker-fuel";
-    iconHtml = '<span style="font-size: 11px; line-height: 1;">⛽</span>';
+  if (cat.includes("hospital") || cat.includes("health") || cat.includes("clinic") || cat.includes("medical") || cat.includes("care")) {
+    emoji = "➕";
+    themeColor = "#dc2626";
+    bgLight = "#fef2f2";
+  } else if (cat.includes("school") || cat.includes("education") || cat.includes("college") || cat.includes("academy") || cat.includes("institute")) {
+    emoji = "🎓";
+    themeColor = "#4f46e5";
+    bgLight = "#eef2ff";
+  } else if (cat.includes("cafe") || cat.includes("restaurant") || cat.includes("food") || cat.includes("dine") || cat.includes("bakery")) {
+    emoji = "🍽️";
+    themeColor = "#ea580c";
+    bgLight = "#fff7ed";
+  } else if (cat.includes("tech") || cat.includes("cowork") || cat.includes("startup") || cat.includes("hub")) {
+    emoji = "💻";
+    themeColor = "#7c3aed";
+    bgLight = "#f5f3ff";
+  } else if (cat.includes("retail") || cat.includes("shop") || cat.includes("store") || cat.includes("market")) {
+    emoji = "🏬";
+    themeColor = "#059669";
+    bgLight = "#ecfdf5";
+  } else if (cat.includes("petrol") || cat.includes("fuel") || cat.includes("pump")) {
+    emoji = "⛽";
+    themeColor = "#d97706";
+    bgLight = "#fffbeb";
+  } else if (cat.includes("art") || cat.includes("creative") || cat.includes("culture")) {
+    emoji = "🎨";
+    themeColor = "#db2777";
+    bgLight = "#fdf2f8";
   }
 
-  const size = isSelected ? 34 : 28;
+  const showRichPill = zoom >= 12 || isSelected;
+  const shortTitle = place.title.length > 22 ? place.title.slice(0, 20) + "…" : place.title;
+
+  if (showRichPill) {
+    const html = `
+      <div class="locatogo-pill-pin ${isSelected ? "is-active" : ""}" style="--theme-color: ${themeColor};">
+        <div class="locatogo-pin-icon-wrap" style="background: ${bgLight}; color: ${themeColor};">
+          <span>${emoji}</span>
+        </div>
+        <div class="locatogo-pin-label">
+          <span class="locatogo-pin-title">${shortTitle}</span>
+        </div>
+        <div class="locatogo-pin-arrow"></div>
+      </div>
+    `;
+
+    return L.divIcon({
+      className: "locatogo-pill-wrapper",
+      html,
+      iconSize: [160, 36],
+      iconAnchor: [80, 36],
+      popupAnchor: [0, -38],
+    });
+  }
+
+  const html = `
+    <div class="locatogo-teardrop-pin ${isSelected ? "is-active" : ""}" style="--theme-color: ${themeColor}; background: ${isSelected ? "#18181b" : themeColor};">
+      <div class="locatogo-teardrop-inner">
+        <span>${emoji}</span>
+      </div>
+    </div>
+  `;
 
   return L.divIcon({
-    className: `mapora-marker ${colorClass} ${isSelected ? "is-active" : ""}`,
-    html: iconHtml,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-    popupAnchor: [0, -(size / 2 + 4)],
+    className: "locatogo-teardrop-wrapper",
+    html,
+    iconSize: [32, 38],
+    iconAnchor: [16, 38],
+    popupAnchor: [0, -40],
   });
 }
 
 const userLocationIcon = L.divIcon({
   className: "user-location-marker",
   html: '<div class="user-location-pulse"></div><div class="user-location-dot"></div>',
-  iconSize: [38, 38],
-  iconAnchor: [19, 19],
-  popupAnchor: [0, -20],
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  popupAnchor: [0, -22],
 });
 
 /**
@@ -176,6 +176,21 @@ function StrictSingleStepWheelZoom({
   return null;
 }
 
+function MapClickHandler({
+  onMapClick,
+}: {
+  onMapClick?: (loc: { lat: number; lng: number }) => void;
+}) {
+  useMapEvents({
+    click: (e) => {
+      if (onMapClick) {
+        onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
+      }
+    },
+  });
+  return null;
+}
+
 /**
  * Robust Location Controller
  * Directly handles instant smooth flyTo when user clicks "My Location"
@@ -197,17 +212,15 @@ function LocationController({
         },
         (err) => {
           console.warn("Browser GPS permission not granted or unavailable:", err.message);
-          // Gracefully center on Central Bangalore (MG Road / Brigade Rd)
           const bangaloreCenter = { lat: 12.9716, lng: 77.5946 };
           onLocationFound(bangaloreCenter);
           map.flyTo([bangaloreCenter.lat, bangaloreCenter.lng], 14, { duration: 1.5 });
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     }
   }, [map, onLocationFound]);
 
-  // Expose to window for seamless click triggering
   useEffect(() => {
     (window as any).__locatogo_locate_me = handleLocateMe;
     return () => {
@@ -269,10 +282,12 @@ function ClusteredMarkersLayer({
   locatedListings,
   activePlaceId,
   setActivePlaceId,
+  userLocation,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
   setActivePlaceId: (id: string | null) => void;
+  userLocation?: { lat: number; lng: number } | null;
 }) {
   const map = useMap();
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
@@ -295,8 +310,8 @@ function ClusteredMarkersLayer({
 
   const supercluster = useMemo(() => {
     const sc = new Supercluster({
-      radius: 45,
-      maxZoom: 16,
+      radius: 40,
+      maxZoom: 15,
       minPoints: 2,
     });
 
@@ -336,8 +351,8 @@ function ClusteredMarkersLayer({
           const clusterIcon = L.divIcon({
             className: "mapora-cluster-marker",
             html: `<span>${pointCount}</span>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
           });
 
           return (
@@ -360,7 +375,9 @@ function ClusteredMarkersLayer({
 
         const place = cluster.properties as PlaceListing & { latitude: number; longitude: number };
         const isSelected = activePlaceId === place.id;
-        const icon = getCategoryMarkerIcon(place.category_name, isSelected);
+        const icon = getCategoryPinIcon(place, isSelected, zoom);
+
+        const uberUrl = generateUberRideLink(place.latitude, place.longitude, place.title, place.locality);
 
         return (
           <Marker
@@ -372,36 +389,52 @@ function ClusteredMarkersLayer({
             }}
           >
             <Popup className="mapora-popup">
-              <div className="p-1 max-w-[220px]">
-                {place.category_name && (
-                  <span className="mb-1 inline-block rounded-full bg-[var(--leaf)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--leaf-dark)]">
-                    {place.category_name}
-                  </span>
-                )}
-                <h4 className="font-semibold text-sm text-[var(--foreground)]">{place.title}</h4>
-                <p className="text-xs text-[var(--ink-muted)] mt-0.5">
-                  📍 {[place.locality, place.city].filter(Boolean).join(", ")}
+              <div className="p-3 max-w-[240px] font-sans">
+                <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                  {place.category_name && (
+                    <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900">
+                      {place.category_name}
+                    </span>
+                  )}
+                  {typeof place.distanceKm === "number" && (
+                    <span className="text-[10px] font-bold text-emerald-700">
+                      🚗 {place.distanceKm.toFixed(1)} km
+                    </span>
+                  )}
+                </div>
+
+                <h4 className="font-serif font-bold text-sm text-gray-950 leading-tight">
+                  {place.title}
+                </h4>
+
+                <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
+                  <span>📍</span>
+                  <span>{[place.locality, place.city].filter(Boolean).join(", ")}</span>
                 </p>
+
                 {place.short_description && (
-                  <p className="text-xs text-[var(--ink-muted)] mt-1.5 line-clamp-2">
+                  <p className="text-[11px] text-gray-600 mt-1.5 line-clamp-2 leading-snug">
                     {place.short_description}
                   </p>
                 )}
-                <div className="mt-3 pt-2 border-t border-[var(--line)] flex items-center justify-between">
+
+                <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <a
+                    href={uberUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 rounded-full bg-black px-2.5 py-1 text-[10px] font-bold text-white hover:bg-gray-800 transition-colors shadow-2xs"
+                  >
+                    <span>🚕</span>
+                    <span>Uber</span>
+                  </a>
+
                   <Link
                     href={`/listing/${place.slug}`}
-                    className="text-xs font-bold text-[var(--coral)] hover:underline"
+                    className="rounded-full bg-[#e26a4f] px-3 py-1 text-[10px] font-bold text-white hover:bg-[#d8583c] transition-colors shadow-xs"
                   >
-                    View place →
+                    Details →
                   </Link>
-                  {place.phone && (
-                    <a
-                      href={`tel:${place.phone}`}
-                      className="text-xs text-[var(--ink-muted)] hover:text-[var(--foreground)]"
-                    >
-                      📞 Call
-                    </a>
-                  )}
                 </div>
               </div>
             </Popup>
@@ -423,6 +456,7 @@ export default function InteractiveLeafletCanvas({
   onToggleFullscreen,
   isFullscreen = false,
   initialPerspective = "street",
+  onMapClick,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
@@ -434,6 +468,7 @@ export default function InteractiveLeafletCanvas({
   onToggleFullscreen?: () => void;
   isFullscreen?: boolean;
   initialPerspective?: "street" | "satellite";
+  onMapClick?: (loc: { lat: number; lng: number }) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<(() => void) | null>(null);
@@ -475,10 +510,10 @@ export default function InteractiveLeafletCanvas({
   );
 
   const handleTriggerLocate = () => {
-    if (typeof window !== "undefined" && (window as any).__locatogo_locate_me) {
-      (window as any).__locatogo_locate_me();
-    } else if (onLocateMe) {
+    if (onLocateMe) {
       onLocateMe();
+    } else if (typeof window !== "undefined" && (window as any).__locatogo_locate_me) {
+      (window as any).__locatogo_locate_me();
     }
   };
 
@@ -492,11 +527,12 @@ export default function InteractiveLeafletCanvas({
         zoom={locatedListings.length ? 13 : 12}
         scrollWheelZoom={false}
         doubleClickZoom={true}
-        className="h-full w-full z-0"
+        className="h-full w-full z-0 cursor-crosshair"
       >
         <TileLayer attribution={currentTiles.attribution} url={currentTiles.url} />
         <StrictSingleStepWheelZoom onZoomChange={handleRegisterZoomFunctions} />
         <LocationController onLocationFound={handleLocationFound} />
+        <MapClickHandler onMapClick={onMapClick} />
         <MapUpdater
           located={locatedListings}
           activePlace={activePlace}
@@ -508,21 +544,22 @@ export default function InteractiveLeafletCanvas({
         {effectiveLocation && (
           <Marker position={[effectiveLocation.lat, effectiveLocation.lng]} icon={userLocationIcon}>
             <Popup className="mapora-popup">
-              <div className="p-1 text-center font-sans">
+              <div className="p-2 text-center font-sans">
                 <span className="font-bold text-xs text-blue-700">📍 You Are Here</span>
-                <p className="text-[10px] text-[var(--ink-muted)] mt-0.5">
-                  Showing nearby places in Bangalore
+                <p className="text-[10px] text-gray-500 mt-0.5">
+                  Showing distances & nearby places
                 </p>
               </div>
             </Popup>
           </Marker>
         )}
 
-        {/* Clustered Place Markers for ALL locations in Bangalore */}
+        {/* Clustered & Rich Pill Place Markers */}
         <ClusteredMarkersLayer
           locatedListings={locatedListings}
           activePlaceId={activePlaceId}
           setActivePlaceId={setActivePlaceId}
+          userLocation={effectiveLocation}
         />
       </MapContainer>
 

@@ -1,173 +1,173 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f5f0;
-  --foreground: #13221c;
-  --ink-muted: #5e7066;
-  --line: #e3e7df;
+  --background: #fdfdfd;
+  --foreground: #111827;
+  --line: #f1f3f5;
+  --line-strong: #e2e5e9;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
   --paper: #ffffff;
-  --paper-subtle: #faf9f5;
-  --leaf: #e1ede0;
-  --leaf-dark: #2a523e;
-  --coral: #e06648;
-  --coral-soft: #fbebe7;
-  --yellow: #f2c85b;
-  --yellow-soft: #fdf6e2;
-  --sky: #e0effa;
-  --sky-dark: #20639b;
+  --ink-muted: #6b7280;
+  --ink-faint: #9ca3af;
+  --leaf: #e8f5e9;
+  --leaf-dark: #1b5e20;
+  --coral: #e26a4f;
+  --coral-dark: #cc5439;
+  --sun: #fef3c7;
+  --sun-dark: #b45309;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-ink-muted: var(--ink-muted);
-  --color-line: var(--line);
-  --color-paper: var(--paper);
-  --color-paper-subtle: var(--paper-subtle);
-  --color-leaf: var(--leaf);
-  --color-leaf-dark: var(--leaf-dark);
-  --color-coral: var(--coral);
-  --color-coral-soft: var(--coral-soft);
-  --color-yellow: var(--yellow);
-  --color-yellow-soft: var(--yellow-soft);
-  --font-sans: var(--font-body);
-  --font-display: var(--font-display);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-instrument-serif);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
-button, a { -webkit-tap-highlight-color: transparent; }
-::selection { background: var(--yellow); color: var(--foreground); }
+/* Custom Scrollbar for horizontal filter pills */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
-/* Custom scrollbars */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: var(--ink-muted); }
+/* =========================================================================
+   NEXT-GEN MODERN MAP MARKERS & PINS (AIRBNB / GOOGLE MAPS STYLE)
+   ========================================================================= */
 
-/* Mapora Interactive Map Markers & Modern Popups */
-.mapora-marker {
+/* 1. Rich Pill Marker Container */
+.locatogo-pill-wrapper {
+  background: transparent !important;
+  border: none !important;
   display: flex !important;
-  align-items: center;
   justify-content: center;
-  background: var(--foreground);
-  color: #ffffff;
-  border: 2.5px solid #ffffff;
-  border-radius: 9999px;
-  box-shadow: 0 4px 14px rgba(19, 34, 28, 0.35);
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  align-items: center;
+  pointer-events: auto !important;
 }
-.mapora-marker:hover, .mapora-marker.is-active {
-  transform: scale(1.3) translateY(-3px);
+
+.locatogo-pill-pin {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  color: #111827;
+  padding: 4px 10px 4px 5px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(17, 24, 39, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  transform-origin: center bottom;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
+}
+
+.locatogo-pill-pin:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  border-color: var(--theme-color, #e26a4f);
+  z-index: 999 !important;
+}
+
+.locatogo-pill-pin.is-active {
+  background: #18181b !important;
+  color: #ffffff !important;
+  border-color: #18181b !important;
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   z-index: 1000 !important;
 }
 
-/* Specific Distinct Category Colors */
-.mapora-marker.marker-hospital {
-  background: #e11d48;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.45);
-}
-.mapora-marker.marker-hospital:hover, .mapora-marker.marker-hospital.is-active {
-  background: #be123c !important;
-  box-shadow: 0 8px 24px rgba(225, 29, 72, 0.65);
-}
-
-.mapora-marker.marker-school {
-  background: #2563eb;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
-}
-.mapora-marker.marker-school:hover, .mapora-marker.marker-school.is-active {
-  background: #1d4ed8 !important;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.65);
-}
-
-.mapora-marker.marker-food {
-  background: #ea580c;
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.45);
-}
-.mapora-marker.marker-food:hover, .mapora-marker.marker-food.is-active {
-  background: #c2410c !important;
-  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.65);
-}
-
-.mapora-marker.marker-fuel {
-  background: #ca8a04;
-  box-shadow: 0 4px 14px rgba(202, 138, 4, 0.45);
-}
-.mapora-marker.marker-fuel:hover, .mapora-marker.marker-fuel.is-active {
-  background: #a16207 !important;
-  box-shadow: 0 8px 24px rgba(202, 138, 4, 0.65);
-}
-
-.mapora-marker.marker-tech {
-  background: #7c3aed;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.45);
-}
-.mapora-marker.marker-tech:hover, .mapora-marker.marker-tech.is-active {
-  background: #6d28d9 !important;
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.65);
-}
-
-.mapora-marker.marker-retail {
-  background: #059669;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.45);
-}
-.mapora-marker.marker-retail:hover, .mapora-marker.marker-retail.is-active {
-  background: #047857 !important;
-  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.65);
-}
-
-.mapora-marker.marker-arts {
-  background: #db2777;
-  box-shadow: 0 4px 14px rgba(219, 39, 119, 0.45);
-}
-.mapora-marker.marker-arts:hover, .mapora-marker.marker-arts.is-active {
-  background: #be185d !important;
-  box-shadow: 0 8px 24px rgba(219, 39, 119, 0.65);
-}
-
-.mapora-marker.marker-default {
-  background: #0f766e;
-  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.45);
-}
-.mapora-marker.marker-default:hover, .mapora-marker.marker-default.is-active {
-  background: #115e59 !important;
-  box-shadow: 0 8px 24px rgba(15, 118, 110, 0.65);
-}
-
-.mapora-marker span {
-  display: block;
-  height: 8px;
-  width: 8px;
+.locatogo-pill-pin .locatogo-pin-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   border-radius: 9999px;
-  background: #ffffff;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
-/* Custom Leaflet Popup Overhaul */
-.leaflet-popup-content-wrapper {
-  background: #ffffff !important;
-  color: var(--foreground) !important;
-  border-radius: 20px !important;
-  padding: 0 !important;
-  box-shadow: 0 12px 36px rgba(19, 34, 28, 0.16) !important;
-  border: 1px solid var(--line) !important;
+.locatogo-pill-pin.is-active .locatogo-pin-icon-wrap {
+  background: rgba(255, 255, 255, 0.2) !important;
 }
-.leaflet-popup-content {
-  margin: 14px 16px !important;
-  line-height: 1.4 !important;
+
+.locatogo-pill-pin .locatogo-pin-title {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
 }
-.leaflet-popup-tip-container {
-  display: none !important;
+
+/* Bottom needle pointer arrow */
+.locatogo-pill-pin .locatogo-pin-arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #ffffff;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
 }
-.leaflet-container {
-  font-family: inherit !important;
+
+.locatogo-pill-pin.is-active .locatogo-pin-arrow {
+  border-top-color: #18181b !important;
+}
+
+/* 2. Compact Teardrop Pin for Zoomed Out Mode */
+.locatogo-teardrop-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.locatogo-teardrop-pin {
+  position: relative;
+  width: 32px;
+  height: 38px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.locatogo-teardrop-pin:hover,
+.locatogo-teardrop-pin.is-active {
+  transform: rotate(-45deg) scale(1.18);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  z-index: 1000 !important;
+}
+
+.locatogo-teardrop-inner {
+  transform: rotate(45deg);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* User Current Location Pulsing Radar Marker */
@@ -188,36 +188,64 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 .user-location-pulse {
   position: absolute;
-  width: 38px;
-  height: 38px;
-  background: rgba(37, 99, 235, 0.3);
+  width: 40px;
+  height: 40px;
+  background: rgba(37, 99, 235, 0.35);
   border-radius: 9999px;
   animation: radar-pulse 2s infinite ease-out;
   z-index: 1;
 }
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
 /* Cluster Marker Badge Styling */
 .mapora-cluster-marker {
   display: flex !important;
   align-items: center;
   justify-content: center;
-  background: rgba(224, 102, 72, 0.92);
+  background: #18181b;
   color: #ffffff;
   border: 3px solid #ffffff;
   border-radius: 9999px;
   font-weight: 800;
   font-family: inherit;
-  font-size: 13px;
-  box-shadow: 0 4px 16px rgba(224, 102, 72, 0.45), 0 0 0 4px rgba(224, 102, 72, 0.25);
+  font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(226, 106, 79, 0.4);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .mapora-cluster-marker:hover {
   transform: scale(1.18);
-  background: var(--coral) !important;
-  box-shadow: 0 8px 24px rgba(224, 102, 72, 0.6), 0 0 0 6px rgba(224, 102, 72, 0.35);
+  background: #e26a4f !important;
+  box-shadow: 0 8px 24px rgba(226, 106, 79, 0.6), 0 0 0 5px rgba(226, 106, 79, 0.35);
   z-index: 1000 !important;
 }
-.mapora-cluster-marker.cluster-large {
-  background: rgba(19, 34, 28, 0.95);
-  box-shadow: 0 4px 16px rgba(19, 34, 28, 0.45), 0 0 0 4px rgba(19, 34, 28, 0.2);
+
+/* Custom Leaflet Popup Overhaul */
+.leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: var(--foreground) !important;
+  border-radius: 20px !important;
+  padding: 0 !important;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+.leaflet-container {
+  font-family: inherit !important;
 }
