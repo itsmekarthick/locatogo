@@ -269,55 +269,66 @@ function MapUpdater({
   activePlace,
   userLocation,
   flyToUserTrigger,
+  searchQuery,
 }: {
   located: (PlaceListing & { latitude: number; longitude: number })[];
   activePlace: (PlaceListing & { latitude: number; longitude: number }) | null;
   userLocation: { lat: number; lng: number } | null;
   flyToUserTrigger: number;
+  searchQuery?: string;
 }) {
   const map = useMap();
   const prevActiveIdRef = useRef<string | null>(null);
   const prevUserLocRef = useRef<{ lat: number; lng: number } | null>(null);
+  const prevSearchRef = useRef<string>("");
+  const prevSigRef = useRef<string>("");
 
+  // 1. Explicit locate me button click trigger
   useEffect(() => {
     if (flyToUserTrigger > 0 && userLocation) {
       map.flyTo([userLocation.lat, userLocation.lng], 15, { duration: 1.5 });
     }
   }, [flyToUserTrigger, userLocation, map]);
 
-  // Also fly to user the first time location is resolved (e.g. on mount auto-detect)
+  // 2. Initial Mount user location fly-to (only on initial load if no search has happened)
   useEffect(() => {
-    if (userLocation && !prevUserLocRef.current) {
+    if (userLocation && !prevUserLocRef.current && !searchQuery) {
       prevUserLocRef.current = userLocation;
-      map.flyTo([userLocation.lat, userLocation.lng], 15, { duration: 1.5 });
+      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
     } else if (userLocation) {
       prevUserLocRef.current = userLocation;
     }
-  }, [userLocation, map]);
+  }, [userLocation, searchQuery, map]);
 
+  // 3. Active Place Selection (clicking a card or marker popup)
   useEffect(() => {
     if (activePlace && activePlace.id !== prevActiveIdRef.current) {
       prevActiveIdRef.current = activePlace.id;
-      map.flyTo([activePlace.latitude, activePlace.longitude], 15, { duration: 1.2 });
+      map.flyTo([activePlace.latitude, activePlace.longitude], 16, { duration: 1.2 });
     }
   }, [activePlace, map]);
 
-  const prevCountRef = useRef<number>(-1);
-
+  // 4. Searching or Filtering: when user types in search or filters, move map to matching place(s)
   useEffect(() => {
-    // Only fit listing bounds if no user location has been resolved yet
-    if (!activePlace && !userLocation && located.length > 0 && flyToUserTrigger === 0) {
-      if (prevCountRef.current !== located.length) {
-        prevCountRef.current = located.length;
-        if (located.length === 1) {
-          map.setView([located[0].latitude, located[0].longitude], 14);
-        } else {
-          const bounds = L.latLngBounds(located.map((l) => [l.latitude, l.longitude]));
-          map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
-        }
+    const sig = located.map((l) => l.id).slice(0, 15).join(",");
+    const trimmedSearch = (searchQuery || "").trim();
+    const searchChanged = trimmedSearch !== prevSearchRef.current;
+    const sigChanged = sig !== prevSigRef.current && prevSigRef.current !== "";
+
+    prevSearchRef.current = trimmedSearch;
+    prevSigRef.current = sig;
+
+    if (activePlace) return;
+
+    if (located.length > 0 && (searchChanged || (trimmedSearch && sigChanged))) {
+      if (located.length === 1) {
+        map.flyTo([located[0].latitude, located[0].longitude], 15, { duration: 1.2 });
+      } else {
+        const bounds = L.latLngBounds(located.map((l) => [l.latitude, l.longitude]));
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
       }
     }
-  }, [located, activePlace, userLocation, flyToUserTrigger, map]);
+  }, [located, activePlace, searchQuery, map]);
 
   return null;
 }
@@ -512,6 +523,7 @@ export default function InteractiveLeafletCanvas({
   weatherType = null,
   showWeatherOverlay = true,
   onMapClick,
+  searchQuery,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
@@ -526,6 +538,7 @@ export default function InteractiveLeafletCanvas({
   weatherType?: WeatherType | null;
   showWeatherOverlay?: boolean;
   onMapClick?: (loc: { lat: number; lng: number }) => void;
+  searchQuery?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<(() => void) | null>(null);
@@ -604,6 +617,7 @@ export default function InteractiveLeafletCanvas({
           activePlace={activePlace}
           userLocation={effectiveLocation}
           flyToUserTrigger={flyToUserTrigger}
+          searchQuery={searchQuery}
         />
 
         {/* User Location Radar Marker */}
@@ -635,7 +649,7 @@ export default function InteractiveLeafletCanvas({
       )}
 
       {/* Top Floating Map Layer & Zoom Switcher */}
-      <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-[400] flex items-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-md p-1 border border-gray-200/90 shadow-lg text-[11px] sm:text-xs font-semibold">
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[400] flex items-center gap-0.5 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-md p-0.5 sm:p-1 border border-gray-200/90 shadow-md text-[10px] sm:text-xs font-semibold">
         {/* Quick Weather FX Cycle / Toggle */}
         <button
           onClick={() => {
@@ -649,7 +663,7 @@ export default function InteractiveLeafletCanvas({
             }
           }}
           title={`Weather Effects: ${activeWeatherFx || "Auto"} (Click to cycle Rain/Storm/Sun)`}
-          className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
+          className={`flex items-center gap-1 px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
             activeWeatherFx === "rain" || activeWeatherFx === "thunderstorm"
               ? "bg-blue-600 text-white font-bold shadow-xs animate-pulse"
               : "text-gray-700 hover:bg-gray-100"
@@ -663,41 +677,41 @@ export default function InteractiveLeafletCanvas({
 
         <button
           onClick={() => setMapStyle("street")}
-          className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
+          className={`flex items-center gap-1 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
             mapStyle === "street"
               ? "bg-gray-950 text-white font-bold shadow-xs"
               : "text-gray-700 hover:bg-gray-100"
           }`}
         >
           <span>🗺️</span>
-          <span className="hidden xs:inline">Street</span>
+          <span className="hidden sm:inline">Street</span>
         </button>
 
         <button
           onClick={() => setMapStyle("satellite")}
-          className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
+          className={`flex items-center gap-1 px-1.5 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
             mapStyle === "satellite"
               ? "bg-[#e26a4f] text-white font-bold shadow-xs"
               : "text-gray-700 hover:bg-gray-100"
           }`}
         >
           <span>🛰️</span>
-          <span className="hidden xs:inline">Satellite</span>
+          <span className="hidden sm:inline">Satellite</span>
         </button>
 
         {/* Explicit 1-Step Click Zoom Buttons */}
-        <div className="flex items-center border-l border-gray-200 pl-1 sm:pl-1.5 gap-0.5 sm:gap-1">
+        <div className="flex items-center border-l border-gray-200 pl-0.5 sm:pl-1.5 gap-0.5">
           <button
             onClick={() => zoomInRef.current?.()}
             title="Zoom In (1 Step)"
-            className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
           >
             +
           </button>
           <button
             onClick={() => zoomOutRef.current?.()}
             title="Zoom Out (1 Step)"
-            className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
           >
             −
           </button>
@@ -707,7 +721,7 @@ export default function InteractiveLeafletCanvas({
           <button
             onClick={onToggleFullscreen}
             title={isFullscreen ? "Exit Full Screen Map" : "Full Screen Map"}
-            className="border-l border-gray-200 pl-2 pr-1 text-gray-600 hover:text-gray-950 text-xs font-bold cursor-pointer"
+            className="border-l border-gray-200 pl-1.5 pr-1 text-gray-600 hover:text-gray-950 text-[10px] sm:text-xs font-bold cursor-pointer"
           >
             {isFullscreen ? "✕" : "⛶"}
           </button>

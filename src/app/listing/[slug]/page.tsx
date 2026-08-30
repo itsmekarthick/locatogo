@@ -19,6 +19,7 @@ import { fetchLivePlaceDetails } from "@/lib/media/google-places";
 import { ShareButton } from "@/components/share-button";
 import { FavoriteButton } from "@/components/favorite-button";
 import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
+import { BrandLogo } from "@/components/brand-logo";
 import { PlaceReviews } from "@/components/place-reviews-section";
 import { NearbyPlaces } from "@/components/nearby-places";
 
@@ -756,8 +757,9 @@ export default async function ListingDetailPage({ params }: Props) {
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
-          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            locatogo<span className="text-[#e26a4f]">.</span>
+          <Link href="/" className="flex items-center gap-2 group font-serif text-xl font-bold tracking-tight text-gray-900">
+            <BrandLogo size={24} />
+            <span>locatogo<span className="text-[#e26a4f]">.</span></span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
