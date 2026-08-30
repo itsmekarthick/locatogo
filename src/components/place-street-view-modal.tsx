@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export function PlaceStreetViewButton({
   latitude,
@@ -12,6 +13,11 @@ export function PlaceStreetViewButton({
   title: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Universal Google Maps 360° Street View Pano Deep Link (Bypasses API key restrictions)
   const streetViewDirectUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${latitude},${longitude}`;
@@ -28,8 +34,8 @@ export function PlaceStreetViewButton({
         <span>Look Around 360°</span>
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
+      {isOpen && mounted && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
           <div className="relative flex flex-col w-full max-w-2xl rounded-3xl bg-gray-950 border border-gray-800 overflow-hidden shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-900/90">
@@ -151,7 +157,8 @@ export function PlaceStreetViewButton({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
