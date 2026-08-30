@@ -576,6 +576,7 @@ export default function InteractiveLeafletCanvas({
       <MapContainer
         center={initialCenter}
         zoom={locatedListings.length ? 13 : 2}
+        zoomControl={false}
         scrollWheelZoom={false}
         doubleClickZoom={true}
         className="h-full w-full z-0 cursor-crosshair"
@@ -615,44 +616,44 @@ export default function InteractiveLeafletCanvas({
       </MapContainer>
 
       {/* Top Floating Map Layer & Zoom Switcher */}
-      <div className="absolute top-4 right-4 z-[400] flex items-center gap-1.5 rounded-2xl bg-white/95 backdrop-blur-md p-1 border border-gray-200/90 shadow-xl text-xs font-semibold">
+      <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-[400] flex items-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-md p-1 border border-gray-200/90 shadow-lg text-[11px] sm:text-xs font-semibold">
         <button
           onClick={() => setMapStyle("street")}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+          className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
             mapStyle === "street"
               ? "bg-gray-950 text-white font-bold shadow-xs"
               : "text-gray-700 hover:bg-gray-100"
           }`}
         >
           <span>🗺️</span>
-          <span>Street</span>
+          <span className="hidden xs:inline">Street</span>
         </button>
 
         <button
           onClick={() => setMapStyle("satellite")}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+          className={`flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
             mapStyle === "satellite"
               ? "bg-[#e26a4f] text-white font-bold shadow-xs"
               : "text-gray-700 hover:bg-gray-100"
           }`}
         >
           <span>🛰️</span>
-          <span>Satellite</span>
+          <span className="hidden xs:inline">Satellite</span>
         </button>
 
         {/* Explicit 1-Step Click Zoom Buttons */}
-        <div className="flex items-center border-l border-gray-200 pl-1.5 gap-1">
+        <div className="flex items-center border-l border-gray-200 pl-1 sm:pl-1.5 gap-0.5 sm:gap-1">
           <button
             onClick={() => zoomInRef.current?.()}
             title="Zoom In (1 Step)"
-            className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-900 font-bold text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+            className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
           >
             +
           </button>
           <button
             onClick={() => zoomOutRef.current?.()}
             title="Zoom Out (1 Step)"
-            className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-900 font-bold text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+            className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
           >
             −
           </button>
@@ -679,13 +680,6 @@ export default function InteractiveLeafletCanvas({
           <span className="text-sm">🎯</span>
           <span className="hidden sm:inline">My Location</span>
         </button>
-
-        <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-semibold text-gray-800 shadow-lg backdrop-blur-md">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#e26a4f] animate-pulse" />
-          <span>
-            {locatedListings.length} {locatedListings.length === 1 ? "place" : "places"}
-          </span>
-        </div>
       </div>
     </div>
   );

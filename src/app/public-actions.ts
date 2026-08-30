@@ -12,7 +12,17 @@ function text(formData: FormData, key: string) {
 export async function submitListing(formData: FormData): Promise<void> {
   const supabase = await createSupabaseServerClient();
   const domainSlug = text(formData, "domainSlug");
-  const parsed = submissionInputSchema.safeParse({ domainSlug: domainSlug || "default", name: text(formData, "name"), email: text(formData, "email"), description: text(formData, "description"), city: text(formData, "city") || undefined });
+  const parsed = submissionInputSchema.safeParse({
+    domainSlug: domainSlug || "default",
+    name: text(formData, "name"),
+    email: text(formData, "email"),
+    description: text(formData, "description"),
+    city: text(formData, "city") || undefined,
+    locality: text(formData, "locality") || undefined,
+    categoryId: text(formData, "categoryId") || undefined,
+    latitude: formData.get("latitude") ? Number(formData.get("latitude")) : undefined,
+    longitude: formData.get("longitude") ? Number(formData.get("longitude")) : undefined,
+  });
   if (!parsed.success) throw new Error("Please provide a name, valid email, and description.");
   
   let domainQuery = supabase.from("domains").select("id, tenant_id, slug").eq("status", "published");
@@ -25,7 +35,21 @@ export async function submitListing(formData: FormData): Promise<void> {
   const { data: allowed } = await supabase.rpc("consume_rate_limit", { target_key: `submission:${parsed.data.email.toLowerCase()}`, window_seconds: 3600, max_requests: 5 });
   if (!allowed) throw new Error("Too many submissions. Please try again later.");
   const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await supabase.from("listing_submissions").insert({ tenant_id: domain.tenant_id, domain_id: domain.id, submitted_by_user_id: user?.id ?? null, submitted_email: parsed.data.email, payload_json: { name: parsed.data.name, description: parsed.data.description, city: parsed.data.city ?? null } });
+  const { error } = await supabase.from("listing_submissions").insert({
+    tenant_id: domain.tenant_id,
+    domain_id: domain.id,
+    submitted_by_user_id: user?.id ?? null,
+    submitted_email: parsed.data.email,
+    payload_json: {
+      name: parsed.data.name,
+      description: parsed.data.description,
+      city: parsed.data.city ?? null,
+      locality: parsed.data.locality ?? null,
+      category_id: parsed.data.categoryId ?? null,
+      latitude: parsed.data.latitude ?? null,
+      longitude: parsed.data.longitude ?? null,
+    },
+  });
   if (error) throw new Error("Submission could not be received.");
   redirect(`/?submitted=1`);
 }

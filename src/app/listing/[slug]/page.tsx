@@ -16,6 +16,10 @@ import {
   generateWhatsAppInquiryLink,
 } from "@/lib/services/transit-links";
 import { fetchLivePlaceDetails } from "@/lib/media/google-places";
+import { ShareButton } from "@/components/share-button";
+import { FavoriteButton } from "@/components/favorite-button";
+import { PlaceReviews } from "@/components/place-reviews-section";
+import { NearbyPlaces } from "@/components/nearby-places";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -42,7 +46,7 @@ async function getListing(params: Promise<{ slug: string }>) {
 
   if (!listing) return null;
 
-  const [{ data: hours }, { data: links }, { data: media }, placeDetails, weather] =
+  const [{ data: hours }, { data: links }, { data: media }, { data: reviews }, placeDetails, weather] =
     await Promise.all([
       supabase
         .from("listing_hours")
@@ -55,13 +59,18 @@ async function getListing(params: Promise<{ slug: string }>) {
         .select("*")
         .eq("listing_id", listing.id)
         .order("sort_order", { ascending: true }),
+      supabase
+        .from("place_reviews")
+        .select("id, user_id, rating, body, created_at")
+        .eq("listing_id", listing.id)
+        .order("created_at", { ascending: false }),
       fetchLivePlaceDetails(listing.title, listing.locality, listing.latitude, listing.longitude),
       listing.latitude && listing.longitude
         ? fetchPlaceWeather(listing.latitude, listing.longitude)
         : Promise.resolve(null),
     ]);
 
-  return { listing, hours, links, media, placeDetails, weather };
+  return { listing, hours, links, media, reviews: reviews ?? [], placeDetails, weather };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -79,7 +88,7 @@ export default async function ListingDetailPage({ params }: Props) {
   const result = await getListing(params);
   if (!result) notFound();
 
-  const { listing, hours, media, placeDetails, weather } = result;
+  const { listing, hours, media, reviews, placeDetails, weather } = result;
 
   // Generate Authentic Editorial Overview and Highlights
   const categoryName = (listing.categories as any)?.name ?? "Place";
@@ -135,14 +144,16 @@ export default async function ListingDetailPage({ params }: Props) {
     listing.short_description ||
     placeDetails.editorialSummary ||
     aboutData.overview ||
-    `Discover ${listing.title}, a premier ${categoryName.toLowerCase()} in ${listing.locality || "Bangalore"}.`;
+    listing.description ||
+    `Verified local infrastructure in ${listing.locality || listing.city || "the area"}.`;
 
   // JSON-LD structured data for local business SEO
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: listing.title,
-    description: listing.short_description ?? listing.description,
+    description: heroSummary,
+    image: displayPhotos.map((p: any) => p.url),
     address: {
       "@type": "PostalAddress",
       streetAddress: listing.address_line_1,
@@ -175,7 +186,7 @@ export default async function ListingDetailPage({ params }: Props) {
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>
-              <span>Bangalore Atlas</span>
+              <span>Global Atlas</span>
             </div>
           </div>
 
@@ -211,7 +222,7 @@ export default async function ListingDetailPage({ params }: Props) {
             className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-gray-950 transition-colors"
           >
             <span>←</span>
-            <span>Back to Bangalore Atlas</span>
+            <span>Back to Live Atlas</span>
           </Link>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -379,6 +390,12 @@ export default async function ListingDetailPage({ params }: Props) {
                 <span>Directions</span>
               </a>
             )}
+
+            {/* Share Place */}
+            <ShareButton title={listing.title} className="rounded-full! shrink-0" />
+
+            {/* Save / Favorite */}
+            <FavoriteButton listingId={listing.id} showCount className="rounded-full! shrink-0" />
           </div>
         </section>
 
@@ -684,6 +701,19 @@ export default async function ListingDetailPage({ params }: Props) {
             </div>
           </div>
         </section>
+
+        {/* 6. COMMUNITY REVIEWS & RATINGS */}
+        <PlaceReviews listingId={listing.id} initialReviews={reviews} />
+
+        {/* 7. NEARBY PLACES WIDGET */}
+        {listing.latitude && listing.longitude && (
+          <NearbyPlaces
+            listingId={listing.id}
+            categoryId={listing.category_id}
+            latitude={listing.latitude}
+            longitude={listing.longitude}
+          />
+        )}
       </main>
 
       {/* Floating Bottom Quick-Action Bar for Mobile Devices */}

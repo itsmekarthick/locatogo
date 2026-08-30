@@ -1,7 +1,21 @@
 import Link from "next/link";
 import { submitListing } from "@/app/public-actions";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { LocationPinPicker } from "@/components/location-pin-picker";
+
+export const metadata = {
+  title: "Suggest a Place | Locatogo",
+  description: "Contribute verified places, schools, hospitals, cafes, and landmarks to the community directory atlas.",
+};
 
 export default async function DirectSubmitPage() {
+  const supabase = await createSupabaseServerClient();
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, slug")
+    .eq("is_active", true)
+    .order("sort_order");
+
   return (
     <main className="min-h-screen bg-[var(--background)] px-5 py-12 sm:px-10">
       <div className="mx-auto max-w-2xl">
@@ -22,7 +36,7 @@ export default async function DirectSubmitPage() {
           </p>
         </div>
 
-        <form action={submitListing} className="mt-8 space-y-5 rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-sm">
+        <form action={submitListing} className="mt-8 space-y-6 rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-sm">
           <input type="hidden" name="domainSlug" value="" />
 
           <div>
@@ -41,9 +55,27 @@ export default async function DirectSubmitPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                Category
+              </label>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Primary classification.</p>
+              <select
+                name="categoryId"
+                className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-sm text-[var(--foreground)] focus:border-[var(--foreground)] focus:outline-none cursor-pointer"
+              >
+                <option value="">Select Category (Optional)</option>
+                {categories?.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
                 Your Email <span className="text-[var(--coral)]">*</span>
               </label>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">For notification when the place is approved.</p>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">For notification when approved.</p>
               <input
                 name="email"
                 required
@@ -52,18 +84,37 @@ export default async function DirectSubmitPage() {
                 className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm text-[var(--foreground)] focus:border-[var(--foreground)] focus:outline-none"
               />
             </div>
+          </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                City / Locality
+                Neighborhood / Locality
               </label>
-              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">City or neighborhood.</p>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">e.g. Indiranagar, Chandapura</p>
               <input
-                name="city"
-                placeholder="e.g. Chandapura, Bangalore"
+                name="locality"
+                placeholder="e.g. Indiranagar"
                 className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm text-[var(--foreground)] focus:border-[var(--foreground)] focus:outline-none"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                City
+              </label>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">City name.</p>
+              <input
+                name="city"
+                placeholder="e.g. Bangalore"
+                className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm text-[var(--foreground)] focus:border-[var(--foreground)] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Interactive Map Pin Picker */}
+          <div className="pt-2">
+            <LocationPinPicker />
           </div>
 
           <div>
@@ -92,4 +143,3 @@ export default async function DirectSubmitPage() {
     </main>
   );
 }
-

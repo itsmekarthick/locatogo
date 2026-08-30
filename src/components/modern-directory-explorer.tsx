@@ -6,6 +6,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Pagination } from "@/components/ui/pagination";
 import { generateUberRideLink, generateWhatsAppInquiryLink } from "@/lib/services/transit-links";
 import { Google3DMap } from "@/components/google-3d-map";
+import { FavoriteButton } from "@/components/favorite-button";
 
 // Dynamically import interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -386,8 +387,14 @@ export function ModernDirectoryExplorer({
               <span className="sm:hidden inline">+ ADD</span>
             </Link>
             <Link
+              href="/dashboard"
+              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Dashboard
+            </Link>
+            <Link
               href="/admin"
-              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Admin
             </Link>
@@ -415,7 +422,7 @@ export function ModernDirectoryExplorer({
       {(viewMode === "immersive" || viewMode === "3d") && (
         <>
           {/* Top Interactive Hero Map with Floating Overlapping Search Card */}
-          <div className="relative w-full h-[460px] sm:h-[500px] bg-[#e8eef5]">
+          <div className="relative w-full h-[380px] sm:h-[460px] md:h-[500px] bg-[#e8eef5]">
             <InteractiveLeafletCanvas
               key={`hero-canvas-${viewMode}`}
               locatedListings={locatedListings}
@@ -666,13 +673,18 @@ export function ModernDirectoryExplorer({
                               )}
                             </div>
 
-                            <Link
-                              href={`/listing/${place.slug}`}
-                              className="font-bold text-xs text-[#e26a4f] hover:underline flex items-center gap-1 shrink-0"
-                            >
-                              <span>Details</span>
-                              <span>→</span>
-                            </Link>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <FavoriteButton listingId={place.id} className="py-1! px-2! text-xs!" />
+                              </div>
+                              <Link
+                                href={`/listing/${place.slug}`}
+                                className="font-bold text-xs text-[#e26a4f] hover:underline flex items-center gap-1 shrink-0"
+                              >
+                                <span>Details</span>
+                                <span>→</span>
+                              </Link>
+                            </div>
                           </div>
                         </article>
                       );

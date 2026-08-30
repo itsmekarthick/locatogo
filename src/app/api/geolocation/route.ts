@@ -1,16 +1,42 @@
 import { NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  try {
-    const forwardedFor = request.headers.get("x-forwarded-for");
-    const realIp = request.headers.get("x-real-ip");
-    let ip = forwardedFor?.split(",")[0]?.trim() || realIp || "";
+// --- Simple in-memory rate limiter (resets on server restart / cold-start) ---
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 20;    // requests
+const WINDOW_MS = 60_000; // per 1 minute
 
-    // Ignore localhost loopback IPs for external lookup
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  if (entry.count > RATE_LIMIT) return true;
+  return false;
+}
+
+export async function GET(request: Request) {
+  // --- Rate limiting ---
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const realIp = request.headers.get("x-real-ip");
+  let ip = forwardedFor?.split(",")[0]?.trim() || realIp || "unknown";
+
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { success: false, message: "Too many requests. Please try again shortly." },
+      { status: 429 }
+    );
+  }
+
+  try {
+    // Ignore localhost / private IPs for external lookup
     if (
       !ip ||
       ip === "::1" ||
       ip === "127.0.0.1" ||
+      ip === "unknown" ||
       ip.startsWith("192.168.") ||
       ip.startsWith("10.") ||
       ip.startsWith("172.16.")
@@ -20,7 +46,7 @@ export async function GET(request: Request) {
 
     const ipApiUrl = ip ? `https://ipwho.is/${ip}` : "https://ipwho.is/";
     const res = await fetch(ipApiUrl, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 3600 }, // cache 1 hour per IP
       headers: { "User-Agent": "LocatogoApp/1.0" },
     });
 
@@ -54,4 +80,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

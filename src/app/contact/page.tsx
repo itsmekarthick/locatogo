@@ -1,31 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
+import { submitContactForm, type ContactFormState } from "./actions";
+
+function SubmitBtn() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-xl bg-gray-950 py-3 text-xs font-bold text-white hover:bg-black transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+    >
+      {pending ? "Sending..." : "Submit Support Message →"}
+    </button>
+  );
+}
 
 export default function ContactSupportPage() {
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    category: "general",
-    placeName: "",
-    subject: "",
-    message: "",
-  });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate reliable submission confirmation
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-    }, 800);
-  };
+  const [state, formAction] = useActionState(submitContactForm, {} as ContactFormState);
+  const supportHq = process.env.NEXT_PUBLIC_SUPPORT_HQ ?? "Bangalore, Karnataka, India";
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#fdfdfd] font-sans antialiased text-[#111827]">
@@ -60,22 +55,20 @@ export default function ContactSupportPage() {
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
-        {/* Breadcrumb */}
-        <div className="mb-6 flex items-center gap-2 text-xs text-gray-500 font-medium">
+      <main className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 py-10 sm:py-16">
+        <nav className="mb-6 flex items-center gap-2 text-xs text-gray-400 font-medium">
           <Link href="/" className="hover:text-gray-900 transition-colors">
             Home
           </Link>
           <span>/</span>
-          <span className="text-gray-900 font-semibold">Contact Support</span>
-        </div>
+          <span className="text-gray-700">Contact Support</span>
+        </nav>
 
-        {/* Top Hero Card */}
-        <div className="border-b border-gray-200 pb-8 mb-10">
-          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
+        <div className="mb-10 sm:mb-12">
+          <span className="inline-block rounded-full bg-emerald-50 border border-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-700 tracking-wide uppercase">
             Helpdesk & Support
           </span>
-          <h1 className="mt-3 font-serif text-3xl sm:text-5xl font-bold text-gray-950">
+          <h1 className="mt-3 font-serif text-3xl sm:text-5xl font-bold tracking-tight text-gray-950">
             How can we assist you today?
           </h1>
           <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-2xl">
@@ -86,7 +79,7 @@ export default function ContactSupportPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
           {/* LEFT: CONTACT FORM */}
           <div className="rounded-3xl border border-gray-200/80 bg-white p-6 sm:p-8 shadow-xs">
-            {submitted ? (
+            {state.success ? (
               <div className="py-12 text-center space-y-4">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-3xl">
                   ✓
@@ -95,37 +88,32 @@ export default function ContactSupportPage() {
                   Message Received!
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto leading-relaxed">
-                  Thank you for reaching out, <strong>{formData.fullName}</strong>. Our directory operations team will review your inquiry and get back to you at <strong>{formData.email}</strong> within 24 hours.
+                  {state.success}
                 </p>
-                <button
-                  onClick={() => {
-                    setSubmitted(false);
-                    setFormData({
-                      fullName: "",
-                      email: "",
-                      category: "general",
-                      placeName: "",
-                      subject: "",
-                      message: "",
-                    });
-                  }}
-                  className="mt-6 rounded-xl bg-gray-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-black transition-colors"
+                <Link
+                  href="/"
+                  className="inline-block mt-6 rounded-xl bg-gray-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-black transition-colors"
                 >
-                  Send Another Message
-                </button>
+                  Return to Atlas
+                </Link>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5 text-xs">
+              <form action={formAction} className="space-y-5 text-xs">
+                {state.error && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 font-medium">
+                    {state.error}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-bold text-gray-700 mb-1.5">
                       Your Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
+                      name="fullName"
                       type="text"
                       required
-                      value={formData.fullName}
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                       placeholder="e.g. Karthik Sundaram"
                       className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition-colors"
                     />
@@ -136,10 +124,9 @@ export default function ContactSupportPage() {
                       Email Address <span className="text-red-500">*</span>
                     </label>
                     <input
+                      name="email"
                       type="email"
                       required
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="name@example.com"
                       className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition-colors"
                     />
@@ -152,8 +139,8 @@ export default function ContactSupportPage() {
                       Inquiry Category
                     </label>
                     <select
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      name="category"
+                      defaultValue="general"
                       className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs font-medium text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition-colors cursor-pointer"
                     >
                       <option value="general">General Question</option>
@@ -169,9 +156,8 @@ export default function ContactSupportPage() {
                       Place / Business Name (Optional)
                     </label>
                     <input
+                      name="placeName"
                       type="text"
-                      value={formData.placeName}
-                      onChange={(e) => setFormData({ ...formData, placeName: e.target.value })}
                       placeholder="e.g. Edify School / Narayana Hospital"
                       className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition-colors"
                     />
@@ -183,10 +169,9 @@ export default function ContactSupportPage() {
                     Subject <span className="text-red-500">*</span>
                   </label>
                   <input
+                    name="subject"
                     type="text"
                     required
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     placeholder="Brief summary of your request"
                     className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition-colors"
                   />
@@ -197,22 +182,15 @@ export default function ContactSupportPage() {
                     Message Details <span className="text-red-500">*</span>
                   </label>
                   <textarea
+                    name="message"
                     required
                     rows={5}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Describe how we can help you with this place or inquiry..."
                     className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-xs text-gray-900 focus:bg-white focus:border-gray-900 focus:outline-none transition-colors leading-relaxed"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full rounded-xl bg-gray-950 py-3 text-xs font-bold text-white hover:bg-black transition-colors shadow-xs cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <span>{isSubmitting ? "Sending..." : "Submit Support Message →"}</span>
-                </button>
+                <SubmitBtn />
               </form>
             )}
           </div>
@@ -239,7 +217,7 @@ export default function ContactSupportPage() {
                   <span className="text-lg">📍</span>
                   <div>
                     <span className="font-bold text-gray-900 block">Headquarters</span>
-                    <p className="text-gray-500">Bangalore, Karnataka, India</p>
+                    <p className="text-gray-500">{supportHq}</p>
                   </div>
                 </div>
 
@@ -310,4 +288,3 @@ export default function ContactSupportPage() {
     </div>
   );
 }
-

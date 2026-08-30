@@ -60,6 +60,10 @@ export const submissionInputSchema = z.object({
   email: z.string().trim().email(),
   description: z.string().trim().min(10).max(5000),
   city: z.string().trim().max(120).optional(),
+  locality: z.string().trim().max(120).optional(),
+  categoryId: z.string().uuid().optional(),
+  latitude: z.coerce.number().min(-90).max(90).optional().nullable(),
+  longitude: z.coerce.number().min(-180).max(180).optional().nullable(),
 });
 
 export const claimInputSchema = z.object({
