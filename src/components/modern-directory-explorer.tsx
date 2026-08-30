@@ -365,20 +365,48 @@ export function ModernDirectoryExplorer({
             </div>
           </div>
 
-          {/* Center: Detect My Location */}
-          <div className="hidden md:flex items-center">
-            <button
-              onClick={handleLocateMe}
-              disabled={isLocating}
-              className="flex items-center gap-2 text-xs font-bold text-gray-800 hover:text-gray-950 transition-colors cursor-pointer"
-            >
-              <span className="text-[#e26a4f] text-sm">🎯</span>
-              <span>{isLocating ? "Detecting Location..." : userLocation ? "Location Active (Nearby)" : "Detect My Location"}</span>
-            </button>
+          {/* Center: Top Global Search Bar + Neighborhood Dropdown */}
+          <div className="flex-1 max-w-[260px] xs:max-w-sm sm:max-w-md lg:max-w-lg mx-2 sm:mx-4">
+            <div className="flex items-center rounded-xl border border-gray-200 bg-gray-50/90 p-1 focus-within:border-gray-400 focus-within:bg-white focus-within:shadow-2xs transition-all">
+              <div className="relative flex-1 flex items-center pl-2 min-w-0">
+                <span className="text-gray-400 text-xs mr-2 shrink-0">🔍</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search places by name..."
+                  className="w-full bg-transparent text-xs text-gray-900 placeholder-gray-400 focus:outline-none min-w-0"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="text-xs text-gray-400 hover:text-gray-700 pr-1.5 cursor-pointer shrink-0"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Neighborhood Selector in Top Navbar */}
+              <div className="border-l border-gray-200 pl-1.5 shrink-0">
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="rounded-lg bg-transparent px-2 py-1 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer max-w-[120px] sm:max-w-[150px] truncate"
+                >
+                  <option value="">All Neighborhoods</option>
+                  {availableLocations.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Right Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link
               href="/submit"
               className="rounded-full sm:rounded-md bg-[#e26a4f] px-3.5 sm:px-5 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[#d8583c] hover:shadow-sm"
@@ -394,7 +422,7 @@ export function ModernDirectoryExplorer({
             </Link>
             <Link
               href="/admin"
-              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Admin
             </Link>
@@ -421,7 +449,7 @@ export function ModernDirectoryExplorer({
       {/* VIEW MODE 1: IMMERSIVE HERO MAP / 3D SATELLITE VIEW */}
       {(viewMode === "immersive" || viewMode === "3d") && (
         <>
-          {/* Top Interactive Hero Map with Floating Overlapping Search Card */}
+          {/* Top Interactive Hero Map with Floating Overlapping Categories Card */}
           <div className="relative w-full h-[380px] sm:h-[460px] md:h-[500px] bg-[#e8eef5]">
             <InteractiveLeafletCanvas
               key={`hero-canvas-${viewMode}`}
@@ -440,48 +468,11 @@ export function ModernDirectoryExplorer({
               }}
             />
 
-            {/* Floating Overlapping Search & Categories Card */}
-            <div className="absolute -bottom-28 sm:-bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[400]">
-              <div className="rounded-3xl border border-gray-100 bg-white/95 p-4 sm:p-6 shadow-xl backdrop-blur-md">
-                {/* Search Bar + Neighborhood Dropdown */}
-                <div className="flex flex-col sm:flex-row items-center rounded-2xl border border-gray-200 bg-white p-1.5 shadow-xs focus-within:border-gray-400 transition-all">
-                  <div className="relative flex-1 w-full flex items-center pl-3">
-                    <span className="text-gray-400 text-sm">🔍</span>
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search by name (e.g. Edify School, Narayana Hospital, Sparsh)..."
-                      className="w-full bg-transparent px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery("")}
-                        className="pr-3 text-xs text-gray-400 hover:text-gray-700"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="w-full sm:w-auto border-t sm:border-t-0 sm:border-l border-gray-200 pt-2 sm:pt-0 sm:pl-2">
-                    <select
-                      value={selectedLocation}
-                      onChange={(e) => setSelectedLocation(e.target.value)}
-                      className="w-full sm:w-auto rounded-xl bg-transparent px-4 py-2 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer"
-                    >
-                      <option value="">All Neighborhoods</option>
-                      {availableLocations.map((loc) => (
-                        <option key={loc} value={loc}>
-                          {loc}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
+            {/* Floating Overlapping Category Pills Card */}
+            <div className="absolute -bottom-16 sm:-bottom-14 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-[400]">
+              <div className="rounded-3xl border border-gray-100 bg-white/95 p-3.5 sm:p-4 shadow-xl backdrop-blur-md">
                 {/* Category Pills Row */}
-                <div className="mt-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar sm:flex-wrap sm:justify-center pb-1">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
                   <button
                     onClick={() => handleSelectCategory("")}
                     className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
@@ -1042,45 +1033,8 @@ export function ModernDirectoryExplorer({
               }}
             />
 
-            {/* Top-Left Floating Unified Search & Category Controls on Map */}
-            <div className="absolute top-4 left-4 z-[400] max-w-[calc(100vw-32px)] sm:max-w-xl space-y-2">
-              <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white/95 p-1.5 shadow-xl backdrop-blur-md">
-                <div className="relative flex-1 flex items-center pl-3">
-                  <span className="text-gray-400 text-sm">🔍</span>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      if (e.target.value.trim()) setIsFullscreenDrawerOpen(true);
-                    }}
-                    placeholder="Search places by name, category or city..."
-                    className="w-full bg-transparent px-2.5 py-1 text-xs text-gray-900 placeholder-gray-400 focus:outline-none"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="pr-2 text-xs text-gray-400 hover:text-gray-700"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="rounded-full bg-gray-50 border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer"
-                >
-                  <option value="">All Locations</option>
-                  {availableLocations.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+            {/* Top-Left Floating Category Controls on Map */}
+            <div className="absolute top-4 left-4 z-[400] max-w-[calc(100vw-32px)] sm:max-w-xl">
               {/* Floating Category Pills on Map */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none max-w-full">
                 <button
