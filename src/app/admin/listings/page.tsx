@@ -68,24 +68,44 @@ export default async function ListingsPage() {
             </div>
           </div>
 
-          {/* Section 2: Category Taxonomy */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-              Category <span className="text-[var(--coral)]">*</span>
-            </label>
-            <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Classification for map tabs, icons, and discovery filters.</p>
-            <select
-              name="categoryId"
-              required
-              className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
-            >
-              <option value="">Choose category</option>
-              {categories?.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+          {/* Section 2: Domain & Category Taxonomy */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                Directory Domain / City Atlas <span className="text-[var(--coral)]">*</span>
+              </label>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">The atlas domain this listing belongs to (e.g. Bangalore, NY).</p>
+              <select
+                name="domainId"
+                required
+                className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
+              >
+                {domains?.map((domain) => (
+                  <option key={domain.id} value={domain.id}>
+                    {domain.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                Category <span className="text-[var(--coral)]">*</span>
+              </label>
+              <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Classification for map tabs, icons, and discovery filters.</p>
+              <select
+                name="categoryId"
+                required
+                className="mt-2 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
+              >
+                <option value="">Choose category</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Section 3: Geographic Location & Map Coordinates */}

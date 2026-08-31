@@ -173,7 +173,6 @@ export function ListingEditForm({
               <h3 className="text-sm font-bold text-[var(--foreground)]">Basic Information</h3>
               <form action={updateAction} className="mt-4 space-y-5">
                 <input type="hidden" name="listingId" value={listing.id} />
-                <input type="hidden" name="domainId" value={listing.domain_id} />
                 {/* Hidden fields for unchanged values */}
                 <input type="hidden" name="addressLine1" value={listing.address_line_1} />
                 <input type="hidden" name="locality" value={locality} />
@@ -210,10 +209,12 @@ export function ListingEditForm({
                     </select>
                   </div>
                   <div>
-                    <label className={labelMutedClass}>Domain</label>
-                    <p className="mt-1.5 rounded-xl bg-[var(--background)] px-4 py-2.5 text-sm font-medium text-[var(--ink-muted)]">
-                      {domain?.name ?? "Default"}
-                    </p>
+                    <label className={labelClass}>Directory Domain / City Atlas <span className="text-[var(--coral)]">*</span></label>
+                    <select name="domainId" required defaultValue={listing.domain_id} className={`${inputClass} bg-[var(--background)]`}>
+                      {domains.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name} (/{d.slug})</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
