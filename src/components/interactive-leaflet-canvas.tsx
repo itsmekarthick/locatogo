@@ -9,6 +9,7 @@ import Supercluster from "supercluster";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { generateUberRideLink } from "@/lib/services/transit-links";
 import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
+import { getPlaceRating } from "@/lib/services/place-rating";
 import type { WeatherType } from "@/lib/services/weather";
 
 const MAP_LAYERS = {
@@ -72,8 +73,9 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, zoom: numb
     bgLight = "#fdf2f8";
   }
 
+  const ratingInfo = getPlaceRating(place);
   const showRichPill = zoom >= 12 || isSelected;
-  const shortTitle = place.title.length > 22 ? place.title.slice(0, 20) + "…" : place.title;
+  const shortTitle = place.title.length > 18 ? place.title.slice(0, 16) + "…" : place.title;
 
   if (showRichPill) {
     const html = `
@@ -81,8 +83,9 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, zoom: numb
         <div class="locatogo-pin-icon-wrap" style="background: ${bgLight}; color: ${themeColor};">
           <span>${emoji}</span>
         </div>
-        <div class="locatogo-pin-label">
+        <div class="locatogo-pin-label" style="display: flex; align-items: center; gap: 4px;">
           <span class="locatogo-pin-title">${shortTitle}</span>
+          <span style="font-size: 10px; font-weight: 800; color: #b45309; background: #fef3c7; border-radius: 4px; padding: 1px 4px; line-height: 1;">★${ratingInfo.rating.toFixed(1)}</span>
         </div>
         <div class="locatogo-pin-arrow"></div>
       </div>
@@ -91,8 +94,8 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, zoom: numb
     return L.divIcon({
       className: "locatogo-pill-wrapper",
       html,
-      iconSize: [160, 36],
-      iconAnchor: [80, 36],
+      iconSize: [180, 36],
+      iconAnchor: [90, 36],
       popupAnchor: [0, -38],
     });
   }
@@ -431,6 +434,7 @@ function ClusteredMarkersLayer({
         const place = cluster.properties as PlaceListing & { latitude: number; longitude: number };
         const isSelected = activePlaceId === place.id;
         const icon = getCategoryPinIcon(place, isSelected, zoom);
+        const ratingInfo = getPlaceRating(place);
 
         const uberUrl = generateUberRideLink(place.latitude, place.longitude, place.title, place.locality);
 
@@ -444,13 +448,20 @@ function ClusteredMarkersLayer({
             }}
           >
             <Popup className="locatogo-popup">
-              <div className="p-3 max-w-[240px] font-sans">
+              <div className="p-3 max-w-[250px] font-sans">
                 <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                  {place.category_name && (
-                    <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900">
-                      {place.category_name}
+                  <div className="flex items-center gap-1">
+                    {place.category_name && (
+                      <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900">
+                        {place.category_name}
+                      </span>
+                    )}
+                    <span className="rounded-md bg-amber-50 border border-amber-200/90 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-0.5">
+                      <span className="text-amber-500">★</span>
+                      <span>{ratingInfo.rating.toFixed(1)}</span>
                     </span>
-                  )}
+                  </div>
+
                   {(() => {
                     const dist = typeof place.distanceKm === "number"
                       ? place.distanceKm
@@ -467,8 +478,17 @@ function ClusteredMarkersLayer({
                 </div>
 
                 <h4 className="font-serif font-bold text-sm text-gray-950 leading-tight">
-                  {place.title}
+                  <Link href={`/listing/${place.slug}`} className="hover:text-[#e26a4f] transition-colors">
+                    {place.title}
+                  </Link>
                 </h4>
+
+                {/* Rating Breakdown Banner */}
+                <div className="mt-1 flex items-center gap-1.5 text-xs">
+                  <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
+                  <span className="text-[11px] font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
+                  <span className="text-[10px] text-gray-500 font-medium">({ratingInfo.reviewCount} reviews)</span>
+                </div>
 
                 <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
                   <span>📍</span>

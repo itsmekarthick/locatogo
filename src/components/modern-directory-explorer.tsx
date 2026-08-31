@@ -9,6 +9,7 @@ import { Google3DMap } from "@/components/google-3d-map";
 import { FavoriteButton } from "@/components/favorite-button";
 import { PlaceWeatherBadge } from "@/components/place-weather-badge";
 import { BrandLogo } from "@/components/brand-logo";
+import { getPlaceRating } from "@/lib/services/place-rating";
 import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
 
 // Dynamically import interactive Leaflet map canvas without SSR
@@ -655,6 +656,7 @@ export function ModernDirectoryExplorer({
                     {paginatedListings.map((place) => {
                       const isSelected = activePlaceId === place.id;
                       const catName = (place.category_name || "General").toUpperCase();
+                      const ratingInfo = getPlaceRating(place);
 
                       return (
                         <article
@@ -668,9 +670,16 @@ export function ModernDirectoryExplorer({
                         >
                           {/* Top Badge Row */}
                           <div className="flex items-center justify-between gap-2">
-                            <span className="rounded bg-blue-50/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
-                              {catName}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="rounded bg-blue-50/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
+                                {catName}
+                              </span>
+                              <span className="rounded bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1 shadow-2xs">
+                                <span className="text-amber-500">★</span>
+                                <span>{ratingInfo.rating.toFixed(1)}</span>
+                                <span className="text-[9px] text-amber-700/80">({ratingInfo.reviewCount})</span>
+                              </span>
+                            </div>
 
                             <div className="flex items-center gap-1.5">
                               {place.distanceKm !== null && place.distanceKm !== undefined ? (
@@ -704,8 +713,15 @@ export function ModernDirectoryExplorer({
                             <Link href={`/listing/${place.slug}`}>{place.title}</Link>
                           </h3>
 
+                          {/* Rating Stars Line */}
+                          <div className="mt-1 flex items-center gap-1.5 text-xs">
+                            <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
+                            <span className="text-xs font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
+                            <span className="text-[11px] text-gray-500 font-medium">({ratingInfo.reviewCount} verified ratings)</span>
+                          </div>
+
                           {/* Address & Locality */}
-                          <p className="mt-1 text-xs text-gray-500 flex items-center gap-1 line-clamp-1">
+                          <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1 line-clamp-1">
                             <span className="text-[#e26a4f]">📍</span>
                             <span>{[place.locality, place.city].filter(Boolean).join(", ") || "Verified Location"}</span>
                           </p>
@@ -876,26 +892,35 @@ export function ModernDirectoryExplorer({
               {/* LEFT: LISTINGS COLUMN */}
               <div className="lg:col-span-6 space-y-4">
                 {paginatedListings.length > 0 ? (
-                  <>
+<>
                     <div className="space-y-3.5">
                       {paginatedListings.map((place) => {
                         const isSelected = activePlaceId === place.id;
                         const catName = (place.category_name || "General").toUpperCase();
+                        const ratingInfo = getPlaceRating(place);
 
                         return (
                           <article
                             key={place.id}
                             onClick={() => setActivePlaceId(place.id)}
-                            className={`group cursor-pointer rounded-2xl border bg-white p-4 transition-all duration-200 shadow-xs hover:shadow-md ${
+                            className={`group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md ${
                               isSelected
                                 ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
                                 : "border-gray-200/90 hover:border-gray-400"
                             }`}
                           >
+                            {/* Top Badge Row */}
                             <div className="flex items-center justify-between gap-2">
-                              <span className="rounded bg-blue-50/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
-                                {catName}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="rounded bg-blue-50/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
+                                  {catName}
+                                </span>
+                                <span className="rounded bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1 shadow-2xs">
+                                  <span className="text-amber-500">★</span>
+                                  <span>{ratingInfo.rating.toFixed(1)}</span>
+                                  <span className="text-[9px] text-amber-700/80">({ratingInfo.reviewCount})</span>
+                                </span>
+                              </div>
 
                               <div className="flex items-center gap-1.5">
                                 {place.distanceKm !== null && place.distanceKm !== undefined ? (
@@ -924,11 +949,20 @@ export function ModernDirectoryExplorer({
                             </div>
                           </div>
 
-                          <h3 className="font-serif text-base sm:text-lg font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors mt-2">
+                          {/* Place Title */}
+                          <h3 className="font-serif text-lg font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors mt-3">
                             <Link href={`/listing/${place.slug}`}>{place.title}</Link>
                           </h3>
 
-                          <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
+                          {/* Rating Stars Line */}
+                          <div className="mt-1 flex items-center gap-1.5 text-xs">
+                            <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
+                            <span className="text-xs font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
+                            <span className="text-[11px] text-gray-500 font-medium">({ratingInfo.reviewCount} verified ratings)</span>
+                          </div>
+
+                          {/* Address & Locality */}
+                          <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1 line-clamp-1">
                             <span className="text-[#e26a4f]">📍</span>
                             <span>{[place.locality, place.city].filter(Boolean).join(", ") || "Verified Location"}</span>
                           </p>
@@ -1146,6 +1180,7 @@ export function ModernDirectoryExplorer({
                 {paginatedListings.map((place) => {
                   const isSelected = activePlaceId === place.id;
                   const catName = (place.category_name || "General").toUpperCase();
+                  const ratingInfo = getPlaceRating(place);
 
                   return (
                     <article
@@ -1158,9 +1193,16 @@ export function ModernDirectoryExplorer({
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="rounded bg-blue-50/90 px-2 py-0.5 text-[9px] font-bold tracking-wider text-blue-800 uppercase">
-                          {catName}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="rounded bg-blue-50/90 px-2 py-0.5 text-[9px] font-bold tracking-wider text-blue-800 uppercase">
+                            {catName}
+                          </span>
+                          <span className="rounded bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 text-[9px] font-bold text-amber-900 flex items-center gap-0.5 shadow-2xs">
+                            <span className="text-amber-500">★</span>
+                            <span>{ratingInfo.rating.toFixed(1)}</span>
+                          </span>
+                        </div>
+
                         {place.distanceKm !== null && place.distanceKm !== undefined ? (
                           <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
                             <span>🚗</span>
@@ -1183,6 +1225,12 @@ export function ModernDirectoryExplorer({
                       <h4 className="font-serif text-base font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors mt-2">
                         <Link href={`/listing/${place.slug}`}>{place.title}</Link>
                       </h4>
+
+                      <div className="mt-1 flex items-center gap-1.5 text-xs">
+                        <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
+                        <span className="text-[11px] font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
+                        <span className="text-[10px] text-gray-500 font-medium">({ratingInfo.reviewCount} reviews)</span>
+                      </div>
 
                       <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
                         <span className="text-[#e26a4f]">📍</span>

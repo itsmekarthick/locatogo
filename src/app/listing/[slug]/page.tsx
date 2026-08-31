@@ -20,6 +20,7 @@ import { ShareButton } from "@/components/share-button";
 import { FavoriteButton } from "@/components/favorite-button";
 import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
 import { BrandLogo } from "@/components/brand-logo";
+import { getPlaceRating } from "@/lib/services/place-rating";
 import { PlaceReviews } from "@/components/place-reviews-section";
 import { NearbyPlaces } from "@/components/nearby-places";
 
@@ -273,17 +274,24 @@ export default async function ListingDetailPage({ params }: Props) {
                   ✓ Verified Place
                 </span>
               )}
-              {placeDetails.rating && (
-                <span className="rounded bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1">
-                  <span>★</span>
-                  <span>{placeDetails.rating.toFixed(1)}</span>
-                  {placeDetails.userRatingCount && (
+              {(() => {
+                const effectiveRating = placeDetails.rating || getPlaceRating(listing).rating;
+                const effectiveCount = placeDetails.userRatingCount || getPlaceRating(listing).reviewCount;
+                return (
+                  <a
+                    href="#reviews"
+                    title="View verified ratings and community reviews"
+                    className="rounded bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1.5 hover:bg-amber-100/80 transition-colors cursor-pointer"
+                  >
+                    <span className="text-amber-500">★</span>
+                    <span>{effectiveRating.toFixed(1)}</span>
                     <span className="text-[9px] text-amber-800/80">
-                      ({placeDetails.userRatingCount.toLocaleString()})
+                      ({effectiveCount.toLocaleString()} reviews)
                     </span>
-                  )}
-                </span>
-              )}
+                    <span className="text-[10px] text-amber-600">↓</span>
+                  </a>
+                );
+              })()}
             </div>
 
             <Link
@@ -299,10 +307,19 @@ export default async function ListingDetailPage({ params }: Props) {
             <h1 className="font-serif text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-950 leading-tight">
               {listing.title}
             </h1>
-            <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-gray-500 flex items-center gap-1.5 font-medium">
-              <span className="text-[#e26a4f] shrink-0">📍</span>
-              <span>{placeDetails.formattedAddress || address || "Bangalore, Karnataka, India"}</span>
-            </p>
+            <div className="mt-1.5 sm:mt-2 flex items-center gap-3 flex-wrap">
+              <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5 font-medium">
+                <span className="text-[#e26a4f] shrink-0">📍</span>
+                <span>{placeDetails.formattedAddress || address || "Bangalore, Karnataka, India"}</span>
+              </p>
+              <a
+                href="#reviews"
+                className="text-xs text-amber-700 hover:text-amber-900 font-semibold flex items-center gap-1 hover:underline"
+              >
+                <span className="text-amber-500">★★★★★</span>
+                <span>See Reviews</span>
+              </a>
+            </div>
 
             {/* WHAT THIS PLACE IS FOR (HERO SUMMARY) */}
             <p className="mt-3 text-xs sm:text-sm lg:text-base text-gray-700 leading-relaxed max-w-4xl font-normal">
