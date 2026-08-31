@@ -38,14 +38,16 @@ export function AdminOnlinePlaceFetcher({
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
+  // Preset Searches
   const presets = [
-    { label: "🏥 Hospitals", q: "Hospitals in Bengaluru" },
-    { label: "💻 Tech Parks", q: "Tech Parks in Bengaluru" },
+    { label: "🏥 Hospitals & Clinics", q: "Hospitals in Bengaluru" },
+    { label: "💻 Tech Parks & SEZ", q: "Tech Parks in Bengaluru" },
     { label: "🏫 Colleges & Universities", q: "Colleges and Universities in Bengaluru" },
-    { label: "☕ Iconic Cafes", q: "Cafes in Bengaluru" },
+    { label: "☕ Iconic Cafes & Pubs", q: "Cafes in Bengaluru" },
     { label: "🛍️ Shopping Malls", q: "Shopping Malls in Bengaluru" },
-    { label: "🚇 Metro Stations", q: "Metro Stations in Bengaluru" },
-    { label: "🌳 Public Parks & Gardens", q: "Parks and Gardens in Bengaluru" },
+    { label: "🚇 Namma Metro Stations", q: "Metro Stations in Bengaluru" },
+    { label: "🌳 Parks & Lakes", q: "Parks and Lakes in Bengaluru" },
+    { label: "🏨 Luxury & Business Hotels", q: "Hotels in Bengaluru" },
   ];
 
   async function handleFetch(customQuery?: string) {
@@ -165,7 +167,7 @@ export function AdminOnlinePlaceFetcher({
               🌐 Live Online Place Importer
             </h2>
             <p className="text-xs text-[var(--ink-muted)]">
-              Query live geographic databases (OpenStreetMap & Nominatim) for real verified places with coordinates
+              Search by broad category OR specific place names (e.g. "Toit Indiranagar", "Manipal Hospital HAL Road", "IIM Bangalore")
             </p>
           </div>
 
@@ -195,7 +197,7 @@ export function AdminOnlinePlaceFetcher({
         <div className="mt-6 grid gap-4 sm:grid-cols-4">
           <div className="sm:col-span-3">
             <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-              Search Online Keywords
+              Search Place Name or Category
             </label>
             <div className="mt-1.5 flex gap-2">
               <input
@@ -203,7 +205,7 @@ export function AdminOnlinePlaceFetcher({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleFetch()}
-                placeholder="e.g. Hospitals in Bangalore, Tech Parks in Whitefield, Cafes..."
+                placeholder="e.g. Apollo Hospital, Manyata Tech Park, Toit, Christ University, Truffles..."
                 className="flex-1 rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
               />
               <button

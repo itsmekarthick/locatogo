@@ -15,21 +15,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Search query is required" }, { status: 400 });
     }
 
-    // List of queries to execute to gather a comprehensive dataset across the city
-    const subQueries = [
-      `${query}, ${city}, Karnataka, India`,
-      `${query}, Koramangala, ${city}, India`,
-      `${query}, Indiranagar, ${city}, India`,
-      `${query}, Whitefield, ${city}, India`,
-      `${query}, HSR Layout, ${city}, India`,
-      `${query}, Electronic City, ${city}, India`,
-      `${query}, Malleswaram, ${city}, India`,
+    // Dynamic search matrix to capture all zones across Bengaluru
+    const zones = [
+      `${query}, ${city}`,
+      `${query}, Bangalore`,
+      `${query}, Koramangala, ${city}`,
+      `${query}, Indiranagar, ${city}`,
+      `${query}, Whitefield, ${city}`,
+      `${query}, HSR Layout, ${city}`,
+      `${query}, Electronic City, ${city}`,
+      `${query}, Jayanagar, ${city}`,
+      `${query}, Malleswaram, ${city}`,
+      `${query}, Hebbal, ${city}`,
+      `${query}, Bannerghatta Road, ${city}`,
+      `${query}, Bellandur, ${city}`,
+      `${query}, MG Road, ${city}`,
+      `${query}, JP Nagar, ${city}`,
+      `${query}, Rajajinagar, ${city}`,
+      `${query}, Marathahalli, ${city}`,
+      `${query}`, // Raw query fallback
     ];
 
     const allRawItems: any[] = [];
     const seenNames = new Set<string>();
+    const seenCoordinates = new Set<string>();
 
-    for (const sq of subQueries) {
+    for (const sq of zones) {
       if (allRawItems.length >= requestedLimit) break;
 
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
@@ -49,8 +60,11 @@ export async function GET(request: NextRequest) {
           if (Array.isArray(data)) {
             for (const item of data) {
               const nameKey = (item.name || item.display_name.split(",")[0]).toLowerCase().trim();
-              if (!seenNames.has(nameKey)) {
+              const coordKey = `${parseFloat(item.lat).toFixed(3)}_${parseFloat(item.lon).toFixed(3)}`;
+
+              if (!seenNames.has(nameKey) && !seenCoordinates.has(coordKey)) {
                 seenNames.add(nameKey);
+                seenCoordinates.add(coordKey);
                 allRawItems.push(item);
               }
               if (allRawItems.length >= requestedLimit) break;
@@ -58,19 +72,20 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (err) {
-        console.error("Subquery fetch failed:", sq, err);
+        console.error("Zone query failed:", sq, err);
       }
     }
 
     const places = allRawItems.map((item: any) => {
       const addressParts = item.display_name.split(", ");
       const rawTitle = item.name || addressParts[0];
-      const street = item.address.road || item.address.pedestrian || addressParts[1] || "";
+      const street = item.address.road || item.address.pedestrian || item.address.street || addressParts[1] || "";
       const locality =
         item.address.suburb ||
         item.address.neighbourhood ||
         item.address.city_district ||
         item.address.residential ||
+        item.address.quarter ||
         "Bengaluru";
       const postalCode = item.address.postcode || "";
 
