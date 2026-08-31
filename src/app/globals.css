@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark, .dark *));
+
 :root {
   --background: #fdfdfd;
   --foreground: #111827;
@@ -12,10 +14,37 @@
   --ink-faint: #9ca3af;
   --leaf: #e8f5e9;
   --leaf-dark: #1b5e20;
-  --coral: #e26a4f;
-  --coral-dark: #cc5439;
+  --coral: #6366f1;
+  --coral-dark: #4f46e5;
+  --coral-soft: #eef2ff;
   --sun: #fef3c7;
   --sun-dark: #b45309;
+  --yellow: #fef08a;
+  --yellow-soft: #fef9c3;
+}
+
+html.dark,
+:root.dark,
+.dark,
+[data-theme="dark"] {
+  --background: #090d16;
+  --foreground: #f3f4f6;
+  --line: #1e293b;
+  --line-strong: #334155;
+  --surface: #0f172a;
+  --surface-raised: #1e293b;
+  --paper: #0f172a;
+  --ink-muted: #94a3b8;
+  --ink-faint: #64748b;
+  --leaf: #064e3b;
+  --leaf-dark: #34d399;
+  --coral: #818cf8;
+  --coral-dark: #6366f1;
+  --coral-soft: #1e1b4b;
+  --sun: #78350f;
+  --sun-dark: #fbbf24;
+  --yellow: #854d0e;
+  --yellow-soft: #713f12;
 }
 
 @theme inline {
@@ -31,6 +60,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Custom Scrollbar for horizontal filter pills */
@@ -61,8 +91,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  color: #111827;
+  background: var(--paper, #ffffff);
+  color: var(--foreground, #111827);
   padding: 4px 10px 4px 5px;
   border-radius: 9999px;
   border: 1.5px solid rgba(17, 24, 39, 0.12);
@@ -77,10 +107,15 @@ body {
   user-select: none;
 }
 
+.dark .locatogo-pill-pin {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
 .locatogo-pill-pin:hover {
   transform: translateY(-3px) scale(1.06);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
-  border-color: var(--theme-color, #e26a4f);
+  border-color: var(--theme-color, var(--coral, #6366f1));
   z-index: 999 !important;
 }
 
@@ -91,6 +126,11 @@ body {
   transform: translateY(-4px) scale(1.1);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   z-index: 1000 !important;
+}
+
+.dark .locatogo-pill-pin.is-active {
+  background: var(--coral, #818cf8) !important;
+  border-color: var(--coral, #818cf8) !important;
 }
 
 .locatogo-pill-pin .locatogo-pin-icon-wrap {
@@ -126,12 +166,16 @@ body {
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid #ffffff;
+  border-top: 6px solid var(--paper, #ffffff);
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
 }
 
 .locatogo-pill-pin.is-active .locatogo-pin-arrow {
   border-top-color: #18181b !important;
+}
+
+.dark .locatogo-pill-pin.is-active .locatogo-pin-arrow {
+  border-top-color: var(--coral, #818cf8) !important;
 }
 
 /* 2. Compact Teardrop Pin for Zoomed Out Mode */
@@ -219,25 +263,25 @@ body {
   font-weight: 800;
   font-family: inherit;
   font-size: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(226, 106, 79, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(99, 102, 241, 0.4);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .locatogo-cluster-marker:hover {
   transform: scale(1.18);
-  background: #e26a4f !important;
-  box-shadow: 0 8px 24px rgba(226, 106, 79, 0.6), 0 0 0 5px rgba(226, 106, 79, 0.35);
+  background: #6366f1 !important;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6), 0 0 0 5px rgba(99, 102, 241, 0.35);
   z-index: 1000 !important;
 }
 
 /* Custom Leaflet Popup Overhaul */
 .leaflet-popup-content-wrapper {
-  background: #ffffff !important;
-  color: #111827 !important;
+  background: var(--paper, #ffffff) !important;
+  color: var(--foreground, #111827) !important;
   border-radius: 20px !important;
   padding: 0 !important;
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.16) !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid var(--line, rgba(0, 0, 0, 0.08)) !important;
 }
 .leaflet-popup-content {
   margin: 0 !important;
@@ -265,7 +309,7 @@ body {
 
 .locatogo-popup .btn-details,
 .leaflet-popup-content .btn-details {
-  background-color: #e26a4f !important;
+  background-color: var(--coral, #6366f1) !important;
   color: #ffffff !important;
 }
 

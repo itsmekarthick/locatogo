@@ -9,7 +9,9 @@ import { Google3DMap } from "@/components/google-3d-map";
 import { FavoriteButton } from "@/components/favorite-button";
 import { PlaceWeatherBadge } from "@/components/place-weather-badge";
 import { BrandLogo } from "@/components/brand-logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getPlaceRating } from "@/lib/services/place-rating";
+import { trackEvent } from "@/lib/analytics/tracker";
 import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
 
 // Dynamically import interactive Leaflet map canvas without SSR
@@ -105,6 +107,10 @@ export function ModernDirectoryExplorer({
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"default" | "distance" | "name" | "featured">("default");
+  const [radiusKm, setRadiusKm] = useState<number | null>(null);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   
   // Layout mode: "immersive" (Hero map + 3-col grid), "3d" (Google 3D Vector/Satellite + 3-col grid), "split" (Side-by-side), or "fullscreen" (100% full map viewport)
   const [viewMode, setViewMode] = useState<"immersive" | "3d" | "split" | "fullscreen">("immersive");
@@ -145,6 +151,14 @@ export function ModernDirectoryExplorer({
       isMounted = false;
     };
   }, [userLocation, initialListings]);
+
+  // Log directory page view analytics
+  useEffect(() => {
+    trackEvent("page_view", {
+      domainSlug: domain?.slug || "default",
+      domainId: domain?.id,
+    });
+  }, [domain?.id, domain?.slug]);
 
   // Handle user clicking 'My Location' with automatic IP Geolocation fallback
   const handleLocateMe = useCallback(() => {
@@ -270,11 +284,21 @@ export function ModernDirectoryExplorer({
         if (!matchesLocality && !matchesCity) return false;
       }
 
+      // 4. Featured Only Filter
+      if (featuredOnly && !place.is_featured) {
+        return false;
+      }
+
+      // 5. Verified Only Filter
+      if (verifiedOnly && place.verification_status !== "verified") {
+        return false;
+      }
+
       return true;
     });
 
     // Add distance if user location is known
-    return list
+    const withDistance = list
       .map((place): PlaceListing => {
         let distanceKm: number | null = null;
         if (userLocation && place.latitude && place.longitude) {
@@ -285,13 +309,38 @@ export function ModernDirectoryExplorer({
           distanceKm,
         };
       })
-      .sort((a, b) => {
+      .filter((place) => {
+        // Radius filter if specified and distance is known
+        if (radiusKm !== null && typeof place.distanceKm === "number") {
+          return place.distanceKm <= radiusKm;
+        }
+        return true;
+      });
+
+    // Sort listings
+    return withDistance.sort((a, b) => {
+      if (sortBy === "distance") {
         if (typeof a.distanceKm === "number" && typeof b.distanceKm === "number") {
           return a.distanceKm - b.distanceKm;
         }
-        return 0;
-      });
-  }, [initialListings, searchQuery, selectedCategory, selectedLocation, userLocation]);
+        if (typeof a.distanceKm === "number") return -1;
+        if (typeof b.distanceKm === "number") return 1;
+      } else if (sortBy === "name") {
+        return a.title.localeCompare(b.title);
+      } else if (sortBy === "featured") {
+        if (a.is_featured && !b.is_featured) return -1;
+        if (!a.is_featured && b.is_featured) return 1;
+      }
+
+      // Default sorting: Featured first, then closest distance if available
+      if (a.is_featured && !b.is_featured) return -1;
+      if (!a.is_featured && b.is_featured) return 1;
+      if (typeof a.distanceKm === "number" && typeof b.distanceKm === "number") {
+        return a.distanceKm - b.distanceKm;
+      }
+      return a.title.localeCompare(b.title);
+    });
+  }, [initialListings, searchQuery, selectedCategory, selectedLocation, userLocation, radiusKm, sortBy, featuredOnly, verifiedOnly]);
 
   const locatedListings = useMemo(
     () =>
@@ -485,6 +534,7 @@ export function ModernDirectoryExplorer({
             >
               Admin
             </Link>
+            <ThemeToggle />
           </div>
         </div>
 
@@ -636,9 +686,24 @@ export function ModernDirectoryExplorer({
           <section className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 mt-20 sm:mt-24 pb-12">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 pb-4">
               <div>
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
-                  {filteredListings.length} Places Found
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
+                    {filteredListings.length} Places Found
+                  </h2>
+                  {(radiusKm !== null || featuredOnly || verifiedOnly || sortBy !== "default") && (
+                    <button
+                      onClick={() => {
+                        setRadiusKm(null);
+                        setFeaturedOnly(false);
+                        setVerifiedOnly(false);
+                        setSortBy("default");
+                      }}
+                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600 hover:bg-gray-200 cursor-pointer"
+                    >
+                      Reset Filters ✕
+                    </button>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Explore locations on the map above or browse details below.
                 </p>
@@ -646,6 +711,81 @@ export function ModernDirectoryExplorer({
 
               {/* View Switcher: Split View / Immersive Map / 3D Satellite / Fullscreen */}
               {renderViewSwitcher(viewMode)}
+            </div>
+
+            {/* Toolbar: Sorting & Radius Filter & Verification Toggles */}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5 py-2 border-b border-gray-100/80 text-xs">
+              {/* Radius Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                <span className="text-gray-400 font-semibold text-[11px] shrink-0">📍 Radius:</span>
+                {[
+                  { label: "Any", val: null },
+                  { label: "1 km", val: 1 },
+                  { label: "3 km", val: 3 },
+                  { label: "5 km", val: 5 },
+                  { label: "10 km", val: 10 },
+                  { label: "25 km", val: 25 },
+                ].map((r) => {
+                  const isSelected = radiusKm === r.val;
+                  return (
+                    <button
+                      key={r.label}
+                      onClick={() => setRadiusKm(r.val)}
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                        isSelected
+                          ? "bg-[var(--coral)] text-white shadow-2xs font-bold"
+                          : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {r.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right side: Sorting + Toggles */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Featured toggle */}
+                <button
+                  onClick={() => setFeaturedOnly(!featuredOnly)}
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                    featuredOnly
+                      ? "bg-amber-100 border border-amber-300 text-amber-900 font-bold"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  <span>⭐</span>
+                  <span>Featured</span>
+                </button>
+
+                {/* Verified toggle */}
+                <button
+                  onClick={() => setVerifiedOnly(!verifiedOnly)}
+                  className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                    verifiedOnly
+                      ? "bg-blue-100 border border-blue-300 text-blue-900 font-bold"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  <span>✓</span>
+                  <span>Verified</span>
+                </button>
+
+                {/* Sort Dropdown */}
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-400 font-semibold text-[11px]">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                    className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-800 focus:outline-none cursor-pointer"
+                  >
+                    <option value="default">Default (Featured)</option>
+                    <option value="distance">Nearest First</option>
+                    <option value="name">Name (A–Z)</option>
+                    <option value="featured">Featured First</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* 3-COLUMN CARDS GRID */}

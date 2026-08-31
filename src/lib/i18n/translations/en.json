@@ -1,0 +1,59 @@
+{
+  "common": {
+    "appName": "Locatogo",
+    "search": "Search",
+    "searchPlaceholder": "Search places by name or specialty...",
+    "allPlaces": "All Places",
+    "allAreas": "All Neighborhoods",
+    "viewDetails": "View Details",
+    "directions": "Get Directions",
+    "contact": "Contact",
+    "featured": "Featured",
+    "verified": "Verified",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "notFound": "Not found"
+  },
+  "nav": {
+    "home": "Atlas",
+    "about": "About",
+    "submit": "Add Place",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "settings": "Settings",
+    "signOut": "Sign out"
+  },
+  "directory": {
+    "placesFound": "{count} Places Found",
+    "exploreMap": "Explore locations on the map above or browse details below.",
+    "splitView": "Split View",
+    "streetMap": "Street Map",
+    "satellite": "Satellite",
+    "fullMap": "Full Map",
+    "radius": "Radius",
+    "sort": "Sort",
+    "sortNearest": "Nearest First",
+    "sortAlpha": "Name (A–Z)",
+    "sortFeatured": "Featured First"
+  },
+  "admin": {
+    "overview": "Overview",
+    "listings": "Listings",
+    "categories": "Categories",
+    "domains": "Domains",
+    "moderation": "Moderation Queue",
+    "claims": "Ownership Claims",
+    "advertising": "Advertising & Slots",
+    "payments": "Payments & Revenue",
+    "activity": "Activity Trail",
+    "team": "Team & Permissions",
+    "settings": "Settings",
+    "quickActions": "Quick Actions",
+    "totalPlaces": "Total Listings",
+    "published": "Published",
+    "pendingReview": "Pending Review",
+    "drafts": "Drafts"
+  }
+}

@@ -386,3 +386,127 @@ export async function processCsvImport(formData: FormData): Promise<void> {
   revalidatePath("/admin/listings");
   redirect(`/admin/import?job=${job.id}`);
 }
+
+export async function updateTenantSettings(formData: FormData): Promise<void> {
+  const { supabase, tenant } = await requireTenantContext();
+  const workspaceName = text(formData, "workspaceName").trim();
+
+  if (!workspaceName || workspaceName.length < 2) {
+    throw new Error("Workspace name must be at least 2 characters.");
+  }
+
+  const { error } = await supabase
+    .from("tenants")
+    .update({ name: workspaceName })
+    .eq("id", tenant.id);
+
+  if (error) throw new Error("Workspace settings could not be saved.");
+
+  // Log the settings update
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    action: "settings_updated",
+    entity_type: "tenant",
+    entity_id: tenant.id,
+  });
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin");
+}
+
+export async function inviteTeamMember(formData: FormData): Promise<void> {
+  const { supabase, tenant, user, membership } = await requireTenantContext();
+  if (membership.role !== "tenant_owner") {
+    throw new Error("Only workspace owners can invite team members.");
+  }
+
+  const email = text(formData, "email").trim().toLowerCase();
+  const role = text(formData, "role") || "tenant_staff";
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("A valid email address is required.");
+  }
+
+  const { error } = await supabase.from("team_invitations").insert({
+    tenant_id: tenant.id,
+    email,
+    role,
+    invited_by: user.id,
+    status: "pending",
+  });
+
+  if (error) throw new Error("Could not create team invitation.");
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    action: "team_member_invited",
+    entity_type: "team",
+    entity_id: tenant.id,
+  });
+
+  revalidatePath("/admin/team");
+}
+
+export async function updateMemberRole(formData: FormData): Promise<void> {
+  const { supabase, tenant, membership } = await requireTenantContext();
+  if (membership.role !== "tenant_owner") {
+    throw new Error("Only workspace owners can update team member roles.");
+  }
+
+  const memberId = id(formData, "memberId");
+  const newRole = text(formData, "role");
+
+  if (!["tenant_owner", "tenant_staff", "business_owner"].includes(newRole)) {
+    throw new Error("Invalid role selected.");
+  }
+
+  const { error } = await supabase
+    .from("tenant_users")
+    .update({ role: newRole, updated_at: new Date().toISOString() })
+    .eq("id", memberId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error("Could not update member role.");
+
+  revalidatePath("/admin/team");
+}
+
+export async function removeTeamMember(formData: FormData): Promise<void> {
+  const { supabase, tenant, membership } = await requireTenantContext();
+  if (membership.role !== "tenant_owner") {
+    throw new Error("Only workspace owners can remove team members.");
+  }
+
+  const memberId = id(formData, "memberId");
+
+  const { error } = await supabase
+    .from("tenant_users")
+    .delete()
+    .eq("id", memberId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error("Could not remove member.");
+
+  revalidatePath("/admin/team");
+}
+
+export async function revokeInvitation(formData: FormData): Promise<void> {
+  const { supabase, tenant, membership } = await requireTenantContext();
+  if (membership.role !== "tenant_owner") {
+    throw new Error("Only workspace owners can revoke invitations.");
+  }
+
+  const invitationId = id(formData, "invitationId");
+
+  const { error } = await supabase
+    .from("team_invitations")
+    .update({ status: "revoked", updated_at: new Date().toISOString() })
+    .eq("id", invitationId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error("Could not revoke invitation.");
+
+  revalidatePath("/admin/team");
+}
+
+

@@ -23,6 +23,8 @@ import { BrandLogo } from "@/components/brand-logo";
 import { getPlaceRating } from "@/lib/services/place-rating";
 import { PlaceReviews } from "@/components/place-reviews-section";
 import { NearbyPlaces } from "@/components/nearby-places";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { ListingViewTracker } from "@/components/listing-view-tracker";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -79,9 +81,32 @@ async function getListing(params: Promise<{ slug: string }>) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const result = await getListing(params);
   if (!result) return { title: "Listing not found" };
+
+  const { listing } = result;
+  const categoryName = (listing.categories as any)?.name ?? "Place";
+  const ogImageUrl = `/api/og?title=${encodeURIComponent(listing.title)}&category=${encodeURIComponent(categoryName)}&locality=${encodeURIComponent(listing.locality || listing.city || "Verified Place")}`;
+
   return {
-    title: `${result.listing.title} | Locatogo Atlas`,
-    description: result.listing.short_description ?? result.listing.description ?? `Explore ${result.listing.title}.`,
+    title: `${listing.title} | Locatogo Atlas`,
+    description: listing.short_description ?? listing.description ?? `Explore ${listing.title}.`,
+    openGraph: {
+      title: `${listing.title} | Locatogo`,
+      description: listing.short_description ?? `Explore ${listing.title}.`,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: listing.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: listing.title,
+      description: listing.short_description ?? `Explore ${listing.title}.`,
+      images: [ogImageUrl],
+    },
   };
 }
 
@@ -212,12 +237,14 @@ export default async function ListingDetailPage({ params }: Props) {
             >
               + Add Place
             </Link>
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
       {/* Main Container */}
       <main className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 py-5 sm:py-8 pb-24 lg:pb-12">
+        <ListingViewTracker listingId={listing.id} />
         {/* Back Link & Quick Weather / Distance Banner */}
         <div className="mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-2.5">
           <Link
