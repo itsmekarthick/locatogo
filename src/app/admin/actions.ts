@@ -628,5 +628,31 @@ export async function bulkInsertOnlinePlaces(
   return { success: successCount, duplicates: duplicateCount, errors: errorCount };
 }
 
+export async function clearAllListings(): Promise<void> {
+  const { supabase, tenant } = await requireTenantContext();
+
+  const { error } = await supabase
+    .from("listings")
+    .delete()
+    .eq("tenant_id", tenant.id);
+
+  if (error) {
+    console.error("Failed to delete listings:", error);
+    throw new Error("Could not delete listings: " + error.message);
+  }
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    action: "all_listings_cleared",
+    entity_type: "listing",
+    entity_id: tenant.id,
+  });
+
+  revalidatePath("/admin/listings");
+  revalidatePath("/admin");
+  revalidatePath("/");
+}
+
+
 
 

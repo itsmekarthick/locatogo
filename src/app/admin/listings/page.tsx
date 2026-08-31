@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createListing } from "@/app/admin/actions";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminListingsTabbedView } from "@/components/admin-listings-tabbed-view";
+import { AdminClearListingsButton } from "@/components/admin-clear-listings-button";
 
 export default async function ListingsPage() {
   const { supabase, tenant } = await requireTenantContext();
@@ -28,6 +29,8 @@ export default async function ListingsPage() {
             Create, edit coordinates, and manage places organized with category tabs across your directories.
           </p>
         </div>
+
+        <AdminClearListingsButton listingsCount={listings?.length ?? 0} />
       </div>
 
       {/* Creation Form with Explanatory Labels & Coordinates Fields */}

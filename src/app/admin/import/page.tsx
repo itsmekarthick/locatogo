@@ -1,13 +1,15 @@
 import { processCsvImport } from "@/app/admin/actions";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminOnlinePlaceFetcher } from "@/components/admin-online-place-fetcher";
+import { AdminClearListingsButton } from "@/components/admin-clear-listings-button";
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string }> }) {
   const { supabase, tenant } = await requireTenantContext();
   const { job: jobId } = await searchParams;
-  const [{ data: domains }, { data: categories }, { data: job }] = await Promise.all([
+  const [{ data: domains }, { data: categories }, { count: listingsCount }, { data: job }] = await Promise.all([
     supabase.from("domains").select("id, name, slug").eq("tenant_id", tenant.id).order("name"),
     supabase.from("categories").select("id, name").eq("tenant_id", tenant.id).neq("is_active", false).order("sort_order"),
+    supabase.from("listings").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id),
     jobId
       ? supabase
           .from("import_jobs")
@@ -20,14 +22,18 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="space-y-10">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Data Operations & Ingestion</p>
-        <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
-          Directory Data Hub
-        </h1>
-        <p className="mt-2 text-sm text-[var(--ink-muted)]">
-          Fetch real live places online with exact GPS coordinates or upload bulk CSV datasets to seed your directory atlas.
-        </p>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Data Operations & Ingestion</p>
+          <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
+            Directory Data Hub
+          </h1>
+          <p className="mt-2 text-sm text-[var(--ink-muted)]">
+            Fetch real live places online with exact GPS coordinates or upload bulk CSV datasets to seed your directory atlas.
+          </p>
+        </div>
+
+        <AdminClearListingsButton listingsCount={listingsCount ?? 0} />
       </div>
 
       {/* 1. Live Online Place Discovery & Fetcher Tool */}
