@@ -38,16 +38,16 @@ export function AdminOnlinePlaceFetcher({
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // Preset Searches
+  // Dynamic Preset Categories (Works for any selected city domain)
   const presets = [
-    { label: "🏥 Hospitals & Clinics", q: "Hospitals in Bengaluru" },
-    { label: "💻 Tech Parks & SEZ", q: "Tech Parks in Bengaluru" },
-    { label: "🏫 Colleges & Universities", q: "Colleges and Universities in Bengaluru" },
-    { label: "☕ Iconic Cafes & Pubs", q: "Cafes in Bengaluru" },
-    { label: "🛍️ Shopping Malls", q: "Shopping Malls in Bengaluru" },
-    { label: "🚇 Namma Metro Stations", q: "Metro Stations in Bengaluru" },
-    { label: "🌳 Parks & Lakes", q: "Parks and Lakes in Bengaluru" },
-    { label: "🏨 Luxury & Business Hotels", q: "Hotels in Bengaluru" },
+    { label: "🏥 Hospitals & Clinics", q: "Hospitals" },
+    { label: "💻 Tech Parks & Offices", q: "Tech Parks" },
+    { label: "🏫 Colleges & Universities", q: "Colleges and Universities" },
+    { label: "☕ Cafes & Restaurants", q: "Cafes" },
+    { label: "🛍️ Shopping Malls", q: "Shopping Malls" },
+    { label: "🚇 Metro & Transit", q: "Metro Stations" },
+    { label: "🌳 Parks & Gardens", q: "Parks" },
+    { label: "🏨 Hotels", q: "Hotels" },
   ];
 
   async function handleFetch(customQuery?: string) {
@@ -58,7 +58,7 @@ export function AdminOnlinePlaceFetcher({
     setFeedback(null);
     try {
       const res = await fetch(
-        `/api/admin/places/fetch-online?q=${encodeURIComponent(q.trim())}&limit=${fetchLimit}`
+        `/api/admin/places/fetch-online?q=${encodeURIComponent(q.trim())}&limit=${fetchLimit}&domainId=${selectedDomainId}`
       );
       const data = await res.json();
       if (!res.ok || !data.success) {

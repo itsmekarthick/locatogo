@@ -560,6 +560,20 @@ export async function bulkInsertOnlinePlaces(
       continue;
     }
 
+    // Global coordinate validity check
+    if (
+      !place.latitude ||
+      !place.longitude ||
+      isNaN(place.latitude) ||
+      isNaN(place.longitude) ||
+      place.latitude < -90 ||
+      place.latitude > 90 ||
+      place.longitude < -180 ||
+      place.longitude > 180
+    ) {
+      continue;
+    }
+
     // Check by coordinate proximity (< 30 meters)
     const isCoordinateDuplicate = (existingListings ?? []).some(
       (ex) =>
