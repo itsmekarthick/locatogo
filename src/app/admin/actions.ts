@@ -509,4 +509,124 @@ export async function revokeInvitation(formData: FormData): Promise<void> {
   revalidatePath("/admin/team");
 }
 
+export type OnlinePlaceToInsert = {
+  title: string;
+  slug: string;
+  latitude: number;
+  longitude: number;
+  addressLine1: string;
+  locality?: string;
+  city?: string;
+  administrativeArea?: string;
+  countryCode?: string;
+  postalCode?: string;
+  shortDescription?: string;
+};
+
+export async function bulkInsertOnlinePlaces(
+  domainId: string,
+  categoryId: string,
+  places: OnlinePlaceToInsert[]
+): Promise<{ success: number; duplicates: number; errors: number }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  if (!places.length) return { success: 0, duplicates: 0, errors: 0 };
+
+  // 1. Fetch existing places in this domain to prevent any duplicate insertion
+  const { data: existingListings } = await supabase
+    .from("listings")
+    .select("title, latitude, longitude, slug")
+    .eq("tenant_id", tenant.id)
+    .eq("domain_id", domainId);
+
+  const existingTitleSet = new Set(
+    (existingListings ?? []).map((l) => l.title.toLowerCase().trim())
+  );
+  const existingSlugSet = new Set(
+    (existingListings ?? []).map((l) => l.slug.toLowerCase().trim())
+  );
+
+  let successCount = 0;
+  let duplicateCount = 0;
+  let errorCount = 0;
+
+  for (const place of places) {
+    const cleanTitle = place.title.trim();
+    const titleKey = cleanTitle.toLowerCase();
+
+    // Check by name
+    if (existingTitleSet.has(titleKey)) {
+      duplicateCount++;
+      continue;
+    }
+
+    // Check by coordinate proximity (< 30 meters)
+    const isCoordinateDuplicate = (existingListings ?? []).some(
+      (ex) =>
+        ex.latitude &&
+        ex.longitude &&
+        Math.abs(ex.latitude - place.latitude) < 0.0003 &&
+        Math.abs(ex.longitude - place.longitude) < 0.0003
+    );
+
+    if (isCoordinateDuplicate) {
+      duplicateCount++;
+      continue;
+    }
+
+    // Generate unique slug
+    let baseSlug = (place.slug || cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")).replace(/(^-|-$)/g, "");
+    let uniqueSlug = baseSlug;
+    let counter = 1;
+    while (existingSlugSet.has(uniqueSlug)) {
+      uniqueSlug = `${baseSlug}-${counter++}`;
+    }
+
+    const { error } = await supabase.from("listings").insert({
+      tenant_id: tenant.id,
+      domain_id: domainId,
+      category_id: categoryId,
+      owner_user_id: user.id,
+      title: cleanTitle,
+      slug: uniqueSlug,
+      short_description: place.shortDescription || `Verified landmark in ${place.locality || "Bengaluru"}.`,
+      address_line_1: place.addressLine1,
+      locality: place.locality || "Bengaluru",
+      city: place.city || "Bengaluru",
+      administrative_area: place.administrativeArea || "Karnataka",
+      country_code: place.countryCode || "IN",
+      postal_code: place.postalCode || null,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      status: "published",
+      verification_status: "verified",
+      is_featured: false,
+      published_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.error("Failed to insert online place:", place.title, error);
+      errorCount++;
+    } else {
+      successCount++;
+      existingTitleSet.add(titleKey);
+      existingSlugSet.add(uniqueSlug);
+    }
+  }
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    action: "online_places_imported",
+    entity_type: "listing",
+    entity_id: tenant.id,
+  });
+
+  revalidatePath("/admin/listings");
+  revalidatePath("/admin");
+  revalidatePath("/");
+
+  return { success: successCount, duplicates: duplicateCount, errors: errorCount };
+}
+
+
 

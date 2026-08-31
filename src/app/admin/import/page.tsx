@@ -1,11 +1,13 @@
 import { processCsvImport } from "@/app/admin/actions";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
+import { AdminOnlinePlaceFetcher } from "@/components/admin-online-place-fetcher";
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string }> }) {
   const { supabase, tenant } = await requireTenantContext();
   const { job: jobId } = await searchParams;
-  const [{ data: domains }, { data: job }] = await Promise.all([
-    supabase.from("domains").select("id, name").eq("tenant_id", tenant.id).order("name"),
+  const [{ data: domains }, { data: categories }, { data: job }] = await Promise.all([
+    supabase.from("domains").select("id, name, slug").eq("tenant_id", tenant.id).order("name"),
+    supabase.from("categories").select("id, name").eq("tenant_id", tenant.id).neq("is_active", false).order("sort_order"),
     jobId
       ? supabase
           .from("import_jobs")
@@ -17,21 +19,34 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Data Operations</p>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Data Operations & Ingestion</p>
         <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
-          Bulk CSV Import
+          Directory Data Hub
         </h1>
         <p className="mt-2 text-sm text-[var(--ink-muted)]">
-          Seed hundreds of places into your directory at once. Imported records will enter as drafts with automatic duplicate detection.
+          Fetch real live places online with exact GPS coordinates or upload bulk CSV datasets to seed your directory atlas.
         </p>
       </div>
 
-      {/* CSV Upload Container */}
+      {/* 1. Live Online Place Discovery & Fetcher Tool */}
+      <AdminOnlinePlaceFetcher
+        domains={domains ?? []}
+        categories={categories ?? []}
+      />
+
+      {/* 2. Bulk CSV Upload Container */}
       <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-xs">
-        <h2 className="font-display text-lg font-bold text-[var(--foreground)]">Upload Listing Dataset</h2>
-        <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Select target directory and choose your CSV file.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-xl font-bold text-[var(--foreground)]">📄 Upload Offline CSV Dataset</h2>
+            <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Upload custom CSV spreadsheets with bulk listings.</p>
+          </div>
+          <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-mono text-[var(--ink-muted)]">
+            Up to 10,000 rows
+          </span>
+        </div>
 
         <form action={processCsvImport} className="mt-6 space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -46,7 +61,9 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
               >
                 <option value="">Choose directory</option>
                 {domains?.map((domain) => (
-                  <option key={domain.id} value={domain.id}>{domain.name}</option>
+                  <option key={domain.id} value={domain.id}>
+                    {domain.name} (/{domain.slug})
+                  </option>
                 ))}
               </select>
             </div>
@@ -60,7 +77,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
                 type="file"
                 accept=".csv,text/csv"
                 required
-                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--ink-muted)] file:mr-3 file:rounded-full file:border-0 file:bg-[var(--foreground)] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[var(--paper)]"
+                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--ink-muted)] file:mr-3 file:rounded-full file:border-0 file:bg-[var(--foreground)] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[var(--paper)] cursor-pointer"
               />
             </div>
           </div>
@@ -80,9 +97,9 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
           <div className="flex justify-end pt-2">
             <button
               disabled={!domains?.length}
-              className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-xs hover:bg-[var(--foreground)]/85 transition-all disabled:opacity-50"
+              className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-xs hover:bg-[var(--foreground)]/85 transition-all disabled:opacity-50 cursor-pointer"
             >
-              Start Batch Import →
+              Start Batch CSV Import →
             </button>
           </div>
         </form>
