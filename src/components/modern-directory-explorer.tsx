@@ -21,8 +21,17 @@ const InteractiveLeafletCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-[#f0f4f8] text-xs font-semibold text-gray-500">
-        <span className="animate-pulse">Loading Interactive Map & Coordinates...</span>
+      <div className="relative flex h-full w-full items-center justify-center bg-slate-100 dark:bg-slate-900 text-xs font-semibold text-slate-500 overflow-hidden">
+        <div className="absolute h-32 w-32 rounded-full bg-indigo-500/10 animate-ping" />
+        <div className="absolute h-20 w-20 rounded-full bg-indigo-500/20 animate-pulse" />
+        <div className="relative flex flex-col items-center gap-2 z-10">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700">
+            <span className="text-xl animate-bounce">📍</span>
+          </div>
+          <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 tracking-wider uppercase">
+            Loading Interactive Atlas...
+          </span>
+        </div>
       </div>
     ),
   }

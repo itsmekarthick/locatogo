@@ -98,6 +98,24 @@ const KNOWN_BRAND_DOMAINS: Record<string, string> = {
   "jp morgan": "jpmorgan.com",
 };
 
+export function getCompanyCategoryIcon(title: string): string {
+  const t = title.toLowerCase();
+  if (t.includes("security") || t.includes("cyber") || t.includes("guard") || t.includes("shield") || t.includes("vault")) return "🛡️";
+  if (t.includes("ai") || t.includes("genai") || t.includes("intelligence") || t.includes("neural") || t.includes("deep learning") || t.includes("cognitive") || t.includes("vision")) return "🤖";
+  if (t.includes("cloud") || t.includes("devops") || t.includes("infra") || t.includes("node") || t.includes("server") || t.includes("hyper") || t.includes("nexus")) return "☁️";
+  if (t.includes("pay") || t.includes("fintech") || t.includes("capital") || t.includes("finance") || t.includes("bank") || t.includes("credit") || t.includes("wallet")) return "💳";
+  if (t.includes("health") || t.includes("hospital") || t.includes("clinic") || t.includes("care") || t.includes("bio") || t.includes("pharma") || t.includes("dental") || t.includes("eye")) return "🩺";
+  if (t.includes("data") || t.includes("analytics") || t.includes("matrix") || t.includes("lake") || t.includes("spark") || t.includes("stratum") || t.includes("pulse")) return "📊";
+  if (t.includes("space") || t.includes("orbit") || t.includes("satellite") || t.includes("geo") || t.includes("aero") || t.includes("quantum")) return "🚀";
+  if (t.includes("electric") || t.includes("energy") || t.includes("power") || t.includes("battery") || t.includes("cleantech") || t.includes("solar")) return "⚡";
+  if (t.includes("school") || t.includes("academy") || t.includes("education") || t.includes("edtech") || t.includes("learn") || t.includes("college") || t.includes("institute")) return "🎓";
+  if (t.includes("robot") || t.includes("hardware") || t.includes("iot") || t.includes("sensor") || t.includes("semiconductor") || t.includes("vanguard") || t.includes("synapse")) return "⚙️";
+  if (t.includes("shop") || t.includes("retail") || t.includes("commerce") || t.includes("mart") || t.includes("market") || t.includes("store")) return "🛍️";
+  if (t.includes("cafe") || t.includes("coffee") || t.includes("restaurant") || t.includes("food") || t.includes("bake") || t.includes("dine")) return "☕";
+  if (t.includes("hotel") || t.includes("stay") || t.includes("resort")) return "🏨";
+  return "💻";
+}
+
 export function getCompanyDomain(website?: string | null, title?: string): string {
   // 1. Check title against known enterprise brand dictionary
   if (title) {
@@ -139,7 +157,6 @@ export function getCompanyDomain(website?: string | null, title?: string): strin
 export function getCompanyLogoUrl(website?: string | null, title?: string): string {
   const domain = getCompanyDomain(website, title);
   if (!domain) return "";
-  // Google's 128px high-res favicon cache
   return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
 }
 
@@ -178,7 +195,7 @@ export function CompanyBrandAvatar({
 }) {
   const [sourceIndex, setSourceIndex] = useState(0);
   const domain = getCompanyDomain(website, title);
-  const initials = getCompanyInitials(title);
+  const techIcon = getCompanyCategoryIcon(title);
 
   // Consistent color gradient based on place title
   const hash = title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -189,7 +206,6 @@ export function CompanyBrandAvatar({
     ? [
         `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`,
         `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`,
-        `https://unavatar.io/${encodeURIComponent(domain)}?fallback=false`,
       ]
     : [];
 
@@ -199,9 +215,11 @@ export function CompanyBrandAvatar({
     return (
       <div
         style={{ width: size, height: size, minWidth: size, minHeight: size }}
-        className={`flex items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} font-extrabold text-xs shadow-xs shrink-0 select-none ${className}`}
+        className={`flex items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} shadow-xs shrink-0 select-none overflow-hidden ${className}`}
       >
-        <span>{initials}</span>
+        <span style={{ fontSize: size * 0.48 }} className="leading-none drop-shadow-xs">
+          {techIcon}
+        </span>
       </div>
     );
   }

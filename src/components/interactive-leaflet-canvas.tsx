@@ -37,7 +37,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   return R * c;
 }
 
-import { getCompanyLogoUrl, getCompanyInitials } from "@/components/company-brand-avatar";
+import { getCompanyLogoUrl, getCompanyInitials, getCompanyCategoryIcon } from "@/components/company-brand-avatar";
 
 const pinIconCache = new Map<string, L.DivIcon>();
 
@@ -76,14 +76,14 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean): L.DivIcon
 
   const ratingInfo = getPlaceRating(place);
   const logoUrl = getCompanyLogoUrl(place.website, place.title);
-  const initials = getCompanyInitials(place.title);
+  const techIcon = getCompanyCategoryIcon(place.title);
 
-  // Universal high-res brand logo with clean 2-letter monogram fallback
+  // Universal high-res brand logo with rich domain tech icon fallback
   const innerIconHtml = logoUrl ? `
-    <img src="${logoUrl}" alt="${place.title}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';" style="width: 17px; height: 17px; object-fit: contain; border-radius: 4px;" />
-    <span style="display: none; font-size: 10px; font-weight: 800; color: ${themeColor}; line-height: 1;">${initials}</span>
+    <img src="${logoUrl}" alt="${place.title}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" style="width: 17px; height: 17px; object-fit: contain; border-radius: 4px;" />
+    <span style="display: none; font-size: 11px; line-height: 1; align-items: center; justify-content: center;">${techIcon}</span>
   ` : `
-    <span style="font-size: 10px; font-weight: 800; color: ${themeColor}; line-height: 1;">${initials}</span>
+    <span style="font-size: 11px; line-height: 1; display: flex; align-items: center; justify-content: center;">${techIcon}</span>
   `;
 
   // Wide 180px text pill is rendered ONLY for the actively selected / clicked pin.
