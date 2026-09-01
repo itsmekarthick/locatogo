@@ -11,12 +11,11 @@ export default async function ListingsPage() {
     supabase.from("categories").select("id, name, domain_id, sort_order").eq("tenant_id", tenant.id).order("sort_order"),
     supabase
       .from("listings")
-      .select(
-        "id, title, slug, status, locality, city, latitude, longitude, is_featured, category_id, updated_at, categories:categories!listings_category_id_domain_id_fkey(name)"
-      )
+      .select("id, title, slug, status, locality, city, latitude, longitude, is_featured, category_id, updated_at")
       .eq("tenant_id", tenant.id)
       .neq("status", "archived")
-      .order("title"),
+      .order("updated_at", { ascending: false })
+      .limit(500),
   ]);
 
   return (

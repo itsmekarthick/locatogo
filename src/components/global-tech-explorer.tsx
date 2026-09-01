@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanyDetailDrawer, type CompanyDetail } from "@/components/company-detail-drawer";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
+import { Pagination } from "@/components/ui/pagination";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 
 // Dynamically load interactive Leaflet map canvas without SSR
@@ -57,10 +58,17 @@ export function GlobalTechExplorer({
   );
   const [companies, setCompanies] = useState<CompanyDetail[]>(initialCompanies);
   const [searchQuery, setSearchQuery] = useState("");
-  const [hiringOnly, setHiringOnly] = useState(false);
+  const [hiringOnly, setHiringOnly] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"map" | "grid">("map");
+  const [gridPage, setGridPage] = useState<number>(1);
+  const GRID_PAGE_SIZE = 24;
+
+  // Reset grid page when filters change
+  useEffect(() => {
+    setGridPage(1);
+  }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedHub]);
   const [selectedCompany, setSelectedCompany] = useState<CompanyDetail | null>(null);
   const [isSearchingServer, setIsSearchingServer] = useState(false);
 
@@ -200,6 +208,12 @@ export function GlobalTechExplorer({
     });
   }, [companies, hiringOnly, selectedType, selectedStage, searchQuery]);
 
+  const totalGridPages = Math.ceil(filteredCompanies.length / GRID_PAGE_SIZE);
+  const paginatedCompanies = useMemo(() => {
+    const start = (gridPage - 1) * GRID_PAGE_SIZE;
+    return filteredCompanies.slice(start, start + GRID_PAGE_SIZE);
+  }, [filteredCompanies, gridPage]);
+
   const totalOpenings = useMemo(() => {
     return companies.reduce((acc, c) => acc + (c.jobs?.length || c.active_jobs_count || 0), 0);
   }, [companies]);
@@ -225,6 +239,14 @@ export function GlobalTechExplorer({
         pin_color: (c.jobs?.length || 0) > 0 ? "#10b981" : "#6366f1",
       }));
   }, [filteredCompanies, selectedHub]);
+
+  const companyMap = useMemo(() => {
+    const map = new Map<string, CompanyDetail>();
+    for (let i = 0; i < companies.length; i++) {
+      map.set(companies[i].id, companies[i]);
+    }
+    return map;
+  }, [companies]);
 
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden bg-slate-50 dark:bg-[#090d16] font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
@@ -404,8 +426,8 @@ export function GlobalTechExplorer({
                   setSelectedCompany(null);
                   return;
                 }
-                const found = initialCompanies.find((c) => c.id === id);
-                if (found) setSelectedCompany(found);
+                const found = companyMap.get(id) || null;
+                setSelectedCompany(found);
               }}
               searchQuery={searchQuery}
             />
@@ -433,7 +455,7 @@ export function GlobalTechExplorer({
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredCompanies.map((comp) => {
+                {paginatedCompanies.map((comp) => {
                   const jobCount = comp.jobs?.length || comp.active_jobs_count || 0;
                   return (
                     <article
@@ -498,6 +520,22 @@ export function GlobalTechExplorer({
                   );
                 })}
               </div>
+
+              {/* Grid Pagination Controls */}
+              {totalGridPages > 1 && (
+                <div className="mt-8">
+                  <Pagination
+                    currentPage={gridPage}
+                    totalPages={totalGridPages}
+                    totalItems={filteredCompanies.length}
+                    pageSize={GRID_PAGE_SIZE}
+                    onPageChange={(p) => {
+                      setGridPage(p);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}

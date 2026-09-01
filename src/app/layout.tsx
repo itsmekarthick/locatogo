@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   openGraph: { title: "Locatogo | Directories with a sense of place", description: "A global directory and interactive map platform.", type: "website" },
 };
 
+import { Suspense } from "react";
+import { NavigationProgressBar } from "@/components/navigation-progress-bar";
+
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html
@@ -48,6 +51,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--background)] text-[var(--foreground)] transition-colors duration-200">
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         {children}
       </body>
     </html>

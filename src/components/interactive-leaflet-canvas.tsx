@@ -39,7 +39,13 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
 import { getCompanyLogoUrl, getCompanyInitials } from "@/components/company-brand-avatar";
 
-function getCategoryPinIcon(place: PlaceListing, isSelected: boolean) {
+const pinIconCache = new Map<string, L.DivIcon>();
+
+function getCategoryPinIcon(place: PlaceListing, isSelected: boolean): L.DivIcon {
+  const cacheKey = `${place.id}_${isSelected ? "sel" : "unsel"}_${place.website || ""}`;
+  const cached = pinIconCache.get(cacheKey);
+  if (cached) return cached;
+
   const cat = (place.category_name || "").toLowerCase();
 
   let themeColor = "#6366f1";
@@ -96,13 +102,15 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean) {
       </div>
     `;
 
-    return L.divIcon({
+    const icon = L.divIcon({
       className: "locatogo-pill-wrapper",
       html,
       iconSize: [180, 36],
       iconAnchor: [90, 36],
       popupAnchor: [0, -38],
     });
+    if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
+    return icon;
   }
 
   const html = `
@@ -113,13 +121,15 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean) {
     </div>
   `;
 
-  return L.divIcon({
+  const icon = L.divIcon({
     className: "locatogo-teardrop-wrapper",
     html,
     iconSize: [32, 38],
     iconAnchor: [16, 38],
     popupAnchor: [0, -40],
   });
+  if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
+  return icon;
 }
 
 const userLocationIcon = L.divIcon({
@@ -312,7 +322,7 @@ function MapUpdater({
   useEffect(() => {
     if (activePlace && activePlace.id !== prevActiveIdRef.current) {
       prevActiveIdRef.current = activePlace.id;
-      map.flyTo([activePlace.latitude, activePlace.longitude], 16, { duration: 1.2 });
+      map.flyTo([activePlace.latitude, activePlace.longitude], 16, { duration: 0.5 });
     }
   }, [activePlace, map]);
 
