@@ -2,6 +2,7 @@ import { processCsvImport } from "@/app/admin/actions";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminOnlinePlaceFetcher } from "@/components/admin-online-place-fetcher";
 import { AdminClearListingsButton } from "@/components/admin-clear-listings-button";
+import { AdminTechAtlasSeederButton } from "@/components/admin-tech-atlas-seeder-button";
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string }> }) {
   const { supabase, tenant } = await requireTenantContext();
@@ -21,14 +22,14 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
   ]);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Data Operations & Ingestion</p>
-          <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Data Operations & Ingestion</p>
+          <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-slate-900 dark:text-slate-100 sm:text-4xl">
             Directory Data Hub
           </h1>
-          <p className="mt-2 text-sm text-[var(--ink-muted)]">
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Fetch real live places online with exact GPS coordinates or upload bulk CSV datasets to seed your directory atlas.
           </p>
         </div>
@@ -36,20 +37,23 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         <AdminClearListingsButton listingsCount={listingsCount ?? 0} />
       </div>
 
-      {/* 1. Live Online Place Discovery & Fetcher Tool */}
+      {/* 1. Verified Tech Atlas Instant Seeder Card */}
+      <AdminTechAtlasSeederButton />
+
+      {/* 2. Live Online Place Discovery & Fetcher Tool */}
       <AdminOnlinePlaceFetcher
         domains={domains ?? []}
         categories={categories ?? []}
       />
 
-      {/* 2. Bulk CSV Upload Container */}
-      <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-xs">
+      {/* 3. Bulk CSV Upload Container */}
+      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-xs">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-display text-xl font-bold text-[var(--foreground)]">📄 Upload Offline CSV Dataset</h2>
-            <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Upload custom CSV spreadsheets with bulk listings.</p>
+            <h2 className="font-display text-xl font-bold text-slate-900 dark:text-slate-100">📄 Upload Custom CSV Dataset</h2>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Upload custom CSV spreadsheets with bulk listings.</p>
           </div>
-          <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-mono text-[var(--ink-muted)]">
+          <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-mono text-slate-600 dark:text-slate-400">
             Up to 10,000 rows
           </span>
         </div>
@@ -57,16 +61,15 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         <form action={processCsvImport} className="mt-6 space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                Target Directory <span className="text-[var(--coral)]">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Target Atlas Domain
               </label>
               <select
-                name="domainId"
+                name="domain_id"
                 required
-                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-xs font-semibold focus:outline-none"
+                className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-slate-100"
               >
-                <option value="">Choose directory</option>
-                {domains?.map((domain) => (
+                {(domains ?? []).map((domain) => (
                   <option key={domain.id} value={domain.id}>
                     {domain.name} (/{domain.slug})
                   </option>
@@ -75,81 +78,54 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                CSV File (.csv) <span className="text-[var(--coral)]">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                Fallback Category
               </label>
-              <input
-                name="file"
-                type="file"
-                accept=".csv,text/csv"
+              <select
+                name="category_id"
                 required
-                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs text-[var(--ink-muted)] file:mr-3 file:rounded-full file:border-0 file:bg-[var(--foreground)] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[var(--paper)] cursor-pointer"
-              />
-            </div>
-          </div>
-
-          {/* Expected Columns Pill List */}
-          <div className="rounded-2xl bg-[var(--background)] p-4 text-xs">
-            <p className="font-bold text-[var(--foreground)]">Supported CSV Header Columns:</p>
-            <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px] text-[var(--ink-muted)]">
-              {["Name", "Category", "Address", "City", "State", "CountryCode", "PostalCode", "Website", "Phone", "Email", "Description"].map((col) => (
-                <span key={col} className="rounded-md border border-[var(--line)] bg-[var(--paper)] px-2 py-0.5">
-                  {col}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button
-              disabled={!domains?.length}
-              className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-xs hover:bg-[var(--foreground)]/85 transition-all disabled:opacity-50 cursor-pointer"
-            >
-              Start Batch CSV Import →
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Results Section if job exists */}
-      {job && (
-        <section className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
-            <div>
-              <h2 className="font-display text-lg font-bold text-[var(--foreground)]">Import Job Results</h2>
-              <p className="text-xs text-[var(--ink-muted)]">Job ID: {job.id}</p>
-            </div>
-            <span className="rounded-full bg-[var(--leaf)] px-3 py-1 text-xs font-bold text-[var(--leaf-dark)] uppercase">
-              {job.status}
-            </span>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {[
-              { label: "Total Rows", val: job.total_rows, color: "text-[var(--foreground)]" },
-              { label: "Successfully Added", val: job.success_count, color: "text-green-700" },
-              { label: "Skipped / Failed", val: job.failure_count, color: "text-red-700" },
-              { label: "Duplicate Conflicts", val: job.duplicate_count, color: "text-amber-700" },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4">
-                <p className="text-xs font-bold text-[var(--ink-muted)]">{stat.label}</p>
-                <p className={`mt-2 font-display text-2xl font-bold ${stat.color}`}>{stat.val}</p>
-              </div>
-            ))}
-          </div>
-
-          {Array.isArray(job.errors_json) && job.errors_json.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-800">
-              <p className="font-bold">Row Errors Encountered ({job.errors_json.length}):</p>
-              <ul className="mt-2 list-disc pl-5 space-y-1">
-                {job.errors_json.slice(0, 5).map((err, idx) => (
-                  <li key={idx}>{typeof err === "string" ? err : JSON.stringify(err)}</li>
+                className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-slate-100"
+              >
+                {(categories ?? []).map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
                 ))}
-              </ul>
+              </select>
             </div>
-          )}
-        </section>
-      )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              CSV Spreadsheet
+            </label>
+            <input
+              type="file"
+              name="file"
+              accept=".csv,text/csv"
+              required
+              className="mt-2 block w-full text-xs text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-500"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="rounded-full bg-slate-900 dark:bg-indigo-600 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-slate-800 dark:hover:bg-indigo-500 transition-colors"
+          >
+            Start CSV Import Batch
+          </button>
+        </form>
+
+        {job ? (
+          <div className="mt-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 text-xs">
+            <p className="font-bold text-slate-900 dark:text-slate-100">Job {job.id}</p>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">
+              Status: {job.status} · Total: {job.total_rows} · Success: {job.success_count} · Failed:{" "}
+              {job.failure_count} · Duplicates: {job.duplicate_count}
+            </p>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

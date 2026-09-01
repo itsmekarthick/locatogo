@@ -40,14 +40,14 @@ export function AdminOnlinePlaceFetcher({
 
   // Dynamic Preset Categories (Works for any selected city domain)
   const presets = [
+    { label: "🏢 IT Companies & GCCs", q: "IT Companies" },
+    { label: "💻 Tech Parks & SEZ", q: "Tech Parks" },
+    { label: "🚀 Startups & Co-Working", q: "Startups" },
     { label: "🏥 Hospitals & Clinics", q: "Hospitals" },
-    { label: "💻 Tech Parks & Offices", q: "Tech Parks" },
-    { label: "🏫 Colleges & Universities", q: "Colleges and Universities" },
     { label: "☕ Cafes & Restaurants", q: "Cafes" },
     { label: "🛍️ Shopping Malls", q: "Shopping Malls" },
     { label: "🚇 Metro & Transit", q: "Metro Stations" },
-    { label: "🌳 Parks & Gardens", q: "Parks" },
-    { label: "🏨 Hotels", q: "Hotels" },
+    { label: "🌳 Gardens & Public Parks", q: "Gardens" },
   ];
 
   async function handleFetch(customQuery?: string) {

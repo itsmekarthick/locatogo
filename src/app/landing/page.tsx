@@ -49,6 +49,10 @@ export default async function LandingPage() {
             <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Interactive Map
             </Link>
+            <Link href="/tech-atlas" className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline">
+              <span>💼 Tech Atlas & Jobs</span>
+              <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.2 text-[9px] uppercase">New</span>
+            </Link>
             <Link href="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               About Platform
             </Link>

@@ -4,7 +4,7 @@ import { requireTenantContext } from "@/lib/auth/tenant-context";
 // Cache for geocoded city centers to avoid repeated lookups
 const cityCenterCache = new Map<string, { lat: number; lon: number; countryCode?: string }>();
 
-// Tag mapping for category queries
+// Tag mapping for category queries (strictly avoiding collision between tech parks and leisure parks)
 const CATEGORY_TAG_MAP: Record<string, { param: string; value: string }[]> = {
   hospital: [{ param: "amenity", value: "hospital" }, { param: "amenity", value: "clinic" }],
   hospitals: [{ param: "amenity", value: "hospital" }, { param: "amenity", value: "clinic" }],
@@ -36,8 +36,6 @@ const CATEGORY_TAG_MAP: Record<string, { param: string; value: string }[]> = {
   gym: [{ param: "leisure", value: "fitness_centre" }],
   gyms: [{ param: "leisure", value: "fitness_centre" }],
   fitness: [{ param: "leisure", value: "fitness_centre" }],
-  park: [{ param: "leisure", value: "park" }, { param: "leisure", value: "garden" }],
-  parks: [{ param: "leisure", value: "park" }, { param: "leisure", value: "garden" }],
   garden: [{ param: "leisure", value: "garden" }],
   gardens: [{ param: "leisure", value: "garden" }],
   mall: [{ param: "shop", value: "mall" }, { param: "shop", value: "department_store" }],
@@ -53,9 +51,6 @@ const CATEGORY_TAG_MAP: Record<string, { param: string; value: string }[]> = {
   bank: [{ param: "amenity", value: "bank" }, { param: "amenity", value: "atm" }],
   banks: [{ param: "amenity", value: "bank" }],
   atm: [{ param: "amenity", value: "atm" }],
-  tech: [{ param: "office", value: "company" }, { param: "office", value: "it" }],
-  office: [{ param: "office", value: "company" }],
-  offices: [{ param: "office", value: "company" }],
 };
 
 async function resolveCenterCoordinates(
@@ -106,6 +101,80 @@ async function resolveCenterCoordinates(
   return { lat: 12.9716, lon: 77.5946, countryCode: "in" };
 }
 
+/**
+ * Fetch IT Companies & Corporate Tech Offices from Overpass API
+ */
+async function fetchOverpassTechOffices(
+  minLat: number,
+  minLon: number,
+  maxLat: number,
+  maxLon: number,
+  limit: number = 30
+): Promise<any[]> {
+  try {
+    const query = `
+      [out:json][timeout:20];
+      (
+        node["office"="company"](${minLat},${minLon},${maxLat},${maxLon});
+        node["office"="it"](${minLat},${minLon},${maxLat},${maxLon});
+        node["office"="coworking"](${minLat},${minLon},${maxLat},${maxLon});
+        node["commercial"="tech_park"](${minLat},${minLon},${maxLat},${maxLon});
+        way["office"="company"](${minLat},${minLon},${maxLat},${maxLon});
+        way["office"="it"](${minLat},${minLon},${maxLat},${maxLon});
+        way["commercial"="tech_park"](${minLat},${minLon},${maxLat},${maxLon});
+      );
+      out center ${limit};
+    `;
+
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: query,
+      headers: {
+        "User-Agent": "Locatogo-Directory-Platform/1.0 (admin@locatogo.app)",
+      },
+    });
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data.elements)) return [];
+
+    return data.elements
+      .map((el: any) => {
+        const name = el.tags?.name || el.tags?.["name:en"];
+        if (!name) return null;
+
+        const lat = el.lat || el.center?.lat;
+        const lon = el.lon || el.center?.lon;
+        if (!lat || !lon) return null;
+
+        const street = el.tags?.["addr:street"] || el.tags?.["addr:road"] || "";
+        const suburb = el.tags?.["addr:suburb"] || el.tags?.["addr:district"] || "";
+        const city = el.tags?.["addr:city"] || "";
+        const postcode = el.tags?.["addr:postcode"] || "";
+
+        return {
+          lat: String(lat),
+          lon: String(lon),
+          name: name,
+          display_name: `${name}, ${street ? street + ", " : ""}${suburb ? suburb + ", " : ""}${city || "Bengaluru"}`,
+          type: el.tags?.office || "company",
+          category: "office",
+          address: {
+            road: street,
+            suburb: suburb,
+            city: city,
+            postcode: postcode,
+            country_code: "in",
+          },
+        };
+      })
+      .filter(Boolean);
+  } catch (err) {
+    console.error("[Overpass Tech Query Error]:", err);
+    return [];
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { supabase, tenant } = await requireTenantContext();
@@ -119,7 +188,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Search query is required" }, { status: 400 });
     }
 
-    // Clean search text by removing fillers like "top", "best", "near me"
+    const lowerQuery = rawQuery.toLowerCase();
+    const isTechSearch =
+      lowerQuery.includes("tech") ||
+      lowerQuery.includes("software") ||
+      lowerQuery.includes("company") ||
+      lowerQuery.includes("companies") ||
+      lowerQuery.includes("office") ||
+      lowerQuery.includes("startup") ||
+      lowerQuery.includes("it park") ||
+      lowerQuery.includes("it companies") ||
+      lowerQuery.includes("tech park");
+
+    // Clean search text by removing fillers
     const cleanedQuery = rawQuery
       .replace(/\b(top|best|popular|famous|near me|nearby|in|at)\b/gi, "")
       .replace(/\s+/g, " ")
@@ -158,14 +239,50 @@ export async function GET(request: NextRequest) {
     // Viewbox format: left (minLon), top (maxLat), right (maxLon), bottom (minLat)
     const viewbox = `${minLon.toFixed(4)},${maxLat.toFixed(4)},${maxLon.toFixed(4)},${minLat.toFixed(4)}`;
 
-    // 4. Build Multi-Strategy & Locality-Aware Search URLs
+    const allRawItems: any[] = [];
+    const seenNames = new Set<string>();
+    const seenCoordinates = new Set<string>();
+
+    const addItem = (item: any) => {
+      const lat = parseFloat(item.lat);
+      const lon = parseFloat(item.lon);
+      if (isNaN(lat) || isNaN(lon)) return;
+      if (lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) return;
+
+      const nameKey = (item.name || item.display_name.split(",")[0]).toLowerCase().trim();
+      const coordKey = `${lat.toFixed(3)}_${lon.toFixed(3)}`;
+
+      if (!seenNames.has(nameKey) && !seenCoordinates.has(coordKey)) {
+        seenNames.add(nameKey);
+        seenCoordinates.add(coordKey);
+        allRawItems.push(item);
+      }
+    };
+
+    // If search is for Tech Companies / Tech Parks / IT Offices, query Overpass directly first!
+    if (isTechSearch) {
+      const overpassItems = await fetchOverpassTechOffices(minLat, minLon, maxLat, maxLon, requestedLimit);
+      for (const item of overpassItems) {
+        addItem(item);
+        if (allRawItems.length >= requestedLimit) break;
+      }
+    }
+
+    // 4. Build Multi-Strategy & Locality-Aware Search URLs for Nominatim
     const queryUrls: string[] = [];
 
-    // Check for matched category tags (e.g. "hospital", "cafe", "school")
+    // Check for matched category tags (excluding park if query is tech)
     const words = cleanedQuery.split(" ").filter(Boolean);
     for (const word of words) {
       const lower = word.toLowerCase();
-      if (CATEGORY_TAG_MAP[lower]) {
+      if (lower === "park" || lower === "parks") {
+        // Only trigger leisure park if it's NOT a tech/office query
+        if (!isTechSearch) {
+          queryUrls.push(
+            `https://nominatim.openstreetmap.org/search?leisure=park&format=json&addressdetails=1&viewbox=${viewbox}&bounded=1&limit=30`
+          );
+        }
+      } else if (CATEGORY_TAG_MAP[lower]) {
         for (const tag of CATEGORY_TAG_MAP[lower]) {
           queryUrls.push(
             `https://nominatim.openstreetmap.org/search?${tag.param}=${encodeURIComponent(
@@ -176,21 +293,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Multi-token combinations for "<Brand> <Locality>" (e.g. "Truffles Koramangala", "Manipal Whitefield")
+    // Multi-token combinations for "<Brand> <Locality>"
     if (words.length >= 2) {
-      // 1. Comma-separated: "Truffles, Koramangala"
       queryUrls.push(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
           words.join(", ")
         )}&format=json&addressdetails=1&viewbox=${viewbox}&bounded=1&limit=30`
       );
-      // 2. Comma-separated with city: "Truffles, Koramangala, Bengaluru"
       queryUrls.push(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
           `${words.join(", ")}, ${targetCityName}`
         )}&format=json&addressdetails=1&viewbox=${viewbox}&bounded=1&limit=30`
       );
-      // 3. First token fallback with viewbox: e.g. "Truffles"
       queryUrls.push(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
           words[0]
@@ -209,15 +323,6 @@ export async function GET(request: NextRequest) {
         `${cleanedQuery}, ${targetCityName}`
       )}&format=json&addressdetails=1&viewbox=${viewbox}&bounded=1&limit=30`
     );
-    queryUrls.push(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-        rawQuery
-      )}&format=json&addressdetails=1&viewbox=${viewbox}&bounded=1&limit=30`
-    );
-
-    const allRawItems: any[] = [];
-    const seenNames = new Set<string>();
-    const seenCoordinates = new Set<string>();
 
     for (const url of queryUrls) {
       if (allRawItems.length >= requestedLimit) break;
@@ -234,24 +339,7 @@ export async function GET(request: NextRequest) {
           const data = await res.json();
           if (Array.isArray(data)) {
             for (const item of data) {
-              const lat = parseFloat(item.lat);
-              const lon = parseFloat(item.lon);
-
-              if (isNaN(lat) || isNaN(lon)) continue;
-
-              // Geographic Boundary Check: Must fall within the domain's radius
-              if (lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
-                continue;
-              }
-
-              const nameKey = (item.name || item.display_name.split(",")[0]).toLowerCase().trim();
-              const coordKey = `${lat.toFixed(3)}_${lon.toFixed(3)}`;
-
-              if (!seenNames.has(nameKey) && !seenCoordinates.has(coordKey)) {
-                seenNames.add(nameKey);
-                seenCoordinates.add(coordKey);
-                allRawItems.push(item);
-              }
+              addItem(item);
               if (allRawItems.length >= requestedLimit) break;
             }
           }
@@ -261,8 +349,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Smart Locality Ranking: If user entered multiple words (e.g. "Truffles Koramangala"),
-    // sort items matching the specific locality words to the very top!
+    // Smart Locality Ranking
     const queryTokens = words.map((w) => w.toLowerCase());
     const sortedItems = [...allRawItems].sort((a, b) => {
       const aFull = (a.display_name || "").toLowerCase();
@@ -277,19 +364,19 @@ export async function GET(request: NextRequest) {
     const places = sortedItems.map((item: any) => {
       const addressParts = item.display_name.split(", ");
       const rawTitle = item.name || addressParts[0];
-      const street = item.address.road || item.address.pedestrian || item.address.street || addressParts[1] || "";
+      const street = item.address?.road || item.address?.pedestrian || item.address?.street || addressParts[1] || "";
       const locality =
-        item.address.suburb ||
-        item.address.neighbourhood ||
-        item.address.city_district ||
-        item.address.residential ||
-        item.address.quarter ||
-        item.address.town ||
+        item.address?.suburb ||
+        item.address?.neighbourhood ||
+        item.address?.city_district ||
+        item.address?.residential ||
+        item.address?.quarter ||
+        item.address?.town ||
         targetCityName;
-      const city = item.address.city || item.address.town || item.address.county || targetCityName;
-      const state = item.address.state || item.address.province || "";
-      const countryCode = (item.address.country_code || center.countryCode || "in").toUpperCase();
-      const postalCode = item.address.postcode || "";
+      const city = item.address?.city || item.address?.town || item.address?.county || targetCityName;
+      const state = item.address?.state || item.address?.province || "";
+      const countryCode = (item.address?.country_code || center.countryCode || "in").toUpperCase();
+      const postalCode = item.address?.postcode || "";
 
       const fullAddress = [street, locality, city, postalCode].filter(Boolean).join(", ");
 
@@ -309,7 +396,7 @@ export async function GET(request: NextRequest) {
         administrativeArea: state,
         countryCode: countryCode,
         postalCode: postalCode,
-        rawCategory: item.type || item.category || "general",
+        rawCategory: item.type || item.category || "company",
         displayName: item.display_name,
       };
     });

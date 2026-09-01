@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { parseImportCsv } from "@/lib/import/csv";
 import { categoryInputSchema, customFieldInputSchema, domainInputSchema, listingInputSchema, socialLinkInputSchema } from "@/lib/validation/directory";
+import { syncCompanyAtsJobs } from "@/lib/careers/ats-sync";
+import { resolvePincodeCoordinates } from "@/lib/import/registry-transformer";
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -361,29 +363,160 @@ export async function setListingVerification(formData: FormData): Promise<void> 
 
 export async function processCsvImport(formData: FormData): Promise<void> {
   const { supabase, tenant, user } = await requireTenantContext();
-  const domainId = id(formData, "domainId");
+  
+  // Read domainId from either domain_id or domainId
+  const rawDomainId = text(formData, "domain_id") || text(formData, "domainId");
+  if (!rawDomainId) throw new Error("Target Atlas domain is required.");
+  const domainId = rawDomainId;
+
+  // Read fallback category
+  const fallbackCategoryId = text(formData, "category_id") || text(formData, "categoryId");
+
   const fileValue = formData.get("file");
-  if (!(fileValue instanceof File) || fileValue.size < 1 || fileValue.size > 25 * 1024 * 1024 || fileValue.type !== "text/csv") throw new Error("Upload a CSV file smaller than 25 MB.");
+  if (!(fileValue instanceof File) || fileValue.size < 1 || fileValue.size > 25 * 1024 * 1024) {
+    throw new Error("Upload a CSV file smaller than 25 MB.");
+  }
+
   const rows = parseImportCsv(await fileValue.text());
   if (!rows.length || rows.length > 10000) throw new Error("CSV must contain between 1 and 10,000 rows.");
-  const [{ data: categories }, { data: existing }] = await Promise.all([supabase.from("categories").select("id, name").eq("tenant_id", tenant.id).eq("domain_id", domainId), supabase.from("listings").select("title, phone").eq("tenant_id", tenant.id).eq("domain_id", domainId)]);
-  const categoryMap = new Map((categories ?? []).map((category) => [category.name.toLowerCase(), category.id]));
-  const existingKeys = new Set((existing ?? []).map((listing) => `${listing.title.toLowerCase()}|${listing.phone ?? ""}`));
+
+  const [{ data: categories }, { data: existing }] = await Promise.all([
+    supabase.from("categories").select("id, name, slug").eq("tenant_id", tenant.id).eq("domain_id", domainId),
+    supabase.from("listings").select("title, slug").eq("tenant_id", tenant.id).eq("domain_id", domainId)
+  ]);
+
+  const categoryMap = new Map((categories ?? []).map((c) => [c.name.toLowerCase(), c.id]));
+  (categories ?? []).forEach((c) => categoryMap.set(c.slug.toLowerCase(), c.id));
+
+  const existingKeys = new Set((existing ?? []).map((l) => l.title.toLowerCase()));
   const errors: Array<{ row: number; error: string }> = [];
   let success = 0;
   let duplicates = 0;
+
   for (const [index, row] of rows.entries()) {
-    const title = row.Name?.trim();
-    const categoryId = categoryMap.get((row.Category ?? "").trim().toLowerCase());
-    const key = `${(title ?? "").toLowerCase()}|${row.Phone?.trim() ?? ""}`;
-    if (!title || !row.Address || !categoryId) { errors.push({ row: index + 2, error: !title ? "Name is required" : !row.Address ? "Address is required" : "Unknown category" }); continue; }
-    if (existingKeys.has(key)) { duplicates += 1; continue; }
-    const { error } = await supabase.from("listings").insert({ tenant_id: tenant.id, domain_id: domainId, category_id: categoryId, owner_user_id: user.id, title, slug: `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${index + 1}`, address_line_1: row.Address, city: row.City || null, administrative_area: row.State || null, country_code: row.CountryCode || null, postal_code: row["Postal code"] || null, website: row.Website || null, phone: row.Phone || null, email: row.Email || null, description: row.Description || null });
-    if (error) errors.push({ row: index + 2, error: "Could not import row" }); else { success += 1; existingKeys.add(key); }
+    // 1. Flexible Title extraction
+    const title = (
+      row.title ||
+      row.Title ||
+      row.name ||
+      row.Name ||
+      row["Company Name"] ||
+      row["company_name"] ||
+      ""
+    ).trim();
+
+    if (!title) {
+      errors.push({ row: index + 2, error: "Name is required" });
+      continue;
+    }
+
+    // 2. Flexible Category extraction
+    const rawCat = (row.category_name || row.Category || row.category || "").trim().toLowerCase();
+    const resolvedCatId = (rawCat ? categoryMap.get(rawCat) : null) || fallbackCategoryId || (categories?.[0]?.id);
+
+    if (!resolvedCatId) {
+      errors.push({ row: index + 2, error: "Unknown category and no fallback category selected" });
+      continue;
+    }
+
+    // 3. Flexible Address & Locality extraction
+    const pin = (row.postal_code || row.postalCode || row["Postal code"] || row.Pincode || row.pincode || "").trim();
+    const locality = (row.locality || row.Locality || row.area || row.Area || "").trim();
+    const street = (
+      row.address_line_1 ||
+      row.Address ||
+      row.address ||
+      row["Street Address"] ||
+      locality ||
+      "Bengaluru"
+    ).trim();
+
+    // 4. Flexible Coordinates extraction (with centroid fallback if missing)
+    let lat: number | null = parseFloat(row.latitude || row.lat || row.Latitude);
+    let lon: number | null = parseFloat(row.longitude || row.lon || row.lng || row.Longitude);
+
+    if (isNaN(lat) || isNaN(lon)) {
+      const resolved = resolvePincodeCoordinates(pin);
+      lat = resolved.lat;
+      lon = resolved.lon;
+    }
+
+    const key = title.toLowerCase();
+    if (existingKeys.has(key)) {
+      duplicates += 1;
+      continue;
+    }
+
+    const slug = (row.slug || `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${index + 1}`).trim();
+
+    // Parse tech stack array
+    const rawTech = row.tech_stack || row.techStack || "";
+    const techStack = typeof rawTech === "string" ? rawTech.split(";").map((t) => t.trim()).filter(Boolean) : [];
+
+    const foundedYear = parseInt(row.founded_year || row.foundedYear || "", 10);
+
+    const { error } = await supabase.from("listings").insert({
+      tenant_id: tenant.id,
+      domain_id: domainId,
+      category_id: resolvedCatId,
+      owner_user_id: user.id,
+      title,
+      slug,
+      short_description: row.short_description || row.description || row.Description || null,
+      address_line_1: street,
+      locality: locality || null,
+      city: row.city || row.City || "Bengaluru",
+      administrative_area: row.state || row.State || "Karnataka",
+      country_code: row.country || row.CountryCode || "IN",
+      postal_code: pin || null,
+      latitude: lat,
+      longitude: lon,
+      website: row.website || row.Website || null,
+      careers_url: row.careers_url || row.careersUrl || null,
+      company_type: row.company_type || row.companyType || null,
+      funding_stage: row.funding_stage || row.fundingStage || null,
+      employee_range: row.employee_range || row.employeeRange || null,
+      tech_stack: techStack.length > 0 ? techStack : undefined,
+      founded_year: !isNaN(foundedYear) ? foundedYear : null,
+      phone: row.phone || row.Phone || null,
+      email: row.email || row.Email || null,
+      status: "published",
+      verification_status: "verified",
+      is_featured: true,
+      published_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      if (error.code === "23505" || error.message?.includes("unique") || error.message?.includes("duplicate")) {
+        duplicates += 1;
+        existingKeys.add(key);
+      } else {
+        console.error(`Import row ${index + 2} failed:`, error);
+        errors.push({ row: index + 2, error: error.message || "Could not import row" });
+      }
+    } else {
+      success += 1;
+      existingKeys.add(key);
+    }
   }
-  const { data: job, error: jobError } = await supabase.from("import_jobs").insert({ tenant_id: tenant.id, domain_id: domainId, created_by: user.id, status: errors.length ? "completed_with_errors" : "completed", total_rows: rows.length, processed_rows: rows.length, success_count: success, failure_count: errors.length, duplicate_count: duplicates, errors_json: errors, completed_at: new Date().toISOString() }).select("id").single();
+
+  const { data: job, error: jobError } = await supabase.from("import_jobs").insert({
+    tenant_id: tenant.id,
+    domain_id: domainId,
+    created_by: user.id,
+    status: errors.length ? "completed_with_errors" : "completed",
+    total_rows: rows.length,
+    processed_rows: rows.length,
+    success_count: success,
+    failure_count: errors.length,
+    duplicate_count: duplicates,
+    errors_json: errors,
+    completed_at: new Date().toISOString()
+  }).select("id").single();
+
   if (jobError || !job) throw new Error("Import results could not be saved.");
   revalidatePath("/admin/listings");
+  revalidatePath("/tech-atlas");
   redirect(`/admin/import?job=${job.id}`);
 }
 
@@ -667,6 +800,73 @@ export async function clearAllListings(): Promise<void> {
   revalidatePath("/");
 }
 
+export async function syncCompanyCareers({
+  listingId,
+  provider,
+  boardToken,
+}: {
+  listingId: string;
+  provider: "greenhouse" | "lever" | "ashby" | "custom" | "workday" | "smartrecruiters";
+  boardToken: string;
+}): Promise<{ success: boolean; count: number; error?: string }> {
+  const { supabase, tenant } = await requireTenantContext();
 
+  const cleanToken = boardToken.trim().replace(/^https?:\/\/[^/]+\//, "").split("/")[0].split("?")[0];
+  if (!cleanToken) {
+    throw new Error("Invalid ATS Board handle or token");
+  }
 
+  // 1. Fetch live jobs via ATS API client
+  const jobs = await syncCompanyAtsJobs(provider, cleanToken);
+  if (!jobs || jobs.length === 0) {
+    return { success: false, count: 0, error: `No active jobs found for ${provider} board: ${cleanToken}` };
+  }
 
+  // 2. Delete existing jobs for this listing
+  await supabase
+    .from("company_jobs")
+    .delete()
+    .eq("tenant_id", tenant.id)
+    .eq("listing_id", listingId);
+
+  // 3. Batch insert fresh jobs
+  const jobsToInsert = jobs.map((j) => ({
+    tenant_id: tenant.id,
+    listing_id: listingId,
+    title: j.title,
+    department: j.department,
+    location_name: j.locationName,
+    workplace_type: j.workplaceType,
+    apply_url: j.applyUrl,
+    ats_job_id: j.atsJobId,
+    is_active: true,
+    posted_at: j.postedAt,
+  }));
+
+  const { error: insertError } = await supabase.from("company_jobs").insert(jobsToInsert);
+  if (insertError) {
+    console.error("Failed to insert synced jobs:", insertError);
+    throw new Error("Failed to save synced jobs: " + insertError.message);
+  }
+
+  // 4. Update listing active_jobs_count, ats_provider, and careers_url
+  let careersUrl = "";
+  if (provider === "greenhouse") careersUrl = `https://boards.greenhouse.io/${cleanToken}`;
+  else if (provider === "lever") careersUrl = `https://jobs.lever.co/${cleanToken}`;
+  else if (provider === "ashby") careersUrl = `https://jobs.ashbyhq.com/${cleanToken}`;
+
+  await supabase
+    .from("listings")
+    .update({
+      active_jobs_count: jobs.length,
+      careers_url: careersUrl || undefined,
+    })
+    .eq("id", listingId)
+    .eq("tenant_id", tenant.id);
+
+  revalidatePath(`/admin/listings/${listingId}`);
+  revalidatePath("/tech-atlas");
+  revalidatePath("/admin/listings");
+
+  return { success: true, count: jobs.length };
+}
