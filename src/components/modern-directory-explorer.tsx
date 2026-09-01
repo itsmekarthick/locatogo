@@ -11,6 +11,7 @@ import { PlaceWeatherBadge } from "@/components/place-weather-badge";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getPlaceRating } from "@/lib/services/place-rating";
+import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { trackEvent } from "@/lib/analytics/tracker";
 import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
 
@@ -433,63 +434,67 @@ export function ModernDirectoryExplorer({
   return (
     <div className="flex min-h-screen w-full flex-col bg-white font-sans antialiased text-[#111827]">
       {/* Top Navbar */}
-      <header className="border-b border-gray-100 bg-white sticky top-0 z-50">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-3 sm:px-6 py-2 sm:py-3.5">
-          {/* Logo & Subtitle */}
-          <div className="flex items-center gap-2 sm:gap-3">
+      <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-50">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-3">
+          {/* Logo & Dual Atlas Switcher */}
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
             <Link href="/" className="flex items-center gap-2.5 group" title="locatogo">
-              <BrandLogo size={34} className="group-hover:scale-105 transition-transform" />
-              <span className="hidden md:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
+              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+              <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
                 locatogo<span className="text-[#e26a4f]">.</span>
               </span>
             </Link>
 
-            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
-              <span className="text-sm">📍</span>
-              <span>{domain?.name ? `${domain.name} Atlas` : "Global Atlas"}</span>
+            {/* Dual Atlas Mode Segmented Pill */}
+            <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 p-0.5 shadow-2xs">
+              <Link
+                href={`/${domain?.slug || "bangalore"}`}
+                className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold text-slate-900 dark:text-white shadow-xs transition-all"
+              >
+                <span>🏙️</span>
+                <span className="hidden md:inline">{domain?.name ? `${domain.name}` : "City"} Atlas</span>
+                <span className="md:hidden">City</span>
+              </Link>
+              <Link
+                href="/tech-atlas"
+                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+              >
+                <span>💼</span>
+                <span className="hidden md:inline">Tech Atlas</span>
+                <span className="md:hidden">Tech</span>
+                <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+              </Link>
             </div>
-            {liveWeather && (
-              <div className="hidden sm:block">
-                <PlaceWeatherBadge
-                  weather={liveWeather}
-                  compact
-                  onSimulateWeather={setSimulatedWeather}
-                  currentSimulated={simulatedWeather}
-                />
-              </div>
-            )}
           </div>
 
-          {/* Desktop/Tablet Center: Top Global Search Bar + Neighborhood Dropdown */}
-          <div className="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-4">
-            <div className="w-full flex items-center rounded-xl border border-gray-200 bg-gray-50/90 p-1 focus-within:border-gray-400 focus-within:bg-white focus-within:shadow-2xs transition-all">
-              <div className="relative flex-1 flex items-center pl-2 min-w-0">
-                <span className="text-gray-400 text-xs mr-2 shrink-0">🔍</span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search places by name..."
-                  className="w-full bg-transparent text-xs text-gray-900 placeholder-gray-400 focus:outline-none min-w-0"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="text-xs text-gray-400 hover:text-gray-700 pr-1.5 cursor-pointer shrink-0"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
+          {/* Desktop Center: Search Bar + Neighborhood Dropdown */}
+          <div className="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-2">
+            <div className="w-full flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 px-3.5 py-1.5 focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all">
+              <span className="text-slate-400 text-xs mr-2 shrink-0">🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search places, restaurants, hospitals..."
+                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1.5 cursor-pointer shrink-0"
+                >
+                  ✕
+                </button>
+              )}
 
               {/* Neighborhood Selector in Top Navbar */}
-              <div className="border-l border-gray-200 pl-1.5 shrink-0">
+              <div className="border-l border-slate-200 dark:border-slate-700 pl-2 shrink-0">
                 <select
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="rounded-lg bg-transparent px-2 py-1 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer max-w-[150px] truncate"
+                  className="rounded-lg bg-transparent px-1.5 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[130px] truncate"
                 >
-                  <option value="">All Neighborhoods</option>
+                  <option value="">All Areas</option>
                   {availableLocations.map((loc) => (
                     <option key={loc} value={loc}>
                       {loc}
@@ -501,36 +506,24 @@ export function ModernDirectoryExplorer({
           </div>
 
           {/* Right Action Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            {liveWeather && (
-              <div className="sm:hidden">
-                <PlaceWeatherBadge
-                  weather={liveWeather}
-                  compact
-                  onSimulateWeather={setSimulatedWeather}
-                  currentSimulated={simulatedWeather}
-                />
-              </div>
-            )}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <Link
               href="/submit"
               title="Add a New Place"
-              className="flex items-center justify-center rounded-xl md:rounded-md bg-[#e26a4f] h-9 w-9 md:h-auto md:w-auto md:px-4 md:py-2 text-xs font-bold uppercase tracking-wider text-white shadow-xs transition-all hover:bg-[#d8583c] hover:shadow-sm"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-md hover:scale-[1.02] transition-all"
             >
-              {/* Mobile (< 768px): Plus Icon Only */}
-              <span className="md:hidden text-xl font-bold leading-none">+</span>
-              {/* Desktop (>= 768px): Full Text with Plus */}
-              <span className="hidden md:inline">+ ADD PLACE</span>
+              <span className="text-sm font-bold leading-none">+</span>
+              <span className="hidden sm:inline">Add Place</span>
             </Link>
             <Link
               href="/dashboard"
-              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="hidden sm:inline-flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
             >
               Dashboard
             </Link>
             <Link
               href="/admin"
-              className="hidden sm:inline-block rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              className="hidden sm:inline-flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
             >
               Admin
             </Link>
@@ -539,32 +532,32 @@ export function ModernDirectoryExplorer({
         </div>
 
         {/* Dedicated Mobile Search & Neighborhood Bar */}
-        <div className="md:hidden border-t border-gray-100 px-3 py-1.5 bg-gray-50/70">
-          <div className="flex items-center rounded-xl border border-gray-200/90 bg-white p-1 shadow-2xs">
-            <div className="relative flex-1 flex items-center pl-2 min-w-0">
-              <span className="text-gray-400 text-xs mr-1.5 shrink-0">🔍</span>
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
+          <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 shadow-2xs">
+            <div className="relative flex-1 flex items-center min-w-0">
+              <span className="text-slate-400 text-xs mr-1.5 shrink-0">🔍</span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search places by name..."
-                className="w-full bg-transparent text-xs text-gray-900 placeholder-gray-400 focus:outline-none min-w-0"
+                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="text-xs text-gray-400 hover:text-gray-700 pr-1 cursor-pointer shrink-0"
+                  className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
                 >
                   ✕
                 </button>
               )}
             </div>
 
-            <div className="border-l border-gray-200 pl-1 shrink-0">
+            <div className="border-l border-slate-200 dark:border-slate-700 pl-1.5 shrink-0">
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="rounded-lg bg-transparent px-1.5 py-1 text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer max-w-[130px] truncate"
+                className="rounded-lg bg-transparent px-1 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[120px] truncate"
               >
                 <option value="">All Areas</option>
                 {availableLocations.map((loc) => (
@@ -617,6 +610,18 @@ export function ModernDirectoryExplorer({
                 setFlyToUserTrigger((prev) => prev + 1);
               }}
             />
+
+            {/* Floating Live Weather & Air Quality Badge on Map Top-Left (Opposite side from top-right layer controls) */}
+            {liveWeather && (
+              <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-[400] drop-shadow-md">
+                <PlaceWeatherBadge
+                  weather={liveWeather}
+                  compact
+                  onSimulateWeather={setSimulatedWeather}
+                  currentSimulated={simulatedWeather}
+                />
+              </div>
+            )}
 
             {/* Floating Overlapping Category Pills Card */}
             <div className="absolute -bottom-14 sm:-bottom-14 left-1/2 -translate-x-1/2 w-full max-w-4xl px-3 sm:px-4 z-[400]">
@@ -848,16 +853,20 @@ export function ModernDirectoryExplorer({
                             </div>
                           </div>
 
-                          {/* Place Title */}
-                          <h3 className="font-serif text-lg font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors mt-3">
-                            <Link href={`/listing/${place.slug}`}>{place.title}</Link>
-                          </h3>
-
-                          {/* Rating Stars Line */}
-                          <div className="mt-1 flex items-center gap-1.5 text-xs">
-                            <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
-                            <span className="text-xs font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
-                            <span className="text-[11px] text-gray-500 font-medium">({ratingInfo.reviewCount} verified ratings)</span>
+                          {/* Place Title + Brand Avatar */}
+                          <div className="flex items-center gap-3 mt-3">
+                            <CompanyBrandAvatar title={place.title} website={place.website} size={38} />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-serif text-base sm:text-lg font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors truncate">
+                                <Link href={`/listing/${place.slug}`}>{place.title}</Link>
+                              </h3>
+                              {/* Rating Stars Line */}
+                              <div className="mt-0.5 flex items-center gap-1.5 text-xs">
+                                <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
+                                <span className="text-xs font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
+                                <span className="text-[11px] text-gray-500 font-medium">({ratingInfo.reviewCount} verified ratings)</span>
+                              </div>
+                            </div>
                           </div>
 
                           {/* Address & Locality */}

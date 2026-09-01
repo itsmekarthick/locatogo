@@ -392,6 +392,7 @@ export async function processCsvImport(formData: FormData): Promise<void> {
   const errors: Array<{ row: number; error: string }> = [];
   let success = 0;
   let duplicates = 0;
+  const validRecords: any[] = [];
 
   for (const [index, row] of rows.entries()) {
     // 1. Flexible Title extraction
@@ -446,6 +447,7 @@ export async function processCsvImport(formData: FormData): Promise<void> {
       duplicates += 1;
       continue;
     }
+    existingKeys.add(key);
 
     const slug = (row.slug || `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${index + 1}`).trim();
 
@@ -455,7 +457,8 @@ export async function processCsvImport(formData: FormData): Promise<void> {
 
     const foundedYear = parseInt(row.founded_year || row.foundedYear || "", 10);
 
-    const { error } = await supabase.from("listings").insert({
+    validRecords.push({
+      _rowNum: index + 2,
       tenant_id: tenant.id,
       domain_id: domainId,
       category_id: resolvedCatId,
@@ -485,18 +488,33 @@ export async function processCsvImport(formData: FormData): Promise<void> {
       is_featured: true,
       published_at: new Date().toISOString(),
     });
+  }
+
+  // High-Speed Bulk Batch Ingestion (200 records per database query)
+  const BATCH_SIZE = 200;
+  for (let i = 0; i < validRecords.length; i += BATCH_SIZE) {
+    const chunk = validRecords.slice(i, i + BATCH_SIZE);
+    const dbPayload = chunk.map(({ _rowNum, ...r }) => r);
+
+    const { error } = await supabase.from("listings").insert(dbPayload);
 
     if (error) {
-      if (error.code === "23505" || error.message?.includes("unique") || error.message?.includes("duplicate")) {
-        duplicates += 1;
-        existingKeys.add(key);
-      } else {
-        console.error(`Import row ${index + 2} failed:`, error);
-        errors.push({ row: index + 2, error: error.message || "Could not import row" });
+      // If batch fails, fallback to individual row insert to capture specific errors
+      for (const item of chunk) {
+        const { _rowNum, ...singlePayload } = item;
+        const { error: singleErr } = await supabase.from("listings").insert(singlePayload);
+        if (singleErr) {
+          if (singleErr.code === "23505" || singleErr.message?.includes("unique")) {
+            duplicates += 1;
+          } else {
+            errors.push({ row: _rowNum, error: singleErr.message || "Insert failed" });
+          }
+        } else {
+          success += 1;
+        }
       }
     } else {
-      success += 1;
-      existingKeys.add(key);
+      success += dbPayload.length;
     }
   }
 

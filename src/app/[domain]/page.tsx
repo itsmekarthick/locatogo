@@ -73,21 +73,37 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
     );
   }
 
-  const [{ data: categories }, { data: rawListings }] = await Promise.all([
-    supabase
-      .from("categories")
-      .select("id, name, slug, icon, pin_color")
-      .eq("domain_id", domain.id)
-      .order("sort_order"),
-    supabase
+  const PAGE_SIZE = 1000;
+  const PAGES = 5; // Hydrate up to 5,000 domain places in parallel
+
+  const fetchPage = async (page: number) => {
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data } = await supabase
       .from("listings")
       .select(
         "id, title, slug, short_description, address_line_1, address_line_2, locality, city, postal_code, phone, website, latitude, longitude, is_featured, verification_status, category_id, categories:categories!listings_category_id_domain_id_fkey(name, icon, pin_color)"
       )
       .eq("domain_id", domain.id)
       .eq("status", "published")
-      .order("is_featured", { ascending: false }),
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("is_featured", { ascending: false })
+      .range(from, to);
+
+    return data || [];
+  };
+
+  const [{ data: categories }, ...pageResults] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("id, name, slug, icon, pin_color")
+      .eq("domain_id", domain.id)
+      .order("sort_order"),
+    ...Array.from({ length: PAGES }, (_, i) => fetchPage(i)),
   ]);
+
+  const rawListings = pageResults.flat();
 
   const listings: PlaceListing[] = (rawListings ?? []).map((l) => {
     const cat = Array.isArray(l.categories)

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanyDetailDrawer, type CompanyDetail } from "@/components/company-detail-drawer";
+import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 
 // Dynamically load interactive Leaflet map canvas without SSR
@@ -44,24 +45,132 @@ export const GLOBAL_TECH_HUBS: TechHub[] = [
 
 export function GlobalTechExplorer({
   initialCompanies,
+  totalDatabaseCompanies = 67699,
   currentHub = "bengaluru",
 }: {
   initialCompanies: CompanyDetail[];
+  totalDatabaseCompanies?: number;
   currentHub?: string;
 }) {
   const [selectedHub, setSelectedHub] = useState<TechHub>(
     GLOBAL_TECH_HUBS.find((h) => h.id === currentHub) || GLOBAL_TECH_HUBS[0]
   );
+  const [companies, setCompanies] = useState<CompanyDetail[]>(initialCompanies);
   const [searchQuery, setSearchQuery] = useState("");
   const [hiringOnly, setHiringOnly] = useState(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"map" | "grid">("map");
   const [selectedCompany, setSelectedCompany] = useState<CompanyDetail | null>(null);
+  const [isSearchingServer, setIsSearchingServer] = useState(false);
+
+  // Progressive background streaming (Loads remaining companies without freezing UI)
+  useEffect(() => {
+    let isCancelled = false;
+    async function loadMoreInBatches() {
+      // Fetch pages 3, 4, 5, etc. progressively
+      for (let page = 3; page < 15; page++) {
+        if (isCancelled) break;
+        try {
+          const res = await fetch(`/api/tech-atlas/companies?page=${page}&limit=2000`);
+          if (!res.ok) break;
+          const data = await res.json();
+          if (!data.companies || data.companies.length === 0) break;
+
+          const newBatch: CompanyDetail[] = data.companies.map((l: any) => ({
+            id: l.id,
+            title: l.title,
+            slug: l.slug,
+            short_description: l.short_description,
+            address_line_1: l.address_line_1,
+            locality: l.locality,
+            city: l.city,
+            latitude: l.latitude,
+            longitude: l.longitude,
+            website: l.website,
+            careers_url: l.careers_url,
+            company_type: l.company_type || "product_saas",
+            funding_stage: l.funding_stage || "Product",
+            employee_range: l.employee_range,
+            tech_stack: l.tech_stack || [],
+            founded_year: l.founded_year,
+            active_jobs_count: l.active_jobs_count || 0,
+            jobs: [],
+          }));
+
+          setCompanies((prev) => {
+            const existingIds = new Set(prev.map((c) => c.id));
+            const uniqueNew = newBatch.filter((c) => !existingIds.has(c.id));
+            return [...prev, ...uniqueNew];
+          });
+        } catch {
+          break;
+        }
+      }
+    }
+
+    const timer = setTimeout(() => {
+      loadMoreInBatches();
+    }, 1200);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, []);
+
+  // Server-side search across all 67,699 companies when typing
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 2) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearchingServer(true);
+        const res = await fetch(`/api/tech-atlas/companies?q=${encodeURIComponent(searchQuery.trim())}&limit=500`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.companies && data.companies.length > 0) {
+            const serverResults: CompanyDetail[] = data.companies.map((l: any) => ({
+              id: l.id,
+              title: l.title,
+              slug: l.slug,
+              short_description: l.short_description,
+              address_line_1: l.address_line_1,
+              locality: l.locality,
+              city: l.city,
+              latitude: l.latitude,
+              longitude: l.longitude,
+              website: l.website,
+              careers_url: l.careers_url,
+              company_type: l.company_type || "product_saas",
+              funding_stage: l.funding_stage || "Product",
+              employee_range: l.employee_range,
+              tech_stack: l.tech_stack || [],
+              founded_year: l.founded_year,
+              active_jobs_count: l.active_jobs_count || 0,
+              jobs: [],
+            }));
+
+            setCompanies((prev) => {
+              const existingIds = new Set(prev.map((c) => c.id));
+              const uniqueNew = serverResults.filter((c) => !existingIds.has(c.id));
+              return [...uniqueNew, ...prev];
+            });
+          }
+        }
+      } catch {
+        // Fallback to client-side filtering
+      } finally {
+        setIsSearchingServer(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Filter companies based on search, hiring toggle, and stage
   const filteredCompanies = useMemo(() => {
-    return initialCompanies.filter((c) => {
+    return companies.filter((c) => {
       // 1. Hiring filter
       if (hiringOnly && (!c.jobs || c.jobs.length === 0) && (!c.active_jobs_count || c.active_jobs_count === 0)) {
         return false;
@@ -89,11 +198,11 @@ export function GlobalTechExplorer({
 
       return true;
     });
-  }, [initialCompanies, hiringOnly, selectedType, selectedStage, searchQuery]);
+  }, [companies, hiringOnly, selectedType, selectedStage, searchQuery]);
 
   const totalOpenings = useMemo(() => {
-    return initialCompanies.reduce((acc, c) => acc + (c.jobs?.length || c.active_jobs_count || 0), 0);
-  }, [initialCompanies]);
+    return companies.reduce((acc, c) => acc + (c.jobs?.length || c.active_jobs_count || 0), 0);
+  }, [companies]);
 
   // Convert to PlaceListing format for InteractiveLeafletCanvas component
   const locatedListings: (PlaceListing & { latitude: number; longitude: number })[] = useMemo(() => {
@@ -120,54 +229,85 @@ export function GlobalTechExplorer({
   return (
     <div className="relative flex h-screen w-full flex-col overflow-hidden bg-slate-50 dark:bg-[#090d16] font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
       {/* Top Floating Control Toolbar */}
-      <header className="z-[1000] border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#0c121e]/90 backdrop-blur-md px-4 py-3 shadow-xs">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-          {/* Brand & Global Hub Switcher */}
-          <div className="flex items-center gap-3">
+      <header className="z-[1000] border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-3">
+          {/* Left Group: Logo, Mode Toggle & Hub Dropdown */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2 group">
-              <BrandLogo size={30} />
-              <span className="font-serif text-lg font-bold tracking-tight text-slate-950 dark:text-slate-100">
+              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+              <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
                 TechAtlas<span className="text-indigo-600">.</span>
               </span>
             </Link>
 
-            {/* City Hub Switcher Dropdown */}
-            <div className="relative">
-              <select
-                value={selectedHub.id}
-                onChange={(e) => {
-                  const hub = GLOBAL_TECH_HUBS.find((h) => h.id === e.target.value);
-                  if (hub) setSelectedHub(hub);
-                }}
-                className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-900 dark:text-slate-100 shadow-2xs focus:outline-none cursor-pointer"
+            {/* Dual Atlas Mode Segmented Pill */}
+            <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 p-0.5 shadow-2xs">
+              <Link
+                href="/bangalore"
+                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
               >
-                {GLOBAL_TECH_HUBS.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.flag} {h.name}
-                  </option>
-                ))}
-              </select>
+                <span>🏙️</span>
+                <span className="hidden md:inline">City Atlas</span>
+                <span className="md:hidden">City</span>
+              </Link>
+              <div
+                className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 shadow-xs"
+              >
+                <span>💼</span>
+                <span className="hidden md:inline">Tech Atlas</span>
+                <span className="md:hidden">Tech</span>
+                <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+              </div>
+            </div>
+
+            {/* City Hub Switcher Dropdown */}
+            <select
+              value={selectedHub.id}
+              onChange={(e) => {
+                const hub = GLOBAL_TECH_HUBS.find((h) => h.id === e.target.value);
+                if (hub) setSelectedHub(hub);
+              }}
+              className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs focus:outline-none cursor-pointer"
+            >
+              {GLOBAL_TECH_HUBS.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.flag} {h.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Center Group: Live Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-2">
+            <div className="relative w-full flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 px-3.5 py-1.5 focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all">
+              <span className="text-slate-400 text-xs mr-2 shrink-0">
+                {isSearchingServer ? "⏳" : "🔍"}
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search 67,000+ companies, tech stack, roles..."
+                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-[200px] max-w-md">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search companies, tech stack, roles..."
-              className="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:outline-none shadow-2xs"
-            />
-          </div>
-
-          {/* Filters & Actions Strip */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Right Group: Filters & View Modes */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Pulsing "Hiring Now" Toggle */}
             <button
               type="button"
               onClick={() => setHiringOnly(!hiringOnly)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs cursor-pointer ${
+              className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer ${
                 hiringOnly
                   ? "bg-emerald-600 text-white shadow-emerald-500/20 shadow-md ring-2 ring-emerald-400"
                   : "border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
@@ -177,14 +317,14 @@ export function GlobalTechExplorer({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span>💼 Hiring ({totalOpenings} roles)</span>
+              <span>Hiring ({totalOpenings})</span>
             </button>
 
             {/* Company Stage Dropdown */}
             <select
               value={selectedStage}
               onChange={(e) => setSelectedStage(e.target.value)}
-              className="rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+              className="hidden sm:inline-block rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
             >
               <option value="all">All Stages</option>
               <option value="GCC">MNC GCC</option>
@@ -202,7 +342,7 @@ export function GlobalTechExplorer({
               <button
                 type="button"
                 onClick={() => setViewMode("map")}
-                className={`rounded-full px-3 py-1 transition-all ${
+                className={`rounded-full px-3 py-1 transition-all cursor-pointer ${
                   viewMode === "map"
                     ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -213,17 +353,41 @@ export function GlobalTechExplorer({
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
-                className={`rounded-full px-3 py-1 transition-all ${
+                className={`rounded-full px-3 py-1 transition-all cursor-pointer ${
                   viewMode === "grid"
                     ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 }`}
               >
-                ▦ Grid ({filteredCompanies.length})
+                ▦ Grid
               </button>
             </div>
 
             <ThemeToggle />
+          </div>
+        </div>
+
+        {/* Dedicated Mobile Search Bar */}
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
+          <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 shadow-2xs">
+            <span className="text-slate-400 text-xs mr-1.5 shrink-0">
+              {isSearchingServer ? "⏳" : "🔍"}
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search companies, tech stack, roles..."
+              className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -279,10 +443,8 @@ export function GlobalTechExplorer({
                     >
                       <div>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold text-lg shadow-xs">
-                              {comp.title.charAt(0)}
-                            </span>
+                          <div className="flex items-center gap-3">
+                            <CompanyBrandAvatar title={comp.title} website={comp.website} size={42} />
                             <div>
                               <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                                 {comp.title}

@@ -49,7 +49,7 @@ export function trackEvent(eventType: AnalyticsEvent, payload: TrackPayload = {}
         keepalive: true,
       }).catch(() => {});
     }
-  } catch (err) {
+  } catch {
     // Fail silently to never disrupt user experience
   }
 }

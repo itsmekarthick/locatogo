@@ -4,7 +4,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, Marker, Popup, Tooltip, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import Supercluster from "supercluster";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { generateUberRideLink } from "@/lib/services/transit-links";
@@ -37,51 +37,56 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   return R * c;
 }
 
-function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, zoom: number) {
+import { getCompanyLogoUrl, getCompanyInitials } from "@/components/company-brand-avatar";
+
+function getCategoryPinIcon(place: PlaceListing, isSelected: boolean) {
   const cat = (place.category_name || "").toLowerCase();
-  let emoji = "📍";
-  let themeColor = "#2563eb";
-  let bgLight = "#eff6ff";
+
+  let themeColor = "#6366f1";
+  let bgLight = "#eef2ff";
 
   if (cat.includes("hospital") || cat.includes("health") || cat.includes("clinic") || cat.includes("medical") || cat.includes("care")) {
-    emoji = "➕";
     themeColor = "#dc2626";
     bgLight = "#fef2f2";
   } else if (cat.includes("school") || cat.includes("education") || cat.includes("college") || cat.includes("academy") || cat.includes("institute")) {
-    emoji = "🎓";
     themeColor = "#4f46e5";
     bgLight = "#eef2ff";
   } else if (cat.includes("cafe") || cat.includes("restaurant") || cat.includes("food") || cat.includes("dine") || cat.includes("bakery")) {
-    emoji = "🍽️";
     themeColor = "#ea580c";
     bgLight = "#fff7ed";
-  } else if (cat.includes("tech") || cat.includes("cowork") || cat.includes("startup") || cat.includes("hub")) {
-    emoji = "💻";
-    themeColor = "#7c3aed";
-    bgLight = "#f5f3ff";
-  } else if (cat.includes("retail") || cat.includes("shop") || cat.includes("store") || cat.includes("market")) {
-    emoji = "🏬";
+  } else if (cat.includes("retail") || cat.includes("shop") || cat.includes("store") || cat.includes("market") || cat.includes("mall")) {
     themeColor = "#059669";
     bgLight = "#ecfdf5";
+  } else if (cat.includes("hotel") || cat.includes("stay") || cat.includes("resort")) {
+    themeColor = "#0284c7";
+    bgLight = "#f0f9ff";
   } else if (cat.includes("petrol") || cat.includes("fuel") || cat.includes("pump")) {
-    emoji = "⛽";
     themeColor = "#d97706";
     bgLight = "#fffbeb";
   } else if (cat.includes("art") || cat.includes("creative") || cat.includes("culture")) {
-    emoji = "🎨";
     themeColor = "#db2777";
     bgLight = "#fdf2f8";
   }
 
   const ratingInfo = getPlaceRating(place);
-  const showRichPill = zoom >= 12 || isSelected;
-  const shortTitle = place.title.length > 18 ? place.title.slice(0, 16) + "…" : place.title;
+  const logoUrl = getCompanyLogoUrl(place.website, place.title);
+  const initials = getCompanyInitials(place.title);
 
-  if (showRichPill) {
+  // Universal high-res brand logo with clean 2-letter monogram fallback
+  const innerIconHtml = logoUrl ? `
+    <img src="${logoUrl}" alt="${place.title}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='block';" style="width: 17px; height: 17px; object-fit: contain; border-radius: 4px;" />
+    <span style="display: none; font-size: 10px; font-weight: 800; color: ${themeColor}; line-height: 1;">${initials}</span>
+  ` : `
+    <span style="font-size: 10px; font-weight: 800; color: ${themeColor}; line-height: 1;">${initials}</span>
+  `;
+
+  // Wide 180px text pill is rendered ONLY for the actively selected / clicked pin.
+  if (isSelected) {
+    const shortTitle = place.title.length > 20 ? place.title.slice(0, 18) + "…" : place.title;
     const html = `
-      <div class="locatogo-pill-pin ${isSelected ? "is-active" : ""}" style="--theme-color: ${themeColor};">
-        <div class="locatogo-pin-icon-wrap" style="background: ${bgLight}; color: ${themeColor};">
-          <span>${emoji}</span>
+      <div class="locatogo-pill-pin is-active" style="--theme-color: ${themeColor};">
+        <div class="locatogo-pin-icon-wrap" style="background: white; color: ${themeColor}; padding: 2px;">
+          ${innerIconHtml}
         </div>
         <div class="locatogo-pin-label" style="display: flex; align-items: center; gap: 4px;">
           <span class="locatogo-pin-title">${shortTitle}</span>
@@ -101,9 +106,9 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, zoom: numb
   }
 
   const html = `
-    <div class="locatogo-teardrop-pin ${isSelected ? "is-active" : ""}" style="--theme-color: ${themeColor}; background: ${isSelected ? "#18181b" : themeColor};">
-      <div class="locatogo-teardrop-inner">
-        <span>${emoji}</span>
+    <div class="locatogo-teardrop-pin" style="--theme-color: ${themeColor}; background: ${themeColor};">
+      <div class="locatogo-teardrop-inner" style="background: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+        ${innerIconHtml}
       </div>
     </div>
   `;
@@ -368,8 +373,8 @@ function ClusteredMarkersLayer({
 
   const supercluster = useMemo(() => {
     const sc = new Supercluster({
-      radius: 40,
-      maxZoom: 15,
+      radius: 50,
+      maxZoom: 16,
       minPoints: 2,
     });
 
@@ -422,7 +427,7 @@ function ClusteredMarkersLayer({
                 click: () => {
                   const targetZoom = Math.min(
                     map.getZoom() + 2,
-                    supercluster.getClusterExpansionZoom(cluster.id as number) || 16
+                    supercluster.getClusterExpansionZoom(cluster.id as number) || 17
                   );
                   map.flyTo([latitude, longitude], targetZoom, { duration: 0.6 });
                 },
@@ -433,7 +438,7 @@ function ClusteredMarkersLayer({
 
         const place = cluster.properties as PlaceListing & { latitude: number; longitude: number };
         const isSelected = activePlaceId === place.id;
-        const icon = getCategoryPinIcon(place, isSelected, zoom);
+        const icon = getCategoryPinIcon(place, isSelected);
         const ratingInfo = getPlaceRating(place);
 
         const uberUrl = generateUberRideLink(place.latitude, place.longitude, place.title, place.locality);
@@ -447,6 +452,16 @@ function ClusteredMarkersLayer({
               click: () => setActivePlaceId(place.id),
             }}
           >
+            {!isSelected && (
+              <Tooltip direction="top" offset={[0, -28]} opacity={1} className="locatogo-hover-tooltip">
+                <div className="flex items-center gap-1.5 px-1 py-0.5 font-sans">
+                  <span className="font-bold text-xs text-gray-900">{place.title}</span>
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60">
+                    ★{ratingInfo.rating.toFixed(1)}
+                  </span>
+                </div>
+              </Tooltip>
+            )}
             <Popup className="locatogo-popup">
               <div className="p-3 max-w-[250px] font-sans">
                 <div className="flex items-center justify-between gap-1.5 mb-1.5">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useActionState } from "react";
 
 interface ShareButtonProps {
   title: string;
@@ -18,7 +17,7 @@ export function ShareButton({ title, url, className = "" }: ShareButtonProps) {
     if (navigator.share) {
       try {
         await navigator.share({ title, url: shareUrl });
-      } catch (e) {
+      } catch {
         // User cancelled or error — fall back to clipboard
         await copyToClipboard(shareUrl);
       }

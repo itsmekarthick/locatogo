@@ -1,8 +1,8 @@
-import { processCsvImport } from "@/app/admin/actions";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminOnlinePlaceFetcher } from "@/components/admin-online-place-fetcher";
 import { AdminClearListingsButton } from "@/components/admin-clear-listings-button";
 import { AdminTechAtlasSeederButton } from "@/components/admin-tech-atlas-seeder-button";
+import { AdminCsvUploadForm } from "@/components/admin-csv-upload-form";
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string }> }) {
   const { supabase, tenant } = await requireTenantContext();
@@ -54,67 +54,14 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Upload custom CSV spreadsheets with bulk listings.</p>
           </div>
           <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-mono text-slate-600 dark:text-slate-400">
-            Up to 10,000 rows
+            Up to 10,000 rows / 25 MB
           </span>
         </div>
 
-        <form action={processCsvImport} className="mt-6 space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Target Atlas Domain
-              </label>
-              <select
-                name="domain_id"
-                required
-                className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-slate-100"
-              >
-                {(domains ?? []).map((domain) => (
-                  <option key={domain.id} value={domain.id}>
-                    {domain.name} (/{domain.slug})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Fallback Category
-              </label>
-              <select
-                name="category_id"
-                required
-                className="mt-2 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm text-slate-900 dark:text-slate-100"
-              >
-                {(categories ?? []).map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              CSV Spreadsheet
-            </label>
-            <input
-              type="file"
-              name="file"
-              accept=".csv,text/csv"
-              required
-              className="mt-2 block w-full text-xs text-slate-500 file:mr-4 file:rounded-full file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-500"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="rounded-full bg-slate-900 dark:bg-indigo-600 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-slate-800 dark:hover:bg-indigo-500 transition-colors"
-          >
-            Start CSV Import Batch
-          </button>
-        </form>
+        <AdminCsvUploadForm
+          domains={domains ?? []}
+          categories={categories ?? []}
+        />
 
         {job ? (
           <div className="mt-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 text-xs">

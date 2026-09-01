@@ -30,8 +30,6 @@ export function WeatherForecastModal({
 
   if (!isOpen || !mounted) return null;
 
-  const currentType = currentSimulated || weather.weatherType;
-
   return createPortal(
     <div
       className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/70 backdrop-blur-sm animate-in fade-in duration-200"

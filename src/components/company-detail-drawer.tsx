@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 
 export type CompanyJob = {
   id: string;
@@ -71,9 +72,7 @@ export function CompanyDetailDrawer({
         {/* Header Strip */}
         <div className="p-6 border-b border-slate-200/80 dark:border-slate-800/80 flex items-start justify-between bg-slate-50/70 dark:bg-slate-900/70">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold text-2xl shadow-md">
-              {company.title.charAt(0)}
-            </div>
+            <CompanyBrandAvatar title={company.title} website={company.website} size={56} className="shadow-md" />
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">

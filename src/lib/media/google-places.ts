@@ -162,7 +162,7 @@ export async function fetchLivePlaceDetails(
       placeCache.set(cacheKey, details);
       return details;
     }
-  } catch (e) {
+  } catch {
     // Ignore
   }
 
