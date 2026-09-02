@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { GlobalTechExplorer } from "@/components/global-tech-explorer";
+import { GlobalTechExplorer, type UnifiedJob } from "@/components/global-tech-explorer";
 import type { CompanyDetail, CompanyJob } from "@/components/company-detail-drawer";
 
 export const metadata: Metadata = {
@@ -85,9 +85,38 @@ export default async function TechAtlasPage() {
     jobs: jobsByListing.get(l.id) || [],
   }));
 
+  // 3. Build unified job listings for the Live Jobs Board
+  const companyInfoMap = new Map<string, any>();
+  (rawListings || []).forEach((l: any) => {
+    companyInfoMap.set(l.id, l);
+  });
+
+  const initialJobs: UnifiedJob[] = (rawJobs || []).map((j: any) => {
+    const comp = companyInfoMap.get(j.listing_id);
+    return {
+      id: j.id,
+      title: j.title,
+      department: j.department || "Engineering",
+      location_name: j.location_name || "Remote",
+      workplace_type: (j.workplace_type || "hybrid") as "on_site" | "hybrid" | "remote",
+      experience_level: j.experience_level || "mid",
+      salary_range: j.salary_range,
+      apply_url: j.apply_url,
+      posted_at: j.posted_at,
+      listing_id: j.listing_id,
+      company_title: comp?.title || "Technology Company",
+      company_slug: comp?.slug || "",
+      company_type: comp?.company_type || "product_saas",
+      funding_stage: comp?.funding_stage || "Product",
+      locality: comp?.locality || "Bengaluru",
+      city: comp?.city || "Bengaluru",
+    };
+  });
+
   return (
     <GlobalTechExplorer
       initialCompanies={initialCompanies}
+      initialJobs={initialJobs}
       totalDatabaseCompanies={totalTechCount || 67699}
       currentHub="bengaluru"
     />

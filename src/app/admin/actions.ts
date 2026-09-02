@@ -343,12 +343,187 @@ export async function saveHours(formData: FormData): Promise<void> {
   revalidatePath("/admin/listings");
 }
 
-export async function findDuplicateListings(title: string, phone?: string) {
+export async function findDuplicateListings(
+  title: string,
+  phone?: string | null,
+  currentListingId?: string
+) {
   const { supabase, tenant } = await requireTenantContext();
-  const query = supabase.from("listings").select("id, title, phone, city, status").eq("tenant_id", tenant.id).ilike("title", `%${title.trim()}%`).limit(10);
+  let query = supabase
+    .from("listings")
+    .select("id, title, phone, city, locality, address_line_1, status, slug, short_description, website")
+    .eq("tenant_id", tenant.id)
+    .ilike("title", `%${title.trim()}%`)
+    .limit(10);
+
+  if (currentListingId) {
+    query = query.neq("id", currentListingId);
+  }
+
   const { data, error } = await query;
   if (error) throw new Error("Duplicate detection failed.");
-  return (data ?? []).filter((listing) => !phone || listing.phone === phone);
+  return (data ?? []).filter(
+    (listing) =>
+      listing.id !== currentListingId &&
+      (!phone || listing.phone === phone || listing.title.toLowerCase().trim() === title.toLowerCase().trim())
+  );
+}
+
+export async function bulkUpdateListingStatus(
+  listingIds: string[],
+  newStatus: "published" | "draft" | "archived"
+): Promise<{ success: boolean; count: number }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+  if (!listingIds || listingIds.length === 0) return { success: false, count: 0 };
+
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      status: newStatus,
+      published_at: newStatus === "published" ? new Date().toISOString() : undefined,
+    })
+    .in("id", listingIds)
+    .eq("tenant_id", tenant.id);
+
+  if (error) {
+    console.error("Bulk status update failed:", error);
+    throw new Error("Bulk status update failed: " + error.message);
+  }
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: `bulk_status_${newStatus}`,
+    entity_type: "listing",
+    metadata: { listing_ids: listingIds, new_status: newStatus },
+  });
+
+  revalidatePath("/admin/listings");
+  revalidatePath("/admin");
+  revalidatePath("/");
+
+  return { success: true, count: listingIds.length };
+}
+
+export async function bulkToggleFeatured(
+  listingIds: string[],
+  isFeatured: boolean
+): Promise<{ success: boolean; count: number }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+  if (!listingIds || listingIds.length === 0) return { success: false, count: 0 };
+
+  const { error } = await supabase
+    .from("listings")
+    .update({ is_featured: isFeatured })
+    .in("id", listingIds)
+    .eq("tenant_id", tenant.id);
+
+  if (error) {
+    console.error("Bulk feature update failed:", error);
+    throw new Error("Bulk feature update failed: " + error.message);
+  }
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: isFeatured ? "bulk_feature_enabled" : "bulk_feature_disabled",
+    entity_type: "listing",
+    metadata: { listing_ids: listingIds, is_featured: isFeatured },
+  });
+
+  revalidatePath("/admin/listings");
+  revalidatePath("/admin");
+  revalidatePath("/");
+
+  return { success: true, count: listingIds.length };
+}
+
+export async function mergeListings({
+  primaryId,
+  duplicateId,
+  resolvedFields,
+}: {
+  primaryId: string;
+  duplicateId: string;
+  resolvedFields: {
+    title?: string;
+    phone?: string;
+    website?: string;
+    short_description?: string;
+    address_line_1?: string;
+  };
+}): Promise<{ success: boolean }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  // 1. Update primary listing with preferred resolved fields
+  const { error: updateError } = await supabase
+    .from("listings")
+    .update({
+      ...resolvedFields,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", primaryId)
+    .eq("tenant_id", tenant.id);
+
+  if (updateError) throw new Error("Could not update primary listing: " + updateError.message);
+
+  // 2. Re-point reviews from duplicate to primary (skip if user already reviewed primary)
+  const { data: existingPrimaryReviews } = await supabase
+    .from("place_reviews")
+    .select("user_id")
+    .eq("listing_id", primaryId);
+  const reviewedUserIds = new Set((existingPrimaryReviews || []).map((r) => r.user_id));
+
+  const { data: duplicateReviews } = await supabase
+    .from("place_reviews")
+    .select("id, user_id")
+    .eq("listing_id", duplicateId);
+
+  for (const review of duplicateReviews || []) {
+    if (!reviewedUserIds.has(review.user_id)) {
+      await supabase.from("place_reviews").update({ listing_id: primaryId }).eq("id", review.id);
+    }
+  }
+
+  // 3. Re-point media from duplicate to primary
+  await supabase
+    .from("listing_media")
+    .update({ listing_id: primaryId })
+    .eq("listing_id", duplicateId)
+    .eq("tenant_id", tenant.id);
+
+  // 4. Archive duplicate listing
+  const { error: archiveError } = await supabase
+    .from("listings")
+    .update({
+      status: "archived",
+      is_featured: false,
+    })
+    .eq("id", duplicateId)
+    .eq("tenant_id", tenant.id);
+
+  if (archiveError) throw new Error("Could not archive duplicate listing: " + archiveError.message);
+
+  // 5. Audit log entry
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: "listing_merged",
+    entity_type: "listing",
+    entity_id: primaryId,
+    metadata: {
+      primary_id: primaryId,
+      duplicate_id: duplicateId,
+      resolved_fields: resolvedFields,
+    },
+  });
+
+  revalidatePath(`/admin/listings/${primaryId}`);
+  revalidatePath("/admin/listings");
+  revalidatePath("/admin");
+  revalidatePath("/");
+
+  return { success: true };
 }
 
 export async function uploadListingMedia(formData: FormData): Promise<void> {

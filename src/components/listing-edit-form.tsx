@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { ListingPreview } from "@/components/listing-preview";
 import { OpeningHoursEditor } from "@/components/opening-hours-editor";
+import { AdminDuplicateMergeModal, type DuplicateListingItem } from "@/components/admin-duplicate-merge-modal";
 
 type ListingData = {
   id: string;
@@ -52,6 +53,7 @@ type Props = {
   media: MediaItem[];
   audit: AuditEntry[];
   duplicateCount: number;
+  duplicates?: DuplicateListingItem[];
   updateAction: (formData: FormData) => Promise<void>;
   saveHoursAction: (formData: FormData) => Promise<void>;
   saveSocialLinkAction: (formData: FormData) => Promise<void>;
@@ -79,6 +81,7 @@ export function ListingEditForm({
   media,
   audit,
   duplicateCount,
+  duplicates = [],
   updateAction,
   saveHoursAction,
   saveSocialLinkAction,
@@ -86,6 +89,7 @@ export function ListingEditForm({
 }: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("basic");
   const [showPreview, setShowPreview] = useState(false);
+  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
 
   // Track form values for live preview
   const [title, setTitle] = useState(listing.title);
@@ -516,14 +520,40 @@ export function ListingEditForm({
                 </label>
 
                 {/* Duplicate detection */}
-                <div className="rounded-xl bg-[var(--background)] p-4">
-                  <p className="text-xs font-bold text-[var(--foreground)]">Duplicate Detection</p>
-                  <p className="mt-1 text-xs text-[var(--ink-muted)]">
-                    {duplicateCount > 1
-                      ? `⚠️ ${duplicateCount - 1} possible duplicate(s) detected.`
-                      : "✓ No duplicates found."}
-                  </p>
+                <div className="rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4 shadow-2xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                        <span>🔍</span>
+                        <span>Duplicate Detection</span>
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--ink-muted)]">
+                        {duplicateCount > 0
+                          ? `⚠️ ${duplicateCount} potential duplicate listing(s) detected with matching title/phone.`
+                          : "✓ No duplicates found in this directory."}
+                      </p>
+                    </div>
+                    {duplicates && duplicates.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setIsMergeModalOpen(true)}
+                        className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 shadow-xs cursor-pointer transition-colors shrink-0"
+                      >
+                        Review & Merge 🤝
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Side-by-side Merge Modal */}
+                {duplicates && duplicates.length > 0 && (
+                  <AdminDuplicateMergeModal
+                    primaryListing={listing}
+                    duplicates={duplicates}
+                    isOpen={isMergeModalOpen}
+                    onClose={() => setIsMergeModalOpen(false)}
+                  />
+                )}
 
                 {/* Audit trail */}
                 {audit.length > 0 && (

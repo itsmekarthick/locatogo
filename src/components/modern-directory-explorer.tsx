@@ -107,6 +107,15 @@ function getCategoryIcon(name: string) {
   return "📍";
 }
 
+export const AMENITIES_LIST = [
+  { id: "wifi", label: "WiFi", icon: "📶", keywords: ["wifi", "internet", "fiber", "broadband", "cowork", "tech park"] },
+  { id: "ev", label: "EV Charging", icon: "⚡", keywords: ["ev charging", "electric", "charger", "fast charging", "charging"] },
+  { id: "parking", label: "Parking", icon: "🅿️", keywords: ["parking", "valet", "garage", "multi-level"] },
+  { id: "accessibility", label: "Accessible", icon: "♿", keywords: ["wheelchair", "accessible", "ramp", "elevator"] },
+  { id: "24x7", label: "Open 24/7", icon: "🕒", keywords: ["24x7", "24/7", "24 hours", "round the clock", "emergency"] },
+  { id: "metro", label: "Near Metro", icon: "🚇", keywords: ["metro", "station", "subway", "transit"] },
+];
+
 export function ModernDirectoryExplorer({
   domain,
   initialListings,
@@ -117,7 +126,20 @@ export function ModernDirectoryExplorer({
   initialQuery = "",
 }: Props) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+
+  // Resolve initialCategory which might be a slug or a UUID
+  const resolvedInitialCat = useMemo(() => {
+    if (!initialCategory) return "";
+    const match = categories.find(
+      (c) => c.id === initialCategory || c.slug?.toLowerCase() === initialCategory.toLowerCase()
+    );
+    return match ? match.id : initialCategory;
+  }, [initialCategory, categories]);
+
+  const [selectedCategory, setSelectedCategory] = useState(resolvedInitialCat);
+  const [selectedAmenity, setSelectedAmenity] = useState<string>("");
+  const [mobileSheetSnap, setMobileSheetSnap] = useState<"peek" | "half" | "full">("peek");
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"default" | "distance" | "name" | "featured">("default");
@@ -304,7 +326,7 @@ export function ModernDirectoryExplorer({
   // Reset to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedLocation, viewMode]);
+  }, [searchQuery, selectedCategory, selectedLocation, selectedAmenity, viewMode]);
 
   // Category select handler
   const handleSelectCategory = (catId: string) => {
@@ -340,9 +362,16 @@ export function ModernDirectoryExplorer({
         if (!matchesTitle && !matchesDesc && !matchesLoc && !matchesCat) return false;
       }
 
-      // 2. Category Filter
-      if (selectedCategory && place.category_id !== selectedCategory) {
-        return false;
+      // 2. Category Filter (Supports matching by UUID or slug)
+      if (selectedCategory) {
+        const matchedCategory = categories.find(
+          (c) => c.id === selectedCategory || c.slug?.toLowerCase() === selectedCategory.toLowerCase()
+        );
+        const targetId = matchedCategory ? matchedCategory.id : selectedCategory;
+        const targetSlug = matchedCategory?.slug?.toLowerCase();
+        const matchesCatId = place.category_id === targetId;
+        const matchesCatSlug = targetSlug && place.category_name?.toLowerCase().includes(targetSlug.replace(/-/g, " "));
+        if (!matchesCatId && !matchesCatSlug) return false;
       }
 
       // 3. Location Filter
@@ -361,6 +390,16 @@ export function ModernDirectoryExplorer({
       // 5. Verified Only Filter
       if (verifiedOnly && place.verification_status !== "verified") {
         return false;
+      }
+
+      // 6. Amenity Filter
+      if (selectedAmenity) {
+        const amenityObj = AMENITIES_LIST.find((a) => a.id === selectedAmenity);
+        if (amenityObj) {
+          const textToSearch = `${place.title} ${place.short_description || ""} ${place.category_name || ""}`.toLowerCase();
+          const hasAmenity = amenityObj.keywords.some((kw) => textToSearch.includes(kw));
+          if (!hasAmenity) return false;
+        }
       }
 
       return true;
@@ -742,6 +781,36 @@ export function ModernDirectoryExplorer({
                     })}
                   </div>
                 )}
+
+                {/* Amenity Filter Chips Row */}
+                <div className="mt-2 pt-2 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
+                  <span className="text-gray-400 font-semibold shrink-0">✨ Amenities:</span>
+                  {AMENITIES_LIST.map((amenity) => {
+                    const isSelected = selectedAmenity === amenity.id;
+                    return (
+                      <button
+                        key={amenity.id}
+                        onClick={() => setSelectedAmenity(isSelected ? "" : amenity.id)}
+                        className={`flex items-center gap-1 rounded-lg px-2.5 py-0.5 font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                          isSelected
+                            ? "bg-indigo-600 text-white shadow-2xs font-bold"
+                            : "bg-gray-100 hover:bg-gray-200 border border-gray-200/80 text-gray-700"
+                        }`}
+                      >
+                        <span>{amenity.icon}</span>
+                        <span>{amenity.label}</span>
+                      </button>
+                    );
+                  })}
+                  {selectedAmenity && (
+                    <button
+                      onClick={() => setSelectedAmenity("")}
+                      className="text-[11px] text-rose-600 hover:text-rose-800 font-semibold px-1.5 py-0.5 cursor-pointer shrink-0"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1543,6 +1612,116 @@ export function ModernDirectoryExplorer({
           )}
         </div>
       )}
+
+      {/* MOBILE DRAGGABLE BOTTOM SHEET (Phones & Small Tablets) */}
+      <div
+        className={`md:hidden fixed inset-x-0 bottom-0 z-[500] bg-white dark:bg-slate-900 rounded-t-3xl border-t border-slate-200 dark:border-slate-800 shadow-2xl transition-all duration-300 flex flex-col ${
+          mobileSheetSnap === "peek"
+            ? "h-[74px]"
+            : mobileSheetSnap === "half"
+            ? "h-[54vh]"
+            : "h-[88vh]"
+        }`}
+      >
+        {/* Drag Handle & Quick Stats Header */}
+        <div
+          onTouchStart={(e) => setTouchStartY(e.touches[0].clientY)}
+          onTouchEnd={(e) => {
+            if (touchStartY === null) return;
+            const touchEndY = e.changedTouches[0].clientY;
+            const diff = touchStartY - touchEndY;
+            if (diff > 40) {
+              setMobileSheetSnap((prev) => (prev === "peek" ? "half" : "full"));
+            } else if (diff < -40) {
+              setMobileSheetSnap((prev) => (prev === "full" ? "half" : "peek"));
+            }
+            setTouchStartY(null);
+          }}
+          onClick={() => {
+            setMobileSheetSnap((prev) => (prev === "peek" ? "half" : prev === "half" ? "full" : "peek"));
+          }}
+          className="pt-2.5 pb-2 px-4 cursor-pointer select-none shrink-0 border-b border-slate-100 dark:border-slate-800"
+        >
+          <div className="h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mb-2" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                📍 {filteredListings.length} Places Found
+              </span>
+              {selectedCategory && (
+                <span className="rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold">
+                  Filtered
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-[#e26a4f]">
+              <span>{mobileSheetSnap === "full" ? "Slide Down ↓" : mobileSheetSnap === "half" ? "Expand ↑" : "Slide Up ↑"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Listings Content in Mobile Sheet */}
+        {mobileSheetSnap !== "peek" && (
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 overscroll-contain">
+            {filteredListings.slice(0, 16).map((place) => {
+              const ratingInfo = getPlaceRating(place);
+              const isSelected = activePlaceId === place.id;
+              return (
+                <article
+                  key={`mobile-sheet-${place.id}`}
+                  onClick={() => {
+                    setActivePlaceId(place.id);
+                    if (place.latitude && place.longitude) {
+                      setUserLocation({ lat: place.latitude, lng: place.longitude });
+                      setFlyToUserTrigger((prev) => prev + 1);
+                    }
+                  }}
+                  className={`rounded-xl border p-3 bg-white dark:bg-slate-800 transition-all ${
+                    isSelected
+                      ? "border-[#e26a4f] bg-orange-50/20 ring-1 ring-[#e26a4f]"
+                      : "border-slate-200 dark:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                      {place.category_name || "Place"}
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                      ★ {ratingInfo.rating.toFixed(1)}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 mt-1">
+                    <Link href={`/listing/${place.slug}`} onClick={(e) => e.stopPropagation()}>
+                      {place.title}
+                    </Link>
+                  </h4>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                    📍 {place.locality || place.city || "Bangalore"}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-700 text-[11px]">
+                    {place.phone ? (
+                      <a
+                        href={`tel:${place.phone}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-semibold text-slate-700 dark:text-slate-300"
+                      >
+                        📞 Call
+                      </a>
+                    ) : <span />}
+                    <Link
+                      href={`/listing/${place.slug}`}
+                      className="font-bold text-[#e26a4f]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      View Details →
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* FOOTER */}
       {viewMode !== "fullscreen" && (

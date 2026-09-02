@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProfileMenu } from "@/components/user-profile-menu";
-import { CompanyDetailDrawer, type CompanyDetail } from "@/components/company-detail-drawer";
+import { CompanyDetailDrawer, type CompanyDetail, type CompanyJob } from "@/components/company-detail-drawer";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { Pagination } from "@/components/ui/pagination";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
@@ -35,6 +35,25 @@ export type TechHub = {
   zoom: number;
 };
 
+export type UnifiedJob = {
+  id: string;
+  title: string;
+  department?: string | null;
+  location_name: string;
+  workplace_type: "on_site" | "hybrid" | "remote";
+  experience_level?: string | null;
+  salary_range?: string | null;
+  apply_url: string;
+  posted_at?: string | null;
+  listing_id?: string;
+  company_title?: string;
+  company_slug?: string;
+  company_type?: string | null;
+  funding_stage?: string | null;
+  locality?: string | null;
+  city?: string | null;
+};
+
 export const GLOBAL_TECH_HUBS: TechHub[] = [
   { id: "bengaluru", name: "Bengaluru", country: "India", flag: "🇮🇳", lat: 12.9716, lng: 77.5946, zoom: 12 },
   { id: "silicon-valley", name: "Silicon Valley & SF", country: "United States", flag: "🇺🇸", lat: 37.7749, lng: -122.4194, zoom: 11 },
@@ -46,12 +65,25 @@ export const GLOBAL_TECH_HUBS: TechHub[] = [
   { id: "hyderabad", name: "Hyderabad", country: "India", flag: "🇮🇳", lat: 17.385, lng: 78.4867, zoom: 12 },
 ];
 
+function formatTimeAgo(dateStr?: string | null): string {
+  if (!dateStr) return "Recently";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days < 1) return "Today";
+  if (days === 1) return "1d ago";
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
+
 export function GlobalTechExplorer({
   initialCompanies,
+  initialJobs = [],
   totalDatabaseCompanies = 67699,
   currentHub = "bengaluru",
 }: {
   initialCompanies: CompanyDetail[];
+  initialJobs?: UnifiedJob[];
   totalDatabaseCompanies?: number;
   currentHub?: string;
 }) {
@@ -63,23 +95,36 @@ export function GlobalTechExplorer({
   const [hiringOnly, setHiringOnly] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStage, setSelectedStage] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"map" | "grid">("map");
+  const [viewMode, setViewMode] = useState<"map" | "grid" | "jobs">("map");
   const [gridPage, setGridPage] = useState<number>(1);
   const GRID_PAGE_SIZE = 24;
 
-  // Reset grid page when filters change
+  // Job Board Search & Filters
+  const [jobSearch, setJobSearch] = useState("");
+  const [jobWorkplace, setJobWorkplace] = useState<string>("all");
+  const [jobExperience, setJobExperience] = useState<string>("all");
+  const [jobDepartment, setJobDepartment] = useState<string>("all");
+  const [jobPage, setJobPage] = useState(1);
+  const JOB_PAGE_SIZE = 12;
+
+  // Reset grid page when company filters change
   useEffect(() => {
     setGridPage(1);
   }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedHub]);
+
+  // Reset job page when job filters change
+  useEffect(() => {
+    setJobPage(1);
+  }, [jobSearch, jobWorkplace, jobExperience, jobDepartment]);
+
   const [selectedCompany, setSelectedCompany] = useState<CompanyDetail | null>(null);
   const [isSearchingServer, setIsSearchingServer] = useState(false);
 
-  // Progressive background streaming (Loads remaining companies without freezing UI)
+  // Progressive background streaming
   useEffect(() => {
     let isCancelled = false;
 
     async function loadMoreInBatches() {
-      // Fetch pages 3, 4, 5, etc. progressively in consolidated chunks
       for (let page = 3; page < 12; page += 2) {
         if (isCancelled) break;
         try {
@@ -114,29 +159,13 @@ export function GlobalTechExplorer({
             jobs: [],
           }));
 
-          if (isCancelled) break;
-
-          // Non-blocking state update
-          if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-            (window as any).requestIdleCallback(() => {
-              if (!isCancelled) {
-                setCompanies((prev) => {
-                  const existingIds = new Set(prev.map((c) => c.id));
-                  const uniqueNew = newBatch.filter((c) => !existingIds.has(c.id));
-                  return [...prev, ...uniqueNew];
-                });
-              }
-            });
-          } else {
+          if (!isCancelled) {
             setCompanies((prev) => {
               const existingIds = new Set(prev.map((c) => c.id));
               const uniqueNew = newBatch.filter((c) => !existingIds.has(c.id));
               return [...prev, ...uniqueNew];
             });
           }
-
-          // Yield CPU to maintain 60 FPS
-          await new Promise((r) => setTimeout(r, 600));
         } catch {
           break;
         }
@@ -145,7 +174,7 @@ export function GlobalTechExplorer({
 
     const timer = setTimeout(() => {
       loadMoreInBatches();
-    }, 1500);
+    }, 2000);
 
     return () => {
       isCancelled = true;
@@ -153,14 +182,14 @@ export function GlobalTechExplorer({
     };
   }, []);
 
-  // Server-side search across all 67,699 companies when typing
+  // Server-side keyword search debounce
   useEffect(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) return;
 
     const timer = setTimeout(async () => {
+      setIsSearchingServer(true);
       try {
-        setIsSearchingServer(true);
-        const res = await fetch(`/api/tech-atlas/companies?q=${encodeURIComponent(searchQuery.trim())}&limit=500`);
+        const res = await fetch(`/api/tech-atlas/companies?q=${encodeURIComponent(searchQuery.trim())}&limit=200`);
         if (res.ok) {
           const data = await res.json();
           if (data.companies && data.companies.length > 0) {
@@ -202,6 +231,53 @@ export function GlobalTechExplorer({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Unified Jobs Collection
+  const allJobs: UnifiedJob[] = useMemo(() => {
+    if (initialJobs && initialJobs.length > 0) {
+      return initialJobs;
+    }
+    const list: UnifiedJob[] = [];
+    companies.forEach((c) => {
+      (c.jobs || []).forEach((j) => {
+        list.push({
+          ...j,
+          company_title: c.title,
+          company_slug: c.slug,
+          listing_id: c.id,
+          company_type: c.company_type,
+          funding_stage: c.funding_stage,
+          locality: c.locality,
+          city: c.city,
+        });
+      });
+    });
+    return list;
+  }, [initialJobs, companies]);
+
+  // Filter Jobs
+  const filteredJobs = useMemo(() => {
+    return allJobs.filter((job) => {
+      if (jobWorkplace !== "all" && job.workplace_type !== jobWorkplace) return false;
+      if (jobExperience !== "all" && job.experience_level?.toLowerCase() !== jobExperience.toLowerCase()) return false;
+      if (jobDepartment !== "all" && !job.department?.toLowerCase().includes(jobDepartment.toLowerCase())) return false;
+      if (jobSearch.trim()) {
+        const q = jobSearch.toLowerCase();
+        const matchesTitle = job.title.toLowerCase().includes(q);
+        const matchesCompany = (job.company_title || "").toLowerCase().includes(q);
+        const matchesDept = (job.department || "").toLowerCase().includes(q);
+        const matchesLoc = (job.location_name || "").toLowerCase().includes(q);
+        if (!matchesTitle && !matchesCompany && !matchesDept && !matchesLoc) return false;
+      }
+      return true;
+    });
+  }, [allJobs, jobWorkplace, jobExperience, jobDepartment, jobSearch]);
+
+  const totalJobPages = Math.ceil(filteredJobs.length / JOB_PAGE_SIZE) || 1;
+  const paginatedJobs = useMemo(() => {
+    const start = (jobPage - 1) * JOB_PAGE_SIZE;
+    return filteredJobs.slice(start, start + JOB_PAGE_SIZE);
+  }, [filteredJobs, jobPage]);
+
   // Filter companies based on search, hiring toggle, and stage
   const filteredCompanies = useMemo(() => {
     return companies.filter((c) => {
@@ -241,8 +317,10 @@ export function GlobalTechExplorer({
   }, [filteredCompanies, gridPage]);
 
   const totalOpenings = useMemo(() => {
-    return companies.reduce((acc, c) => acc + (c.jobs?.length || c.active_jobs_count || 0), 0);
-  }, [companies]);
+    return allJobs.length > 0
+      ? allJobs.length
+      : companies.reduce((acc, c) => acc + (c.jobs?.length || c.active_jobs_count || 0), 0);
+  }, [allJobs, companies]);
 
   // Convert to PlaceListing format for InteractiveLeafletCanvas component
   const locatedListings: (PlaceListing & { latitude: number; longitude: number })[] = useMemo(() => {
@@ -252,39 +330,29 @@ export function GlobalTechExplorer({
         id: c.id,
         title: c.title,
         slug: c.slug,
-        short_description: c.short_description || `${c.funding_stage || "Tech Company"} • ${c.locality || c.city}`,
-        address_line_1: c.address_line_1,
-        locality: c.locality || "Tech Hub",
-        city: c.city || selectedHub.name,
+        short_description: c.short_description,
+        locality: c.locality,
+        city: c.city,
         latitude: c.latitude,
         longitude: c.longitude,
         is_featured: (c.jobs?.length || c.active_jobs_count || 0) > 0,
         verification_status: "verified",
-        category_name: c.company_type || "Tech",
-        category_icon: (c.jobs?.length || 0) > 0 ? "💼" : "💻",
-        pin_color: (c.jobs?.length || 0) > 0 ? "#10b981" : "#6366f1",
+        category_name: c.company_type ? c.company_type.replace(/_/g, " ").toUpperCase() : "TECH COMPANY",
+        website: c.website,
       }));
-  }, [filteredCompanies, selectedHub]);
-
-  const companyMap = useMemo(() => {
-    const map = new Map<string, CompanyDetail>();
-    for (let i = 0; i < companies.length; i++) {
-      map.set(companies[i].id, companies[i]);
-    }
-    return map;
-  }, [companies]);
+  }, [filteredCompanies]);
 
   return (
-    <div className="relative flex h-screen w-full flex-col overflow-hidden bg-slate-50 dark:bg-[#090d16] font-sans text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white">
-      {/* Top Floating Control Toolbar */}
-      <header className="z-[1000] border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-3">
-          {/* Left Group: Logo, Mode Toggle & Hub Dropdown */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            <Link href="/" className="flex items-center gap-2 group">
-              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+    <div className="flex min-h-screen w-full flex-col bg-white dark:bg-[#070b13] font-sans antialiased text-slate-900 dark:text-slate-100">
+      {/* Top Navbar */}
+      <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-[1000] shadow-2xs">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-2 sm:gap-4">
+          {/* Logo & Hub Selector */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Link href="/" className="flex items-center gap-2 group" title="Mapora Atlas">
+              <BrandLogo size={30} className="group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-                TechAtlas<span className="text-indigo-600">.</span>
+                locatogo<span className="text-[#e26a4f]">.</span>
               </span>
             </Link>
 
@@ -325,38 +393,46 @@ export function GlobalTechExplorer({
             </select>
           </div>
 
-          {/* Center Group: Live Search Bar */}
+          {/* Center Group: Live Search Bar (Hidden when in dedicated Jobs view) */}
           <div className="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-2">
-            <div className="relative w-full flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 px-3.5 py-1.5 focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all">
-              <span className="text-slate-400 text-xs mr-2 shrink-0">
-                {isSearchingServer ? "⏳" : "🔍"}
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search 67,000+ companies, tech stack, roles..."
-                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+            {viewMode !== "jobs" && (
+              <div className="relative w-full flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 px-3.5 py-1.5 focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all">
+                <span className="text-slate-400 text-xs mr-2 shrink-0">
+                  {isSearchingServer ? "⏳" : "🔍"}
+                </span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search 67,000+ companies, tech stack, roles..."
+                  className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Right Group: Filters & View Modes */}
+          {/* Right Group: Filters & 3-Way View Modes */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Pulsing "Hiring Now" Toggle */}
             <button
               type="button"
-              onClick={() => setHiringOnly(!hiringOnly)}
+              onClick={() => {
+                if (viewMode === "jobs") {
+                  setViewMode("map");
+                } else {
+                  setHiringOnly(!hiringOnly);
+                }
+              }}
               className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer ${
-                hiringOnly
+                hiringOnly && viewMode !== "jobs"
                   ? "bg-emerald-600 text-white shadow-emerald-500/20 shadow-md ring-2 ring-emerald-400"
                   : "border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
               }`}
@@ -368,29 +444,12 @@ export function GlobalTechExplorer({
               <span>Hiring ({totalOpenings})</span>
             </button>
 
-            {/* Company Stage Dropdown */}
-            <select
-              value={selectedStage}
-              onChange={(e) => setSelectedStage(e.target.value)}
-              className="hidden sm:inline-block rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
-            >
-              <option value="all">All Stages</option>
-              <option value="GCC">MNC GCC</option>
-              <option value="Unicorn">Unicorn</option>
-              <option value="Public">Public Enterprise</option>
-              <option value="Series C+">Series C+</option>
-              <option value="Series B">Series B</option>
-              <option value="Series A">Series A</option>
-              <option value="Seed">Seed</option>
-              <option value="Bootstrapped">Bootstrapped</option>
-            </select>
-
-            {/* View Switcher: Map vs Grid */}
+            {/* View Switcher: Map vs Grid vs Jobs */}
             <div className="flex rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 p-0.5 text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setViewMode("map")}
-                className={`rounded-full px-3 py-1 transition-all cursor-pointer ${
+                className={`rounded-full px-2.5 sm:px-3 py-1 transition-all cursor-pointer ${
                   viewMode === "map"
                     ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
@@ -401,13 +460,27 @@ export function GlobalTechExplorer({
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
-                className={`rounded-full px-3 py-1 transition-all cursor-pointer ${
+                className={`rounded-full px-2.5 sm:px-3 py-1 transition-all cursor-pointer ${
                   viewMode === "grid"
                     ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                 }`}
               >
                 ▦ Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("jobs")}
+                className={`rounded-full px-2.5 sm:px-3 py-1 transition-all cursor-pointer flex items-center gap-1 ${
+                  viewMode === "jobs"
+                    ? "bg-indigo-600 text-white shadow-xs"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                <span>💼 Jobs</span>
+                <span className="rounded-full bg-emerald-400 text-emerald-950 px-1 py-0.2 text-[9px] font-extrabold">
+                  {totalOpenings}
+                </span>
               </button>
             </div>
 
@@ -417,149 +490,421 @@ export function GlobalTechExplorer({
         </div>
 
         {/* Dedicated Mobile Search Bar */}
-        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
-          <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 shadow-2xs">
-            <span className="text-slate-400 text-xs mr-1.5 shrink-0">
-              {isSearchingServer ? "⏳" : "🔍"}
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search companies, tech stack, roles..."
-              className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
-              >
-                ✕
-              </button>
-            )}
+        {viewMode !== "jobs" && (
+          <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
+            <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 shadow-2xs">
+              <span className="text-slate-400 text-xs mr-2 shrink-0">🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search companies, tech stack..."
+                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-xs text-slate-400">
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
-      {/* Main Body: Map or Grid View */}
-      <main className="relative flex-1 w-full overflow-hidden">
-        {viewMode === "map" ? (
-          <div className="relative h-full w-full">
-            <MapErrorBoundary fallbackText="The Tech Atlas map canvas encountered an issue. Click below to reload.">
+      {/* Main Content Area */}
+      <main className="flex-1 w-full relative">
+        {/* VIEW MODE 1: INTERACTIVE MAP WITH CLUSTERS */}
+        {viewMode === "map" && (
+          <div className="relative w-full h-[calc(100vh-62px)] bg-slate-100 dark:bg-slate-900 overflow-hidden">
+            <MapErrorBoundary fallbackText="The tech atlas map canvas encountered an issue. Click below to reload.">
               <InteractiveLeafletCanvas
+                key={`tech-canvas-${selectedHub.id}`}
                 locatedListings={locatedListings}
-                activePlaceId={selectedCompany?.id ?? null}
-                setActivePlaceId={(id: string | null) => {
-                  if (!id) {
-                    setSelectedCompany(null);
-                    return;
-                  }
-                  const found = companyMap.get(id) || null;
-                  setSelectedCompany(found);
+                activePlaceId={selectedCompany?.id || null}
+                setActivePlaceId={(id) => {
+                  const comp = companies.find((c) => c.id === id);
+                  if (comp) setSelectedCompany(comp);
                 }}
                 searchQuery={searchQuery}
+                initialPerspective="street"
               />
             </MapErrorBoundary>
 
-            {/* Bottom floating results badge */}
-            <div className="pointer-events-none absolute bottom-4 left-4 z-[900]">
-              <div className="pointer-events-auto rounded-full border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 px-4 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-md backdrop-blur-md">
-                📍 {filteredCompanies.length} Tech Companies in {selectedHub.name}
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Grid View Mode */
-          <div className="h-full overflow-y-auto p-6 lg:p-8">
-            <div className="mx-auto max-w-7xl">
-              <div className="flex items-center justify-between mb-6">
+            {/* Floating Top Pill on Map */}
+            <div className="absolute top-4 left-4 z-[400] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3 shadow-lg max-w-sm hidden sm:block">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{selectedHub.flag}</span>
                 <div>
-                  <h2 className="font-display text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    Tech Companies & Startups in {selectedHub.name}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Showing {filteredCompanies.length} companies matching your criteria
+                  <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100 leading-tight">
+                    {selectedHub.name} Tech Cluster
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    {filteredCompanies.length.toLocaleString()} tech companies mapped · {totalOpenings} openings
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {paginatedCompanies.map((comp) => {
-                  const jobCount = comp.jobs?.length || comp.active_jobs_count || 0;
-                  return (
-                    <article
-                      key={comp.id}
-                      onClick={() => setSelectedCompany(comp)}
-                      className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs transition-all hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-700 cursor-pointer"
+        {/* VIEW MODE 2: DIRECTORY GRID */}
+        {viewMode === "grid" && (
+          <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-5">
+              <div>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100">
+                  {selectedHub.name} Tech Ecosystem
+                </h2>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Showing {paginatedCompanies.length} of {filteredCompanies.length.toLocaleString()} technology companies in {selectedHub.name}.
+                </p>
+              </div>
+
+              {/* Company Stage Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-slate-400">Funding:</span>
+                <select
+                  value={selectedStage}
+                  onChange={(e) => setSelectedStage(e.target.value)}
+                  className="rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Stages</option>
+                  <option value="GCC">MNC GCC</option>
+                  <option value="Unicorn">Unicorn</option>
+                  <option value="Public">Public Enterprise</option>
+                  <option value="Series C+">Series C+</option>
+                  <option value="Series B">Series B</option>
+                  <option value="Series A">Series A</option>
+                  <option value="Seed">Seed</option>
+                  <option value="Bootstrapped">Bootstrapped</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Companies Grid */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {paginatedCompanies.map((comp) => {
+                const jobCount = comp.jobs?.length || comp.active_jobs_count || 0;
+                return (
+                  <article
+                    key={comp.id}
+                    onClick={() => setSelectedCompany(comp)}
+                    className="group rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md hover:border-indigo-400 transition-all cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="rounded bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
+                          {(comp.company_type || "Product").replace(/_/g, " ")}
+                        </span>
+                        {comp.funding_stage && (
+                          <span className="rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+                            {comp.funding_stage}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-3">
+                        <CompanyBrandAvatar
+                          title={comp.title}
+                          website={comp.website || undefined}
+                          size={40}
+                          className="rounded-xl shadow-2xs shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 transition-colors truncate">
+                            {comp.title}
+                          </h3>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            📍 {comp.locality || comp.city || selectedHub.name}
+                          </p>
+                        </div>
+                      </div>
+
+                      {comp.short_description && (
+                        <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                          {comp.short_description}
+                        </p>
+                      )}
+
+                      {/* Tech Stack tags */}
+                      {comp.tech_stack && comp.tech_stack.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          {comp.tech_stack.slice(0, 3).map((t) => (
+                            <span
+                              key={t}
+                              className="rounded-md bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 text-[10px] font-mono text-slate-600 dark:text-slate-300"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold">
+                      {jobCount > 0 ? (
+                        <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                          💼 {jobCount} Active Roles
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-[11px]">No active roles</span>
+                      )}
+
+                      <span className="text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">
+                        Details →
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* Grid Pagination */}
+            {totalGridPages > 1 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={gridPage}
+                  totalPages={totalGridPages}
+                  totalItems={filteredCompanies.length}
+                  pageSize={GRID_PAGE_SIZE}
+                  onPageChange={(p) => {
+                    setGridPage(p);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* VIEW MODE 3: LIVE TECH JOBS BOARD */}
+        {viewMode === "jobs" && (
+          <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-8">
+            {/* Jobs Header & Filters Card */}
+            <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-7 shadow-xs">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-3 py-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                      🟢 Live Verified Openings
+                    </span>
+                    <span className="text-xs text-slate-500 font-mono">
+                      Hub: {selectedHub.name}
+                    </span>
+                  </div>
+                  <h2 className="mt-2 font-display text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100">
+                    {filteredJobs.length} Active Positions
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Real-time openings synced directly from Greenhouse, Lever, Ashby, and top tech companies in {selectedHub.name}.
+                  </p>
+                </div>
+
+                {/* Quick Filters */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Workplace Mode */}
+                  <select
+                    value={jobWorkplace}
+                    onChange={(e) => setJobWorkplace(e.target.value)}
+                    className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">🌐 All Workplaces</option>
+                    <option value="remote">🟢 Remote</option>
+                    <option value="hybrid">🔵 Hybrid</option>
+                    <option value="on_site">🏢 On-Site</option>
+                  </select>
+
+                  {/* Experience Level */}
+                  <select
+                    value={jobExperience}
+                    onChange={(e) => setJobExperience(e.target.value)}
+                    className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">⚡ All Experience</option>
+                    <option value="intern">Intern</option>
+                    <option value="entry">Entry Level</option>
+                    <option value="mid">Mid Level</option>
+                    <option value="senior">Senior</option>
+                    <option value="lead">Lead / Staff</option>
+                    <option value="executive">Executive</option>
+                  </select>
+
+                  {/* Department */}
+                  <select
+                    value={jobDepartment}
+                    onChange={(e) => setJobDepartment(e.target.value)}
+                    className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                  >
+                    <option value="all">📂 All Departments</option>
+                    <option value="engineering">Engineering</option>
+                    <option value="product">Product</option>
+                    <option value="design">Design</option>
+                    <option value="sales">Sales & BD</option>
+                    <option value="marketing">Marketing</option>
+                    <option value="data">Data & AI</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Dedicated Job Search Input */}
+              <div className="mt-4 flex items-center gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3.5 top-2.5 text-xs text-slate-400">🔍</span>
+                  <input
+                    type="text"
+                    value={jobSearch}
+                    onChange={(e) => setJobSearch(e.target.value)}
+                    placeholder="Search roles by title (e.g. Frontend Engineer, Product Manager, Go)..."
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/70 pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:bg-white dark:focus:bg-slate-800"
+                  />
+                  {jobSearch && (
+                    <button
+                      onClick={() => setJobSearch("")}
+                      className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600"
                     >
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <CompanyBrandAvatar title={comp.title} website={comp.website} size={42} />
-                            <div>
-                              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                {comp.title}
-                              </h3>
-                              <p className="text-[11px] text-slate-500">📍 {comp.locality || comp.city}</p>
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Jobs Grid */}
+            <div className="mt-6">
+              {paginatedJobs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {paginatedJobs.map((job) => {
+                    const company = companies.find(
+                      (c) => c.id === job.listing_id || c.title.toLowerCase() === (job.company_title || "").toLowerCase()
+                    );
+                    return (
+                      <div
+                        key={job.id}
+                        className="group rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md hover:border-indigo-400 transition-all flex flex-col justify-between"
+                      >
+                        <div>
+                          {/* Company Header Row */}
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <CompanyBrandAvatar
+                                title={job.company_title || "Company"}
+                                website={company?.website || undefined}
+                                size={40}
+                                className="rounded-xl shadow-2xs"
+                              />
+                              <div>
+                                <button
+                                  type="button"
+                                  onClick={() => company && setSelectedCompany(company)}
+                                  className="text-left font-bold text-xs text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                                >
+                                  {job.company_title}
+                                </button>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                  <span>📍 {job.location_name || job.locality || selectedHub.name}</span>
+                                </p>
+                              </div>
                             </div>
+
+                            {/* Relative Posted Time */}
+                            <span className="text-[10px] font-mono font-medium text-slate-400 dark:text-slate-500 shrink-0">
+                              {formatTimeAgo(job.posted_at)}
+                            </span>
                           </div>
 
-                          {comp.funding_stage && (
-                            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                              {comp.funding_stage}
+                          {/* Role Title */}
+                          <h3 className="mt-3.5 text-base font-bold text-slate-950 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {job.title}
+                          </h3>
+
+                          {/* Badges Row */}
+                          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
+                            <span
+                              className={`rounded-md px-2 py-0.5 uppercase tracking-wider ${
+                                job.workplace_type === "remote"
+                                  ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                                  : job.workplace_type === "hybrid"
+                                  ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                              }`}
+                            >
+                              {job.workplace_type === "remote" ? "🟢 Remote" : job.workplace_type === "hybrid" ? "🔵 Hybrid" : "🏢 On-Site"}
                             </span>
+
+                            {job.department && (
+                              <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-600 dark:text-slate-300">
+                                {job.department}
+                              </span>
+                            )}
+
+                            {job.experience_level && (
+                              <span className="rounded-md bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 px-2 py-0.5 capitalize">
+                                {job.experience_level}
+                              </span>
+                            )}
+
+                            {job.funding_stage && (
+                              <span className="rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2 py-0.5">
+                                {job.funding_stage}
+                              </span>
+                            )}
+                          </div>
+
+                          {job.salary_range && (
+                            <p className="mt-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                              💰 {job.salary_range}
+                            </p>
                           )}
                         </div>
 
-                        {comp.short_description && (
-                          <p className="mt-3 text-xs leading-relaxed text-slate-600 dark:text-slate-400 line-clamp-2">
-                            {comp.short_description}
-                          </p>
-                        )}
+                        {/* Action Buttons */}
+                        <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                          {company ? (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCompany(company)}
+                              className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 cursor-pointer"
+                            >
+                              🏢 About Company →
+                            </button>
+                          ) : <div />}
 
-                        {/* Tech Stack tags */}
-                        {comp.tech_stack && comp.tech_stack.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-1">
-                            {comp.tech_stack.slice(0, 3).map((t) => (
-                              <span
-                                key={t}
-                                className="rounded-md bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 text-[10px] font-mono text-slate-600 dark:text-slate-300"
-                              >
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                          <a
+                            href={job.apply_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Apply Now</span>
+                            <span>↗</span>
+                          </a>
+                        </div>
                       </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 p-12 text-center">
+                  <span className="text-3xl">💼</span>
+                  <h4 className="mt-2 font-bold text-sm text-slate-900 dark:text-slate-100">
+                    No matching live jobs found
+                  </h4>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Try adjusting workplace mode, experience level, or clearing your search term.
+                  </p>
+                </div>
+              )}
 
-                      <div className="mt-5 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3 text-xs font-bold">
-                        {jobCount > 0 ? (
-                          <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                            💼 {jobCount} Active Roles
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 text-[11px]">No active roles</span>
-                        )}
-
-                        <span className="text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">
-                          View Details →
-                        </span>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-
-              {/* Grid Pagination Controls */}
-              {totalGridPages > 1 && (
+              {/* Job Pagination Controls */}
+              {totalJobPages > 1 && (
                 <div className="mt-8">
                   <Pagination
-                    currentPage={gridPage}
-                    totalPages={totalGridPages}
-                    totalItems={filteredCompanies.length}
-                    pageSize={GRID_PAGE_SIZE}
+                    currentPage={jobPage}
+                    totalPages={totalJobPages}
+                    totalItems={filteredJobs.length}
+                    pageSize={JOB_PAGE_SIZE}
                     onPageChange={(p) => {
-                      setGridPage(p);
+                      setJobPage(p);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }}
                   />

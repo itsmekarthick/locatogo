@@ -95,6 +95,9 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     );
   }
 
+  // Fetch real duplicates in this workspace
+  const duplicates = await findDuplicateListings(listing.title, listing.phone, listing.id).catch(() => []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -134,7 +137,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         links={links ?? []}
         media={media ?? []}
         audit={audit ?? []}
-        duplicateCount={0}
+        duplicateCount={duplicates.length}
+        duplicates={duplicates as any}
         updateAction={updateListing}
         saveHoursAction={saveHours}
         saveSocialLinkAction={saveSocialLink}

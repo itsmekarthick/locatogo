@@ -21,6 +21,7 @@ import { FavoriteButton } from "@/components/favorite-button";
 import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
 import { BrandLogo } from "@/components/brand-logo";
 import { getPlaceRating } from "@/lib/services/place-rating";
+import { computeLiveOpeningStatus } from "@/lib/services/opening-hours";
 import { PlaceReviews } from "@/components/place-reviews-section";
 import { NearbyPlaces } from "@/components/nearby-places";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -128,6 +129,9 @@ export default async function ListingDetailPage({ params }: Props) {
     listing.short_description,
     listing.description
   );
+
+  // Live Real-Time Opening Status Calculation with Countdown
+  const liveOpening = computeLiveOpeningStatus(hours, placeDetails.isOpenNow);
 
   // High-Resolution Authentic Photos
   const displayPhotos =
@@ -273,18 +277,13 @@ export default async function ListingDetailPage({ params }: Props) {
                 {categoryName}
               </span>
 
-              {/* Live Open Now / Closed Status Badge */}
-              {placeDetails.isOpenNow !== undefined && (
-                <span
-                  className={`rounded border px-2.5 py-0.5 text-[10px] font-bold ${
-                    placeDetails.isOpenNow
-                      ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                      : "bg-rose-50 border-rose-300 text-rose-800"
-                  }`}
-                >
-                  {placeDetails.isOpenNow ? "🟢 Open Now" : "🔴 Closed"}
-                </span>
-              )}
+              {/* Live Open Now / Closed Status Badge with Countdown */}
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold shadow-2xs ${liveOpening.badgeClass}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${liveOpening.dotColorClass} animate-pulse`} />
+                <span>{liveOpening.statusText}</span>
+              </span>
 
               {listing.is_featured && (
                 <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
@@ -683,13 +682,9 @@ export default async function ListingDetailPage({ params }: Props) {
                   <span>⏰</span>
                   <span>Operating Schedule</span>
                 </h3>
-                {placeDetails.isOpenNow !== undefined && (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    placeDetails.isOpenNow ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-                  }`}>
-                    {placeDetails.isOpenNow ? "Open" : "Closed"}
-                  </span>
-                )}
+                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${liveOpening.badgeClass}`}>
+                  {liveOpening.statusBadge}
+                </span>
               </div>
 
               {/* Show Google Verified Opening Hours if present */}
