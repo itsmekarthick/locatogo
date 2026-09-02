@@ -75,17 +75,23 @@ export function GlobalTechExplorer({
   // Progressive background streaming (Loads remaining companies without freezing UI)
   useEffect(() => {
     let isCancelled = false;
+
     async function loadMoreInBatches() {
-      // Fetch pages 3, 4, 5, etc. progressively
-      for (let page = 3; page < 15; page++) {
+      // Fetch pages 3, 4, 5, etc. progressively in consolidated chunks
+      for (let page = 3; page < 12; page += 2) {
         if (isCancelled) break;
         try {
-          const res = await fetch(`/api/tech-atlas/companies?page=${page}&limit=2000`);
-          if (!res.ok) break;
-          const data = await res.json();
-          if (!data.companies || data.companies.length === 0) break;
+          const [res1, res2] = await Promise.all([
+            fetch(`/api/tech-atlas/companies?page=${page}&limit=1500`),
+            fetch(`/api/tech-atlas/companies?page=${page + 1}&limit=1500`),
+          ]);
 
-          const newBatch: CompanyDetail[] = data.companies.map((l: any) => ({
+          const data1 = res1.ok ? await res1.json() : { companies: [] };
+          const data2 = res2.ok ? await res2.json() : { companies: [] };
+          const combined = [...(data1.companies || []), ...(data2.companies || [])];
+          if (combined.length === 0) break;
+
+          const newBatch: CompanyDetail[] = combined.map((l: any) => ({
             id: l.id,
             title: l.title,
             slug: l.slug,
@@ -106,11 +112,29 @@ export function GlobalTechExplorer({
             jobs: [],
           }));
 
-          setCompanies((prev) => {
-            const existingIds = new Set(prev.map((c) => c.id));
-            const uniqueNew = newBatch.filter((c) => !existingIds.has(c.id));
-            return [...prev, ...uniqueNew];
-          });
+          if (isCancelled) break;
+
+          // Non-blocking state update
+          if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+            (window as any).requestIdleCallback(() => {
+              if (!isCancelled) {
+                setCompanies((prev) => {
+                  const existingIds = new Set(prev.map((c) => c.id));
+                  const uniqueNew = newBatch.filter((c) => !existingIds.has(c.id));
+                  return [...prev, ...uniqueNew];
+                });
+              }
+            });
+          } else {
+            setCompanies((prev) => {
+              const existingIds = new Set(prev.map((c) => c.id));
+              const uniqueNew = newBatch.filter((c) => !existingIds.has(c.id));
+              return [...prev, ...uniqueNew];
+            });
+          }
+
+          // Yield CPU to maintain 60 FPS
+          await new Promise((r) => setTimeout(r, 600));
         } catch {
           break;
         }
@@ -119,7 +143,7 @@ export function GlobalTechExplorer({
 
     const timer = setTimeout(() => {
       loadMoreInBatches();
-    }, 1200);
+    }, 1500);
 
     return () => {
       isCancelled = true;

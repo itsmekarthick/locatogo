@@ -82,7 +82,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
     const { data } = await supabase
       .from("listings")
       .select(
-        "id, title, slug, short_description, address_line_1, address_line_2, locality, city, postal_code, phone, website, latitude, longitude, is_featured, verification_status, category_id, categories:categories!listings_category_id_domain_id_fkey(name, icon, pin_color)"
+        "id, title, slug, short_description, address_line_1, address_line_2, locality, city, postal_code, phone, website, latitude, longitude, is_featured, verification_status, category_id, categories:categories!listings_category_id_domain_id_fkey(name, icon)"
       )
       .eq("domain_id", domain.id)
       .eq("status", "published")
@@ -97,7 +97,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
   const [{ data: categories }, ...pageResults] = await Promise.all([
     supabase
       .from("categories")
-      .select("id, name, slug, icon, pin_color")
+      .select("id, name, slug, icon")
       .eq("domain_id", domain.id)
       .order("sort_order"),
     ...Array.from({ length: PAGES }, (_, i) => fetchPage(i)),
@@ -105,10 +105,10 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
   const rawListings = pageResults.flat();
 
-  const listings: PlaceListing[] = (rawListings ?? []).map((l) => {
+  const listings: PlaceListing[] = (rawListings ?? []).map((l: any) => {
     const cat = Array.isArray(l.categories)
       ? l.categories[0]
-      : (l.categories as { name?: string; icon?: string; pin_color?: string } | null);
+      : (l.categories as { name?: string; icon?: string } | null);
 
     return {
       id: l.id,
@@ -129,7 +129,6 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
       category_id: l.category_id,
       category_name: cat?.name,
       category_icon: cat?.icon,
-      pin_color: cat?.pin_color,
     };
   });
 

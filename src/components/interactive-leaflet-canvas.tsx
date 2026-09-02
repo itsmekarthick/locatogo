@@ -14,12 +14,15 @@ import type { WeatherType } from "@/lib/services/weather";
 
 const MAP_LAYERS = {
   street: {
-    url: process.env.NEXT_PUBLIC_MAP_TILE_URL || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: process.env.NEXT_PUBLIC_MAP_TILE_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a>',
+    subdomains: "abc",
+    maxZoom: 19,
   },
   satellite: {
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: "&copy; Esri, Maxar, Earthstar Geographics",
+    maxZoom: 19,
   },
 };
 
@@ -178,31 +181,29 @@ function StrictSingleStepWheelZoom({
 
       accumulatedDelta += e.deltaY;
 
-      if (!isAnimating && Math.abs(accumulatedDelta) >= 90) {
-        isAnimating = true;
-        if (accumulatedDelta < 0) {
-          map.zoomIn(1, { animate: true });
-        } else {
-          map.zoomOut(1, { animate: true });
-        }
-        accumulatedDelta = 0;
-
-        setTimeout(() => {
-          isAnimating = false;
-        }, 180);
-      }
-
       resetTimer = setTimeout(() => {
-        accumulatedDelta = 0;
-        isAnimating = false;
-      }, 120);
+        if (!isAnimating && Math.abs(accumulatedDelta) >= 30) {
+          isAnimating = true;
+          if (accumulatedDelta > 0) {
+            map.zoomOut(1, { animate: true });
+          } else {
+            map.zoomIn(1, { animate: true });
+          }
+          setTimeout(() => {
+            isAnimating = false;
+            accumulatedDelta = 0;
+          }, 250);
+        } else {
+          accumulatedDelta = 0;
+        }
+      }, 30);
     };
 
     const container = map.getContainer();
-    container.addEventListener("wheel", handleWheel, { passive: false, capture: true });
+    container.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
-      container.removeEventListener("wheel", handleWheel, { capture: true });
+      container.removeEventListener("wheel", handleWheel);
       if (resetTimer) clearTimeout(resetTimer);
     };
   }, [map]);
@@ -239,14 +240,13 @@ function LocationController({
   const handleLocateMe = useCallback(() => {
     const fallbackToIp = async () => {
       try {
-        const res = await fetch("/api/geolocation");
+        const res = await fetch("https://ipapi.co/json/");
         if (res.ok) {
           const data = await res.json();
-          if (data.success && data.latitude && data.longitude) {
+          if (data.latitude && data.longitude) {
             const loc = { lat: data.latitude, lng: data.longitude };
             onLocationFound(loc);
             map.flyTo([loc.lat, loc.lng], 14, { duration: 1.5 });
-            return;
           }
         }
       } catch (e) {
@@ -328,25 +328,59 @@ function MapUpdater({
 
   // 4. Searching or Filtering: when user types in search or filters, move map to matching place(s)
   useEffect(() => {
-    const sig = located.map((l) => l.id).slice(0, 15).join(",");
-    const trimmedSearch = (searchQuery || "").trim();
-    const searchChanged = trimmedSearch !== prevSearchRef.current;
-    const sigChanged = sig !== prevSigRef.current && prevSigRef.current !== "";
+    if (!located.length) return;
 
-    prevSearchRef.current = trimmedSearch;
-    prevSigRef.current = sig;
+    // Check if search query has changed significantly
+    const currentSearch = (searchQuery || "").trim().toLowerCase();
+    const isSearchChanged = currentSearch !== prevSearchRef.current;
 
-    if (activePlace) return;
+    // Compute simple signature of located places to detect category or location filter switches
+    const currentSig = `${located.length}_${located[0]?.id || ""}_${located[located.length - 1]?.id || ""}`;
+    const isFilterChanged = currentSig !== prevSigRef.current;
 
-    if (located.length > 0 && (searchChanged || (trimmedSearch && sigChanged))) {
+    if (isSearchChanged || isFilterChanged) {
+      prevSearchRef.current = currentSearch;
+      prevSigRef.current = currentSig;
+
       if (located.length === 1) {
-        map.flyTo([located[0].latitude, located[0].longitude], 15, { duration: 1.2 });
-      } else {
-        const bounds = L.latLngBounds(located.map((l) => [l.latitude, l.longitude]));
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        // Exactly 1 result found (e.g. searching specific place) -> smooth zoom to that location
+        const item = located[0];
+        map.flyTo([item.latitude, item.longitude], 16, { duration: 1.0 });
+      } else if (located.length > 1 && (currentSearch.length > 0 || isFilterChanged)) {
+        // Multiple places matching filter/search -> fit bounds cleanly around all matching pins
+        try {
+          const lats = located.map((l) => l.latitude);
+          const lngs = located.map((l) => l.longitude);
+          const minLat = Math.min(...lats);
+          const maxLat = Math.max(...lats);
+          const minLng = Math.min(...lngs);
+          const maxLng = Math.max(...lngs);
+
+          // Ensure bounds have a reasonable spread
+          const latDiff = maxLat - minLat;
+          const lngDiff = maxLng - minLng;
+
+          if (latDiff > 0.0001 || lngDiff > 0.0001) {
+            map.fitBounds(
+              [
+                [minLat, minLng],
+                [maxLat, maxLng],
+              ],
+              {
+                padding: [50, 50],
+                maxZoom: 15,
+                duration: 1.0,
+              }
+            );
+          } else {
+            map.flyTo([minLat, minLng], 15, { duration: 1.0 });
+          }
+        } catch (err) {
+          console.warn("Could not auto-fit bounds on search/filter:", err);
+        }
       }
     }
-  }, [located, activePlace, searchQuery, map]);
+  }, [located, searchQuery, map]);
 
   return null;
 }
@@ -365,11 +399,17 @@ function ClusteredMarkersLayer({
   const map = useMap();
   const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
   const [zoom, setZoom] = useState<number>(map.getZoom());
+  const rafRef = useRef<number | null>(null);
 
   const updateBounds = useCallback(() => {
-    const b = map.getBounds();
-    setBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
-    setZoom(map.getZoom());
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      try {
+        const b = map.getBounds();
+        setBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
+        setZoom(map.getZoom());
+      } catch {}
+    });
   }, [map]);
 
   useMapEvents({
@@ -379,11 +419,14 @@ function ClusteredMarkersLayer({
 
   useEffect(() => {
     updateBounds();
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [updateBounds]);
 
   const supercluster = useMemo(() => {
     const sc = new Supercluster({
-      radius: 50,
+      radius: 55,
       maxZoom: 16,
       minPoints: 2,
     });
@@ -451,8 +494,6 @@ function ClusteredMarkersLayer({
         const icon = getCategoryPinIcon(place, isSelected);
         const ratingInfo = getPlaceRating(place);
 
-        const uberUrl = generateUberRideLink(place.latitude, place.longitude, place.title, place.locality);
-
         return (
           <Marker
             key={`place-${place.id}`}
@@ -472,81 +513,84 @@ function ClusteredMarkersLayer({
                 </div>
               </Tooltip>
             )}
-            <Popup className="locatogo-popup">
-              <div className="p-3 max-w-[250px] font-sans">
-                <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                  <div className="flex items-center gap-1">
-                    {place.category_name && (
-                      <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900">
-                        {place.category_name}
+
+            {/* Render Rich Interactive Popup ONLY on the actively selected pin */}
+            {isSelected && (
+              <Popup className="locatogo-popup" autoPan={false}>
+                <div className="p-3 max-w-[260px] font-sans">
+                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
+                    <div className="flex items-center gap-1">
+                      {place.category_name && (
+                        <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900">
+                          {place.category_name}
+                        </span>
+                      )}
+                      <span className="rounded-md bg-amber-50 border border-amber-200/90 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-0.5">
+                        <span className="text-amber-500">★</span>
+                        <span>{ratingInfo.rating.toFixed(1)}</span>
                       </span>
-                    )}
-                    <span className="rounded-md bg-amber-50 border border-amber-200/90 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-0.5">
-                      <span className="text-amber-500">★</span>
-                      <span>{ratingInfo.rating.toFixed(1)}</span>
-                    </span>
+                    </div>
+
+                    {(() => {
+                      const dist = typeof place.distanceKm === "number"
+                        ? place.distanceKm
+                        : (userLocation
+                          ? calculateDistanceKm(userLocation.lat, userLocation.lng, place.latitude, place.longitude)
+                          : null);
+                      if (dist === null) return null;
+                      return (
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-md">
+                          🚗 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)} km`}
+                        </span>
+                      );
+                    })()}
                   </div>
 
-                  {(() => {
-                    const dist = typeof place.distanceKm === "number"
-                      ? place.distanceKm
-                      : (userLocation
-                        ? calculateDistanceKm(userLocation.lat, userLocation.lng, place.latitude, place.longitude)
-                        : null);
-                    if (dist === null) return null;
-                    return (
-                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-md">
-                        🚗 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)} km`}
-                      </span>
-                    );
-                  })()}
-                </div>
+                  <h4 className="font-serif font-bold text-sm text-gray-950 leading-tight">
+                    <Link href={`/listing/${place.slug}`} className="hover:text-[#e26a4f] transition-colors">
+                      {place.title}
+                    </Link>
+                  </h4>
 
-                <h4 className="font-serif font-bold text-sm text-gray-950 leading-tight">
-                  <Link href={`/listing/${place.slug}`} className="hover:text-[#e26a4f] transition-colors">
-                    {place.title}
-                  </Link>
-                </h4>
+                  <div className="mt-1 flex items-center gap-1.5 text-xs">
+                    <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
+                    <span className="text-[11px] font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
+                    <span className="text-[10px] text-gray-500 font-medium">({ratingInfo.reviewCount} reviews)</span>
+                  </div>
 
-                {/* Rating Breakdown Banner */}
-                <div className="mt-1 flex items-center gap-1.5 text-xs">
-                  <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
-                  <span className="text-[11px] font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
-                  <span className="text-[10px] text-gray-500 font-medium">({ratingInfo.reviewCount} reviews)</span>
-                </div>
-
-                <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
-                  <span>📍</span>
-                  <span>{[place.locality, place.city].filter(Boolean).join(", ")}</span>
-                </p>
-
-                {place.short_description && (
-                  <p className="text-[11px] text-gray-600 mt-1.5 line-clamp-2 leading-snug">
-                    {place.short_description}
+                  <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
+                    <span>📍</span>
+                    <span>{[place.locality, place.city].filter(Boolean).join(", ")}</span>
                   </p>
-                )}
 
-                <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2">
-                  <a
-                    href={uberUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-uber flex items-center gap-1 rounded-full !bg-black px-3 py-1.5 text-[11px] font-bold !text-white hover:!bg-gray-800 transition-colors shadow-2xs cursor-pointer"
-                  >
-                    <span>🚕</span>
-                    <span className="!text-white font-bold">Uber</span>
-                  </a>
+                  {place.short_description && (
+                    <p className="text-[11px] text-gray-600 mt-1.5 line-clamp-2 leading-snug">
+                      {place.short_description}
+                    </p>
+                  )}
 
-                  <Link
-                    href={`/listing/${place.slug}`}
-                    className="btn-details flex items-center gap-1 rounded-full !bg-[#e26a4f] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#d8583c] transition-colors shadow-xs cursor-pointer"
-                  >
-                    <span className="!text-white font-bold">Details</span>
-                    <span className="!text-white font-bold">→</span>
-                  </Link>
+                  <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2">
+                    <a
+                      href={generateUberRideLink(place.latitude, place.longitude, place.title, place.locality)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-uber flex items-center gap-1 rounded-full !bg-black px-3 py-1.5 text-[11px] font-bold !text-white hover:!bg-gray-800 transition-colors shadow-2xs cursor-pointer"
+                    >
+                      <span>🚕</span>
+                      <span className="!text-white font-bold">Uber</span>
+                    </a>
+
+                    <Link
+                      href={`/listing/${place.slug}`}
+                      className="btn-details flex items-center gap-1 rounded-full !bg-[#e26a4f] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#d8583c] transition-colors shadow-xs cursor-pointer"
+                    >
+                      <span className="!text-white font-bold">Details</span>
+                      <span className="!text-white font-bold">→</span>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            </Popup>
+              </Popup>
+            )}
           </Marker>
         );
       })}
