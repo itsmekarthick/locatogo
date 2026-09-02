@@ -1117,6 +1117,9 @@ export async function createAdSlotAction(formData: FormData): Promise<{ success:
 
   const sponsorName = text(formData, "sponsor_name");
   const slotType = text(formData, "slot_type") as "flash_banner" | "header_banner" | "featured_pin" | "featured_listing";
+  const placementLocation = text(formData, "placement_location") || "in_feed";
+  const targetCategoryId = text(formData, "target_category_id") || null;
+  const targetCity = text(formData, "target_city") || "all";
   const title = text(formData, "title");
   const description = text(formData, "description");
   const ctaText = text(formData, "cta_text") || "Learn More";
@@ -1151,6 +1154,9 @@ export async function createAdSlotAction(formData: FormData): Promise<{ success:
       domain_id: domainId,
       listing_id: listingId,
       slot_type: slotType,
+      placement_location: placementLocation,
+      target_category_id: targetCategoryId,
+      target_city: targetCity,
       sponsor_name: sponsorName,
       title: title || sponsorName,
       description: description || null,

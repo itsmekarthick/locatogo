@@ -726,7 +726,7 @@ export default async function ListingDetailPage({ params }: Props) {
             </div>
 
             {/* Partner Spotlight Ad Banner Placement */}
-            <AdBannerSlot slotType="header_banner" variant="sidebar" />
+            <AdBannerSlot placementLocation="sidebar" variant="sidebar" categoryId={listing.category_id} />
 
             {/* Claim Card */}
             <div className="rounded-2xl sm:rounded-3xl border border-dashed border-gray-300 bg-white p-5 sm:p-6 text-center shadow-xs">
@@ -759,6 +759,23 @@ export default async function ListingDetailPage({ params }: Props) {
             longitude={listing.longitude}
           />
         )}
+
+        {/* 8. FEATURED PARTNER SHOWCASE */}
+        <section className="pt-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-serif text-base font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
+              <span>🤝</span>
+              <span>Recommended Local & Business Partners</span>
+            </h3>
+            <Link
+              href="/advertise"
+              className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
+              Partner with us ↗
+            </Link>
+          </div>
+          <AdBannerSlot placementLocation="detail_bottom" variant="detail_bottom" categoryId={listing.category_id} />
+        </section>
       </main>
 
       {/* Floating Bottom Quick-Action Bar for Mobile Devices */}

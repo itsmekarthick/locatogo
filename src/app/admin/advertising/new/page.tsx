@@ -20,6 +20,12 @@ export default async function NewAdvertisementPage() {
     .select("id, name")
     .eq("tenant_id", tenant.id);
 
+  // Fetch available categories for contextual targeting
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, slug")
+    .order("name");
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Breadcrumb & Navigation */}
@@ -51,6 +57,7 @@ export default async function NewAdvertisementPage() {
       <AdminAdCreationForm
         domains={domains ?? []}
         listings={listings ?? []}
+        categories={categories ?? []}
       />
     </div>
   );

@@ -725,6 +725,11 @@ export function ModernDirectoryExplorer({
               </div>
             )}
 
+            {/* Floating Map Canvas Sponsor Card */}
+            <div className="absolute bottom-20 left-3 sm:left-4 z-[400] max-w-[240px] sm:max-w-xs drop-shadow-md">
+              <AdBannerSlot placementLocation="map_overlay" variant="map_overlay" />
+            </div>
+
             {/* Floating Overlapping Category Pills Card */}
             <div className="absolute -bottom-14 sm:-bottom-14 left-1/2 -translate-x-1/2 w-full max-w-4xl px-3 sm:px-4 z-[400]">
               <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white/95 p-2.5 sm:p-4 shadow-xl backdrop-blur-md">
@@ -937,10 +942,12 @@ export function ModernDirectoryExplorer({
 
                       return (
                         <div key={place.id} className="contents">
-                          {index === 2 && (
+                          {(index === 2 || (index > 2 && (index + 1) % 4 === 0)) && (
                             <AdBannerSlot
-                              slotType="header_banner"
+                              placementLocation="in_feed"
                               variant="in_feed"
+                              itemIndex={Math.floor(index / 3)}
+                              categoryId={selectedCategory || null}
                             />
                           )}
                           <article
@@ -1223,15 +1230,24 @@ export function ModernDirectoryExplorer({
                 {paginatedListings.length > 0 ? (
 <>
                     <div className="space-y-3.5">
-                      {paginatedListings.map((place) => {
+                      {paginatedListings.map((place, index) => {
                         const isSelected = activePlaceId === place.id;
                         const catName = (place.category_name || "General").toUpperCase();
                         const ratingInfo = getPlaceRating(place);
 
                         return (
-                          <article
-                            key={place.id}
-                            onClick={() => setActivePlaceId(place.id)}
+                          <div key={place.id} className="space-y-3.5">
+                            {(index === 2 || (index > 2 && (index + 1) % 4 === 0)) && (
+                              <AdBannerSlot
+                                placementLocation="in_feed"
+                                variant="in_feed"
+                                itemIndex={Math.floor(index / 3)}
+                                categoryId={selectedCategory || null}
+                                className="mb-3.5"
+                              />
+                            )}
+                            <article
+                              onClick={() => setActivePlaceId(place.id)}
                             className={`group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md ${
                               isSelected
                                 ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
@@ -1344,7 +1360,8 @@ export function ModernDirectoryExplorer({
                             </div>
                           </div>
                         </article>
-                      );
+                      </div>
+                    );
                     })}
                   </div>
 
@@ -1404,6 +1421,11 @@ export function ModernDirectoryExplorer({
                     }}
                   />
                 </MapErrorBoundary>
+
+                {/* Floating Map Canvas Sponsor Card */}
+                <div className="absolute bottom-4 left-4 z-[400] max-w-[240px] sm:max-w-xs drop-shadow-md">
+                  <AdBannerSlot placementLocation="map_overlay" variant="map_overlay" />
+                </div>
               </div>
             </div>
           </section>

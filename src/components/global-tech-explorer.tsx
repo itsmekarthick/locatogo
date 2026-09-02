@@ -513,7 +513,7 @@ export function GlobalTechExplorer({
       </header>
 
       {/* Top Flash Announcement Ad Banner */}
-      <AdBannerSlot slotType="flash_banner" variant="flash" />
+      <AdBannerSlot placementLocation="flash" variant="flash" />
 
       {/* Main Content Area */}
       <main className="flex-1 w-full relative">
@@ -775,7 +775,7 @@ export function GlobalTechExplorer({
 
             {/* Tech Partner Spotlight Ad Placement */}
             <div className="mt-5">
-              <AdBannerSlot slotType="header_banner" variant="tech_spotlight" />
+              <AdBannerSlot placementLocation="tech_spotlight" variant="tech_spotlight" />
             </div>
 
             {/* Jobs Grid */}

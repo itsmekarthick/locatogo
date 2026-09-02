@@ -16,10 +16,77 @@ type ListingOption = {
   city?: string | null;
 };
 
+type CategoryOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export type PlacementOption = {
+  id: "flash" | "in_feed" | "map_overlay" | "sidebar" | "detail_bottom" | "tech_spotlight";
+  name: string;
+  icon: string;
+  description: string;
+  slotType: "flash_banner" | "header_banner" | "featured_pin" | "featured_listing";
+  defaultPrice: string;
+};
+
+export const PLACEMENT_OPTIONS: PlacementOption[] = [
+  {
+    id: "flash",
+    name: "Top Flash Announcement",
+    icon: "⚡",
+    description: "High-visibility top banner across directory & tech atlas with auto-rotation carousel.",
+    slotType: "flash_banner",
+    defaultPrice: "299",
+  },
+  {
+    id: "in_feed",
+    name: "Directory In-Feed Stream",
+    icon: "📰",
+    description: "Injected every 4 places into directory & search results with gold 'Promoted' badge.",
+    slotType: "featured_listing",
+    defaultPrice: "499",
+  },
+  {
+    id: "map_overlay",
+    name: "Interactive Map Spotlight",
+    icon: "🗺️",
+    description: "Floating frosted-glass sponsor pill on the Leaflet map canvas with custom pin.",
+    slotType: "featured_pin",
+    defaultPrice: "599",
+  },
+  {
+    id: "sidebar",
+    name: "Place Profile Sidebar",
+    icon: "📌",
+    description: "Exclusive card in the right sidebar of verified place detail pages.",
+    slotType: "header_banner",
+    defaultPrice: "699",
+  },
+  {
+    id: "detail_bottom",
+    name: "Place Profile Bottom Showcase",
+    icon: "🤝",
+    description: "Multi-partner showcase strip positioned right under verified customer reviews.",
+    slotType: "header_banner",
+    defaultPrice: "799",
+  },
+  {
+    id: "tech_spotlight",
+    name: "Tech Atlas Hiring Spotlight",
+    icon: "💼",
+    description: "Promoted cloud, tools, or hiring spotlight card directly above live tech job openings.",
+    slotType: "header_banner",
+    defaultPrice: "999",
+  },
+];
+
 const SAMPLE_PRESETS = [
   {
     label: "🏢 Coworking Space",
     sponsor_name: "WeWork Bengaluru",
+    placement_location: "flash" as const,
     title: "Flexible Dedicated Desks & Private Offices in Bangalore",
     description: "Get 20% off modern tech workspaces across Indiranagar, Bellandur, and Koramangala.",
     banner_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
@@ -30,6 +97,7 @@ const SAMPLE_PRESETS = [
   {
     label: "⚡ Cloud & Tech",
     sponsor_name: "AWS for Startups",
+    placement_location: "tech_spotlight" as const,
     title: "Accelerate Your Scale with $100K in Cloud Infrastructure Credits",
     description: "Build, deploy, and scale with premier technical guidance and architecture support.",
     banner_url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
@@ -38,8 +106,20 @@ const SAMPLE_PRESETS = [
     badge_text: "Tech Sponsor",
   },
   {
+    label: "☕ Work-Friendly Cafe",
+    sponsor_name: "Third Wave Coffee",
+    placement_location: "map_overlay" as const,
+    title: "Artisanal Specialty Roasts & Quiet Work Corners in Bangalore",
+    description: "Fast WiFi, single-origin pour-overs, and warm neighborhood atmosphere.",
+    banner_url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80",
+    target_url: "https://thirdwavecoffeeroasters.com",
+    cta_text: "Find Nearest Cafe",
+    badge_text: "Map Partner",
+  },
+  {
     label: "🏥 Health & Wellness",
     sponsor_name: "Manipal Preventive Health",
+    placement_location: "sidebar" as const,
     title: "Comprehensive Annual Executive Health Checkups in Bangalore",
     description: "Advanced diagnostics, cardiac screening, and consultations with top specialists.",
     banner_url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80",
@@ -52,9 +132,11 @@ const SAMPLE_PRESETS = [
 export function AdminAdCreationForm({
   domains,
   listings,
+  categories = [],
 }: {
   domains: DomainItem[];
   listings: ListingOption[];
+  categories?: CategoryOption[];
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -62,7 +144,9 @@ export function AdminAdCreationForm({
 
   // Form State
   const [sponsorName, setSponsorName] = useState("");
-  const [slotType, setSlotType] = useState<"flash_banner" | "header_banner" | "featured_pin" | "featured_listing">("flash_banner");
+  const [placementLocation, setPlacementLocation] = useState<PlacementOption["id"]>("flash");
+  const [targetCategoryId, setTargetCategoryId] = useState("");
+  const [targetCity, setTargetCity] = useState("all");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
@@ -80,8 +164,18 @@ export function AdminAdCreationForm({
   const [endDate, setEndDate] = useState(nextMonthStr);
   const [status, setStatus] = useState<"active" | "draft">("active");
 
+  const currentPlacement = PLACEMENT_OPTIONS.find((p) => p.id === placementLocation) || PLACEMENT_OPTIONS[0];
+
+  const handleSelectPlacement = (opt: PlacementOption) => {
+    setPlacementLocation(opt.id);
+    setPricePaid(opt.defaultPrice);
+  };
+
   const applyPreset = (preset: typeof SAMPLE_PRESETS[0]) => {
     setSponsorName(preset.sponsor_name);
+    setPlacementLocation(preset.placement_location);
+    const matchedOpt = PLACEMENT_OPTIONS.find((p) => p.id === preset.placement_location);
+    if (matchedOpt) setPricePaid(matchedOpt.defaultPrice);
     setTitle(preset.title);
     setDescription(preset.description);
     setBannerUrl(preset.banner_url);
@@ -97,6 +191,7 @@ export function AdminAdCreationForm({
 
     try {
       const formData = new FormData(e.currentTarget);
+      formData.set("slot_type", currentPlacement.slotType);
       await createAdSlotAction(formData);
       router.push("/admin/advertising");
     } catch (err: any) {
@@ -128,10 +223,91 @@ export function AdminAdCreationForm({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <input type="hidden" name="domain_id" value={selectedDomainId} />
+          <input type="hidden" name="placement_location" value={placementLocation} />
 
-          {/* Sponsor Name & Placement Type */}
+          {/* STEP 1: EXPLICIT PLACEMENT LOCATION SELECTOR */}
+          <div>
+            <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
+              1. Choose Where This Ad Should Appear <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {PLACEMENT_OPTIONS.map((opt) => {
+                const isSelected = placementLocation === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleSelectPlacement(opt)}
+                    className={`text-left rounded-2xl border p-3.5 transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/40 ring-1 ring-indigo-600 shadow-xs"
+                        : "border-[var(--line)] bg-[var(--background)] hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="font-bold text-xs text-[var(--foreground)] flex items-center gap-1.5">
+                        <span>{opt.icon}</span>
+                        <span>{opt.name}</span>
+                      </span>
+                      {isSelected && (
+                        <span className="h-2 w-2 rounded-full bg-indigo-600 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
+                      {opt.description}
+                    </p>
+                    <p className="mt-2 text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-400">
+                      Standard: ${opt.defaultPrice}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* STEP 2: CATEGORY & CITY TARGETING */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[var(--line)]">
+            <div>
+              <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                Contextual Category Targeting
+              </label>
+              <select
+                name="target_category_id"
+                value={targetCategoryId}
+                onChange={(e) => setTargetCategoryId(e.target.value)}
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+              >
+                <option value="">🌐 Show Across All Categories</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    Target: {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                Geographic City / Hub Target
+              </label>
+              <select
+                name="target_city"
+                value={targetCity}
+                onChange={(e) => setTargetCity(e.target.value)}
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+              >
+                <option value="all">🌐 All Locations & Global Tech Hubs</option>
+                <option value="bengaluru">Bengaluru / Bangalore Only</option>
+                <option value="silicon-valley">Silicon Valley & SF Only</option>
+                <option value="london">London Only</option>
+                <option value="singapore">Singapore Only</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Sponsor Name & Headline */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
@@ -143,56 +319,38 @@ export function AdminAdCreationForm({
                 required
                 value={sponsorName}
                 onChange={(e) => setSponsorName(e.target.value)}
-                placeholder="e.g. WeWork India, AWS"
+                placeholder="e.g. WeWork Bengaluru, AWS"
                 className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                Placement Slot Type <span className="text-rose-500">*</span>
+                Campaign Headline <span className="text-rose-500">*</span>
               </label>
-              <select
-                name="slot_type"
-                value={slotType}
-                onChange={(e) => setSlotType(e.target.value as any)}
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-              >
-                <option value="flash_banner">⚡ Top Flash Banner (Pill Announcement)</option>
-                <option value="header_banner">🌟 Header / Sidebar Spotlight Card</option>
-                <option value="featured_listing">📍 In-Feed Promoted Directory Card</option>
-                <option value="featured_pin">🗺️ Featured Map Pin Placement</option>
-              </select>
+              <input
+                type="text"
+                name="title"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Get 20% off dedicated coworking suites"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
             </div>
-          </div>
-
-          {/* Campaign Headline */}
-          <div>
-            <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-              Campaign Headline <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="title"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Looking for premium workspace? Get 25% off private suites"
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
           </div>
 
           {/* Campaign Description */}
           <div>
             <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-              Short Ad Description / Tagline
+              Short Ad Description / Value Proposition
             </label>
             <textarea
               name="description"
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief value proposition (1-2 sentences) to entice clicks..."
+              placeholder="Brief value proposition to entice clicks..."
               className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -358,61 +516,84 @@ export function AdminAdCreationForm({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-full bg-slate-900 dark:bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+              className="w-full rounded-full bg-slate-900 dark:bg-indigo-600 px-6 py-3 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-md cursor-pointer disabled:opacity-50"
             >
-              {isSubmitting ? "Creating Advertisement..." : "Publish Advertisement Campaign 🚀"}
+              {isSubmitting ? "Creating Advertisement..." : `Publish to ${currentPlacement.name} 🚀`}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Right Column: Live Interactive Preview */}
+      {/* Right Column: Live Interactive Placement Preview */}
       <div className="lg:col-span-5 space-y-4 sticky top-6">
         <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-xs">
           <div className="flex items-center justify-between border-b border-[var(--line)] pb-3 mb-4">
             <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--ink-muted)]">
-              Live Preview
+              Simulated Placement Preview
             </h3>
-            <span className="rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5">
-              {slotType.replace(/_/g, " ").toUpperCase()}
+            <span className="rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2.5 py-0.5">
+              {currentPlacement.icon} {currentPlacement.name}
             </span>
           </div>
 
           {/* Flash Announcement Banner Preview */}
-          {slotType === "flash_banner" && (
-            <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 p-3.5 shadow-xs text-xs">
+          {placementLocation === "flash" && (
+            <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white p-3.5 shadow-md text-xs">
               <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="rounded bg-amber-200/80 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                <span className="rounded bg-white/20 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white">
                   {badgeText || "Partner Spotlight"}
                 </span>
-                <span className="text-[10px] font-bold text-amber-800 dark:text-amber-400">
+                <span className="text-[10px] font-bold text-white/90">
                   {sponsorName || "Sponsor Name"}
                 </span>
               </div>
-              <p className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+              <p className="font-bold text-white text-xs leading-snug">
                 {title || "Campaign Headline will appear here..."}
               </p>
               {description && (
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                <p className="text-[11px] text-white/90 mt-1 leading-relaxed line-clamp-2">
                   {description}
                 </p>
               )}
-              <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-amber-200/60 dark:border-amber-900/40">
-                <span className="text-[10px] text-amber-800/80 dark:text-amber-400/80 font-mono">
-                  Ends {endDate}
+              <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-white/20">
+                <span className="text-[10px] text-white/70 font-mono">
+                  Auto-rotates with active sponsors
                 </span>
-                <span className="rounded-full bg-amber-500 text-white font-bold px-3 py-1 text-[10px] shadow-2xs">
+                <span className="rounded-full bg-white text-slate-900 font-bold px-3 py-1 text-[10px] shadow-2xs">
                   {ctaText || "Claim Offer"} ↗
                 </span>
               </div>
             </div>
           )}
 
-          {/* Spotlight Card Preview */}
-          {(slotType === "header_banner" || slotType === "featured_listing" || slotType === "featured_pin") && (
+          {/* Map Overlay Spotlight Preview */}
+          {placementLocation === "map_overlay" && (
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-900/90 backdrop-blur-md text-white p-3.5 shadow-xl text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="rounded bg-amber-400 text-slate-950 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <span>📍</span>
+                  <span>Map Sponsor</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">Map Pin #1</span>
+              </div>
+              <p className="font-bold text-xs text-white">
+                {title || "Specialty Roasts & Quiet Work Corners in Bangalore"}
+              </p>
+              <div className="flex items-center justify-between pt-1 text-[11px]">
+                <span className="text-slate-300 font-medium">{sponsorName || "Third Wave Coffee"}</span>
+                <span className="text-amber-400 font-bold">{ctaText || "View on Map"} →</span>
+              </div>
+            </div>
+          )}
+
+          {/* In-Feed & Sidebar & Tech Atlas Preview */}
+          {(placementLocation === "in_feed" ||
+            placementLocation === "sidebar" ||
+            placementLocation === "detail_bottom" ||
+            placementLocation === "tech_spotlight") && (
             <div className="rounded-2xl border border-[var(--line)] bg-[var(--background)] overflow-hidden shadow-xs">
               {bannerUrl ? (
-                <div className="h-32 w-full overflow-hidden relative">
+                <div className="h-32 w-full overflow-hidden relative bg-slate-100 dark:bg-slate-800">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={bannerUrl}
@@ -463,9 +644,19 @@ export function AdminAdCreationForm({
             </div>
           )}
 
-          <div className="mt-4 text-[11px] text-[var(--ink-muted)] space-y-1">
-            <p>✓ Auto-records impressions and click analytics.</p>
-            <p>✓ Real-time RLS date verification.</p>
+          <div className="mt-4 text-[11px] text-[var(--ink-muted)] space-y-1.5 border-t border-[var(--line)] pt-3">
+            <p className="flex items-center gap-1.5">
+              <span>✓</span>
+              <span>Only displays in <strong>{currentPlacement.name}</strong>.</span>
+            </p>
+            <p className="flex items-center gap-1.5">
+              <span>✓</span>
+              <span>Contextual targeting: <strong>{targetCategoryId ? "Specific Category" : "All Categories"}</strong>.</span>
+            </p>
+            <p className="flex items-center gap-1.5">
+              <span>✓</span>
+              <span>Auto-rotates fairly when multiple sponsors occupy the same slot.</span>
+            </p>
           </div>
         </div>
       </div>
