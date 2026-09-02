@@ -10,6 +10,7 @@ import { FavoriteButton } from "@/components/favorite-button";
 import { PlaceWeatherBadge } from "@/components/place-weather-badge";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserProfileMenu } from "@/components/user-profile-menu";
 import { getPlaceRating } from "@/lib/services/place-rating";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { trackEvent } from "@/lib/analytics/tracker";
@@ -500,7 +501,7 @@ export function ModernDirectoryExplorer({
   return (
     <div className="flex min-h-screen w-full flex-col bg-white font-sans antialiased text-[#111827]">
       {/* Top Navbar */}
-      <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c121e] sticky top-0 z-[1000] shadow-2xs">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-3">
           {/* Logo & Dual Atlas Switcher */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
@@ -576,24 +577,13 @@ export function ModernDirectoryExplorer({
             <Link
               href="/submit"
               title="Add a New Place"
-              className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-md hover:scale-[1.02] transition-all"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-md hover:scale-[1.02] transition-all"
             >
               <span className="text-sm font-bold leading-none">+</span>
               <span className="hidden sm:inline">Add Place</span>
             </Link>
-            <Link
-              href="/dashboard"
-              className="hidden sm:inline-flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/admin"
-              className="hidden sm:inline-flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs"
-            >
-              Admin
-            </Link>
             <ThemeToggle />
+            <UserProfileMenu />
           </div>
         </div>
 

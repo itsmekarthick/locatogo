@@ -5,6 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserProfileMenu } from "@/components/user-profile-menu";
 import { CompanyDetailDrawer, type CompanyDetail } from "@/components/company-detail-drawer";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { Pagination } from "@/components/ui/pagination";
@@ -411,6 +412,7 @@ export function GlobalTechExplorer({
             </div>
 
             <ThemeToggle />
+            <UserProfileMenu />
           </div>
         </div>
 

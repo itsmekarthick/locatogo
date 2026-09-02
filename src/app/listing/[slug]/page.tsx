@@ -24,6 +24,7 @@ import { getPlaceRating } from "@/lib/services/place-rating";
 import { PlaceReviews } from "@/components/place-reviews-section";
 import { NearbyPlaces } from "@/components/nearby-places";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserProfileMenu } from "@/components/user-profile-menu";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
 
 type Props = {
@@ -205,7 +206,7 @@ export default async function ListingDetailPage({ params }: Props) {
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#fdfdfd] font-sans antialiased text-[#111827]">
       {/* Top Navbar with Autocomplete Search */}
-      <header className="border-b border-gray-100 bg-white sticky top-0 z-50 shadow-2xs">
+      <header className="border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-[#0c121e] sticky top-0 z-[1000] shadow-2xs">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
           {/* Logo & Badge */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -231,13 +232,8 @@ export default async function ListingDetailPage({ params }: Props) {
             >
               Explore Map
             </Link>
-            <Link
-              href="/admin/listings"
-              className="rounded-xl bg-[#111827] px-3.5 py-1.5 text-xs font-bold text-white hover:bg-black transition-colors shadow-xs"
-            >
-              + Add Place
-            </Link>
             <ThemeToggle />
+            <UserProfileMenu />
           </div>
         </div>
       </header>
