@@ -139,11 +139,11 @@ export function CompanyDetailDrawer({
           </div>
 
           <Link
-            href={`/listing/${company.slug}`}
-            className="text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 flex items-center gap-1"
+            href={`/bangalore?q=${encodeURIComponent(company.locality || company.title)}`}
+            className="rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
           >
-            <span>Full Place Profile</span>
-            <span>→</span>
+            <span>🏙️ View in City Atlas</span>
+            <span>↗</span>
           </Link>
         </div>
 

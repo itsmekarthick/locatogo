@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         city,
         short_description,
         is_featured,
-        categories:categories!listings_category_id_domain_id_fkey(name, icon)
+        categories:categories!listings_category_id_fkey(name, icon)
       `)
       .eq("status", "published")
       .or(`title.ilike.%${cleanQ}%,locality.ilike.%${cleanQ}%,slug.ilike.%${cleanQ}%`)

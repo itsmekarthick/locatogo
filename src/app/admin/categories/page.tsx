@@ -10,7 +10,6 @@ export default async function CategoriesPage() {
       .from("categories")
       .select("id, name, slug, description, domain_id, is_active")
       .eq("tenant_id", tenant.id)
-      .neq("is_active", false)
       .order("sort_order")
       .order("name"),
   ]);
@@ -21,7 +20,7 @@ export default async function CategoriesPage() {
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Taxonomy & Organization</p>
         <h1 className="mt-2 font-display text-4xl font-bold tracking-[-0.06em]">Categories</h1>
         <p className="mt-2 text-sm text-[var(--ink-muted)]">
-          Build a structured category hierarchy for each directory atlas. Categories power discovery filters, search tags, and map icons.
+          Build a structured category hierarchy for each directory atlas. Only enabled categories will appear in the directory UI, search filters, and map markers.
         </p>
       </div>
 
@@ -62,11 +61,13 @@ export default async function CategoriesPage() {
               </label>
               <select
                 name="domainId"
-                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none"
+                defaultValue="global"
+                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--paper)] px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none cursor-pointer"
               >
+                <option value="global">🌐 All Domains (Global / Universal)</option>
                 {domains?.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name} (/{d.slug})
+                    📍 {d.name} (/{d.slug})
                   </option>
                 ))}
               </select>
@@ -85,7 +86,17 @@ export default async function CategoriesPage() {
             />
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="flex items-center justify-between pt-2 border-t border-[var(--line)]">
+            <label className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground)] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                name="isActive"
+                defaultChecked={true}
+                className="h-4 w-4 rounded border-gray-300 text-[var(--coral)] focus:ring-[var(--coral)] cursor-pointer"
+              />
+              <span>Enable category in directory UI immediately</span>
+            </label>
+
             <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all cursor-pointer">
               + Add Category
             </button>

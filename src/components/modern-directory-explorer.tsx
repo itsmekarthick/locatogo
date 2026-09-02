@@ -96,13 +96,14 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
 function getCategoryIcon(name: string) {
   const lower = name.toLowerCase();
-  if (lower.includes("restaurant") || lower.includes("cafe") || lower.includes("food") || lower.includes("dine")) return "🍽️";
-  if (lower.includes("school") || lower.includes("education") || lower.includes("college") || lower.includes("academy")) return "🎓";
-  if (lower.includes("hospital") || lower.includes("health") || lower.includes("clinic") || lower.includes("medical")) return "➕";
+  if (lower.includes("tech park") || lower.includes("sez") || lower.includes("business park") || lower.includes("campus")) return "🏢";
+  if (lower.includes("cowork") || lower.includes("shared office") || lower.includes("workspace") || lower.includes("wework")) return "💻";
+  if (lower.includes("restaurant") || lower.includes("cafe") || lower.includes("food") || lower.includes("dine") || lower.includes("bakery")) return "☕";
+  if (lower.includes("school") || lower.includes("education") || lower.includes("college") || lower.includes("academy") || lower.includes("university")) return "🎓";
+  if (lower.includes("hospital") || lower.includes("health") || lower.includes("clinic") || lower.includes("medical") || lower.includes("pharmacy")) return "🏥";
   if (lower.includes("art") || lower.includes("creative") || lower.includes("design") || lower.includes("culture")) return "🎨";
-  if (lower.includes("retail") || lower.includes("shop") || lower.includes("store") || lower.includes("market")) return "🏬";
-  if (lower.includes("tech") || lower.includes("cowork") || lower.includes("startup") || lower.includes("hub")) return "💻";
-  if (lower.includes("petrol") || lower.includes("fuel") || lower.includes("bunk") || lower.includes("pump") || lower.includes("gas")) return "⛽";
+  if (lower.includes("mall") || lower.includes("retail") || lower.includes("shop") || lower.includes("store") || lower.includes("market")) return "🏬";
+  if (lower.includes("petrol") || lower.includes("fuel") || lower.includes("bunk") || lower.includes("pump") || lower.includes("gas") || lower.includes("ev")) return "⛽";
   return "📍";
 }
 
@@ -938,6 +939,47 @@ export function ModernDirectoryExplorer({
                             <p className="mt-2 text-xs text-gray-600 line-clamp-2 leading-relaxed">
                               {place.short_description}
                             </p>
+                          )}
+
+                          {/* Tech Park / SEZ Campus Badge & Cross-Atlas Link */}
+                          {(place.category_name?.toLowerCase().includes("tech park") ||
+                            place.title.toLowerCase().includes("tech park") ||
+                            place.title.toLowerCase().includes("business park") ||
+                            place.title.toLowerCase().includes("sez")) && (
+                            <div className="mt-2.5 flex items-center justify-between rounded-xl bg-indigo-50/90 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800/80 px-2.5 py-1.5 text-[11px]">
+                              <div className="flex items-center gap-1.5 font-bold text-indigo-900 dark:text-indigo-200">
+                                <span>🏢</span>
+                                <span>Tech Campus</span>
+                              </div>
+                              <Link
+                                href={`/tech-atlas?q=${encodeURIComponent(place.title.split(" ")[0])}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                              >
+                                <span>Explore Tech MNCs</span>
+                                <span>↗</span>
+                              </Link>
+                            </div>
+                          )}
+
+                          {/* Coworking Space Badge */}
+                          {(place.category_name?.toLowerCase().includes("cowork") ||
+                            place.title.toLowerCase().includes("wework") ||
+                            place.title.toLowerCase().includes("91springboard") ||
+                            place.title.toLowerCase().includes("innov8") ||
+                            place.title.toLowerCase().includes("indiqube") ||
+                            place.title.toLowerCase().includes("bhive") ||
+                            place.title.toLowerCase().includes("cowrks") ||
+                            place.title.toLowerCase().includes("awfis")) && (
+                            <div className="mt-2.5 flex items-center justify-between rounded-xl bg-emerald-50/90 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/80 px-2.5 py-1.5 text-[11px]">
+                              <div className="flex items-center gap-1.5 font-bold text-emerald-900 dark:text-emerald-200">
+                                <span>💻</span>
+                                <span>Coworking Hub</span>
+                              </div>
+                              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                                Hot Desks & Cabins
+                              </span>
+                            </div>
                           )}
 
                           {/* Action Bar with Uber, WhatsApp & View */}

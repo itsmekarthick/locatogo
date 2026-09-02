@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Pagination } from "@/components/ui/pagination";
-import { updateCategory, archiveCategory } from "@/app/admin/actions";
+import { updateCategory, toggleCategoryStatus, archiveCategory } from "@/app/admin/actions";
 
 type CategoryItem = {
   id: string;
@@ -70,13 +70,14 @@ export function AdminCategoriesList({
       <div className="grid gap-3 sm:grid-cols-2">
         {paginated.length > 0 ? (
           paginated.map((category) => {
+            const isEnabled = category.is_active !== false;
             const icon =
               category.name.includes("School") || category.name.includes("Education")
-                ? "🏫"
+                ? "🎓"
                 : category.name.includes("Hospital") || category.name.includes("Health")
                 ? "🏥"
-                : category.name.includes("Tech") || category.name.includes("Software")
-                ? "💻"
+                : category.name.includes("Tech") || category.name.includes("Software") || category.name.includes("Cowork")
+                ? "🏢"
                 : category.name.includes("Food") || category.name.includes("Restaurant") || category.name.includes("Cafe")
                 ? "☕"
                 : "🏷️";
@@ -86,21 +87,38 @@ export function AdminCategoriesList({
             return (
               <article
                 key={category.id}
-                className="flex flex-col justify-between rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-5 shadow-xs transition-all hover:shadow-md"
+                className={`flex flex-col justify-between rounded-3xl border p-5 shadow-xs transition-all hover:shadow-md ${
+                  isEnabled
+                    ? "border-[var(--line)] bg-[var(--paper)]"
+                    : "border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 opacity-75"
+                }`}
               >
                 <div>
                   <div className="flex items-center justify-between">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--background)] text-lg border border-[var(--line)]">
                       {icon}
                     </span>
-                    {domainName && (
-                      <span className="rounded-full bg-[var(--background)] px-2.5 py-0.5 text-[10px] font-semibold text-[var(--ink-muted)] border border-[var(--line)]">
-                        {domainName}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {domainName ? (
+                        <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 text-[10px] font-bold">
+                          📍 {domainName}
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 text-[10px] font-bold">
+                          🌐 Global (All Cities)
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <h3 className="mt-3 font-semibold text-sm text-[var(--foreground)]">{category.name}</h3>
+                  <h3 className="mt-3 font-semibold text-sm text-[var(--foreground)] flex items-center gap-2">
+                    <span>{category.name}</span>
+                    {!isEnabled && (
+                      <span className="rounded bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 text-[9px] font-bold text-slate-600 dark:text-slate-300 uppercase">
+                        Hidden
+                      </span>
+                    )}
+                  </h3>
                   <p className="mt-0.5 font-mono text-xs text-[var(--coral)]">/{category.slug}</p>
 
                   {category.description && (
@@ -111,9 +129,23 @@ export function AdminCategoriesList({
                 </div>
 
                 <div className="mt-4 flex items-center justify-between border-t border-[var(--line)] pt-3 text-xs">
-                  <span className="rounded-full bg-[var(--leaf)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--leaf-dark)] uppercase">
-                    Active
-                  </span>
+                  {/* Interactive Quick Toggle */}
+                  <form action={toggleCategoryStatus}>
+                    <input type="hidden" name="categoryId" value={category.id} />
+                    <input type="hidden" name="isActive" value={isEnabled ? "false" : "true"} />
+                    <button
+                      type="submit"
+                      title={isEnabled ? "Click to Disable in Directory UI" : "Click to Enable in Directory UI"}
+                      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                        isEnabled
+                          ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200"
+                          : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 hover:bg-slate-300"
+                      }`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${isEnabled ? "bg-emerald-500" : "bg-slate-400"}`} />
+                      <span>{isEnabled ? "Enabled in UI" : "Disabled (Hidden)"}</span>
+                    </button>
+                  </form>
 
                   <div className="flex items-center gap-2">
                     <button
@@ -130,7 +162,7 @@ export function AdminCategoriesList({
                       <button
                         type="submit"
                         onClick={(e) => {
-                          if (!confirm(`Archive category "${category.name}"?`)) e.preventDefault();
+                          if (!confirm(`Disable & archive category "${category.name}"?`)) e.preventDefault();
                         }}
                         className="rounded-full px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                         title="Archive category"
@@ -167,7 +199,7 @@ export function AdminCategoriesList({
                 <h3 className="font-display text-xl font-bold text-[var(--foreground)]">
                   Edit Category
                 </h3>
-                <p className="text-xs text-[var(--ink-muted)]">Update taxonomy classification and slug</p>
+                <p className="text-xs text-[var(--ink-muted)]">Update taxonomy classification, slug and directory visibility</p>
               </div>
               <button
                 type="button"
@@ -216,12 +248,13 @@ export function AdminCategoriesList({
                   </label>
                   <select
                     name="domainId"
-                    defaultValue={editingCategory.domain_id || ""}
-                    className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-sm focus:outline-none"
+                    defaultValue={editingCategory.domain_id || "global"}
+                    className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-sm focus:outline-none cursor-pointer"
                   >
+                    <option value="global">🌐 All Domains (Global / Universal)</option>
                     {domains.map((d) => (
                       <option key={d.id} value={d.id}>
-                        {d.name} {d.slug ? `(/${d.slug})` : ""}
+                        📍 {d.name} {d.slug ? `(/${d.slug})` : ""}
                       </option>
                     ))}
                   </select>
@@ -241,6 +274,22 @@ export function AdminCategoriesList({
                 />
               </div>
 
+              {/* Checkbox: Enable Category in Directory UI */}
+              <div className="pt-2 border-t border-[var(--line)]">
+                <label className="flex items-center gap-2.5 text-xs font-bold text-[var(--foreground)] cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    defaultChecked={editingCategory.is_active !== false}
+                    className="h-4 w-4 rounded border-gray-300 text-[var(--coral)] focus:ring-[var(--coral)] cursor-pointer"
+                  />
+                  <span>Enable category in directory UI and search filters</span>
+                </label>
+                <p className="text-[11px] text-[var(--ink-muted)] ml-6.5 mt-0.5">
+                  When disabled, places in this category remain in the database but are hidden from the public UI.
+                </p>
+              </div>
+
               <div className="flex justify-end gap-2 pt-3 border-t border-[var(--line)]">
                 <button
                   type="button"
@@ -251,7 +300,7 @@ export function AdminCategoriesList({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full bg-[var(--foreground)] px-6 py-2 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all"
+                  className="rounded-full bg-[var(--foreground)] px-6 py-2 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all cursor-pointer"
                 >
                   Save Changes
                 </button>

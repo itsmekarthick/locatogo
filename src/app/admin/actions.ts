@@ -79,25 +79,71 @@ async function getDefaultDomainId(
 
 export async function createCategory(formData: FormData): Promise<void> {
   const { supabase, tenant } = await requireTenantContext();
-  const domainId = await getDefaultDomainId(supabase, tenant.id, text(formData, "domainId"));
-  const parsed = categoryInputSchema.safeParse({ domainId, name: text(formData, "name"), slug: text(formData, "slug"), description: text(formData, "description") });
+  const rawDomainId = text(formData, "domainId");
+  const domainId = rawDomainId && rawDomainId !== "global" && rawDomainId !== "" ? rawDomainId : null;
+  const parsed = categoryInputSchema.safeParse({
+    domainId: domainId || undefined,
+    name: text(formData, "name"),
+    slug: text(formData, "slug"),
+    description: text(formData, "description"),
+  });
   if (!parsed.success) throw new Error("Invalid category details.");
-  const { error } = await supabase.from("categories").insert({ tenant_id: tenant.id, domain_id: domainId, name: parsed.data.name, slug: parsed.data.slug, description: parsed.data.description || null });
+  const isActive = formData.get("isActive") === null ? true : formData.get("isActive") === "on" || formData.get("isActive") === "true";
+  const { error } = await supabase.from("categories").insert({
+    tenant_id: tenant.id,
+    domain_id: domainId,
+    name: parsed.data.name,
+    slug: parsed.data.slug,
+    description: parsed.data.description || null,
+    is_active: isActive,
+  });
   if (error) throw new Error("The category could not be created.");
   revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/[domain]", "page");
   redirect("/admin/categories");
 }
 
 export async function updateCategory(formData: FormData): Promise<void> {
   const { supabase, tenant } = await requireTenantContext();
   const categoryId = id(formData, "categoryId");
-  const domainId = await getDefaultDomainId(supabase, tenant.id, text(formData, "domainId"));
-  const parsed = categoryInputSchema.safeParse({ domainId, name: text(formData, "name"), slug: text(formData, "slug"), description: text(formData, "description") });
+  const rawDomainId = text(formData, "domainId");
+  const domainId = rawDomainId && rawDomainId !== "global" && rawDomainId !== "" ? rawDomainId : null;
+  const parsed = categoryInputSchema.safeParse({
+    domainId: domainId || undefined,
+    name: text(formData, "name"),
+    slug: text(formData, "slug"),
+    description: text(formData, "description"),
+  });
   if (!parsed.success) throw new Error("Invalid category details.");
-  const { error } = await supabase.from("categories").update({ name: parsed.data.name, slug: parsed.data.slug, description: parsed.data.description || null }).eq("id", categoryId).eq("tenant_id", tenant.id);
+  const isActive = formData.get("isActive") === "on" || formData.get("isActive") === "true";
+  const { error } = await supabase.from("categories").update({
+    name: parsed.data.name,
+    slug: parsed.data.slug,
+    description: parsed.data.description || null,
+    domain_id: domainId,
+    is_active: isActive,
+  }).eq("id", categoryId).eq("tenant_id", tenant.id);
   if (error) throw new Error("The category could not be updated.");
   revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/[domain]", "page");
   redirect("/admin/categories");
+}
+
+export async function toggleCategoryStatus(formData: FormData): Promise<void> {
+  const { supabase, tenant } = await requireTenantContext();
+  const categoryId = id(formData, "categoryId");
+  const isActive = formData.get("isActive") === "true" || formData.get("isActive") === "on";
+  const { error } = await supabase
+    .from("categories")
+    .update({ is_active: isActive })
+    .eq("id", categoryId)
+    .eq("tenant_id", tenant.id);
+  if (error) throw new Error("Could not update category status.");
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/[domain]", "page");
 }
 
 export async function archiveCategory(formData: FormData): Promise<void> {
@@ -106,6 +152,8 @@ export async function archiveCategory(formData: FormData): Promise<void> {
   const { error } = await supabase.from("categories").update({ is_active: false }).eq("id", categoryId).eq("tenant_id", tenant.id);
   if (error) throw new Error("The category could not be archived.");
   revalidatePath("/admin/categories");
+  revalidatePath("/");
+  revalidatePath("/[domain]", "page");
 }
 
 export async function createListing(formData: FormData): Promise<void> {

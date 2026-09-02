@@ -31,9 +31,10 @@ export async function GET(request: Request) {
         is_featured,
         verification_status,
         category_id,
-        categories:categories!listings_category_id_domain_id_fkey(name, icon)
+        categories:categories!listings_category_id_fkey(name, icon)
       `)
       .eq("status", "published")
+      .is("company_type", null)
       .not("latitude", "is", null)
       .not("longitude", "is", null);
 

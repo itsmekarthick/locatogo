@@ -78,15 +78,17 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
     supabase
       .from("categories")
       .select("id, name, slug, icon")
-      .eq("domain_id", domain.id)
+      .or(`domain_id.is.null,domain_id.eq.${domain.id}`)
+      .eq("is_active", true)
       .order("sort_order"),
     supabase
       .from("listings")
       .select(
-        "id, title, slug, short_description, address_line_1, address_line_2, locality, city, postal_code, phone, website, latitude, longitude, is_featured, verification_status, category_id, categories:categories!listings_category_id_domain_id_fkey(name, icon)"
+        "id, title, slug, short_description, address_line_1, address_line_2, locality, city, postal_code, phone, website, latitude, longitude, is_featured, verification_status, category_id, categories:categories!listings_category_id_fkey(name, icon)"
       )
       .eq("domain_id", domain.id)
       .eq("status", "published")
+      .is("company_type", null)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
       .order("is_featured", { ascending: false })

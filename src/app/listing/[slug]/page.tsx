@@ -40,7 +40,7 @@ async function getListing(params: Promise<{ slug: string }>) {
 
   let query = supabase
     .from("listings")
-    .select("*, categories:categories!listings_category_id_domain_id_fkey(name, slug)");
+    .select("*, categories:categories!listings_category_id_fkey(name, slug)");
 
   if (isUuid) {
     query = query.or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug},id.eq.${cleanSlug}`);

@@ -45,7 +45,7 @@ export async function NearbyPlaces({
   const { data: candidates } = await supabase
     .from("listings")
     .select(
-      "id, title, slug, locality, latitude, longitude, categories:categories!listings_category_id_domain_id_fkey(name)"
+      "id, title, slug, locality, latitude, longitude, categories:categories!listings_category_id_fkey(name)"
     )
     .eq("category_id", categoryId)
     .eq("status", "published")

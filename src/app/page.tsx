@@ -19,9 +19,10 @@ export default async function Home({ searchParams }: Props) {
     supabase
       .from("listings")
       .select(
-        "id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_domain_id_fkey(name)"
+        "id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_fkey(name)"
       )
       .eq("status", "published")
+      .is("company_type", null)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
       .order("is_featured", { ascending: false })

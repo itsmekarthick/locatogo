@@ -40,7 +40,7 @@ async function getListing(params: Props["params"]) {
 
   let query = supabase
     .from("listings")
-    .select("id, title, slug, short_description, description, address_line_1, address_line_2, locality, city, administrative_area, country_code, postal_code, website, phone, email, whatsapp, latitude, longitude, verification_status, is_featured, categories:categories!listings_category_id_domain_id_fkey(name)");
+    .select("id, title, slug, short_description, description, address_line_1, address_line_2, locality, city, administrative_area, country_code, postal_code, website, phone, email, whatsapp, latitude, longitude, verification_status, is_featured, categories:categories!listings_category_id_fkey(name)");
 
   if (directory?.id) {
     query = query.eq("domain_id", directory.id);
