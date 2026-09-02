@@ -138,6 +138,62 @@ export function ModernDirectoryExplorer({
   const [liveWeather, setLiveWeather] = useState<PlaceWeather | null>(null);
   const [simulatedWeather, setSimulatedWeather] = useState<WeatherType | null>(null);
 
+  const [allListings, setAllListings] = useState<PlaceListing[]>(initialListings);
+
+  // Progressive background streaming: Loads remaining places smoothly without blocking main thread
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function streamMoreListings() {
+      for (let page = 1; page < 8; page++) {
+        if (isCancelled) break;
+        try {
+          const url = domain?.id
+            ? `/api/listings?domain_id=${domain.id}&page=${page}&limit=1000`
+            : `/api/listings?page=${page}&limit=1000`;
+          const res = await fetch(url);
+          if (!res.ok) break;
+          const data = await res.json();
+          if (!data.listings || data.listings.length === 0) break;
+
+          if (isCancelled) break;
+
+          if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+            (window as any).requestIdleCallback(() => {
+              if (!isCancelled) {
+                setAllListings((prev) => {
+                  const existingIds = new Set(prev.map((l) => l.id));
+                  const uniqueNew = data.listings.filter((l: PlaceListing) => !existingIds.has(l.id));
+                  return [...prev, ...uniqueNew];
+                });
+              }
+            });
+          } else {
+            setAllListings((prev) => {
+              const existingIds = new Set(prev.map((l) => l.id));
+              const uniqueNew = data.listings.filter((l: PlaceListing) => !existingIds.has(l.id));
+              return [...prev, ...uniqueNew];
+            });
+          }
+
+          // Yield CPU to maintain 60 FPS
+          await new Promise((r) => setTimeout(r, 800));
+        } catch {
+          break;
+        }
+      }
+    }
+
+    const timer = setTimeout(() => {
+      streamMoreListings();
+    }, 1500);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [domain?.id]);
+
   useEffect(() => {
     let isMounted = true;
     const fetchWeather = async () => {
@@ -270,7 +326,7 @@ export function ModernDirectoryExplorer({
 
   // Filter and calculate distances
   const filteredListings = useMemo(() => {
-    const list = initialListings.filter((place) => {
+    const list = allListings.filter((place) => {
       // 1. Text Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -350,7 +406,7 @@ export function ModernDirectoryExplorer({
       }
       return a.title.localeCompare(b.title);
     });
-  }, [initialListings, searchQuery, selectedCategory, selectedLocation, userLocation, radiusKm, sortBy, featuredOnly, verifiedOnly]);
+  }, [allListings, searchQuery, selectedCategory, selectedLocation, userLocation, radiusKm, sortBy, featuredOnly, verifiedOnly]);
 
   const locatedListings = useMemo(
     () =>
