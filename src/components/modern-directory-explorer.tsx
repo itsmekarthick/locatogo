@@ -16,6 +16,7 @@ import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { trackEvent } from "@/lib/analytics/tracker";
 import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
 import { MapErrorBoundary } from "@/components/map-error-boundary";
+import { AdBannerSlot } from "@/components/ad-banner-slot";
 
 // Dynamically import interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -667,6 +668,9 @@ export function ModernDirectoryExplorer({
         </div>
       </header>
 
+      {/* Top Flash Announcement Ad Banner Placement */}
+      <AdBannerSlot slotType="flash_banner" variant="flash" />
+
       {/* Location Permission Guidance Toast */}
       {locationErrorNotice && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-xs text-amber-900 flex items-center justify-between gap-3 sticky top-14 z-50 shadow-xs">
@@ -926,15 +930,21 @@ export function ModernDirectoryExplorer({
               {paginatedListings.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                    {paginatedListings.map((place) => {
+                    {paginatedListings.map((place, index) => {
                       const isSelected = activePlaceId === place.id;
                       const catName = (place.category_name || "General").toUpperCase();
                       const ratingInfo = getPlaceRating(place);
 
                       return (
-                        <article
-                          key={place.id}
-                          onClick={() => setActivePlaceId(place.id)}
+                        <div key={place.id} className="contents">
+                          {index === 2 && (
+                            <AdBannerSlot
+                              slotType="header_banner"
+                              variant="in_feed"
+                            />
+                          )}
+                          <article
+                            onClick={() => setActivePlaceId(place.id)}
                           className={`group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md ${
                             isSelected
                               ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
@@ -1094,7 +1104,8 @@ export function ModernDirectoryExplorer({
                             </div>
                           </div>
                         </article>
-                      );
+                      </div>
+                    );
                     })}
                   </div>
 

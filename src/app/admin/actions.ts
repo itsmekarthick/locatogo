@@ -1111,3 +1111,141 @@ export async function syncCompanyCareers({
 
   return { success: true, count: jobs.length };
 }
+
+export async function createAdSlotAction(formData: FormData): Promise<{ success: boolean; id: string }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  const sponsorName = text(formData, "sponsor_name");
+  const slotType = text(formData, "slot_type") as "flash_banner" | "header_banner" | "featured_pin" | "featured_listing";
+  const title = text(formData, "title");
+  const description = text(formData, "description");
+  const ctaText = text(formData, "cta_text") || "Learn More";
+  const badgeText = text(formData, "badge_text") || "Sponsored";
+  const targetUrl = text(formData, "target_url");
+  const bannerUrl = text(formData, "banner_url");
+  const startDate = text(formData, "start_date");
+  const endDate = text(formData, "end_date");
+  const pricePaid = parseFloat(text(formData, "price_paid") || "0") || 0;
+  const status = (text(formData, "status") || "active") as "draft" | "active";
+  const listingId = text(formData, "listing_id") || null;
+
+  if (!sponsorName) throw new Error("Sponsor name is required.");
+  if (!slotType) throw new Error("Slot placement type is required.");
+  if (!startDate || !endDate) throw new Error("Start and end dates are required.");
+  if (new Date(endDate) <= new Date(startDate)) throw new Error("End date must be after start date.");
+
+  // Get primary domain for this tenant
+  const { data: domains } = await supabase
+    .from("domains")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .limit(1);
+
+  const domainId = text(formData, "domain_id") || domains?.[0]?.id;
+  if (!domainId) throw new Error("Tenant domain not found.");
+
+  const { data: inserted, error } = await supabase
+    .from("ad_slots")
+    .insert({
+      tenant_id: tenant.id,
+      domain_id: domainId,
+      listing_id: listingId,
+      slot_type: slotType,
+      sponsor_name: sponsorName,
+      title: title || sponsorName,
+      description: description || null,
+      cta_text: ctaText,
+      badge_text: badgeText,
+      target_url: targetUrl || null,
+      banner_url: bannerUrl || null,
+      start_date: new Date(startDate).toISOString(),
+      end_date: new Date(endDate).toISOString(),
+      status: status,
+      price_paid: pricePaid,
+    })
+    .select("id")
+    .single();
+
+  if (error || !inserted) {
+    console.error("Ad slot creation error:", error);
+    throw new Error("Failed to create ad slot: " + (error?.message || "Unknown error"));
+  }
+
+  // Audit log
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: "ad_slot_created",
+    entity_type: "ad_slot",
+    entity_id: inserted.id,
+    metadata: {
+      slot_type: slotType,
+      sponsor_name: sponsorName,
+      price_paid: pricePaid,
+      start_date: startDate,
+      end_date: endDate,
+    },
+  });
+
+  revalidatePath("/admin/advertising");
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath("/tech-atlas");
+
+  return { success: true, id: inserted.id };
+}
+
+export async function updateAdSlotStatusAction(
+  slotId: string,
+  newStatus: "draft" | "active" | "cancelled" | "expired"
+): Promise<{ success: boolean }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  const { error } = await supabase
+    .from("ad_slots")
+    .update({ status: newStatus })
+    .eq("id", slotId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error("Could not update ad slot status: " + error.message);
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: `ad_slot_status_${newStatus}`,
+    entity_type: "ad_slot",
+    entity_id: slotId,
+  });
+
+  revalidatePath("/admin/advertising");
+  revalidatePath("/");
+  revalidatePath("/tech-atlas");
+
+  return { success: true };
+}
+
+export async function deleteAdSlotAction(slotId: string): Promise<{ success: boolean }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  const { error } = await supabase
+    .from("ad_slots")
+    .delete()
+    .eq("id", slotId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error("Could not delete ad slot: " + error.message);
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: "ad_slot_deleted",
+    entity_type: "ad_slot",
+    entity_id: slotId,
+  });
+
+  revalidatePath("/admin/advertising");
+  revalidatePath("/");
+  revalidatePath("/tech-atlas");
+
+  return { success: true };
+}

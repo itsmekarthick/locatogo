@@ -11,6 +11,7 @@ import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { Pagination } from "@/components/ui/pagination";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { MapErrorBoundary } from "@/components/map-error-boundary";
+import { AdBannerSlot } from "@/components/ad-banner-slot";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -511,6 +512,9 @@ export function GlobalTechExplorer({
         )}
       </header>
 
+      {/* Top Flash Announcement Ad Banner */}
+      <AdBannerSlot slotType="flash_banner" variant="flash" />
+
       {/* Main Content Area */}
       <main className="flex-1 w-full relative">
         {/* VIEW MODE 1: INTERACTIVE MAP WITH CLUSTERS */}
@@ -767,6 +771,11 @@ export function GlobalTechExplorer({
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Tech Partner Spotlight Ad Placement */}
+            <div className="mt-5">
+              <AdBannerSlot slotType="header_banner" variant="tech_spotlight" />
             </div>
 
             {/* Jobs Grid */}

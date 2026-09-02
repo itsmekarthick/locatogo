@@ -27,6 +27,7 @@ import { NearbyPlaces } from "@/components/nearby-places";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProfileMenu } from "@/components/user-profile-menu";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
+import { AdBannerSlot } from "@/components/ad-banner-slot";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -723,6 +724,9 @@ export default async function ListingDetailPage({ params }: Props) {
                 </div>
               )}
             </div>
+
+            {/* Partner Spotlight Ad Banner Placement */}
+            <AdBannerSlot slotType="header_banner" variant="sidebar" />
 
             {/* Claim Card */}
             <div className="rounded-2xl sm:rounded-3xl border border-dashed border-gray-300 bg-white p-5 sm:p-6 text-center shadow-xs">
