@@ -27,6 +27,9 @@ const MAP_LAYERS = {
 };
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  if (!Number.isFinite(lat1) || !Number.isFinite(lon1) || !Number.isFinite(lat2) || !Number.isFinite(lon2)) {
+    return 0;
+  }
   const R = 6371; // Earth radius in km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -36,8 +39,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  const clampedA = Math.max(0, Math.min(1, a));
+  const c = 2 * Math.atan2(Math.sqrt(clampedA), Math.sqrt(Math.max(0, 1 - clampedA)));
+  const dist = R * c;
+  return Number.isFinite(dist) ? dist : 0;
 }
 
 import { getCompanyLogoUrl, getCompanyInitials, getCompanyCategoryIcon } from "@/components/company-brand-avatar";
@@ -431,24 +436,42 @@ function ClusteredMarkersLayer({
       minPoints: 2,
     });
 
-    const points: Array<GeoJSON.Feature<GeoJSON.Point, PlaceListing & { latitude: number; longitude: number }>> =
-      locatedListings.map((listing) => ({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [listing.longitude, listing.latitude],
-        },
-        properties: listing,
-      }));
+    const validPoints: Array<GeoJSON.Feature<GeoJSON.Point, PlaceListing & { latitude: number; longitude: number }>> =
+      locatedListings
+        .filter((listing) => {
+          const lat = Number(listing?.latitude);
+          const lng = Number(listing?.longitude);
+          return (
+            Number.isFinite(lat) &&
+            Number.isFinite(lng) &&
+            lat >= -90 &&
+            lat <= 90 &&
+            lng >= -180 &&
+            lng <= 180
+          );
+        })
+        .map((listing) => ({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [Number(listing.longitude), Number(listing.latitude)],
+          },
+          properties: listing,
+        }));
 
-    sc.load(points);
+    try {
+      sc.load(validPoints);
+    } catch (err) {
+      console.warn("Supercluster indexing warning:", err);
+    }
     return sc;
   }, [locatedListings]);
 
   const clusters = useMemo(() => {
-    if (!bounds) return [];
+    if (!bounds || !Number.isFinite(zoom)) return [];
     try {
-      return supercluster.getClusters(bounds, Math.floor(zoom));
+      const clampedZoom = Math.max(0, Math.min(18, Math.floor(zoom)));
+      return supercluster.getClusters(bounds, clampedZoom);
     } catch {
       return [];
     }

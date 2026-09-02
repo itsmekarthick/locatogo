@@ -9,6 +9,7 @@ import { CompanyDetailDrawer, type CompanyDetail } from "@/components/company-de
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { Pagination } from "@/components/ui/pagination";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
+import { MapErrorBoundary } from "@/components/map-error-boundary";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -442,19 +443,21 @@ export function GlobalTechExplorer({
       <main className="relative flex-1 w-full overflow-hidden">
         {viewMode === "map" ? (
           <div className="relative h-full w-full">
-            <InteractiveLeafletCanvas
-              locatedListings={locatedListings}
-              activePlaceId={selectedCompany?.id ?? null}
-              setActivePlaceId={(id: string | null) => {
-                if (!id) {
-                  setSelectedCompany(null);
-                  return;
-                }
-                const found = companyMap.get(id) || null;
-                setSelectedCompany(found);
-              }}
-              searchQuery={searchQuery}
-            />
+            <MapErrorBoundary fallbackText="The Tech Atlas map canvas encountered an issue. Click below to reload.">
+              <InteractiveLeafletCanvas
+                locatedListings={locatedListings}
+                activePlaceId={selectedCompany?.id ?? null}
+                setActivePlaceId={(id: string | null) => {
+                  if (!id) {
+                    setSelectedCompany(null);
+                    return;
+                  }
+                  const found = companyMap.get(id) || null;
+                  setSelectedCompany(found);
+                }}
+                searchQuery={searchQuery}
+              />
+            </MapErrorBoundary>
 
             {/* Bottom floating results badge */}
             <div className="pointer-events-none absolute bottom-4 left-4 z-[900]">

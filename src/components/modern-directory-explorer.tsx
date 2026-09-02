@@ -14,6 +14,7 @@ import { getPlaceRating } from "@/lib/services/place-rating";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { trackEvent } from "@/lib/analytics/tracker";
 import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
+import { MapErrorBoundary } from "@/components/map-error-boundary";
 
 // Dynamically import interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -657,24 +658,26 @@ export function ModernDirectoryExplorer({
         <>
           {/* Top Interactive Hero Map with Floating Overlapping Categories Card */}
           <div className="relative w-full h-[380px] sm:h-[460px] md:h-[500px] bg-[#e8eef5]">
-            <InteractiveLeafletCanvas
-              key={`hero-canvas-${viewMode}`}
-              locatedListings={locatedListings}
-              activePlaceId={activePlaceId}
-              setActivePlaceId={setActivePlaceId}
-              userLocation={userLocation}
-              onLocateMe={handleLocateMe}
-              flyToUserTrigger={flyToUserTrigger}
-              onToggleFullscreen={handleToggleFullscreen}
-              isFullscreen={false}
-              initialPerspective={viewMode === "3d" ? "satellite" : "street"}
-              weatherType={simulatedWeather || liveWeather?.weatherType}
-              searchQuery={searchQuery}
-              onMapClick={(loc) => {
-                setUserLocation(loc);
-                setFlyToUserTrigger((prev) => prev + 1);
-              }}
-            />
+            <MapErrorBoundary fallbackText="The city atlas map canvas encountered an issue. Click below to reload.">
+              <InteractiveLeafletCanvas
+                key={`hero-canvas-${viewMode}`}
+                locatedListings={locatedListings}
+                activePlaceId={activePlaceId}
+                setActivePlaceId={setActivePlaceId}
+                userLocation={userLocation}
+                onLocateMe={handleLocateMe}
+                flyToUserTrigger={flyToUserTrigger}
+                onToggleFullscreen={handleToggleFullscreen}
+                isFullscreen={false}
+                initialPerspective={viewMode === "3d" ? "satellite" : "street"}
+                weatherType={simulatedWeather || liveWeather?.weatherType}
+                searchQuery={searchQuery}
+                onMapClick={(loc) => {
+                  setUserLocation(loc);
+                  setFlyToUserTrigger((prev) => prev + 1);
+                }}
+              />
+            </MapErrorBoundary>
 
             {/* Floating Live Weather & Air Quality Badge on Map Top-Left (Opposite side from top-right layer controls) */}
             {liveWeather && (
@@ -1271,22 +1274,24 @@ export function ModernDirectoryExplorer({
 
               {/* RIGHT: MAP CANVAS */}
               <div className="lg:col-span-6 relative h-[380px] sm:h-[500px] lg:h-[650px] w-full overflow-hidden rounded-2xl border border-gray-200 shadow-xs lg:sticky lg:top-24">
-                <InteractiveLeafletCanvas
-                  locatedListings={locatedListings}
-                  activePlaceId={activePlaceId}
-                  setActivePlaceId={setActivePlaceId}
-                  userLocation={userLocation}
-                  onLocateMe={handleLocateMe}
-                  flyToUserTrigger={flyToUserTrigger}
-                  onToggleFullscreen={handleToggleFullscreen}
-                  isFullscreen={false}
-                  weatherType={simulatedWeather || liveWeather?.weatherType}
-                  searchQuery={searchQuery}
-                  onMapClick={(loc) => {
-                    setUserLocation(loc);
-                    setFlyToUserTrigger((prev) => prev + 1);
-                  }}
-                />
+                <MapErrorBoundary fallbackText="Split map view encountered an issue. Click below to reload.">
+                  <InteractiveLeafletCanvas
+                    locatedListings={locatedListings}
+                    activePlaceId={activePlaceId}
+                    setActivePlaceId={setActivePlaceId}
+                    userLocation={userLocation}
+                    onLocateMe={handleLocateMe}
+                    flyToUserTrigger={flyToUserTrigger}
+                    onToggleFullscreen={handleToggleFullscreen}
+                    isFullscreen={false}
+                    weatherType={simulatedWeather || liveWeather?.weatherType}
+                    searchQuery={searchQuery}
+                    onMapClick={(loc) => {
+                      setUserLocation(loc);
+                      setFlyToUserTrigger((prev) => prev + 1);
+                    }}
+                  />
+                </MapErrorBoundary>
               </div>
             </div>
           </section>
@@ -1298,22 +1303,24 @@ export function ModernDirectoryExplorer({
         <div className="relative h-[calc(100vh-105px)] sm:h-[calc(100vh-65px)] w-full flex overflow-hidden">
           {/* Full-width Map Canvas */}
           <main className="relative flex-1 h-full w-full bg-[#e8eef5]">
-            <InteractiveLeafletCanvas
-              locatedListings={locatedListings}
-              activePlaceId={activePlaceId}
-              setActivePlaceId={handleSelectPlace}
-              userLocation={userLocation}
-              onLocateMe={handleLocateMe}
-              flyToUserTrigger={flyToUserTrigger}
-              onToggleFullscreen={handleToggleFullscreen}
-              isFullscreen={true}
-              weatherType={simulatedWeather || liveWeather?.weatherType}
-              searchQuery={searchQuery}
-              onMapClick={(loc) => {
-                setUserLocation(loc);
-                setFlyToUserTrigger((prev) => prev + 1);
-              }}
-            />
+            <MapErrorBoundary fallbackText="Fullscreen map view encountered an issue. Click below to reload.">
+              <InteractiveLeafletCanvas
+                locatedListings={locatedListings}
+                activePlaceId={activePlaceId}
+                setActivePlaceId={handleSelectPlace}
+                userLocation={userLocation}
+                onLocateMe={handleLocateMe}
+                flyToUserTrigger={flyToUserTrigger}
+                onToggleFullscreen={handleToggleFullscreen}
+                isFullscreen={true}
+                weatherType={simulatedWeather || liveWeather?.weatherType}
+                searchQuery={searchQuery}
+                onMapClick={(loc) => {
+                  setUserLocation(loc);
+                  setFlyToUserTrigger((prev) => prev + 1);
+                }}
+              />
+            </MapErrorBoundary>
 
             {/* Top-Left Floating Category Controls on Map */}
             <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-[400] max-w-[calc(100vw-190px)] sm:max-w-xl">
