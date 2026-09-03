@@ -583,6 +583,14 @@ export function ModernDirectoryExplorer({
                 <span className="md:hidden">Tech</span>
                 <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
               </Link>
+              <Link
+                href="/blog"
+                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                title="City Guides & Stories"
+              >
+                <span>📖</span>
+                <span className="hidden lg:inline">Stories</span>
+              </Link>
             </div>
           </div>
 

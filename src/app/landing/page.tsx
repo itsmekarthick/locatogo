@@ -19,6 +19,7 @@ export default async function LandingPage() {
     { data: categories },
     { count: totalDomains },
     { data: featuredPlaces },
+    { data: blogs },
   ] = await Promise.all([
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "published"),
     supabase.from("categories").select("id, name, slug").eq("is_active", true).order("sort_order"),
@@ -29,6 +30,12 @@ export default async function LandingPage() {
       .eq("status", "published")
       .order("is_featured", { ascending: false })
       .limit(6),
+    supabase
+      .from("blogs")
+      .select("id, title, slug, excerpt, cover_image_url, category, author_name, reading_time_minutes, published_at")
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .limit(3),
   ]);
 
   return (
@@ -52,6 +59,9 @@ export default async function LandingPage() {
             <Link href="/tech-atlas" className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline">
               <span>💼 Tech Atlas & Jobs</span>
               <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.2 text-[9px] uppercase">New</span>
+            </Link>
+            <Link href="/blog" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+              <span>📖 Stories</span>
             </Link>
             <Link href="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               About Platform
@@ -258,6 +268,84 @@ export default async function LandingPage() {
       {/* Platform Features Grid */}
       <LandingFeatures />
 
+      {/* Editorial Stories & Local Guides Section */}
+      {blogs && blogs.length > 0 && (
+        <section className="py-20 sm:py-28 bg-white dark:bg-slate-900/60 border-t border-slate-200/80 dark:border-slate-800">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                  The Locatogo Journal
+                </p>
+                <h2 className="mt-1 font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                  Curated City Guides & Local Stories
+                </h2>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl">
+                  Insider perspectives on coworking culture, specialty coffee roasters, emerging tech corridors, and healthcare across Bengaluru.
+                </p>
+              </div>
+
+              <Link
+                href="/blog"
+                className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-slate-50 dark:bg-slate-900 px-5 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all shadow-2xs flex items-center gap-1.5 shrink-0"
+              >
+                <span>Read All Stories</span>
+                <span>→</span>
+              </Link>
+            </div>
+
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {blogs.map((article: any) => (
+                <Link
+                  key={article.id}
+                  href={`/blog/${article.slug}`}
+                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-300 dark:hover:border-indigo-800"
+                >
+                  <div>
+                    {article.cover_image_url && (
+                      <div className="h-48 w-full rounded-2xl overflow-hidden mb-4 relative bg-slate-100 dark:bg-slate-800">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={article.cover_image_url}
+                          alt={article.title}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <span className="absolute top-2.5 left-2.5 rounded-full bg-black/60 backdrop-blur-md text-white px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                          {article.category}
+                        </span>
+                        <span className="absolute bottom-2.5 right-2.5 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-900 dark:text-slate-100 px-2 py-0.5 text-[10px] font-semibold shadow-xs">
+                          ⏱️ {article.reading_time_minutes} min read
+                        </span>
+                      </div>
+                    )}
+
+                    <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+                      {article.title}
+                    </h3>
+
+                    {article.excerpt && (
+                      <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        {article.excerpt}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      By {article.author_name}
+                    </span>
+                    <span className="group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                      <span>Read Guide</span>
+                      <span>→</span>
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Bottom CTA Banner — Deep Midnight Indigo Gradient (No orange) */}
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 py-24 text-white">
         {/* Glow orb */}
@@ -312,6 +400,7 @@ export default async function LandingPage() {
               <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Directory</p>
               <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
                 <li><Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400">Live Atlas</Link></li>
+                <li><Link href="/blog" className="hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold text-indigo-600 dark:text-indigo-400">City Guides & Stories</Link></li>
                 <li><Link href="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400">About Locatogo</Link></li>
                 <li><Link href="/submit" className="hover:text-indigo-600 dark:hover:text-indigo-400">Add Business</Link></li>
               </ul>

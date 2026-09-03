@@ -1255,3 +1255,187 @@ export async function deleteAdSlotAction(slotId: string): Promise<{ success: boo
 
   return { success: true };
 }
+
+export async function createBlogAction(formData: FormData): Promise<{ success: boolean; id: string; slug: string }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  const title = text(formData, "title");
+  let slug = text(formData, "slug");
+  const category = text(formData, "category") || "City Guide";
+  const excerpt = text(formData, "excerpt") || null;
+  const content = text(formData, "content");
+  const coverImageUrl = text(formData, "cover_image_url") || null;
+  const authorName = text(formData, "author_name") || "Locatogo Editorial";
+  const authorAvatarUrl = text(formData, "author_avatar_url") || null;
+  const rawTags = text(formData, "tags");
+  const readingTime = parseInt(text(formData, "reading_time_minutes") || "4", 10) || 4;
+  const status = (text(formData, "status") || "published") as "draft" | "published" | "archived";
+  const isFeatured = formData.get("is_featured") === "true" || formData.get("is_featured") === "on";
+
+  if (!title) throw new Error("Article title is required.");
+  if (!content) throw new Error("Article content is required.");
+
+  if (!slug) {
+    slug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+  }
+
+  // Get primary domain
+  const { data: domains } = await supabase
+    .from("domains")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .limit(1);
+
+  const domainId = domains?.[0]?.id || null;
+
+  const tags = rawTags
+    ? rawTags.split(",").map((t) => t.trim()).filter(Boolean)
+    : [];
+
+  const { data: inserted, error } = await supabase
+    .from("blogs")
+    .insert({
+      tenant_id: tenant.id,
+      domain_id: domainId,
+      title,
+      slug,
+      category,
+      excerpt,
+      content,
+      cover_image_url: coverImageUrl,
+      author_name: authorName,
+      author_avatar_url: authorAvatarUrl,
+      tags,
+      reading_time_minutes: readingTime,
+      status,
+      is_featured: isFeatured,
+    })
+    .select("id, slug")
+    .single();
+
+  if (error || !inserted) {
+    throw new Error("Could not create blog article: " + (error?.message || "Unknown error"));
+  }
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: "blog_created",
+    entity_type: "blog",
+    entity_id: inserted.id,
+  });
+
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${inserted.slug}`);
+  revalidatePath("/admin/blogs");
+  revalidatePath("/landing");
+
+  return { success: true, id: inserted.id, slug: inserted.slug };
+}
+
+export async function updateBlogAction(
+  blogId: string,
+  formData: FormData
+): Promise<{ success: boolean; slug: string }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  const title = text(formData, "title");
+  let slug = text(formData, "slug");
+  const category = text(formData, "category") || "City Guide";
+  const excerpt = text(formData, "excerpt") || null;
+  const content = text(formData, "content");
+  const coverImageUrl = text(formData, "cover_image_url") || null;
+  const authorName = text(formData, "author_name") || "Locatogo Editorial";
+  const authorAvatarUrl = text(formData, "author_avatar_url") || null;
+  const rawTags = text(formData, "tags");
+  const readingTime = parseInt(text(formData, "reading_time_minutes") || "4", 10) || 4;
+  const status = (text(formData, "status") || "published") as "draft" | "published" | "archived";
+  const isFeatured = formData.get("is_featured") === "true" || formData.get("is_featured") === "on";
+
+  if (!title) throw new Error("Article title is required.");
+  if (!content) throw new Error("Article content is required.");
+
+  if (!slug) {
+    slug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+  }
+
+  const tags = rawTags
+    ? rawTags.split(",").map((t) => t.trim()).filter(Boolean)
+    : [];
+
+  const { data: updated, error } = await supabase
+    .from("blogs")
+    .update({
+      title,
+      slug,
+      category,
+      excerpt,
+      content,
+      cover_image_url: coverImageUrl,
+      author_name: authorName,
+      author_avatar_url: authorAvatarUrl,
+      tags,
+      reading_time_minutes: readingTime,
+      status,
+      is_featured: isFeatured,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", blogId)
+    .eq("tenant_id", tenant.id)
+    .select("slug")
+    .single();
+
+  if (error || !updated) {
+    throw new Error("Could not update blog article: " + (error?.message || "Unknown error"));
+  }
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: "blog_updated",
+    entity_type: "blog",
+    entity_id: blogId,
+  });
+
+  revalidatePath("/blog");
+  revalidatePath(`/blog/${updated.slug}`);
+  revalidatePath("/admin/blogs");
+  revalidatePath("/landing");
+
+  return { success: true, slug: updated.slug };
+}
+
+export async function deleteBlogAction(blogId: string): Promise<{ success: boolean }> {
+  const { supabase, tenant, user } = await requireTenantContext();
+
+  const { error } = await supabase
+    .from("blogs")
+    .delete()
+    .eq("id", blogId)
+    .eq("tenant_id", tenant.id);
+
+  if (error) throw new Error("Could not delete blog article: " + error.message);
+
+  await supabase.from("listing_audit_logs").insert({
+    tenant_id: tenant.id,
+    actor_user_id: user.id,
+    action: "blog_deleted",
+    entity_type: "blog",
+    entity_id: blogId,
+  });
+
+  revalidatePath("/blog");
+  revalidatePath("/admin/blogs");
+  revalidatePath("/landing");
+
+  return { success: true };
+}
+

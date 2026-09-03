@@ -40,6 +40,7 @@ const navSections: NavSection[] = [
       { label: "Moderation Queue", href: "/admin/moderation", icon: "🛡️" },
       { label: "Ownership Claims", href: "/admin/claims", icon: "🤝" },
       { label: "Advertising & Slots", href: "/admin/advertising", icon: "📢" },
+      { label: "Stories & Blogs", href: "/admin/blogs", icon: "📰" },
       { label: "Payments & Revenue", href: "/admin/payments", icon: "💳" },
     ],
   },

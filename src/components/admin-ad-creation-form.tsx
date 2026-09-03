@@ -131,11 +131,11 @@ const SAMPLE_PRESETS = [
 
 export function AdminAdCreationForm({
   domains,
-  listings,
+  listings = [],
   categories = [],
 }: {
   domains: DomainItem[];
-  listings: ListingOption[];
+  listings?: ListingOption[];
   categories?: CategoryOption[];
 }) {
   const router = useRouter();
@@ -154,7 +154,6 @@ export function AdminAdCreationForm({
   const [ctaText, setCtaText] = useState("Learn More");
   const [badgeText, setBadgeText] = useState("Sponsored");
   const [pricePaid, setPricePaid] = useState("299");
-  const [selectedListingId, setSelectedListingId] = useState("");
   const [selectedDomainId, setSelectedDomainId] = useState(domains[0]?.id || "");
 
   // Today & 30-days-from-today defaults
@@ -484,27 +483,7 @@ export function AdminAdCreationForm({
             </div>
           </div>
 
-          {/* Optional: Associate with existing Directory Place */}
-          {listings.length > 0 && (
-            <div>
-              <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                Link to Verified Directory Listing (Optional)
-              </label>
-              <select
-                name="listing_id"
-                value={selectedListingId}
-                onChange={(e) => setSelectedListingId(e.target.value)}
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none cursor-pointer"
-              >
-                <option value="">-- None (External Ad Campaign) --</option>
-                {listings.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.title} ({[l.locality, l.city].filter(Boolean).join(", ")})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+
 
           {errorMessage && (
             <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800 font-bold">

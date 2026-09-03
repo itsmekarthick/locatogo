@@ -136,8 +136,8 @@ export function AdminAdvertisingList({ slots }: { slots: AdSlotItem[] }) {
                     <p className="mt-1 text-[11px] text-[var(--ink-muted)] flex items-center gap-2 flex-wrap">
                       <span>
                         Schedule:{" "}
-                        <span className="font-mono font-medium">
-                          {new Date(slot.start_date).toLocaleDateString()} → {new Date(slot.end_date).toLocaleDateString()}
+                        <span className="font-mono font-medium" suppressHydrationWarning>
+                          {slot.start_date.split("T")[0]} → {slot.end_date.split("T")[0]}
                         </span>
                       </span>
                       <span>·</span>
