@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogBySlug, getRelatedBlogs } from "@/lib/services/blogs";
-import { BrandLogo } from "@/components/brand-logo";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UserProfileMenu } from "@/components/user-profile-menu";
+import { PublicHeader } from "@/components/public-header";
+import { ArticleReadingProgress } from "@/components/article-reading-progress";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -18,18 +17,62 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Story Not Found | Locatogo" };
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const url = `${baseUrl}/blog/${blog.slug}`;
+
   return {
     title: `${blog.title} | Locatogo Journal`,
     description: blog.excerpt || `Read ${blog.title} on the Locatogo directory atlas.`,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: blog.title,
       description: blog.excerpt || undefined,
-      images: blog.cover_image_url ? [{ url: blog.cover_image_url }] : [],
+      url,
+      type: "article",
+      publishedTime: blog.published_at,
+      authors: [blog.author_name],
+      tags: blog.tags,
+      images: blog.cover_image_url
+        ? [{ url: blog.cover_image_url, width: 1200, height: 630, alt: blog.title }]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: blog.title,
+      description: blog.excerpt || undefined,
+      images: blog.cover_image_url ? [blog.cover_image_url] : [],
     },
   };
 }
 
 export const revalidate = 60; // Cache for 60 seconds
+
+// Extract all ## and ### headings for interactive Table of Contents
+function extractHeadings(content: string) {
+  const lines = content.split("\n");
+  const headings: { text: string; id: string; level: number }[] = [];
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("## ")) {
+      const text = trimmed.replace("## ", "");
+      const id = text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+      headings.push({ text, id, level: 2 });
+    } else if (trimmed.startsWith("### ")) {
+      const text = trimmed.replace("### ", "");
+      const id = text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+      headings.push({ text, id, level: 3 });
+    }
+  });
+  return headings;
+}
 
 // Simple, robust markdown converter for headlines, lists, and bold text
 function renderMarkdownContent(content: string) {
@@ -60,16 +103,34 @@ function renderMarkdownContent(content: string) {
 
     if (trimmed.startsWith("### ")) {
       flushList(idx);
+      const subText = trimmed.replace("### ", "");
+      const headingId = subText
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
       elements.push(
-        <h3 key={idx} className="mt-8 mb-3 font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
-          {trimmed.replace("### ", "")}
+        <h3
+          key={idx}
+          id={headingId}
+          className="mt-8 mb-3 font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 scroll-mt-20"
+        >
+          {subText}
         </h3>
       );
     } else if (trimmed.startsWith("## ")) {
       flushList(idx);
+      const titleText = trimmed.replace("## ", "");
+      const headingId = titleText
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
       elements.push(
-        <h2 key={idx} className="mt-10 mb-4 font-serif text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800">
-          {trimmed.replace("## ", "")}
+        <h2
+          key={idx}
+          id={headingId}
+          className="mt-10 mb-4 font-serif text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 pb-2 border-b border-slate-100 dark:border-slate-800 scroll-mt-20"
+        >
+          {titleText}
         </h2>
       );
     } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
@@ -110,40 +171,45 @@ export default async function BlogPostPage({ params }: Props) {
   }
 
   const relatedBlogs = await getRelatedBlogs(blog.slug, blog.category, 3);
+  const headings = extractHeadings(blog.content);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: blog.title,
+    description: blog.excerpt,
+    image: blog.cover_image_url ? [blog.cover_image_url] : [],
+    datePublished: blog.published_at,
+    dateModified: blog.updated_at || blog.published_at,
+    author: {
+      "@type": "Person",
+      name: blog.author_name,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Locatogo",
+      url: baseUrl,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/blog/${blog.slug}`,
+    },
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070b13] text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1100px] items-center justify-between px-4 sm:px-6 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group">
-              <BrandLogo size={30} className="group-hover:scale-105 transition-transform" />
-              <span className="font-serif text-xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-                locatogo<span className="text-indigo-600 dark:text-indigo-400">.</span>
-              </span>
-            </Link>
-            <span className="text-slate-300 dark:text-slate-700">/</span>
-            <Link
-              href="/blog"
-              className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              ← All Stories
-            </Link>
-          </div>
+      {/* Scroll Reading Progress Bar */}
+      <ArticleReadingProgress />
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:border-indigo-400 transition-all shadow-2xs"
-            >
-              🗺️ Open Map
-            </Link>
-            <ThemeToggle />
-            <UserProfileMenu />
-          </div>
-        </div>
-      </header>
+      {/* JSON-LD Structured Data for Google Rich Snippets */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+
+      {/* Unified Public Navigation Header */}
+      <PublicHeader />
 
       {/* Main Reader Container */}
       <main className="mx-auto max-w-[840px] w-full px-4 sm:px-6 py-10 sm:py-14 flex-1">
@@ -222,6 +288,35 @@ export default async function BlogPostPage({ params }: Props) {
               className="h-full w-full object-cover"
             />
           </div>
+        )}
+
+        {/* Interactive Table of Contents (for long guides & Google Jump-to links) */}
+        {headings.length >= 2 && (
+          <nav aria-label="Table of contents" className="my-8 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 p-5 sm:p-6 shadow-2xs">
+            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 mb-3">
+              <span>📑</span>
+              <span>Table of Contents</span>
+            </p>
+            <ul className="space-y-2 text-xs sm:text-sm font-medium">
+              {headings.map((h, i) => (
+                <li key={`${h.id}-${i}`} className={h.level === 3 ? "pl-4 text-xs" : ""}>
+                  <a
+                    href={`#${h.id}`}
+                    className={`hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-baseline gap-2 transition-colors ${
+                      h.level === 3
+                        ? "text-slate-600 dark:text-slate-400 font-normal"
+                        : "text-slate-900 dark:text-slate-100 font-bold"
+                    }`}
+                  >
+                    <span className="font-mono text-[10px] text-slate-400">
+                      {h.level === 3 ? "›" : `${i + 1}.`}
+                    </span>
+                    <span>{h.text}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         )}
 
         {/* Formatted Article Body */}

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LandingHero } from "@/components/landing-hero";
 import { LandingStats, LandingFeatures } from "@/components/landing-stats";
+import { PublicHeader } from "@/components/public-header";
 import { BrandLogo } from "@/components/brand-logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "Locatogo | Global Interactive Map & Directory Platform",
@@ -40,53 +40,8 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white font-sans">
-      {/* Landing Top Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-[#090d16]/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <BrandLogo size={34} className="group-hover:scale-105 transition-transform" />
-            <span className="font-serif text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-              locatogo<span className="text-indigo-600 dark:text-indigo-400">.</span>
-            </span>
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600 dark:text-slate-400">
-            <Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-              Interactive Map
-            </Link>
-            <Link href="/tech-atlas" className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline">
-              <span>💼 Tech Atlas & Jobs</span>
-              <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-1.5 py-0.2 text-[9px] uppercase">New</span>
-            </Link>
-            <Link href="/blog" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
-              <span>📖 Stories</span>
-            </Link>
-            <Link href="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-              About Platform
-            </Link>
-            <Link href="/submit" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-              Add Business
-            </Link>
-            <Link href="/admin" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-              Admin Workspace
-            </Link>
-          </nav>
-
-          {/* Action Bar */}
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <Link
-              href="/"
-              className="rounded-full bg-slate-950 dark:bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all flex items-center gap-1.5"
-            >
-              <span>Explore Atlas</span>
-              <span>↗</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Unified Public Navigation Header */}
+      <PublicHeader />
 
       {/* Hero Section with Interactive Preview Mockup */}
       <LandingHero totalListings={totalPlaces ?? 50} totalCategories={categories?.length ?? 8} />

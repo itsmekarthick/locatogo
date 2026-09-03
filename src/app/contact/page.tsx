@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { submitContactForm, type ContactFormState } from "./actions";
+import { PublicHeader } from "@/components/public-header";
 
 function SubmitBtn() {
   const { pending } = useFormStatus();
@@ -23,36 +24,9 @@ export default function ContactSupportPage() {
   const supportHq = process.env.NEXT_PUBLIC_SUPPORT_HQ ?? "Bangalore, Karnataka, India";
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#fdfdfd] font-sans antialiased text-[#111827]">
-      {/* Header */}
-      <header className="border-b border-gray-100 bg-white sticky top-0 z-50 shadow-2xs">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 sm:px-6 py-3">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/" className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-              locatogo<span className="text-[#e26a4f]">.</span>
-            </Link>
-            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
-              <span className="text-sm">📍</span>
-              <span>Global Atlas</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="rounded-xl border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs"
-            >
-              Explore Map
-            </Link>
-            <Link
-              href="/submit"
-              className="rounded-xl bg-[#111827] px-4 py-1.5 text-xs font-bold text-white hover:bg-black transition-colors shadow-xs"
-            >
-              + Add Place
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="flex min-h-screen w-full flex-col bg-slate-50 dark:bg-[#070b13] font-sans antialiased text-slate-900 dark:text-slate-100">
+      {/* Unified Public Navigation Header */}
+      <PublicHeader />
 
       {/* Main Content */}
       <main className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 py-10 sm:py-16">

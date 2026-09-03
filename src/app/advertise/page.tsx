@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BrandLogo } from "@/components/brand-logo";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UserProfileMenu } from "@/components/user-profile-menu";
+import { PublicHeader } from "@/components/public-header";
 import { SponsorInquiryForm } from "@/components/sponsor-inquiry-form";
 
 export const metadata: Metadata = {
@@ -13,36 +11,8 @@ export const metadata: Metadata = {
 export default function AdvertisePage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#070b13] text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col">
-      {/* Top Navbar */}
-      <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-50">
-        <div className="mx-auto flex max-w-[1300px] items-center justify-between px-4 sm:px-6 py-3">
-          <Link href="/" className="flex items-center gap-2 group">
-            <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
-            <span className="font-serif text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-              locatogo<span className="text-[#e26a4f]">.</span>
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/"
-              className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            >
-              <span className="hidden sm:inline">← City Explorer</span>
-              <span className="sm:hidden">← City</span>
-            </Link>
-            <Link
-              href="/tech-atlas"
-              className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            >
-              <span className="hidden sm:inline">💼 Tech Atlas</span>
-              <span className="sm:hidden">💼 Tech</span>
-            </Link>
-            <ThemeToggle />
-            <UserProfileMenu />
-          </div>
-        </div>
-      </header>
+      {/* Unified Public Navigation Header */}
+      <PublicHeader />
 
       {/* Hero Showcase */}
       <main className="flex-1 mx-auto w-full max-w-[1200px] px-4 sm:px-6 py-12 sm:py-16 space-y-16">

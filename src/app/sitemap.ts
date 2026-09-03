@@ -9,15 +9,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { data: domains },
     { data: listings },
     { data: categories },
+    { data: blogs },
   ] = await Promise.all([
     supabase.from("domains").select("id, slug, updated_at").eq("status", "published"),
     supabase.from("listings").select("slug, updated_at").eq("status", "published"),
     supabase.from("categories").select("id, slug, updated_at").eq("is_active", true),
+    supabase.from("blogs").select("slug, updated_at").eq("status", "published"),
   ]);
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
     { url: `${baseUrl}/tech-atlas`, lastModified: new Date(), changeFrequency: "daily", priority: 0.95 },
+    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
     { url: `${baseUrl}/landing`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/submit`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
@@ -44,5 +47,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...categoryUrls, ...domainUrls, ...listingUrls];
+  const blogUrls: MetadataRoute.Sitemap = (blogs ?? []).map((blog) => ({
+    url: `${baseUrl}/blog/${blog.slug}`,
+    lastModified: blog.updated_at ? new Date(blog.updated_at) : new Date(),
+    changeFrequency: "weekly",
+    priority: 0.85,
+  }));
+
+  return [...staticRoutes, ...categoryUrls, ...domainUrls, ...listingUrls, ...blogUrls];
 }

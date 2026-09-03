@@ -48,6 +48,16 @@ export function AdminBlogForm({
     }
   };
 
+  // Auto-calculate reading time based on 200 words per minute
+  const handleContentChange = (val: string) => {
+    setContent(val);
+    const words = val.trim().split(/\s+/).filter(Boolean).length;
+    if (words > 0) {
+      const estimated = Math.max(1, Math.ceil(words / 200));
+      setReadingTime(String(estimated));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -164,10 +174,19 @@ export function AdminBlogForm({
               required
               rows={16}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => handleContentChange(e.target.value)}
               placeholder="Write your article in markdown format...&#10;&#10;## Section Heading&#10;Paragraph text here...&#10;&#10;### Subheading&#10;- Bullet point 1&#10;- Bullet point 2"
               className="w-full rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4 text-xs font-mono leading-relaxed text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
+
+            <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)] pt-1">
+              <span>
+                {content.trim().split(/\s+/).filter(Boolean).length} words · {content.length} characters
+              </span>
+              <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                ⚡ Auto-calculated read time: ~{readingTime} min
+              </span>
+            </div>
           </div>
         </div>
 

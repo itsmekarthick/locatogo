@@ -2,6 +2,7 @@ import Link from "next/link";
 import { submitListing } from "@/app/public-actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LocationPinPicker } from "@/components/location-pin-picker";
+import { PublicHeader } from "@/components/public-header";
 
 export const metadata = {
   title: "Suggest a Place | Locatogo",
@@ -17,8 +18,12 @@ export default async function DirectSubmitPage() {
     .order("sort_order");
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-5 py-12 sm:px-10">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
+      {/* Unified Public Navigation Header */}
+      <PublicHeader />
+
+      <main className="flex-1 px-5 py-12 sm:px-10">
+        <div className="mx-auto max-w-2xl">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--foreground)] transition-colors"
@@ -141,5 +146,6 @@ export default async function DirectSubmitPage() {
         </form>
       </div>
     </main>
+    </div>
   );
 }
