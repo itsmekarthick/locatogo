@@ -23,18 +23,20 @@ export default function AdvertisePage() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/"
               className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
-              ← City Explorer
+              <span className="hidden sm:inline">← City Explorer</span>
+              <span className="sm:hidden">← City</span>
             </Link>
             <Link
               href="/tech-atlas"
               className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
-              💼 Tech Atlas
+              <span className="hidden sm:inline">💼 Tech Atlas</span>
+              <span className="sm:hidden">💼 Tech</span>
             </Link>
             <ThemeToggle />
             <UserProfileMenu />

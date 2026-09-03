@@ -16,6 +16,8 @@ type Props = {
 
 // Global in-memory set to prevent duplicate impression pings per session
 const recordedImpressions = new Set<string>();
+// Client-side in-memory cache for fetched active ad slots across page transitions
+const adMemoryCache: Record<string, AdSlotItem[]> = {};
 
 export function AdBannerSlot({
   slot: initialSlot,
@@ -29,11 +31,18 @@ export function AdBannerSlot({
 }: Props) {
   const resolvedPlacement = placementLocation || (variant as any) || (slotType === "flash_banner" ? "flash" : "in_feed");
   const resolvedVariant = variant || (resolvedPlacement as any) || "in_feed";
+  const cacheKey = `${resolvedPlacement}_${categoryId || "all"}`;
 
-  const [adList, setAdList] = useState<AdSlotItem[]>(initialSlots || (initialSlot ? [initialSlot] : []));
+  const [adList, setAdList] = useState<AdSlotItem[]>(() => {
+    if (initialSlots && initialSlots.length > 0) return initialSlots;
+    if (initialSlot) return [initialSlot];
+    if (adMemoryCache[cacheKey] && adMemoryCache[cacheKey].length > 0) return adMemoryCache[cacheKey];
+    return [];
+  });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [isMapMinimized, setIsMapMinimized] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Fetch active ads for this placement location if not passed
@@ -74,6 +83,7 @@ export function AdBannerSlot({
           if (categoryId) {
             filtered = filtered.filter((a) => !a.target_category_id || a.target_category_id === categoryId);
           }
+          adMemoryCache[cacheKey] = filtered;
           setAdList(filtered);
         }
       } catch (err) {
@@ -87,18 +97,13 @@ export function AdBannerSlot({
     };
   }, [initialSlot, initialSlots, resolvedPlacement, slotType, categoryId]);
 
-  // Determine active slot:
-  // For carousel (flash / detail_bottom), use currentSlide.
-  // For in_feed round-robin, use itemIndex modulo list length.
-  const activeSlot = adList.length > 0
-    ? resolvedVariant === "in_feed"
-      ? adList[itemIndex % adList.length]
-      : adList[currentSlide % adList.length]
-    : null;
+  // Determine active slot with combined slide offset and initial item index
+  const activeIndex = (currentSlide + itemIndex) % (adList.length || 1);
+  const activeSlot = adList.length > 0 ? adList[activeIndex] : null;
 
-  // Auto-rotate carousel every 7 seconds for multi-ad flash banner
+  // Auto-rotate carousel every 7 seconds for multi-ad banners (flash, in_feed, detail_bottom)
   useEffect(() => {
-    if ((resolvedVariant !== "flash" && resolvedVariant !== "detail_bottom") || adList.length <= 1 || isPaused) return;
+    if (adList.length <= 1 || isPaused) return;
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % adList.length);
@@ -166,74 +171,138 @@ export function AdBannerSlot({
         onMouseLeave={() => setIsPaused(false)}
         className={`w-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white shadow-md relative z-40 transition-colors duration-500 ${className}`}
       >
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between px-3 sm:px-6 py-2 sm:py-2.5 text-xs">
-          {/* Left: Previous Slide Button if multiple */}
-          {adList.length > 1 && (
-            <button
-              onClick={() => setCurrentSlide((prev) => (prev - 1 + adList.length) % adList.length)}
-              className="hidden sm:inline-flex text-white/80 hover:text-white px-1.5 py-0.5 text-xs cursor-pointer font-bold shrink-0"
-              title="Previous Sponsor"
-            >
-              ‹
-            </button>
-          )}
-
-          <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
-            <span className="rounded-md bg-white/20 backdrop-blur-xs px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shrink-0">
-              {badge}
-            </span>
-            <p className="font-semibold truncate text-[11px] sm:text-xs text-white">
-              <span className="font-bold">{activeSlot.sponsor_name}:</span> {activeSlot.title}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Slide Dots Indicator */}
-            {adList.length > 1 && (
-              <div className="hidden md:flex items-center gap-1 shrink-0">
-                {adList.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setCurrentSlide(idx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                      (currentSlide % adList.length) === idx
-                        ? "w-4 bg-white"
-                        : "w-1.5 bg-white/40 hover:bg-white/70"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-
-            <a
-              href={targetLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={handleAdClick}
-              className="rounded-full bg-white text-slate-900 px-3 py-1 text-[11px] font-bold hover:bg-slate-100 transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
-            >
-              {cta} ↗
-            </a>
-
-            {/* Next Slide Button */}
+        <div className="mx-auto max-w-[1400px] px-3 sm:px-6 py-2 sm:py-2.5 text-xs">
+          {/* DESKTOP SINGLE-ROW BAR (sm and up) */}
+          <div className="hidden sm:flex items-center justify-between gap-3">
+            {/* Left: Previous Slide Button if multiple */}
             {adList.length > 1 && (
               <button
-                onClick={() => setCurrentSlide((prev) => (prev + 1) % adList.length)}
-                className="hidden sm:inline-flex text-white/80 hover:text-white px-1.5 py-0.5 text-xs cursor-pointer font-bold shrink-0"
-                title="Next Sponsor"
+                onClick={() => setCurrentSlide((prev) => (prev - 1 + adList.length) % adList.length)}
+                className="text-white/80 hover:text-white px-1.5 py-0.5 text-xs cursor-pointer font-bold shrink-0"
+                title="Previous Sponsor"
               >
-                ›
+                ‹
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={() => setIsDismissed(true)}
-              title="Dismiss announcement"
-              className="text-white/80 hover:text-white font-bold p-1 cursor-pointer text-xs ml-1"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-2">
+              <span className="rounded-md bg-white/20 backdrop-blur-xs px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shrink-0">
+                {badge}
+              </span>
+              <p className="font-semibold truncate text-xs text-white">
+                <span className="font-bold">{activeSlot.sponsor_name}:</span> {activeSlot.title}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              {/* Slide Dots Indicator */}
+              {adList.length > 1 && (
+                <div className="flex items-center gap-1 shrink-0">
+                  {adList.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentSlide(idx)}
+                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                        (currentSlide % adList.length) === idx
+                          ? "w-4 bg-white"
+                          : "w-1.5 bg-white/40 hover:bg-white/70"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <a
+                href={targetLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleAdClick}
+                className="rounded-full bg-white text-slate-900 px-3.5 py-1.5 text-xs font-bold hover:bg-slate-100 transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+              >
+                {cta} ↗
+              </a>
+
+              {/* Next Slide Button */}
+              {adList.length > 1 && (
+                <button
+                  onClick={() => setCurrentSlide((prev) => (prev + 1) % adList.length)}
+                  className="text-white/80 hover:text-white px-1.5 py-0.5 text-xs cursor-pointer font-bold shrink-0"
+                  title="Next Sponsor"
+                >
+                  ›
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsDismissed(true)}
+                title="Dismiss announcement"
+                className="text-white/80 hover:text-white font-bold p-1 cursor-pointer text-xs ml-1"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* MOBILE 2-TIER CARD (< sm) */}
+          <div className="flex sm:hidden flex-col gap-1.5 py-0.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="rounded bg-white/25 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white shrink-0">
+                  {badge}
+                </span>
+                <span className="font-bold text-[11px] text-white truncate">
+                  {activeSlot.sponsor_name}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {adList.length > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setCurrentSlide((prev) => (prev - 1 + adList.length) % adList.length)}
+                      className="text-white/90 p-0.5 text-xs font-bold"
+                      title="Previous"
+                    >
+                      ‹
+                    </button>
+                    <span className="text-[10px] text-white/80 font-mono">
+                      {(currentSlide % adList.length) + 1}/{adList.length}
+                    </span>
+                    <button
+                      onClick={() => setCurrentSlide((prev) => (prev + 1) % adList.length)}
+                      className="text-white/90 p-0.5 text-xs font-bold"
+                      title="Next"
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsDismissed(true)}
+                  className="text-white/80 hover:text-white p-1 text-xs font-bold"
+                  title="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <p className="text-[11px] font-semibold text-white line-clamp-2 leading-snug flex-1 pr-1">
+                {activeSlot.title}
+              </p>
+              <a
+                href={targetLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleAdClick}
+                className="rounded-full bg-white text-slate-900 px-3 py-1.5 text-[11px] font-bold hover:bg-slate-100 transition-colors shadow-2xs whitespace-nowrap cursor-pointer shrink-0"
+              >
+                {cta} ↗
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -245,6 +314,8 @@ export function AdBannerSlot({
     return (
       <article
         ref={containerRef}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
         className={`group rounded-2xl border-2 border-amber-300 dark:border-amber-700/60 bg-gradient-to-br from-amber-50/40 via-white to-orange-50/30 dark:from-amber-950/20 dark:via-slate-900 dark:to-orange-950/20 p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between ${className}`}
       >
         <div>
@@ -253,9 +324,38 @@ export function AdBannerSlot({
               <span>⭐</span>
               <span>{badge}</span>
             </span>
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              {activeSlot.sponsor_name}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                {activeSlot.sponsor_name}
+              </span>
+              {adList.length > 1 && (
+                <div className="flex items-center gap-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 px-1.5 py-0.2 text-[9px] font-bold text-amber-900 dark:text-amber-300 font-mono">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide((prev) => (prev - 1 + adList.length) % adList.length);
+                    }}
+                    className="hover:text-black dark:hover:text-white px-0.5 cursor-pointer font-bold"
+                    title="Previous sponsor"
+                  >
+                    ‹
+                  </button>
+                  <span>{activeIndex + 1}/{adList.length}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide((prev) => (prev + 1) % adList.length);
+                    }}
+                    className="hover:text-black dark:hover:text-white px-0.5 cursor-pointer font-bold"
+                    title="Next sponsor"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {activeSlot.banner_url && (
@@ -299,24 +399,83 @@ export function AdBannerSlot({
     );
   }
 
-  // VARIANT 3: INTERACTIVE MAP CANVAS OVERLAY
+  // VARIANT 3: INTERACTIVE MAP CANVAS OVERLAY (Mobile Collapsible)
   if (resolvedVariant === "map_overlay") {
+    // If minimized on mobile, show compact floating pill
+    if (isMapMinimized) {
+      return (
+        <div
+          ref={containerRef}
+          className={`flex items-center gap-1.5 rounded-full bg-slate-950/90 dark:bg-slate-900/90 backdrop-blur-md text-white px-3 py-1.5 text-xs shadow-xl border border-amber-400/80 z-[450] animate-in fade-in duration-200 ${className}`}
+        >
+          <span className="text-amber-400 text-xs">📍</span>
+          <span className="font-bold text-[11px] text-amber-300 truncate max-w-[120px] sm:max-w-[180px]">
+            {activeSlot.sponsor_name}
+          </span>
+          <button
+            type="button"
+            onClick={() => setIsMapMinimized(false)}
+            className="text-[10px] font-bold text-slate-300 hover:text-white px-1 cursor-pointer"
+            title="Expand partner card"
+          >
+            ▲
+          </button>
+          <a
+            href={targetLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleAdClick}
+            className="text-[10px] font-bold text-amber-400 hover:underline pl-0.5"
+          >
+            {cta} ↗
+          </a>
+          <button
+            type="button"
+            onClick={() => setIsDismissed(true)}
+            className="text-white/60 hover:text-white text-xs pl-1 font-bold cursor-pointer"
+            title="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      );
+    }
+
+    // Expanded card
     return (
       <div
         ref={containerRef}
-        className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-amber-300/80 dark:border-amber-700/80 p-3 shadow-xl max-w-xs text-xs z-[450] animate-in fade-in slide-in-from-bottom-2 duration-300 ${className}`}
+        className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-amber-300/80 dark:border-amber-700/80 p-3 shadow-xl max-w-[280px] sm:max-w-xs text-xs z-[450] animate-in fade-in slide-in-from-bottom-2 duration-300 ${className}`}
       >
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <span className="rounded bg-amber-400 text-slate-950 font-bold px-2 py-0.5 text-[9px] uppercase tracking-wider flex items-center gap-1">
             <span>📍</span>
             <span>{badge}</span>
           </span>
-          <span className="text-[10px] font-bold text-slate-500 truncate">
-            {activeSlot.sponsor_name}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold text-slate-500 truncate max-w-[100px]">
+              {activeSlot.sponsor_name}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsMapMinimized(true)}
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold px-1 cursor-pointer"
+              title="Minimize to pill"
+            >
+              ▼
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsDismissed(true)}
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-bold cursor-pointer"
+              title="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
-        <p className="font-bold text-xs text-slate-900 dark:text-slate-100 line-clamp-2">
+        <p className="font-bold text-xs text-slate-900 dark:text-slate-100 line-clamp-2 leading-snug">
           {activeSlot.title}
         </p>
 

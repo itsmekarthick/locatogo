@@ -203,7 +203,7 @@ export function AdminAdCreationForm({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Left Column: Configuration Form */}
-      <div className="lg:col-span-7 rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
+      <div className="lg:col-span-7 rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-4 sm:p-7 shadow-xs">
         {/* Quick Presets */}
         <div className="mb-6 pb-5 border-b border-[var(--line)]">
           <p className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)] mb-2.5">

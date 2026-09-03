@@ -420,8 +420,8 @@ export function GlobalTechExplorer({
             )}
           </div>
 
-          {/* Right Group: Filters & 3-Way View Modes */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Desktop Right Group: Filters & 3-Way View Modes (md and up) */}
+          <div className="hidden md:flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Pulsing "Hiring Now" Toggle */}
             <button
               type="button"
@@ -488,6 +488,78 @@ export function GlobalTechExplorer({
             <ThemeToggle />
             <UserProfileMenu />
           </div>
+
+          {/* Mobile Right Group: Theme & Profile Only (< md) */}
+          <div className="md:hidden flex items-center gap-1.5 shrink-0">
+            <ThemeToggle />
+            <UserProfileMenu />
+          </div>
+        </div>
+
+        {/* Dedicated Mobile Sub-Bar: View Switcher & Hiring Toggle */}
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/80 dark:bg-slate-900/80 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+          {/* View Switcher: Map vs Grid vs Jobs */}
+          <div className="flex rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5 text-xs font-bold shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode("map")}
+              className={`rounded-full px-2.5 py-1 transition-all cursor-pointer ${
+                viewMode === "map"
+                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              🗺️ Map
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`rounded-full px-2.5 py-1 transition-all cursor-pointer ${
+                viewMode === "grid"
+                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              ▦ Grid
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("jobs")}
+              className={`rounded-full px-2.5 py-1 transition-all cursor-pointer flex items-center gap-1 ${
+                viewMode === "jobs"
+                  ? "bg-indigo-600 text-white shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              <span>💼 Jobs</span>
+              <span className="rounded-full bg-emerald-400 text-emerald-950 px-1 py-0.2 text-[9px] font-extrabold">
+                {totalOpenings}
+              </span>
+            </button>
+          </div>
+
+          {/* Pulsing "Hiring Now" Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              if (viewMode === "jobs") {
+                setViewMode("map");
+              } else {
+                setHiringOnly(!hiringOnly);
+              }
+            }}
+            className={`rounded-full px-2.5 py-1 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0 ${
+              hiringOnly && viewMode !== "jobs"
+                ? "bg-emerald-600 text-white shadow-emerald-500/20 shadow-md ring-1 ring-emerald-400"
+                : "border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+            }`}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>Hiring ({totalOpenings})</span>
+          </button>
         </div>
 
         {/* Dedicated Mobile Search Bar */}

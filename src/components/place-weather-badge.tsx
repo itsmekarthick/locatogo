@@ -34,17 +34,18 @@ export function PlaceWeatherBadge({
         <button
           onClick={() => setIsModalOpen(true)}
           title="Click to view 5-Day Prediction & Hourly Timeline"
-          className="inline-flex items-center gap-2 rounded-full border border-gray-200/90 bg-white/95 px-3 py-1 text-xs font-semibold text-gray-700 shadow-2xs backdrop-blur-xs hover:border-blue-400 hover:bg-blue-50/40 transition-all cursor-pointer group"
+          className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-gray-200/90 bg-white/95 px-2.5 sm:px-3 py-1 text-xs font-semibold text-gray-700 shadow-2xs backdrop-blur-xs hover:border-blue-400 hover:bg-blue-50/40 transition-all cursor-pointer group max-w-[140px] sm:max-w-none truncate"
         >
           <span>{weather.weatherIcon}</span>
-          <span>{weather.temperature}°C</span>
+          <span className="font-bold">{weather.temperature}°C</span>
           <span className="text-gray-300">|</span>
-          <span className={`rounded-full px-2 py-0.2 text-[10px] font-bold ${weather.aqiColor}`}>
-            AQI {weather.aqi} · {weather.aqiStatus}
+          <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${weather.aqiColor}`}>
+            <span className="hidden sm:inline">AQI {weather.aqi} · {weather.aqiStatus}</span>
+            <span className="sm:hidden">{weather.aqi} AQI</span>
           </span>
           {isRain && (
             <span className="rounded-full bg-blue-500/10 px-1.5 py-0.2 text-[10px] font-bold text-blue-600 animate-pulse">
-              🌧️ Rain
+              🌧️
             </span>
           )}
           <span className="text-gray-400 group-hover:text-blue-600 text-[10px]">↗</span>

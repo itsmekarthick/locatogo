@@ -152,7 +152,18 @@ export function ModernDirectoryExplorer({
   const [viewMode, setViewMode] = useState<"immersive" | "3d" | "split" | "fullscreen">("immersive");
   const [isFullscreenDrawerOpen, setIsFullscreenDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = (viewMode === "immersive" || viewMode === "3d") ? 6 : 5;
+  // 5 place listings + 1 in-feed ad = exactly 6 cards (2 complete 3-column rows) on every page
+  const pageSize = 5;
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    if (typeof window !== "undefined") {
+      const el = document.getElementById("listings-grid-top");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  };
 
   // User Geolocation State
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -637,7 +648,7 @@ export function ModernDirectoryExplorer({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search places by name..."
+                placeholder="Search places..."
                 className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
               />
               {searchQuery && (
@@ -654,7 +665,7 @@ export function ModernDirectoryExplorer({
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="rounded-lg bg-transparent px-1 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[120px] truncate"
+                className="rounded-lg bg-transparent px-1 py-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[105px] truncate"
               >
                 <option value="">All Areas</option>
                 {availableLocations.map((loc) => (
@@ -931,7 +942,7 @@ export function ModernDirectoryExplorer({
             </div>
 
             {/* 3-COLUMN CARDS GRID */}
-            <div className="mt-5 sm:mt-6">
+            <div id="listings-grid-top" className="mt-5 sm:mt-6 scroll-mt-24">
               {paginatedListings.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
@@ -942,11 +953,12 @@ export function ModernDirectoryExplorer({
 
                       return (
                         <div key={place.id} className="contents">
-                          {(index === 2 || (index > 2 && (index + 1) % 4 === 0)) && (
+                          {index === 2 && (
                             <AdBannerSlot
+                              key={`grid_ad_p${currentPage}`}
                               placementLocation="in_feed"
                               variant="in_feed"
-                              itemIndex={Math.floor(index / 3)}
+                              itemIndex={currentPage - 1}
                               categoryId={selectedCategory || null}
                             />
                           )}
@@ -1124,7 +1136,7 @@ export function ModernDirectoryExplorer({
                         totalPages={totalPages}
                         totalItems={filteredListings.length}
                         pageSize={pageSize}
-                        onPageChange={setCurrentPage}
+                        onPageChange={handlePageChange}
                       />
                     </div>
                   )}
@@ -1237,11 +1249,11 @@ export function ModernDirectoryExplorer({
 
                         return (
                           <div key={place.id} className="space-y-3.5">
-                            {(index === 2 || (index > 2 && (index + 1) % 4 === 0)) && (
+                            {index === 2 && (
                               <AdBannerSlot
                                 placementLocation="in_feed"
                                 variant="in_feed"
-                                itemIndex={Math.floor(index / 3)}
+                                itemIndex={currentPage - 1}
                                 categoryId={selectedCategory || null}
                                 className="mb-3.5"
                               />
@@ -1373,7 +1385,7 @@ export function ModernDirectoryExplorer({
                         totalPages={totalPages}
                         totalItems={filteredListings.length}
                         pageSize={pageSize}
-                        onPageChange={setCurrentPage}
+                        onPageChange={handlePageChange}
                       />
                     </div>
                   )}
