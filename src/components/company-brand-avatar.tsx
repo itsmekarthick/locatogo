@@ -52,6 +52,8 @@ const KNOWN_BRAND_DOMAINS: Record<string, string> = {
   apollo: "apollohospitals.com",
   fortis: "fortishealthcare.com",
   narayana: "narayanahealth.org",
+  hrudayalaya: "narayanahealth.org",
+  euroschool: "euroschoolindia.com",
   aster: "asterhospitals.in",
   cloudnine: "cloudninecare.com",
   "sakra world": "sakraworldhospital.com",
@@ -142,15 +144,8 @@ export function getCompanyDomain(website?: string | null, title?: string): strin
     }
   }
 
-  // 3. Fallback: extract clean brand slug from title
-  if (title) {
-    const clean = title
-      .toLowerCase()
-      .replace(/\b(pvt|ltd|limited|technologies|technology|solutions|services|hospital|hospitals|clinic|school|academy|college|cafe|restaurant|store|branch|hub|park|tower|labs|systems|security|software)\b/gi, "")
-      .replace(/[^a-z0-9]/g, "");
-    if (clean.length >= 3) return `${clean}.com`;
-  }
-
+  // If no known brand or verified website exists, do not guess arbitrary .com domains
+  // to avoid triggering 404 network errors from external favicon proxies.
   return "";
 }
 

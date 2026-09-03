@@ -329,7 +329,7 @@ export default async function LandingPage() {
               href="/auth/signup"
               className="rounded-full border border-indigo-400/50 bg-indigo-900/40 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-indigo-900/70 transition-all backdrop-blur-md"
             >
-              Create Free Workspace
+              Create Free Account
             </Link>
           </div>
         </div>
@@ -364,7 +364,7 @@ export default async function LandingPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Administration</p>
               <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <li><Link href="/admin" className="hover:text-indigo-600 dark:hover:text-indigo-400">Workspace Hub</Link></li>
+                <li><Link href="/admin" className="hover:text-indigo-600 dark:hover:text-indigo-400">Admin Dashboard</Link></li>
                 <li><Link href="/admin/analytics" className="hover:text-indigo-600 dark:hover:text-indigo-400">Visitor Analytics</Link></li>
                 <li><Link href="/admin/team" className="hover:text-indigo-600 dark:hover:text-indigo-400">Team & Permissions</Link></li>
               </ul>

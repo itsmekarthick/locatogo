@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export function UserProfileMenu({
   className = "",
@@ -10,8 +12,30 @@ export function UserProfileMenu({
   className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Load real user session from Supabase
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ?? null);
+      setIsLoaded(true);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setIsLoaded(true);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -48,6 +72,49 @@ export function UserProfileMenu({
     };
   }, [isOpen]);
 
+  // Handle client sign-out
+  const handleSignOut = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsOpen(false);
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setUser(null);
+    window.location.href = "/auth/sign-out";
+  };
+
+  // While loading initial auth check
+  if (!isLoaded) {
+    return (
+      <div
+        className={`h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse ${className}`}
+        aria-hidden="true"
+      />
+    );
+  }
+
+  // If user is NOT logged in, show clean Sign In button
+  if (!user) {
+    return (
+      <Link
+        href="/auth/login"
+        className={`inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all shadow-2xs cursor-pointer select-none ${className}`}
+      >
+        <span>👤</span>
+        <span>Sign In</span>
+      </Link>
+    );
+  }
+
+  // User is logged in: compute dynamic metadata
+  const displayName =
+    (user.user_metadata?.display_name as string) ||
+    (user.user_metadata?.full_name as string) ||
+    user.email?.split("@")[0] ||
+    "Member";
+
+  const initials = displayName.slice(0, 2).toUpperCase();
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+
   return (
     <div ref={menuRef} className={`relative inline-block text-left ${className}`}>
       {/* Trigger Button: User Avatar Badge */}
@@ -63,9 +130,14 @@ export function UserProfileMenu({
             : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 shadow-2xs"
         }`}
       >
-        {/* Avatar Monogram / Icon */}
-        <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white font-bold text-xs shadow-xs">
-          <span>👤</span>
+        {/* Avatar Image or Monogram */}
+        <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white font-bold text-xs shadow-xs overflow-hidden">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+          ) : (
+            <span>{initials}</span>
+          )}
           {/* Active Status Indicator */}
           <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-900" />
         </div>
@@ -83,27 +155,32 @@ export function UserProfileMenu({
       {/* Floating Dropdown Popover */}
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-64 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d131f] p-2 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 z-[2000] animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Header Profile Tag */}
+          {/* Header Profile Tag with real user data */}
           <div className="px-3.5 py-3 border-b border-slate-100 dark:border-slate-800/80 mb-1">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-700 text-white font-bold text-sm shadow-xs">
-                JD
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-700 text-white font-bold text-sm shadow-xs overflow-hidden shrink-0">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+                ) : (
+                  <span>{initials}</span>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
-                  Atlas Operator
+                  {displayName}
                 </p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                  operator@locatogo.com
+                  {user.email}
                 </p>
               </div>
             </div>
             <div className="mt-2.5 flex items-center justify-between">
               <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/70 dark:border-indigo-800/60 px-2 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
-                ⚡ Admin Verified
+                ⚡ Active Session
               </span>
               <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                Active Tenant
+                Authenticated
               </span>
             </div>
           </div>
@@ -156,11 +233,11 @@ export function UserProfileMenu({
               className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
             >
               <span className="text-sm">⚙️</span>
-              <span className="flex-1 font-medium">Workspace Settings</span>
+              <span className="flex-1 font-medium">Account Settings</span>
             </Link>
           </div>
 
-          {/* Footer Shortcuts */}
+          {/* Footer Shortcuts & Sign Out */}
           <div className="mt-1 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-0.5">
             <Link
               href="/tech-atlas"
@@ -170,13 +247,15 @@ export function UserProfileMenu({
               <span>↗</span>
             </Link>
 
-            <Link
-              href="/auth/sign-out"
-              className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-            >
-              <span>🚪</span>
-              <span>Sign Out</span>
-            </Link>
+            <form onSubmit={handleSignOut} className="w-full">
+              <button
+                type="submit"
+                className="w-full flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer"
+              >
+                <span>🚪</span>
+                <span>Sign Out</span>
+              </button>
+            </form>
           </div>
         </div>
       )}

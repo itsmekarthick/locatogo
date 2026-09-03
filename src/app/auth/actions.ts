@@ -8,9 +8,7 @@ import type { ActionResult } from "@/lib/validation/directory";
 
 const credentialsSchema = z.object({ email: z.string().trim().email(), password: z.string().min(8) });
 const signupSchema = credentialsSchema.extend({
-  displayName: z.string().trim().min(2).max(120),
-  tenantName: z.string().trim().min(2).max(120),
-  tenantSlug: z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  displayName: z.string().trim().min(2, "Name must be at least 2 characters.").max(120),
 });
 const resetEmailSchema = z.object({ email: z.string().trim().email() });
 const updatePasswordSchema = z.object({
@@ -38,26 +36,36 @@ export async function login(_state: ActionResult | undefined, formData: FormData
 export async function signup(_state: ActionResult | undefined, formData: FormData): Promise<ActionResult> {
   const parsed = signupSchema.safeParse({
     displayName: value(formData, "displayName"),
-    tenantName: value(formData, "tenantName"),
-    tenantSlug: value(formData, "tenantSlug"),
     email: value(formData, "email"),
     password: value(formData, "password"),
   });
-  if (!parsed.success) return { error: "Check the workspace, email, and password fields." };
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || "Please check your name, email, and password." };
+  }
+
+  const displayName = parsed.data.displayName;
+  const baseSlug = displayName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "") || "workspace";
+  const randomSuffix = Math.random().toString(36).substring(2, 7);
+  const tenantSlug = `${baseSlug}-${randomSuffix}`;
+  const tenantName = `${displayName}'s Workspace`;
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
       data: {
-        display_name: parsed.data.displayName,
-        tenant_name: parsed.data.tenantName,
-        tenant_slug: parsed.data.tenantSlug,
+        display_name: displayName,
+        tenant_name: tenantName,
+        tenant_slug: tenantSlug,
       },
     },
   });
-  if (error || !data.user) return { error: "Unable to create the account." };
-  if (!data.session) return { success: "Account created. Confirm your email, then sign in to access your workspace." };
+  if (error || !data.user) return { error: error?.message || "Unable to create the account." };
+  if (!data.session) return { success: "Account created! Confirm your email, then sign in to get started." };
   redirect("/admin");
 }
 
