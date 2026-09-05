@@ -103,6 +103,15 @@ export default async function Home({ searchParams }: Props) {
       .order("sort_order"),
   ]);
 
+  // Ensure unique categories by slug
+  const categoryMap = new Map<string, Category>();
+  (categories ?? []).forEach((c) => {
+    if (c.slug && !categoryMap.has(c.slug)) {
+      categoryMap.set(c.slug, c as Category);
+    }
+  });
+  const uniqueCategories = Array.from(categoryMap.values());
+
   const domainList = domains ?? [];
   const localCityDomain =
     savedCitySlug === "all"
@@ -238,7 +247,7 @@ export default async function Home({ searchParams }: Props) {
           : undefined
       }
       initialListings={listings}
-      categories={(categories as Category[]) ?? []}
+      categories={uniqueCategories}
       availableLocations={availableLocations}
       initialCategory={filters.category}
       initialLocation={filters.location}

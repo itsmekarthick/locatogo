@@ -151,6 +151,17 @@ export function ModernDirectoryExplorer({
     return match ? match.id : initialCategory;
   }, [initialCategory, categories]);
 
+  // Canonical deduplicated categories list
+  const uniqueCategories = useMemo(() => {
+    const seen = new Set<string>();
+    return categories.filter((c) => {
+      const key = (c.slug || c.name || c.id).toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [categories]);
+
   const [selectedCategory, setSelectedCategory] = useState(resolvedInitialCat);
   const [selectedAmenity, setSelectedAmenity] = useState<string>("");
   const [mobileSheetSnap, setMobileSheetSnap] = useState<"peek" | "half" | "full">("peek");
@@ -860,7 +871,7 @@ export function ModernDirectoryExplorer({
                     <span>All Places</span>
                   </button>
 
-                  {categories.map((cat) => {
+                  {uniqueCategories.map((cat) => {
                     const isSelected = selectedCategory === cat.id;
                     const icon = getCategoryIcon(cat.name);
 
@@ -1341,7 +1352,7 @@ export function ModernDirectoryExplorer({
                   <span>All Places</span>
                 </button>
 
-                {categories.map((cat) => {
+                {uniqueCategories.map((cat) => {
                   const isSelected = selectedCategory === cat.id;
                   const icon = getCategoryIcon(cat.name);
 
