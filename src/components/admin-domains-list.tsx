@@ -44,7 +44,12 @@ export function AdminDomainsList({ domains }: { domains: DomainItem[] }) {
                     {domain.status}
                   </span>
                   <span className="text-[11px] font-mono text-[var(--ink-muted)]">
-                    Created {new Date(domain.created_at).toLocaleDateString()}
+                    Created {new Intl.DateTimeFormat("en-GB", {
+                      day: "numeric",
+                      month: "numeric",
+                      year: "numeric",
+                      timeZone: "UTC",
+                    }).format(new Date(domain.created_at))}
                   </span>
                 </div>
 

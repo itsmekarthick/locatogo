@@ -38,26 +38,84 @@ export async function GET(request: Request) {
       .not("latitude", "is", null)
       .not("longitude", "is", null);
 
+    let rawListings: any[] = [];
+
     if (domainId) {
-      query = query.eq("domain_id", domainId);
+      if (categoryId && categoryId !== "all") {
+        query = query.eq("category_id", categoryId);
+      }
+
+      if (search.trim()) {
+        query = query.ilike("title", `%${search.trim()}%`);
+      }
+
+      const from = page * limit;
+      const to = from + limit - 1;
+
+      const { data, error } = await query
+        .eq("domain_id", domainId)
+        .order("is_featured", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+      rawListings = data ?? [];
+    } else {
+      // Balanced pan-metro streaming across all published domains
+      const { data: domains } = await supabase
+        .from("domains")
+        .select("id")
+        .eq("status", "published")
+        .order("name");
+
+      const domainList = domains ?? [];
+      const perDomainLimit = Math.max(25, Math.ceil(limit / (domainList.length || 1)));
+      const from = page * perDomainLimit;
+      const to = from + perDomainLimit - 1;
+
+      const domainQueries = domainList.map((d) => {
+        let q = supabase
+          .from("listings")
+          .select(`
+            id,
+            title,
+            slug,
+            short_description,
+            address_line_1,
+            address_line_2,
+            locality,
+            city,
+            postal_code,
+            phone,
+            website,
+            latitude,
+            longitude,
+            is_featured,
+            verification_status,
+            category_id,
+            categories:categories!listings_category_id_fkey(name, icon)
+          `)
+          .eq("domain_id", d.id)
+          .eq("status", "published")
+          .is("company_type", null)
+          .not("latitude", "is", null)
+          .not("longitude", "is", null);
+
+        if (categoryId && categoryId !== "all") {
+          q = q.eq("category_id", categoryId);
+        }
+
+        if (search.trim()) {
+          q = q.ilike("title", `%${search.trim()}%`);
+        }
+
+        return q
+          .order("is_featured", { ascending: false })
+          .range(from, to);
+      });
+
+      const results = await Promise.all(domainQueries);
+      rawListings = results.flatMap((r) => r.data ?? []);
     }
-
-    if (categoryId && categoryId !== "all") {
-      query = query.eq("category_id", categoryId);
-    }
-
-    if (search.trim()) {
-      query = query.ilike("title", `%${search.trim()}%`);
-    }
-
-    const from = page * limit;
-    const to = from + limit - 1;
-
-    const { data: rawListings, error } = await query
-      .order("is_featured", { ascending: false })
-      .range(from, to);
-
-    if (error) throw error;
 
     const listings = (rawListings || []).map((l: any) => {
       const cat = Array.isArray(l.categories)

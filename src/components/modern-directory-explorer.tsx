@@ -79,6 +79,7 @@ type Props = {
   initialCategory?: string;
   initialLocation?: string;
   initialQuery?: string;
+  isRootHome?: boolean;
 };
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -117,6 +118,18 @@ export const AMENITIES_LIST = [
   { id: "metro", label: "Near Metro", icon: "🚇", keywords: ["metro", "station", "subway", "transit"] },
 ];
 
+export const METRO_DOMAINS = [
+  { name: "All India", slug: "", domain_id: "", lat: 20.5937, lng: 78.9629 },
+  { name: "Bangalore", slug: "bangalore", domain_id: "461e4ee7-7a16-43b3-b342-5a968e44f306", lat: 12.9716, lng: 77.5946 },
+  { name: "Chennai", slug: "chennai", domain_id: "5f4cdbe4-d2c6-45f1-9812-6c8114c62c8b", lat: 13.0827, lng: 80.2707 },
+  { name: "Delhi NCR", slug: "delhi", domain_id: "09f2c99c-be3c-4272-b217-6de226d9edc1", lat: 28.6139, lng: 77.2090 },
+  { name: "Hyderabad", slug: "hyderabad", domain_id: "c0441a34-5395-4462-9492-e982ab9035c0", lat: 17.3850, lng: 78.4867 },
+  { name: "Kochi", slug: "kochi", domain_id: "2cf6a26b-5672-400e-ac9d-75361d56a842", lat: 9.9312, lng: 76.2673 },
+  { name: "Kolkata", slug: "kolkata", domain_id: "4071b01b-b555-4a6a-b92a-4feda0679cac", lat: 22.5726, lng: 88.3639 },
+  { name: "Mumbai", slug: "mumbai", domain_id: "cbe0a7d8-63d8-4c5b-9a72-4cef88922272", lat: 19.0760, lng: 72.8777 },
+  { name: "Pune", slug: "pune", domain_id: "f3ae324b-fa4d-4556-af94-f9a5e343cc41", lat: 18.5204, lng: 73.8567 },
+];
+
 export function ModernDirectoryExplorer({
   domain,
   initialListings,
@@ -125,6 +138,7 @@ export function ModernDirectoryExplorer({
   initialCategory = "",
   initialLocation = "",
   initialQuery = "",
+  isRootHome = false,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
 
@@ -182,10 +196,10 @@ export function ModernDirectoryExplorer({
     let isCancelled = false;
 
     async function streamMoreListings() {
-      for (let page = 1; page < 8; page++) {
+      for (let page = 0; page < 8; page++) {
         if (isCancelled) break;
         try {
-          const url = domain?.id
+          const url = (domain?.id && !isRootHome)
             ? `/api/listings?domain_id=${domain.id}&page=${page}&limit=1000`
             : `/api/listings?page=${page}&limit=1000`;
           const res = await fetch(url);
@@ -268,16 +282,54 @@ export function ModernDirectoryExplorer({
     setLocationErrorNotice(null);
     setIsLocating(true);
 
+    const applyUserMetro = (lat: number, lng: number) => {
+      let nearest = METRO_DOMAINS[1]; // default Bangalore
+      let minDistance = Infinity;
+      for (const m of METRO_DOMAINS) {
+        if (!m.slug) continue;
+        const dist = calculateDistanceKm(lat, lng, m.lat, m.lng);
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearest = m;
+        }
+      }
+
+      if (typeof document !== "undefined") {
+        document.cookie = `locatogo_city=${nearest.slug}; path=/; max-age=31536000; SameSite=Lax`;
+      }
+
+      if (!domain?.slug && !initialLocation) {
+        setSelectedLocation(nearest.name);
+        fetch(`/api/listings?domain_id=${nearest.domain_id}&page=0&limit=1000`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.listings && data.listings.length > 0) {
+              setAllListings((prev) => {
+                const existingIds = new Set(data.listings.map((l: PlaceListing) => l.id));
+                const otherListings = prev.filter((l) => !existingIds.has(l.id));
+                return [...data.listings, ...otherListings];
+              });
+            }
+          })
+          .catch((err) => console.warn("Could not fetch local city places:", err));
+      }
+    };
+
+    const onLocationResolved = (coords: { lat: number; lng: number }) => {
+      setUserLocation(coords);
+      setIsLocating(false);
+      setLocationErrorNotice(null);
+      setFlyToUserTrigger((prev) => prev + 1);
+      applyUserMetro(coords.lat, coords.lng);
+    };
+
     const fallbackToIp = async () => {
       try {
         const res = await fetch("/api/geolocation");
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.latitude && data.longitude) {
-            setUserLocation({ lat: data.latitude, lng: data.longitude });
-            setIsLocating(false);
-            setLocationErrorNotice(null);
-            setFlyToUserTrigger((prev) => prev + 1);
+            onLocationResolved({ lat: data.latitude, lng: data.longitude });
             return;
           }
         }
@@ -293,10 +345,7 @@ export function ModernDirectoryExplorer({
     const doGpsLookup = () => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-          setIsLocating(false);
-          setLocationErrorNotice(null);
-          setFlyToUserTrigger((prev) => prev + 1);
+          onLocationResolved({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
         (err) => {
           console.warn("GPS failed (code " + err.code + "), falling back to IP...");
@@ -328,7 +377,7 @@ export function ModernDirectoryExplorer({
     } else {
       doGpsLookup();
     }
-  }, []);
+  }, [domain?.slug, initialLocation]);
 
   // Request browser location immediately on initial mount
   useEffect(() => {
@@ -466,7 +515,14 @@ export function ModernDirectoryExplorer({
     () =>
       filteredListings.filter(
         (p): p is PlaceListing & { latitude: number; longitude: number } =>
-          p.latitude !== null && p.longitude !== null
+          typeof p.latitude === "number" &&
+          Number.isFinite(p.latitude) &&
+          p.latitude >= -90 &&
+          p.latitude <= 90 &&
+          typeof p.longitude === "number" &&
+          Number.isFinite(p.longitude) &&
+          p.longitude >= -180 &&
+          p.longitude <= 180
       ),
     [filteredListings]
   );
@@ -725,6 +781,7 @@ export function ModernDirectoryExplorer({
                 initialPerspective={viewMode === "3d" ? "satellite" : "street"}
                 weatherType={simulatedWeather || liveWeather?.weatherType}
                 searchQuery={searchQuery}
+                radiusKm={radiusKm ?? 5}
                 onMapClick={(loc) => {
                   setUserLocation(loc);
                   setFlyToUserTrigger((prev) => prev + 1);
@@ -752,6 +809,43 @@ export function ModernDirectoryExplorer({
             {/* Floating Overlapping Category Pills Card */}
             <div className="absolute -bottom-14 sm:-bottom-14 left-1/2 -translate-x-1/2 w-full max-w-4xl px-3 sm:px-4 z-[400]">
               <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white/95 p-2.5 sm:p-4 shadow-xl backdrop-blur-md">
+                {/* Metro Cities Switcher Bar */}
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-2 border-b border-gray-100 text-xs">
+                  <span className="text-gray-400 font-semibold text-[11px] shrink-0 mr-0.5">🏙️ Metros:</span>
+                  {[
+                    { name: "All India", slug: "" },
+                    { name: "Bangalore", slug: "bangalore" },
+                    { name: "Chennai", slug: "chennai" },
+                    { name: "Delhi NCR", slug: "delhi" },
+                    { name: "Hyderabad", slug: "hyderabad" },
+                    { name: "Mumbai", slug: "mumbai" },
+                    { name: "Pune", slug: "pune" },
+                    { name: "Kolkata", slug: "kolkata" },
+                    { name: "Kochi", slug: "kochi" },
+                  ].map((m) => {
+                    const isCurrent = (!domain?.slug && !m.slug) || (domain?.slug === m.slug);
+                    return (
+                      <Link
+                        key={m.name}
+                        href={m.slug ? `/${m.slug}` : "/"}
+                        onClick={() => {
+                          setRadiusKm(null);
+                          if (typeof document !== "undefined") {
+                            document.cookie = `locatogo_city=${m.slug || "all"}; path=/; max-age=31536000; SameSite=Lax`;
+                          }
+                        }}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all ${
+                          isCurrent
+                            ? "bg-indigo-600 text-white shadow-xs font-bold"
+                            : "bg-gray-100 hover:bg-gray-200 border border-gray-200/80 text-gray-700"
+                        }`}
+                      >
+                        {m.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+
                 {/* Category Pills Row */}
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                   <button
@@ -847,10 +941,15 @@ export function ModernDirectoryExplorer({
           <section className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 mt-20 sm:mt-24 pb-12">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 pb-4">
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
                     {filteredListings.length} Places Found
                   </h2>
+                  {userLocation && (
+                    <span className="rounded-full bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 flex items-center gap-1">
+                      <span>📍</span> Zoomed to 5 km around you · Zoom out to explore further
+                    </span>
+                  )}
                   {(radiusKm !== null || featuredOnly || verifiedOnly || sortBy !== "default") && (
                     <button
                       onClick={() => {
@@ -1191,8 +1290,45 @@ export function ModernDirectoryExplorer({
                 Global interactive map directory with verified GPS coordinates, operating hours, and direct routes.
               </p>
 
+              {/* Metro Cities Switcher */}
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 text-xs">
+                <span className="text-gray-400 font-semibold text-xs mr-1">🏙️ Metros:</span>
+                {[
+                  { name: "All India", slug: "" },
+                  { name: "Bangalore", slug: "bangalore" },
+                  { name: "Chennai", slug: "chennai" },
+                  { name: "Delhi NCR", slug: "delhi" },
+                  { name: "Hyderabad", slug: "hyderabad" },
+                  { name: "Mumbai", slug: "mumbai" },
+                  { name: "Pune", slug: "pune" },
+                  { name: "Kolkata", slug: "kolkata" },
+                  { name: "Kochi", slug: "kochi" },
+                ].map((m) => {
+                  const isCurrent = (!domain?.slug && !m.slug) || (domain?.slug === m.slug);
+                  return (
+                    <Link
+                      key={m.name}
+                      href={m.slug ? `/${m.slug}` : "/"}
+                      onClick={() => {
+                        setRadiusKm(null);
+                        if (typeof document !== "undefined") {
+                          document.cookie = `locatogo_city=${m.slug || "all"}; path=/; max-age=31536000; SameSite=Lax`;
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+                        isCurrent
+                          ? "bg-indigo-600 text-white shadow-xs font-bold"
+                          : "bg-gray-100 hover:bg-gray-200 border border-gray-200/80 text-gray-700"
+                      }`}
+                    >
+                      {m.name}
+                    </Link>
+                  );
+                })}
+              </div>
+
               {/* Category Filter Chips Row */}
-              <div className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5">
                 <button
                   onClick={() => handleSelectCategory("")}
                   className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-bold transition-all cursor-pointer ${
@@ -1232,9 +1368,16 @@ export function ModernDirectoryExplorer({
           <section className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 pt-2 pb-12">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 pb-4">
               <div>
-                <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
-                  {filteredListings.length} Places Found
-                </h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
+                    {filteredListings.length} Places Found
+                  </h2>
+                  {userLocation && (
+                    <span className="rounded-full bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 flex items-center gap-1">
+                      <span>📍</span> Zoomed to 5 km around you · Zoom out to explore further
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Showing matching locations on the interactive map with coordinates.
                 </p>
@@ -1435,6 +1578,7 @@ export function ModernDirectoryExplorer({
                     isFullscreen={false}
                     weatherType={simulatedWeather || liveWeather?.weatherType}
                     searchQuery={searchQuery}
+                    radiusKm={radiusKm ?? 5}
                     onMapClick={(loc) => {
                       setUserLocation(loc);
                       setFlyToUserTrigger((prev) => prev + 1);
@@ -1469,6 +1613,7 @@ export function ModernDirectoryExplorer({
                 isFullscreen={true}
                 weatherType={simulatedWeather || liveWeather?.weatherType}
                 searchQuery={searchQuery}
+                radiusKm={radiusKm ?? 5}
                 onMapClick={(loc) => {
                   setUserLocation(loc);
                   setFlyToUserTrigger((prev) => prev + 1);

@@ -4,13 +4,76 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { MapContainer, Marker, Popup, Tooltip, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, Marker, Popup, Tooltip, TileLayer, Circle, useMap, useMapEvents } from "react-leaflet";
 import Supercluster from "supercluster";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { generateUberRideLink } from "@/lib/services/transit-links";
 import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
 import { getPlaceRating } from "@/lib/services/place-rating";
 import type { WeatherType } from "@/lib/services/weather";
+
+// Safeguard Leaflet 1.9.4 bug where unbindTooltip leaves active focus events on DOM elements,
+// causing "Cannot set properties of null (setting '_source')" when marker is clicked or focused.
+if (typeof window !== "undefined" && L && L.Layer) {
+  const LayerProto = L.Layer.prototype as any;
+  if (LayerProto && !LayerProto.__mapora_source_safeguard) {
+    LayerProto.__mapora_source_safeguard = true;
+
+    // 1. Guard _addFocusListenersOnLayer against null this._tooltip
+    LayerProto._addFocusListenersOnLayer = function (layer: any) {
+      const el = typeof layer.getElement === "function" && layer.getElement();
+      if (el) {
+        L.DomEvent.on(
+          el,
+          "focus",
+          function (this: any) {
+            if (!this._tooltip) return;
+            this._tooltip._source = layer;
+            this.openTooltip();
+          },
+          this
+        );
+        L.DomEvent.on(
+          el,
+          "blur",
+          function (this: any) {
+            if (!this._tooltip) return;
+            this.closeTooltip();
+          },
+          this
+        );
+      }
+    };
+
+    // 2. Guard openTooltip against null this._tooltip
+    const origOpenTooltip = LayerProto.openTooltip;
+    LayerProto.openTooltip = function (this: any, latlng: any) {
+      if (!this._tooltip) return this;
+      return origOpenTooltip.call(this, latlng);
+    };
+
+    // 3. Guard _openTooltip against null this._tooltip
+    const origOpenTooltipEvent = LayerProto._openTooltip;
+    LayerProto._openTooltip = function (this: any, e: any) {
+      if (!this._tooltip || !this._map) return;
+      return origOpenTooltipEvent.call(this, e);
+    };
+
+    // 4. Guard openPopup against null this._popup
+    const origOpenPopup = LayerProto.openPopup;
+    LayerProto.openPopup = function (this: any, latlng: any) {
+      if (!this._popup) return this;
+      return origOpenPopup.call(this, latlng);
+    };
+
+    // 5. Guard _openPopup against null this._popup
+    const origOpenPopupEvent = LayerProto._openPopup;
+    LayerProto._openPopup = function (this: any, e: any) {
+      if (!this._popup || !this._map) return;
+      return origOpenPopupEvent.call(this, e);
+    };
+  }
+}
 
 const MAP_LAYERS = {
   street: {
@@ -306,18 +369,18 @@ function MapUpdater({
   const prevSearchRef = useRef<string>("");
   const prevSigRef = useRef<string>("");
 
-  // 1. Explicit locate me button click trigger
+  // 1. Explicit locate me button click trigger -> fly to user at 5km radius view (zoom 14)
   useEffect(() => {
     if (flyToUserTrigger > 0 && userLocation) {
-      map.flyTo([userLocation.lat, userLocation.lng], 15, { duration: 1.5 });
+      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
     }
   }, [flyToUserTrigger, userLocation, map]);
 
-  // 2. Initial Mount user location fly-to (only on initial load if no search has happened)
+  // 2. Initial Mount user location fly-to -> focus on current location at 5km radius view (zoom 14)
   useEffect(() => {
     if (userLocation && !prevUserLocRef.current && !searchQuery) {
       prevUserLocRef.current = userLocation;
-      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
+      map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.0 });
     } else if (userLocation) {
       prevUserLocRef.current = userLocation;
     }
@@ -331,28 +394,21 @@ function MapUpdater({
     }
   }, [activePlace, map]);
 
-  // 4. Searching or Filtering: when user types in search or filters, move map to matching place(s)
+  // 4. Searching: Only trigger fitBounds when user explicitly enters a search query
+  // (Prevents background listing streaming from overriding user zoom or 5km initial view)
   useEffect(() => {
     if (!located.length) return;
 
-    // Check if search query has changed significantly
     const currentSearch = (searchQuery || "").trim().toLowerCase();
     const isSearchChanged = currentSearch !== prevSearchRef.current;
 
-    // Compute simple signature of located places to detect category or location filter switches
-    const currentSig = `${located.length}_${located[0]?.id || ""}_${located[located.length - 1]?.id || ""}`;
-    const isFilterChanged = currentSig !== prevSigRef.current;
-
-    if (isSearchChanged || isFilterChanged) {
+    if (isSearchChanged && currentSearch.length > 0) {
       prevSearchRef.current = currentSearch;
-      prevSigRef.current = currentSig;
 
       if (located.length === 1) {
-        // Exactly 1 result found (e.g. searching specific place) -> smooth zoom to that location
         const item = located[0];
-        map.flyTo([item.latitude, item.longitude], 16, { duration: 1.0 });
-      } else if (located.length > 1 && (currentSearch.length > 0 || isFilterChanged)) {
-        // Multiple places matching filter/search -> fit bounds cleanly around all matching pins
+        map.flyTo([item.latitude, item.longitude], 16, { duration: 0.8 });
+      } else if (located.length > 1) {
         try {
           const lats = located.map((l) => l.latitude);
           const lngs = located.map((l) => l.longitude);
@@ -361,7 +417,6 @@ function MapUpdater({
           const minLng = Math.min(...lngs);
           const maxLng = Math.max(...lngs);
 
-          // Ensure bounds have a reasonable spread
           const latDiff = maxLat - minLat;
           const lngDiff = maxLng - minLng;
 
@@ -374,16 +429,16 @@ function MapUpdater({
               {
                 padding: [50, 50],
                 maxZoom: 15,
-                duration: 1.0,
+                duration: 0.8,
               }
             );
-          } else {
-            map.flyTo([minLat, minLng], 15, { duration: 1.0 });
           }
         } catch (err) {
-          console.warn("Could not auto-fit bounds on search/filter:", err);
+          console.warn("Could not auto-fit bounds on search:", err);
         }
       }
+    } else if (isSearchChanged) {
+      prevSearchRef.current = currentSearch;
     }
   }, [located, searchQuery, map]);
 
@@ -456,7 +511,18 @@ function ClusteredMarkersLayer({
             type: "Point",
             coordinates: [Number(listing.longitude), Number(listing.latitude)],
           },
-          properties: listing,
+          properties: {
+            id: listing.id,
+            title: listing.title,
+            slug: listing.slug,
+            short_description: listing.short_description ?? null,
+            city: listing.city ?? null,
+            category_name: listing.category_name ?? null,
+            website: listing.website ?? null,
+            is_featured: listing.is_featured === true,
+            latitude: Number(listing.latitude),
+            longitude: Number(listing.longitude),
+          },
         }));
 
     try {
@@ -636,6 +702,7 @@ export default function InteractiveLeafletCanvas({
   showWeatherOverlay = true,
   onMapClick,
   searchQuery,
+  radiusKm = null,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
@@ -651,6 +718,7 @@ export default function InteractiveLeafletCanvas({
   showWeatherOverlay?: boolean;
   onMapClick?: (loc: { lat: number; lng: number }) => void;
   searchQuery?: string;
+  radiusKm?: number | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<(() => void) | null>(null);
@@ -744,6 +812,21 @@ export default function InteractiveLeafletCanvas({
               </div>
             </Popup>
           </Marker>
+        )}
+
+        {/* Active Radius Circle around User Location */}
+        {effectiveLocation && typeof radiusKm === "number" && radiusKm > 0 && (
+          <Circle
+            center={[effectiveLocation.lat, effectiveLocation.lng]}
+            radius={radiusKm * 1000}
+            pathOptions={{
+              color: "#4f46e5",
+              fillColor: "#6366f1",
+              fillOpacity: 0.08,
+              weight: 1.5,
+              dashArray: "6, 6",
+            }}
+          />
         )}
 
         {/* Clustered & Rich Pill Place Markers */}

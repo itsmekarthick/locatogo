@@ -133,6 +133,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
   return (
     <ModernDirectoryExplorer
       domain={{
+        id: domain.id,
         name: domain.name,
         slug: domain.slug,
         description: domain.description,

@@ -61,3 +61,6 @@ Thumbs.db
 
 # TypeScript Cache
 *.tsbuildinfo
+.venv-overture/
+scripts/overture/*.parquet
+scripts/overture/*manifest*.json
