@@ -129,7 +129,7 @@ export default async function Home({ searchParams }: Props) {
     let query = supabase
       .from("listings")
       .select(
-        "id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_fkey(name)"
+        "id, domain_id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_fkey(name)"
       )
       .eq("status", "published")
       .is("company_type", null)
@@ -179,7 +179,7 @@ export default async function Home({ searchParams }: Props) {
         supabase
           .from("listings")
           .select(
-            "id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_fkey(name)"
+            "id, domain_id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_fkey(name)"
           )
           .eq("domain_id", d.id)
           .eq("status", "published")
@@ -201,7 +201,7 @@ export default async function Home({ searchParams }: Props) {
       supabase
         .from("listings")
         .select(
-          "id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_fkey(name)"
+          "id, domain_id, title, slug, short_description, locality, city, administrative_area, country_code, latitude, longitude, is_featured, verification_status, category_id, phone, website, categories:categories!listings_category_id_fkey(name)"
         )
         .eq("domain_id", d.id)
         .eq("status", "published")
@@ -232,7 +232,10 @@ export default async function Home({ searchParams }: Props) {
   domainList.forEach((d) => {
     if (d.name) locationSet.add(d.name);
   });
-  listings.forEach((item) => {
+  const locationListings = localCityDomain
+    ? listings.filter((item: any) => item.domain_id === localCityDomain.id)
+    : listings;
+  locationListings.forEach((item) => {
     if (item.locality) locationSet.add(item.locality);
     if (item.city) locationSet.add(item.city);
   });
