@@ -96,6 +96,20 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   return R * c;
 }
 
+function deduplicateListings(listings: PlaceListing[]) {
+  const seen = new Set<string>();
+  return listings.filter((listing) => {
+    const coordinateKey =
+      typeof listing.latitude === "number" && typeof listing.longitude === "number"
+        ? `${listing.latitude.toFixed(5)},${listing.longitude.toFixed(5)}`
+        : listing.id;
+    const key = `${listing.title.trim().toLowerCase()}|${coordinateKey}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function getCategoryIcon(name: string) {
   const lower = name.toLowerCase();
   if (lower.includes("tech park") || lower.includes("sez") || lower.includes("business park") || lower.includes("campus")) return "🏢";
@@ -130,6 +144,15 @@ export const METRO_DOMAINS = [
   { name: "Pune", slug: "pune", domain_id: "f3ae324b-fa4d-4556-af94-f9a5e343cc41", lat: 18.5204, lng: 73.8567 },
 ];
 
+const VISIBLE_CATEGORY_SLUGS = new Set([
+  "schools-education",
+  "restaurants-cafes",
+  "hospitals-clinics",
+  "hotels-accommodation",
+  "shopping-malls",
+  "tech-coworking",
+]);
+
 export function ModernDirectoryExplorer({
   domain,
   initialListings,
@@ -161,6 +184,14 @@ export function ModernDirectoryExplorer({
       return true;
     });
   }, [categories]);
+  const visibleCategories = useMemo(
+    () => uniqueCategories.filter((category) => VISIBLE_CATEGORY_SLUGS.has(category.slug)),
+    [uniqueCategories]
+  );
+  const additionalCategories = useMemo(
+    () => uniqueCategories.filter((category) => !VISIBLE_CATEGORY_SLUGS.has(category.slug)),
+    [uniqueCategories]
+  );
 
   const [selectedCategory, setSelectedCategory] = useState(resolvedInitialCat);
   const [selectedAmenity, setSelectedAmenity] = useState<string>("");
@@ -423,7 +454,7 @@ export function ModernDirectoryExplorer({
 
   // Filter and calculate distances
   const filteredListings = useMemo(() => {
-    const list = allListings.filter((place) => {
+    const list = deduplicateListings(allListings).filter((place) => {
       // 1. Text Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -820,45 +851,8 @@ export function ModernDirectoryExplorer({
             {/* Floating Overlapping Category Pills Card */}
             <div className="absolute -bottom-14 sm:-bottom-14 left-1/2 -translate-x-1/2 w-full max-w-4xl px-3 sm:px-4 z-[400]">
               <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white/95 p-2.5 sm:p-4 shadow-xl backdrop-blur-md">
-                {/* Metro Cities Switcher Bar */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2 mb-2 border-b border-gray-100 text-xs">
-                  <span className="text-gray-400 font-semibold text-[11px] shrink-0 mr-0.5">🏙️ Metros:</span>
-                  {[
-                    { name: "All India", slug: "" },
-                    { name: "Bangalore", slug: "bangalore" },
-                    { name: "Chennai", slug: "chennai" },
-                    { name: "Delhi NCR", slug: "delhi" },
-                    { name: "Hyderabad", slug: "hyderabad" },
-                    { name: "Mumbai", slug: "mumbai" },
-                    { name: "Pune", slug: "pune" },
-                    { name: "Kolkata", slug: "kolkata" },
-                    { name: "Kochi", slug: "kochi" },
-                  ].map((m) => {
-                    const isCurrent = (!domain?.slug && !m.slug) || (domain?.slug === m.slug);
-                    return (
-                      <Link
-                        key={m.name}
-                        href={m.slug ? `/${m.slug}` : "/"}
-                        onClick={() => {
-                          setRadiusKm(null);
-                          if (typeof document !== "undefined") {
-                            document.cookie = `locatogo_city=${m.slug || "all"}; path=/; max-age=31536000; SameSite=Lax`;
-                          }
-                        }}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all ${
-                          isCurrent
-                            ? "bg-indigo-600 text-white shadow-xs font-bold"
-                            : "bg-gray-100 hover:bg-gray-200 border border-gray-200/80 text-gray-700"
-                        }`}
-                      >
-                        {m.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-
                 {/* Category Pills Row */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                <div className="flex flex-wrap items-center gap-1.5 pb-0.5">
                   <button
                     onClick={() => handleSelectCategory("")}
                     className={`flex items-center gap-1.5 rounded-full px-3 sm:px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
@@ -871,7 +865,7 @@ export function ModernDirectoryExplorer({
                     <span>All Places</span>
                   </button>
 
-                  {uniqueCategories.map((cat) => {
+                  {visibleCategories.map((cat) => {
                     const isSelected = selectedCategory === cat.id;
                     const icon = getCategoryIcon(cat.name);
 
@@ -890,6 +884,18 @@ export function ModernDirectoryExplorer({
                       </button>
                     );
                   })}
+                  {additionalCategories.length > 0 && (
+                    <select
+                      value={additionalCategories.some((cat) => cat.id === selectedCategory) ? selectedCategory : ""}
+                      onChange={(event) => handleSelectCategory(event.target.value)}
+                      className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-700 shadow-2xs outline-none cursor-pointer"
+                    >
+                      <option value="">More categories</option>
+                      {additionalCategories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
                 {/* Dynamic Quick Area / City Jump Presets */}
@@ -915,35 +921,6 @@ export function ModernDirectoryExplorer({
                   </div>
                 )}
 
-                {/* Amenity Filter Chips Row */}
-                <div className="mt-2 pt-2 border-t border-gray-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
-                  <span className="text-gray-400 font-semibold shrink-0">✨ Amenities:</span>
-                  {AMENITIES_LIST.map((amenity) => {
-                    const isSelected = selectedAmenity === amenity.id;
-                    return (
-                      <button
-                        key={amenity.id}
-                        onClick={() => setSelectedAmenity(isSelected ? "" : amenity.id)}
-                        className={`flex items-center gap-1 rounded-lg px-2.5 py-0.5 font-medium transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                          isSelected
-                            ? "bg-indigo-600 text-white shadow-2xs font-bold"
-                            : "bg-gray-100 hover:bg-gray-200 border border-gray-200/80 text-gray-700"
-                        }`}
-                      >
-                        <span>{amenity.icon}</span>
-                        <span>{amenity.label}</span>
-                      </button>
-                    );
-                  })}
-                  {selectedAmenity && (
-                    <button
-                      onClick={() => setSelectedAmenity("")}
-                      className="text-[11px] text-rose-600 hover:text-rose-800 font-semibold px-1.5 py-0.5 cursor-pointer shrink-0"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -1301,43 +1278,6 @@ export function ModernDirectoryExplorer({
                 Global interactive map directory with verified GPS coordinates, operating hours, and direct routes.
               </p>
 
-              {/* Metro Cities Switcher */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 text-xs">
-                <span className="text-gray-400 font-semibold text-xs mr-1">🏙️ Metros:</span>
-                {[
-                  { name: "All India", slug: "" },
-                  { name: "Bangalore", slug: "bangalore" },
-                  { name: "Chennai", slug: "chennai" },
-                  { name: "Delhi NCR", slug: "delhi" },
-                  { name: "Hyderabad", slug: "hyderabad" },
-                  { name: "Mumbai", slug: "mumbai" },
-                  { name: "Pune", slug: "pune" },
-                  { name: "Kolkata", slug: "kolkata" },
-                  { name: "Kochi", slug: "kochi" },
-                ].map((m) => {
-                  const isCurrent = (!domain?.slug && !m.slug) || (domain?.slug === m.slug);
-                  return (
-                    <Link
-                      key={m.name}
-                      href={m.slug ? `/${m.slug}` : "/"}
-                      onClick={() => {
-                        setRadiusKm(null);
-                        if (typeof document !== "undefined") {
-                          document.cookie = `locatogo_city=${m.slug || "all"}; path=/; max-age=31536000; SameSite=Lax`;
-                        }
-                      }}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-                        isCurrent
-                          ? "bg-indigo-600 text-white shadow-xs font-bold"
-                          : "bg-gray-100 hover:bg-gray-200 border border-gray-200/80 text-gray-700"
-                      }`}
-                    >
-                      {m.name}
-                    </Link>
-                  );
-                })}
-              </div>
-
               {/* Category Filter Chips Row */}
               <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5">
                 <button
@@ -1352,7 +1292,7 @@ export function ModernDirectoryExplorer({
                   <span>All Places</span>
                 </button>
 
-                {uniqueCategories.map((cat) => {
+                {visibleCategories.map((cat) => {
                   const isSelected = selectedCategory === cat.id;
                   const icon = getCategoryIcon(cat.name);
 
@@ -1371,6 +1311,18 @@ export function ModernDirectoryExplorer({
                     </button>
                   );
                 })}
+                {additionalCategories.length > 0 && (
+                  <select
+                    value={additionalCategories.some((cat) => cat.id === selectedCategory) ? selectedCategory : ""}
+                    onChange={(event) => handleSelectCategory(event.target.value)}
+                    className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-700 shadow-2xs outline-none cursor-pointer"
+                  >
+                    <option value="">More categories</option>
+                    {additionalCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
           </section>
@@ -1635,7 +1587,7 @@ export function ModernDirectoryExplorer({
             {/* Top-Left Floating Category Controls on Map */}
             <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-[400] max-w-[calc(100vw-190px)] sm:max-w-xl">
               {/* Floating Category Pills on Map */}
-              <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto pb-1 no-scrollbar max-w-full">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pb-1 max-w-full">
                 <button
                   onClick={() => handleSelectCategory("")}
                   className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold shadow-md transition-all cursor-pointer ${
@@ -1646,7 +1598,7 @@ export function ModernDirectoryExplorer({
                 >
                   🌐 All Places
                 </button>
-                {categories.map((cat) => {
+                {visibleCategories.map((cat) => {
                   const isSelected = selectedCategory === cat.id;
                   const icon = getCategoryIcon(cat.name);
                   return (
@@ -1663,6 +1615,18 @@ export function ModernDirectoryExplorer({
                     </button>
                   );
                 })}
+                {additionalCategories.length > 0 && (
+                  <select
+                    value={additionalCategories.some((cat) => cat.id === selectedCategory) ? selectedCategory : ""}
+                    onChange={(event) => handleSelectCategory(event.target.value)}
+                    className="rounded-full border border-gray-200 bg-white/95 px-2.5 py-1 text-[11px] sm:text-xs font-bold text-gray-700 shadow-md outline-none cursor-pointer"
+                  >
+                    <option value="">More categories</option>
+                    {additionalCategories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
 

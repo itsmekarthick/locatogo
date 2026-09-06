@@ -90,29 +90,28 @@ export default async function Home({ searchParams }: Props) {
   const savedCitySlug = cookieStore.get("locatogo_city")?.value;
 
   // 1. Fetch all published domains and categories
-  const [{ data: domains }, { data: categories }] = await Promise.all([
+  const [{ data: domains }] = await Promise.all([
     supabase
       .from("domains")
-      .select("id, name, slug, default_latitude, default_longitude")
+      .select("id, name, slug, tenant_id, default_latitude, default_longitude")
       .eq("status", "published")
       .order("name"),
-    supabase
-      .from("categories")
-      .select("id, name, slug")
-      .eq("is_active", true)
-      .order("sort_order"),
   ]);
 
-  // Ensure unique categories by slug
+  const domainList = domains ?? [];
+  const metroTenantId = domainList.find((d) => d.slug !== "india-atlas")?.tenant_id;
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, slug")
+    .eq("tenant_id", metroTenantId ?? "")
+    .eq("is_active", true)
+    .order("sort_order");
+
   const categoryMap = new Map<string, Category>();
   (categories ?? []).forEach((c) => {
-    if (c.slug && !categoryMap.has(c.slug)) {
-      categoryMap.set(c.slug, c as Category);
-    }
+    if (c.slug && !categoryMap.has(c.slug)) categoryMap.set(c.slug, c as Category);
   });
   const uniqueCategories = Array.from(categoryMap.values());
-
-  const domainList = domains ?? [];
   const localCityDomain =
     savedCitySlug === "all"
       ? null

@@ -16,17 +16,23 @@ envFile.split("\n").forEach((line) => {
 });
 
 const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
 
 async function run() {
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  // 1. Get first active domain & category
-  const { data: domains } = await supabase.from("domains").select("id, tenant_id").limit(1);
-  if (!domains || !domains.length) {
-    console.error("No active domains found in database.");
-    return;
+  const replaceExisting = process.argv.includes("--replace");
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
   }
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // 1. Resolve the dedicated Bengaluru Tech Atlas target.
+  const { data: domains, error: domainError } = await supabase
+    .from("domains")
+    .select("id, tenant_id")
+    .eq("slug", "bangalore")
+    .eq("status", "published")
+    .limit(1);
+  if (domainError || !domains?.length) throw domainError || new Error("Bangalore domain not found");
   const { id: domainId, tenant_id: tenantId } = domains[0];
 
   let { data: category } = await supabase
@@ -54,6 +60,20 @@ async function run() {
   }
 
   const categoryId = category?.id || domainId;
+
+  if (replaceExisting) {
+    console.log("Removing existing Tech Atlas companies and jobs...");
+    const { error: jobsError } = await supabase.from("company_jobs").delete().not("id", "is", null);
+    if (jobsError) throw jobsError;
+    const { error: listingsError } = await supabase
+      .from("listings")
+      .delete()
+      .eq("domain_id", domainId)
+      .not("company_type", "is", null);
+    if (listingsError) throw listingsError;
+    console.log("Existing Tech Atlas companies removed");
+  }
+
   const datasetsDir = path.join(process.cwd(), "public", "datasets");
 
   const files = [
@@ -120,7 +140,9 @@ async function run() {
         };
       });
 
-      const { error } = await supabase.from("listings").insert(records);
+      const { error } = await supabase
+        .from("listings")
+        .upsert(records, { onConflict: "domain_id,slug" });
       if (error) {
         // If duplicates exist, insert item by item or skip
         console.warn(`Chunk ${i / CHUNK_SIZE + 1} notice: ${error.message}`);

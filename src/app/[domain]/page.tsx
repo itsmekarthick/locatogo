@@ -36,7 +36,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
 
   const { data: domain } = await supabase
     .from("domains")
-    .select("id, name, description, slug")
+    .select("id, name, description, slug, tenant_id")
     .or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug}`)
     .eq("status", "published")
     .maybeSingle();
@@ -78,6 +78,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
     supabase
       .from("categories")
       .select("id, name, slug, icon")
+      .eq("tenant_id", domain.tenant_id)
       .or(`domain_id.is.null,domain_id.eq.${domain.id}`)
       .eq("is_active", true)
       .order("sort_order"),

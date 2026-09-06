@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import heapq
 import json
 import os
 import re
@@ -105,6 +106,49 @@ CATEGORY_MAP = {
     "community_center": "community-nonprofit", "ngo": "community-nonprofit", "library": "community-nonprofit", "museum": "community-nonprofit",
 }
 
+CATEGORY_ALIASES = {
+    "place_of_worship": "temples-religious", "religious_site": "temples-religious",
+    "medical_clinic": "hospitals-clinics", "healthcare": "hospitals-clinics",
+    "office": "professional-services", "business": "professional-services",
+    "store": "independent-retail", "shop": "independent-retail",
+    "supermarket": "shopping-malls", "department_store": "shopping-malls",
+    "food_and_drink": "restaurants-cafes", "fast_food_restaurant": "restaurants-cafes",
+    "lodging": "hotels-accommodation", "bed_and_breakfast": "hotels-accommodation",
+    "railway_station": "transportation", "subway_station": "transportation",
+    "parking": "transportation", "post_office": "government-public",
+}
+
+CATEGORY_TOKEN_RULES = (
+    ("school education college university preschool tutoring training", "schools-education"),
+    ("restaurant cafe bakery food dining fast_food indian_restaurant", "restaurants-cafes"),
+    ("hospital clinic medical health pharmacy dentist diagnostic", "hospitals-clinics"),
+    ("hotel hostel resort accommodation lodging travel tours", "hotels-accommodation"),
+    ("bank financial finance atm credit_union insurance", "banks-finance"),
+    ("software information_technology it_service computer", "tech-coworking"),
+    ("temple hindu religious church mosque worship cathedral", "temples-religious"),
+    ("government public_service police fire post_office", "government-public"),
+    ("fuel gas_station automotive car_dealer car_repair motorcycle auto_parts", "petrol-automotive"),
+    ("gym sports yoga swimming stadium", "gyms-sports"),
+    ("beauty salon spa barber massage", "beauty-spa"),
+    ("cinema theater nightclub bar pub party event amusement arts entertainment landmark", "entertainment-nightlife"),
+    ("park garden playground recreation", "parks-recreation"),
+    ("bus train metro railway airport transportation", "transportation"),
+    ("grocery supermarket convenience butcher vegetable", "groceries-daily-needs"),
+    ("professional real_estate business office consultant lawyer accountant construction developer property", "professional-services"),
+    ("clothing electronics mobile_phone jewelry shoe furniture hardware bookstore flowers gifts computer store shopping", "independent-retail"),
+    ("community nonprofit library museum", "community-nonprofit"),
+)
+
+TECH_PRIMARY_CATEGORIES = {
+    "software_development", "information_technology_company",
+    "it_service_and_computer_repair", "computer_hardware_company",
+    "computer_store", "computer_coaching", "computer_wholesaler",
+    "b2b_science_and_technology", "b2b_science_and_technology_service",
+    "biotechnology_company", "coworking_space", "it_consultant",
+    "event_technology_service", "shared_office_space", "engineering_services",
+    "engineering_service",
+}
+
 CATEGORY_SLUG_TO_ID = {
     "banks-finance": "21af23e6-c103-4a79-bf0e-bf72b3740813",
     "beauty-spa": "01bf8c3b-4088-4015-9ce9-b7d5a0a2a78e",
@@ -169,10 +213,18 @@ def first_val(value: Any) -> str | None:
     return as_text(value)
 
 
-def category_id_for(raw_cat: Any) -> str:
+def category_id_for(raw_cat: Any, category_ids: dict[str, str]) -> str:
     raw = first_val(raw_cat)
-    slug = CATEGORY_MAP.get(raw.strip().lower().replace(" ", "_") if raw else "", "other")
-    return CATEGORY_SLUG_TO_ID.get(slug, CATEGORY_SLUG_TO_ID["other"])
+    normalized = raw.strip().lower().replace(" ", "_") if raw else ""
+    normalized = normalized.split(":")[-1]
+    slug = CATEGORY_MAP.get(normalized) or CATEGORY_ALIASES.get(normalized)
+    if not slug:
+        slug = next(
+            (target for tokens, target in CATEGORY_TOKEN_RULES
+             if any(token in normalized for token in tokens.split())),
+            "other",
+        )
+    return category_ids.get(slug) or category_ids["other"]
 
 
 def slugify(val: str) -> str:
@@ -241,16 +293,134 @@ class SupabaseClient:
                     raise RuntimeError(f"Insert failed: {err}")
                 time.sleep(2 ** attempt)
 
+    def get(self, table: str, params: str) -> list[dict[str, Any]]:
+        for attempt in range(5):
+            req = Request(
+                f"{self.url}/rest/v1/{table}?{params}",
+                headers={"apikey": self.key, "Authorization": f"Bearer {self.key}"},
+                method="GET",
+            )
+            try:
+                with urlopen(req, timeout=60) as resp:
+                    return json.loads(resp.read().decode("utf-8"))
+            except (HTTPError, URLError):
+                if attempt == 4:
+                    raise
+                time.sleep(2 ** attempt)
+        raise RuntimeError(f"Could not read {table}")
+
+    def delete_all_listings(self) -> None:
+        for attempt in range(5):
+            req = Request(
+                f"{self.url}/rest/v1/listings?id=not.is.null",
+                headers={
+                    "apikey": self.key,
+                    "Authorization": f"Bearer {self.key}",
+                    "Prefer": "return=minimal",
+                },
+                method="DELETE",
+            )
+            try:
+                with urlopen(req, timeout=120) as resp:
+                    resp.read()
+                    return
+            except HTTPError as err:
+                body = err.read().decode("utf-8", errors="replace")
+                print(f"Supabase reset error ({err.code}): {body}", file=sys.stderr)
+                if attempt == 4:
+                    raise RuntimeError(f"Could not delete existing listings: {err}") from err
+                time.sleep(2 ** attempt)
+            except URLError:
+                if attempt == 4:
+                    raise
+                time.sleep(2 ** attempt)
+
+    def delete_tech_listings(self) -> None:
+        self.delete_rows("company_jobs", "id=not.is.null")
+        listing_rows: list[dict[str, Any]] = []
+        for offset in range(0, 1_000_000, 1_000):
+            page = self.get(
+                "listings",
+                f"company_type=not.is.null&select=id&limit=1000&offset={offset}",
+            )
+            listing_rows.extend(page)
+            if len(page) < 1_000:
+                break
+        listing_ids = [row["id"] for row in listing_rows if row.get("id")]
+        for start in range(0, len(listing_ids), 250):
+            ids = ",".join(listing_ids[start:start + 250])
+            self.delete_rows("listings", f"id=in.({ids})")
+
+    def delete_rows(self, table: str, params: str) -> None:
+        req = Request(
+            f"{self.url}/rest/v1/{table}?{params}",
+            headers={
+                "apikey": self.key,
+                "Authorization": f"Bearer {self.key}",
+                "Prefer": "return=minimal",
+            },
+            method="DELETE",
+        )
+        with urlopen(req, timeout=120) as resp:
+            resp.read()
+
+    def resolve_import_ids(self) -> tuple[str, dict[str, str]]:
+        tenant_rows = self.get("tenants", "slug=eq.karthick&select=id")
+        if not tenant_rows:
+            raise RuntimeError("Tenant karthick not found")
+        tenant_id = tenant_rows[0]["id"]
+        domains = self.get(
+            "domains",
+            f"tenant_id=eq.{tenant_id}&slug=in.({','.join(METROS)})&select=id,slug",
+        )
+        domain_ids = {row["slug"]: row["id"] for row in domains}
+        missing_domains = sorted(set(METROS) - set(domain_ids))
+        if missing_domains:
+            raise RuntimeError(f"Metro domains not found: {', '.join(missing_domains)}")
+
+        categories = self.get(
+            "categories",
+            f"tenant_id=eq.{tenant_id}&domain_id=is.null&select=id,slug",
+        )
+        category_ids = {row["slug"]: row["id"] for row in categories}
+        if "other" not in category_ids:
+            raise RuntimeError("Global 'other' category not found")
+        return tenant_id, {**category_ids, **{f"domain:{slug}": domain_ids[slug] for slug in domain_ids}}
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--parquet", default="scripts/overture/india_places.parquet", type=Path)
     parser.add_argument("--batch-size", default=500, type=int)
     parser.add_argument("--city", help="Specific city to import (e.g. bangalore)")
+    parser.add_argument(
+        "--reset-listings",
+        action="store_true",
+        help="Delete every existing listing before importing; domains and categories remain",
+    )
+    parser.add_argument(
+        "--tech-only",
+        action="store_true",
+        help="Import only Overture technology and engineering places as Tech Atlas companies",
+    )
+    parser.add_argument(
+        "--reset-tech",
+        action="store_true",
+        help="Delete existing company listings and jobs before a Tech-only import",
+    )
     args = parser.parse_args()
 
     url, key = load_env()
     client = SupabaseClient(url, key)
+    if args.reset_listings:
+        print("⚠️  Deleting all existing listings before import...")
+        client.delete_all_listings()
+        print("✅ Existing listings deleted")
+    if args.reset_tech:
+        print("⚠️  Deleting existing Tech Atlas companies and jobs...")
+        client.delete_tech_listings()
+        print("✅ Existing Tech Atlas companies deleted")
+    tenant_id, resolved_ids = client.resolve_import_ids()
 
     target_metros = {args.city: METROS[args.city]} if args.city and args.city in METROS else METROS
     print(f"🎯 Target Metros to import: {list(target_metros.keys())}")
@@ -267,9 +437,12 @@ def main():
         print(f"==========================================")
         min_lon, min_lat, max_lon, max_lat = cfg["bbox"]
         target_limit = cfg["limit"]
-        domain_id = cfg["domain_id"]
+        domain_id = resolved_ids[f"domain:{metro_key}"]
 
-        collected_candidates = []
+        # Keep only the best rows needed for this city instead of retaining the
+        # entire bbox in memory.
+        collected_candidates: list[tuple[float, int, float, float, str, dict[str, Any]]] = []
+        candidate_sequence = 0
         seen_slugs = set()
 
         for i in range(rg_count):
@@ -283,8 +456,11 @@ def main():
             if rg_max_x < min_lon or rg_min_x > max_lon or rg_max_y < min_lat or rg_min_y > max_lat:
                 continue
 
-            # Load actual data for this row group
-            rg_table = f.read_row_group(i)
+            # Load only fields used for scoring and record creation.
+            rg_table = f.read_row_group(i, columns=[
+                "id", "names", "bbox", "addresses", "categories", "confidence",
+                "websites", "phones", "emails", "brand",
+            ])
             rg_rows = rg_table.to_pylist()
 
             for row in rg_rows:
@@ -300,21 +476,30 @@ def main():
                 if not title:
                     continue
 
+                raw_categories = row.get("categories") or {}
+                primary_category = raw_categories.get("primary") if isinstance(raw_categories, dict) else raw_categories
+                if args.tech_only and primary_category not in TECH_PRIMARY_CATEGORIES:
+                    continue
+
                 score = calculate_quality_score(row)
-                collected_candidates.append((score, lon, lat, title, row))
+                candidate_sequence += 1
+                candidate = (score, candidate_sequence, lon, lat, title, row)
+                if len(collected_candidates) < target_limit:
+                    heapq.heappush(collected_candidates, candidate)
+                elif candidate > collected_candidates[0]:
+                    heapq.heapreplace(collected_candidates, candidate)
 
-        print(f"  🔍 Found {len(collected_candidates):,} total places in {cfg['name']} bbox")
+        print(f"  🔍 Retained top {len(collected_candidates):,} places in {cfg['name']} bbox")
 
-        # Sort by quality score descending and take top limit
-        collected_candidates.sort(key=lambda x: x[0], reverse=True)
-        top_places = collected_candidates[:target_limit]
+        # Restore deterministic quality order after bounded collection.
+        top_places = sorted(collected_candidates, key=lambda x: (x[0], x[1]), reverse=True)
         print(f"  ⭐ Selected top {len(top_places):,} highest quality places for import")
 
         records_to_insert = []
         inserted_count = 0
         batch_num = 0
 
-        for seq, (score, lon, lat, title, raw) in enumerate(top_places, start=1):
+        for seq, (score, _candidate_sequence, lon, lat, title, raw) in enumerate(top_places, start=1):
             addr_list = raw.get("addresses") or []
             first_addr = addr_list[0] if isinstance(addr_list, list) and addr_list else {}
             addr_line = as_text(first_addr.get("freeform"))
@@ -325,19 +510,20 @@ def main():
 
             raw_cat = raw.get("categories") or {}
             primary_cat = raw_cat.get("primary") if isinstance(raw_cat, dict) else raw_cat
-            cat_id = category_id_for(primary_cat)
+            cat_id = category_id_for(primary_cat, resolved_ids)
 
             raw_id = as_text(raw.get("id")) or f"{title}|{seq}"
-            slug = make_clean_slug(title, raw_id, seq, seen_slugs)
+            slug_title = f"tech-{title}" if args.tech_only else title
+            slug = make_clean_slug(slug_title, raw_id, seq, seen_slugs)
 
             brand = raw.get("brand") or {}
             brand_name = as_text(brand.get("names", {}).get("primary")) if isinstance(brand, dict) else None
             short_desc = f"Brand: {brand_name}" if brand_name else None
 
             record = {
-                "tenant_id": TENANT_ID,
+                "tenant_id": tenant_id,
                 "domain_id": domain_id,
-                "category_id": cat_id,
+                "category_id": resolved_ids["tech-coworking"] if args.tech_only else cat_id,
                 "owner_user_id": OWNER_USER_ID,
                 "title": title,
                 "slug": slug,
@@ -345,6 +531,7 @@ def main():
                 "address_line_1": addr_line,
                 "locality": as_text(first_addr.get("locality")) or cfg["name"],
                 "city": cfg["name"],
+                "company_type": "it_services_consulting" if args.tech_only else None,
                 "administrative_area": as_text(first_addr.get("region")),
                 "country_code": "IN",
                 "postal_code": as_text(first_addr.get("postcode")),
