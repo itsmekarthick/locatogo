@@ -141,13 +141,27 @@ CATEGORY_TOKEN_RULES = (
 
 TECH_PRIMARY_CATEGORIES = {
     "software_development", "information_technology_company",
-    "it_service_and_computer_repair", "computer_hardware_company",
-    "computer_store", "computer_coaching", "computer_wholesaler",
+    "computer_hardware_company",
     "b2b_science_and_technology", "b2b_science_and_technology_service",
-    "biotechnology_company", "coworking_space", "it_consultant",
-    "event_technology_service", "shared_office_space", "engineering_services",
+    "biotechnology_company", "it_consultant", "engineering_services",
     "engineering_service",
 }
+
+NON_EMPLOYER_SIGNAL = re.compile(
+    r"\b(?:academy|authorized reseller|computer store|computer repair|co[- ]?working|"
+    r"coaching|dealer|distributor|electronics store|mobile shop|repair center|"
+    r"service center|showroom|training center|workspace)\b",
+    re.IGNORECASE,
+)
+DIRECTORY_HOST = re.compile(
+    r"(?:linkedin\.com|facebook\.com|instagram\.com|justdial\.com|indiamart\.com|"
+    r"magicpin\.in|nearbuy\.com|sulekha\.com|singleinterface\.com|yelp\.com)",
+    re.IGNORECASE,
+)
+
+
+def is_employer_candidate(title: str, website: str | None) -> bool:
+    return bool(website and not NON_EMPLOYER_SIGNAL.search(title) and not DIRECTORY_HOST.search(website))
 
 CATEGORY_SLUG_TO_ID = {
     "banks-finance": "21af23e6-c103-4a79-bf0e-bf72b3740813",
@@ -480,6 +494,9 @@ def main():
                 primary_category = raw_categories.get("primary") if isinstance(raw_categories, dict) else raw_categories
                 if args.tech_only and primary_category not in TECH_PRIMARY_CATEGORIES:
                     continue
+                website = first_val(row.get("websites"))
+                if args.tech_only and not is_employer_candidate(title, website):
+                    continue
 
                 score = calculate_quality_score(row)
                 candidate_sequence += 1
@@ -537,7 +554,7 @@ def main():
                 "postal_code": as_text(first_addr.get("postcode")),
                 "latitude": float(lat),
                 "longitude": float(lon),
-                "website": first_val(raw.get("websites")),
+                "website": website,
                 "phone": first_val(raw.get("phones")),
                 "email": first_val(raw.get("emails")),
                 "status": "published",

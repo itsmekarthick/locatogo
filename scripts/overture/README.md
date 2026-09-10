@@ -31,6 +31,17 @@ python scripts/overture/import_india.py scripts/overture/india_places.parquet --
 
 Records are upserted in batches of 500 as `published` and `unverified`, with no owner and no featured flag. Deterministic domain/slug keys make reruns safe: existing Atlas records are updated rather than duplicated. Rejected rows are reported in the manifest. The migration is the explicit clean-slate operation.
 
+## Enrich Tech Careers URLs
+
+Tech-only Overture listings usually include a company website but not an ATS URL. Discover supported Greenhouse, Lever, Ashby, and SmartRecruiters boards from those sites and public search results, then verify each board API before writing it to `listings.careers_url`:
+
+```powershell
+python scripts/overture/enrich_tech_careers.py --limit 1000 --dry-run
+python scripts/overture/enrich_tech_careers.py --limit 1000
+```
+
+The script requires `SUPABASE_URL` (or `NEXT_PUBLIC_SUPABASE_URL`) and `SUPABASE_SERVICE_ROLE_KEY`. It only considers listings with a non-null `company_type` and a null `careers_url`; unresolved or non-ATS career pages are left unchanged. Run it periodically after importing new Overture tech listings.
+
 To import into your own existing tenant/domain and associate records with your user, pass the existing slugs and your profile UUID:
 
 ```powershell

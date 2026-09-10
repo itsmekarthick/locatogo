@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Pagination } from "@/components/ui/pagination";
 import { generateUberRideLink, generateWhatsAppInquiryLink } from "@/lib/services/transit-links";
 import { Google3DMap } from "@/components/google-3d-map";
@@ -110,6 +110,19 @@ function deduplicateListings(listings: PlaceListing[]) {
   });
 }
 
+function getDisplayCategory(place: PlaceListing) {
+  if (place.category_name?.trim()) return place.category_name;
+  const text = `${place.title} ${place.short_description || ""}`.toLowerCase();
+  if (/hospital|clinic|health|medical|pharmacy|dentist/.test(text)) return "Healthcare";
+  if (/hotel|resort|hostel|accommodation/.test(text)) return "Hospitality";
+  if (/restaurant|cafe|bakery|food|dining/.test(text)) return "Food & Dining";
+  if (/tech|software|computer|it company|coworking|engineering/.test(text)) return "Technology";
+  if (/car|auto|motor|fuel|petrol|vehicle/.test(text)) return "Automotive";
+  if (/shop|store|retail|mall|market/.test(text)) return "Retail";
+  if (/school|college|university|academy|education/.test(text)) return "Education";
+  return "Local Business";
+}
+
 function getCategoryIcon(name: string) {
   const lower = name.toLowerCase();
   if (lower.includes("tech park") || lower.includes("sez") || lower.includes("business park") || lower.includes("campus")) return "🏢";
@@ -153,6 +166,13 @@ const VISIBLE_CATEGORY_SLUGS = new Set([
   "tech-coworking",
 ]);
 
+const BANGALORE_MICRO_MARKETS = [
+  "Koramangala", "Indiranagar", "Jayanagar", "Whitefield", "Electronic City",
+  "Bommasandra", "HSR Layout", "Marathahalli", "Bellandur", "Hebbal",
+  "JP Nagar", "Banashankari", "Rajajinagar", "BTM Layout", "Sarjapur Road",
+  "Manyata Tech Park",
+];
+
 export function ModernDirectoryExplorer({
   domain,
   initialListings,
@@ -192,6 +212,18 @@ export function ModernDirectoryExplorer({
     () => uniqueCategories.filter((category) => !VISIBLE_CATEGORY_SLUGS.has(category.slug)),
     [uniqueCategories]
   );
+  const areaOptions = useMemo(() => {
+    const locations = Array.from(new Set(availableLocations.filter(Boolean)));
+    if (domain?.slug !== "bangalore") return locations;
+    const priority = BANGALORE_MICRO_MARKETS.filter((market) =>
+      locations.some((location) => location.toLowerCase().includes(market.toLowerCase()))
+    );
+    const prioritySet = new Set(priority.map((market) => market.toLowerCase()));
+    const remaining = locations
+      .filter((location) => !prioritySet.has(location.toLowerCase()))
+      .sort((a, b) => a.localeCompare(b));
+    return [...priority, ...remaining];
+  }, [availableLocations, domain?.slug]);
 
   const [selectedCategory, setSelectedCategory] = useState(resolvedInitialCat);
   const [selectedAmenity, setSelectedAmenity] = useState<string>("");
@@ -199,6 +231,7 @@ export function ModernDirectoryExplorer({
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [activePlaceId, setActivePlaceId] = useState<string | null>(null);
+  const cardInteractionRef = useRef(false);
   const [sortBy, setSortBy] = useState<"default" | "distance" | "name" | "featured">("default");
   const [radiusKm, setRadiusKm] = useState<number | null>(null);
   const [featuredOnly, setFeaturedOnly] = useState(false);
@@ -232,6 +265,16 @@ export function ModernDirectoryExplorer({
   const [simulatedWeather, setSimulatedWeather] = useState<WeatherType | null>(null);
 
   const [allListings, setAllListings] = useState<PlaceListing[]>(initialListings);
+
+  useEffect(() => {
+    if (!activePlaceId || typeof document === "undefined") return;
+    if (cardInteractionRef.current) {
+      cardInteractionRef.current = false;
+      return;
+    }
+    const card = document.querySelector(`[data-listing-id="${activePlaceId}"]`);
+    card?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [activePlaceId]);
 
   // Progressive background streaming: Loads remaining places smoothly without blocking main thread
   useEffect(() => {
@@ -577,8 +620,8 @@ export function ModernDirectoryExplorer({
 
   // Dynamic top locations derived from available locations or listings
   const topLocations = useMemo(() => {
-    if (availableLocations && availableLocations.length > 0) {
-      return availableLocations.slice(0, 10);
+    if (areaOptions.length > 0) {
+      return areaOptions.slice(0, 10);
     }
     const unique = Array.from(
       new Set(
@@ -588,7 +631,7 @@ export function ModernDirectoryExplorer({
       )
     );
     return unique.slice(0, 10);
-  }, [availableLocations, initialListings]);
+  }, [areaOptions, initialListings]);
 
   const handleSelectQuickLocation = (locName: string) => {
     if (selectedLocation === locName) {
@@ -606,6 +649,44 @@ export function ModernDirectoryExplorer({
       setFlyToUserTrigger((prev) => prev + 1);
     }
   };
+
+  const renderResultsCategoryFilters = () => (
+    <div className="mt-4 flex min-w-0 items-center gap-1.5 overflow-x-auto border-b border-gray-100 pb-3 no-scrollbar">
+      <span className="shrink-0 text-[11px] font-semibold text-gray-400">Categories:</span>
+      <button
+        onClick={() => handleSelectCategory("")}
+        className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+          !selectedCategory ? "bg-[#18181b] text-white" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+        }`}
+      >
+        All
+      </button>
+      {visibleCategories.map((category) => (
+        <button
+          key={category.id}
+          onClick={() => handleSelectCategory(category.id)}
+          className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+            selectedCategory === category.id ? "bg-[#18181b] text-white" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          <span>{getCategoryIcon(category.name)}</span>
+          {category.name}
+        </button>
+      ))}
+      {additionalCategories.length > 0 && (
+        <select
+          value={additionalCategories.some((category) => category.id === selectedCategory) ? selectedCategory : ""}
+          onChange={(event) => handleSelectCategory(event.target.value)}
+          className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-bold text-gray-700 outline-none cursor-pointer"
+        >
+          <option value="">More categories</option>
+          {additionalCategories.map((category) => (
+            <option key={category.id} value={category.id}>{category.name}</option>
+          ))}
+        </select>
+      )}
+    </div>
+  );
 
   const renderViewSwitcher = (currentMode: string) => (
     <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50/50 p-1 self-start sm:self-auto overflow-x-auto no-scrollbar max-w-full">
@@ -652,9 +733,9 @@ export function ModernDirectoryExplorer({
     <div className="flex min-h-screen w-full flex-col bg-white font-sans antialiased text-[#111827]">
       {/* Top Navbar */}
       <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c121e] sticky top-0 z-[1000] shadow-2xs">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-3">
+        <div className="mx-auto flex min-w-0 max-w-[1440px] items-center justify-between px-2.5 sm:px-6 py-2.5 sm:py-3 gap-2 sm:gap-3">
           {/* Logo & Dual Atlas Switcher */}
-          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4 shrink-0">
             <Link href="/" className="flex items-center gap-2.5 group" title="locatogo">
               <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
@@ -720,7 +801,7 @@ export function ModernDirectoryExplorer({
                   className="rounded-lg bg-transparent px-1.5 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[130px] truncate"
                 >
                   <option value="">All Areas</option>
-                  {availableLocations.map((loc) => (
+                  {areaOptions.map((loc) => (
                     <option key={loc} value={loc}>
                       {loc}
                     </option>
@@ -731,7 +812,7 @@ export function ModernDirectoryExplorer({
           </div>
 
           {/* Right Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
             <Link
               href="/submit"
               title="Add a New Place"
@@ -746,8 +827,8 @@ export function ModernDirectoryExplorer({
         </div>
 
         {/* Dedicated Mobile Search & Neighborhood Bar */}
-        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
-          <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 shadow-2xs">
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-2.5 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
+          <div className="flex min-w-0 w-full items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 shadow-2xs">
             <div className="relative flex-1 flex items-center min-w-0">
               <span className="text-slate-400 text-xs mr-1.5 shrink-0">🔍</span>
               <input
@@ -774,7 +855,7 @@ export function ModernDirectoryExplorer({
                 className="rounded-lg bg-transparent px-1 py-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[105px] truncate"
               >
                 <option value="">All Areas</option>
-                {availableLocations.map((loc) => (
+                {areaOptions.map((loc) => (
                   <option key={loc} value={loc}>
                     {loc}
                   </option>
@@ -808,7 +889,7 @@ export function ModernDirectoryExplorer({
       {(viewMode === "immersive" || viewMode === "3d") && (
         <>
           {/* Top Interactive Hero Map with Floating Overlapping Categories Card */}
-          <div className="relative w-full h-[380px] sm:h-[460px] md:h-[500px] bg-[#e8eef5]">
+          <div className="relative mx-auto w-full max-w-[1440px] h-[380px] sm:h-[460px] md:h-[500px] overflow-visible bg-[#e8eef5] sm:rounded-3xl sm:shadow-[0_18px_50px_rgba(15,23,42,0.14)] sm:ring-1 sm:ring-slate-200/80">
             <MapErrorBoundary fallbackText="The city atlas map canvas encountered an issue. Click below to reload.">
               <InteractiveLeafletCanvas
                 key={`hero-canvas-${viewMode}`}
@@ -849,10 +930,10 @@ export function ModernDirectoryExplorer({
             </div>
 
             {/* Floating Overlapping Category Pills Card */}
-            <div className="absolute -bottom-14 sm:-bottom-14 left-1/2 -translate-x-1/2 w-full max-w-4xl px-3 sm:px-4 z-[400]">
-              <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white/95 p-2.5 sm:p-4 shadow-xl backdrop-blur-md">
+            <div className="absolute -bottom-14 sm:-bottom-14 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-4xl px-0 sm:w-full sm:px-4 z-[400]">
+              <div className="rounded-2xl sm:rounded-3xl border border-gray-100 bg-white/95 p-2 sm:p-4 shadow-xl backdrop-blur-md">
                 {/* Category Pills Row */}
-                <div className="flex flex-wrap items-center gap-1.5 pb-0.5">
+                <div className="flex flex-wrap items-center gap-1 pb-0.5 sm:gap-1.5">
                   <button
                     onClick={() => handleSelectCategory("")}
                     className={`flex items-center gap-1.5 rounded-full px-3 sm:px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
@@ -961,34 +1042,35 @@ export function ModernDirectoryExplorer({
               {renderViewSwitcher(viewMode)}
             </div>
 
+            {renderResultsCategoryFilters()}
+
             {/* Toolbar: Sorting & Radius Filter & Verification Toggles */}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5 py-2 border-b border-gray-100/80 text-xs">
               {/* Radius Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-                <span className="text-gray-400 font-semibold text-[11px] shrink-0">📍 Radius:</span>
-                {[
-                  { label: "Any", val: null },
-                  { label: "1 km", val: 1 },
-                  { label: "3 km", val: 3 },
-                  { label: "5 km", val: 5 },
-                  { label: "10 km", val: 10 },
-                  { label: "25 km", val: 25 },
-                ].map((r) => {
-                  const isSelected = radiusKm === r.val;
-                  return (
-                    <button
-                      key={r.label}
-                      onClick={() => setRadiusKm(r.val)}
-                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                        isSelected
-                          ? "bg-[var(--coral)] text-white shadow-2xs font-bold"
-                          : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      {r.label}
-                    </button>
-                  );
-                })}
+              <div className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-sm">
+                <span className="shrink-0 text-[11px] font-semibold text-gray-400">📍 Radius</span>
+                <input
+                  aria-label="Search radius in kilometres"
+                  type="range"
+                  min="1"
+                  max="25"
+                  step="1"
+                  value={radiusKm ?? 25}
+                  onChange={(event) => setRadiusKm(Number(event.target.value))}
+                  className="h-1.5 min-w-0 flex-1 cursor-pointer accent-[var(--coral)]"
+                />
+                <span className="w-10 shrink-0 text-right text-[11px] font-bold text-gray-700">
+                  {radiusKm === null ? "Any" : `${radiusKm} km`}
+                </span>
+                {radiusKm !== null && (
+                  <button
+                    type="button"
+                    onClick={() => setRadiusKm(null)}
+                    className="shrink-0 text-[11px] font-semibold text-gray-500 hover:text-gray-900 cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
 
               {/* Right side: Sorting + Toggles */}
@@ -1043,7 +1125,7 @@ export function ModernDirectoryExplorer({
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                     {paginatedListings.map((place, index) => {
                       const isSelected = activePlaceId === place.id;
-                      const catName = (place.category_name || "General").toUpperCase();
+                      const catName = getDisplayCategory(place).toUpperCase();
                       const ratingInfo = getPlaceRating(place);
 
                       return (
@@ -1058,7 +1140,9 @@ export function ModernDirectoryExplorer({
                             />
                           )}
                           <article
-                            onClick={() => setActivePlaceId(place.id)}
+                            data-listing-id={place.id}
+                            onMouseEnter={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
+                            onClick={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
                           className={`group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md ${
                             isSelected
                               ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
@@ -1081,8 +1165,8 @@ export function ModernDirectoryExplorer({
                             <div className="flex items-center gap-1.5">
                               {place.distanceKm !== null && place.distanceKm !== undefined ? (
                                 <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
-                                  <span>🚗</span>
-                                  <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}</span>
+                                  <span>📍</span>
+                                    <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`} away</span>
                                 </span>
                               ) : (
                                 <button
@@ -1349,6 +1433,8 @@ export function ModernDirectoryExplorer({
               {renderViewSwitcher(viewMode)}
             </div>
 
+              {renderResultsCategoryFilters()}
+
             {/* TWO-COLUMN SPLIT: LEFT LISTINGS, RIGHT INTERACTIVE MAP */}
             <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* LEFT: LISTINGS COLUMN */}
@@ -1358,7 +1444,7 @@ export function ModernDirectoryExplorer({
                     <div className="space-y-3.5">
                       {paginatedListings.map((place, index) => {
                         const isSelected = activePlaceId === place.id;
-                        const catName = (place.category_name || "General").toUpperCase();
+                        const catName = getDisplayCategory(place).toUpperCase();
                         const ratingInfo = getPlaceRating(place);
 
                         return (
@@ -1373,7 +1459,9 @@ export function ModernDirectoryExplorer({
                               />
                             )}
                             <article
-                              onClick={() => setActivePlaceId(place.id)}
+                              data-listing-id={place.id}
+                              onMouseEnter={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
+                              onClick={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
                             className={`group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md ${
                               isSelected
                                 ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
@@ -1396,8 +1484,8 @@ export function ModernDirectoryExplorer({
                               <div className="flex items-center gap-1.5">
                                 {place.distanceKm !== null && place.distanceKm !== undefined ? (
                                   <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
-                                    <span>🚗</span>
-                                    <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}</span>
+                                    <span>📍</span>
+                                    <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`} away</span>
                                   </span>
                                 ) : (
                                   <button
@@ -1585,9 +1673,9 @@ export function ModernDirectoryExplorer({
             </MapErrorBoundary>
 
             {/* Top-Left Floating Category Controls on Map */}
-            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-[400] max-w-[calc(100vw-190px)] sm:max-w-xl">
+            <div className="absolute top-2 left-2 right-2 sm:top-4 sm:left-4 sm:right-auto z-[400] max-w-[calc(100vw-1rem)] sm:max-w-xl">
               {/* Floating Category Pills on Map */}
-              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pb-1 max-w-full">
+              <div className="flex flex-wrap items-center gap-1 pb-1 max-w-full sm:gap-1.5">
                 <button
                   onClick={() => handleSelectCategory("")}
                   className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold shadow-md transition-all cursor-pointer ${
@@ -1674,13 +1762,15 @@ export function ModernDirectoryExplorer({
               <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
                 {paginatedListings.map((place) => {
                   const isSelected = activePlaceId === place.id;
-                  const catName = (place.category_name || "General").toUpperCase();
+                  const catName = getDisplayCategory(place).toUpperCase();
                   const ratingInfo = getPlaceRating(place);
 
                   return (
                     <article
                       key={place.id}
-                      onClick={() => setActivePlaceId(place.id)}
+                      data-listing-id={place.id}
+                      onMouseEnter={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
+                      onClick={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
                       className={`group cursor-pointer rounded-2xl border bg-white p-4 transition-all duration-200 shadow-xs hover:shadow-md ${
                         isSelected
                           ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
@@ -1700,8 +1790,8 @@ export function ModernDirectoryExplorer({
 
                         {place.distanceKm !== null && place.distanceKm !== undefined ? (
                           <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
-                            <span>🚗</span>
-                            <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`}</span>
+                            <span>📍</span>
+                            <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`} away</span>
                           </span>
                         ) : (
                           <button
@@ -1842,7 +1932,9 @@ export function ModernDirectoryExplorer({
               return (
                 <article
                   key={`mobile-sheet-${place.id}`}
+                  data-listing-id={place.id}
                   onClick={() => {
+                    cardInteractionRef.current = true;
                     setActivePlaceId(place.id);
                     if (place.latitude && place.longitude) {
                       setUserLocation({ lat: place.latitude, lng: place.longitude });

@@ -190,7 +190,7 @@ export function CompanyBrandAvatar({
 }) {
   const [sourceIndex, setSourceIndex] = useState(0);
   const domain = getCompanyDomain(website, title);
-  const techIcon = getCompanyCategoryIcon(title);
+  const initials = getCompanyInitials(title);
 
   // Consistent color gradient based on place title
   const hash = title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -212,8 +212,8 @@ export function CompanyBrandAvatar({
         style={{ width: size, height: size, minWidth: size, minHeight: size }}
         className={`flex items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} shadow-xs shrink-0 select-none overflow-hidden ${className}`}
       >
-        <span style={{ fontSize: size * 0.48 }} className="leading-none drop-shadow-xs">
-          {techIcon}
+        <span style={{ fontSize: size * 0.32 }} className="font-bold leading-none tracking-wide drop-shadow-xs">
+          {initials}
         </span>
       </div>
     );
