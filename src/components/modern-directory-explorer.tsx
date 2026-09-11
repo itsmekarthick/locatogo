@@ -17,6 +17,11 @@ import { trackEvent } from "@/lib/analytics/tracker";
 import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
 import { MapErrorBoundary } from "@/components/map-error-boundary";
 import { AdBannerSlot } from "@/components/ad-banner-slot";
+import { AirbnbSearchBar } from "@/components/airbnb-search-bar";
+import { AirbnbCategoryCarousel } from "@/components/airbnb-category-carousel";
+import { AirbnbFiltersModal, type FilterState } from "@/components/airbnb-filters-modal";
+import { AirbnbListingCard } from "@/components/airbnb-listing-card";
+import type { MapViewportBounds } from "@/components/interactive-leaflet-canvas";
 
 // Dynamically import interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -227,6 +232,8 @@ export function ModernDirectoryExplorer({
 
   const [selectedCategory, setSelectedCategory] = useState(resolvedInitialCat);
   const [selectedAmenity, setSelectedAmenity] = useState<string>("");
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [minRating, setMinRating] = useState<number | null>(null);
   const [mobileSheetSnap, setMobileSheetSnap] = useState<"peek" | "half" | "full">("peek");
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
@@ -236,13 +243,15 @@ export function ModernDirectoryExplorer({
   const [radiusKm, setRadiusKm] = useState<number | null>(null);
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [activeMapBounds, setActiveMapBounds] = useState<MapViewportBounds | null>(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [mobileShowMap, setMobileShowMap] = useState(false);
   
-  // Layout mode: "immersive" (Hero map + 3-col grid), "3d" (Google 3D Vector/Satellite + 3-col grid), "split" (Side-by-side), or "fullscreen" (100% full map viewport)
-  const [viewMode, setViewMode] = useState<"immersive" | "3d" | "split" | "fullscreen">("immersive");
+  // Layout mode: "split" (Default Airbnb split view), "immersive" (Hero map + grid), "3d", or "fullscreen"
+  const [viewMode, setViewMode] = useState<"immersive" | "3d" | "split" | "fullscreen">("split");
   const [isFullscreenDrawerOpen, setIsFullscreenDrawerOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  // 5 place listings + 1 in-feed ad = exactly 6 cards (2 complete 3-column rows) on every page
-  const pageSize = 5;
+  const pageSize = 12;
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -538,14 +547,35 @@ export function ModernDirectoryExplorer({
         return false;
       }
 
-      // 6. Amenity Filter
-      if (selectedAmenity) {
+      // 6. Minimum Star Rating Filter
+      if (minRating !== null) {
+        const ratingInfo = getPlaceRating(place);
+        if (ratingInfo.rating < minRating) return false;
+      }
+
+      // 7. Amenities Multi-Select Filter
+      if (selectedAmenities.length > 0) {
+        const textToSearch = `${place.title} ${place.short_description || ""} ${place.category_name || ""}`.toLowerCase();
+        const hasAllAmenities = selectedAmenities.every((amenityId) => {
+          const amenityObj = AMENITIES_LIST.find((a) => a.id === amenityId);
+          if (!amenityObj) return true;
+          return amenityObj.keywords.some((kw) => textToSearch.includes(kw));
+        });
+        if (!hasAllAmenities) return false;
+      } else if (selectedAmenity) {
         const amenityObj = AMENITIES_LIST.find((a) => a.id === selectedAmenity);
         if (amenityObj) {
           const textToSearch = `${place.title} ${place.short_description || ""} ${place.category_name || ""}`.toLowerCase();
           const hasAmenity = amenityObj.keywords.some((kw) => textToSearch.includes(kw));
           if (!hasAmenity) return false;
         }
+      }
+
+      // 8. Active Map Bounds Filter ("Search this area")
+      if (activeMapBounds && typeof place.latitude === "number" && typeof place.longitude === "number") {
+        const inLat = place.latitude <= activeMapBounds.north && place.latitude >= activeMapBounds.south;
+        const inLng = place.longitude <= activeMapBounds.east && place.longitude >= activeMapBounds.west;
+        if (!inLat || !inLng) return false;
       }
 
       return true;
@@ -594,7 +624,21 @@ export function ModernDirectoryExplorer({
       }
       return a.title.localeCompare(b.title);
     });
-  }, [allListings, searchQuery, selectedCategory, selectedLocation, userLocation, radiusKm, sortBy, featuredOnly, verifiedOnly]);
+  }, [
+    allListings,
+    searchQuery,
+    selectedCategory,
+    selectedLocation,
+    userLocation,
+    radiusKm,
+    sortBy,
+    featuredOnly,
+    verifiedOnly,
+    minRating,
+    selectedAmenities,
+    selectedAmenity,
+    activeMapBounds,
+  ]);
 
   const locatedListings = useMemo(
     () =>
@@ -729,6 +773,50 @@ export function ModernDirectoryExplorer({
     </div>
   );
 
+  const activeMetro = METRO_DOMAINS.find((m) => m.slug === domain?.slug) || METRO_DOMAINS[0];
+
+  const handleSelectMetro = (metro: (typeof METRO_DOMAINS)[0]) => {
+    if (typeof window !== "undefined") {
+      if (metro.slug) {
+        window.location.href = `/${metro.slug}`;
+      } else {
+        window.location.href = `/`;
+      }
+    }
+  };
+
+  const activeFilterCount =
+    (minRating ? 1 : 0) +
+    (radiusKm ? 1 : 0) +
+    selectedAmenities.length +
+    (featuredOnly ? 1 : 0) +
+    (verifiedOnly ? 1 : 0) +
+    (selectedLocation ? 1 : 0) +
+    (activeMapBounds ? 1 : 0);
+
+  const handleApplyFilters = (newFilters: FilterState) => {
+    setMinRating(newFilters.minRating);
+    setRadiusKm(newFilters.radiusKm);
+    setSelectedAmenities(newFilters.selectedAmenities);
+    setFeaturedOnly(newFilters.featuredOnly);
+    setVerifiedOnly(newFilters.verifiedOnly);
+    setSelectedLocation(newFilters.selectedArea);
+  };
+
+  const handleResetFilters = () => {
+    setMinRating(null);
+    setRadiusKm(null);
+    setSelectedAmenities([]);
+    setFeaturedOnly(false);
+    setVerifiedOnly(false);
+    setSelectedLocation("");
+    setActiveMapBounds(null);
+  };
+
+  const handleSearchArea = useCallback((bounds: MapViewportBounds) => {
+    setActiveMapBounds(bounds);
+  }, []);
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-white font-sans antialiased text-[#111827]">
       {/* Top Navbar */}
@@ -773,42 +861,24 @@ export function ModernDirectoryExplorer({
             </div>
           </div>
 
-          {/* Desktop Center: Search Bar + Neighborhood Dropdown */}
-          <div className="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-2">
-            <div className="w-full flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 px-3.5 py-1.5 focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all">
-              <span className="text-slate-400 text-xs mr-2 shrink-0">🔍</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search places, restaurants, hospitals..."
-                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1.5 cursor-pointer shrink-0"
-                >
-                  ✕
-                </button>
-              )}
-
-              {/* Neighborhood Selector in Top Navbar */}
-              <div className="border-l border-slate-200 dark:border-slate-700 pl-2 shrink-0">
-                <select
-                  value={selectedLocation}
-                  onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="rounded-lg bg-transparent px-1.5 py-0.5 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[130px] truncate"
-                >
-                  <option value="">All Areas</option>
-                  {areaOptions.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+          {/* Desktop Center: Airbnb Unified Search Pill */}
+          <div className="hidden md:flex flex-1 max-w-xl mx-2 justify-center">
+            <AirbnbSearchBar
+              activeMetroName={domain?.name || activeMetro.name}
+              onSelectMetro={handleSelectMetro}
+              selectedCategory={selectedCategory}
+              categories={uniqueCategories}
+              onSelectCategory={handleSelectCategory}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onSelectPlace={(id) => {
+                cardInteractionRef.current = true;
+                setActivePlaceId(id);
+              }}
+              places={allListings}
+              onLocateMe={handleLocateMe}
+              isLocating={isLocating}
+            />
           </div>
 
           {/* Right Action Buttons */}
@@ -828,46 +898,56 @@ export function ModernDirectoryExplorer({
 
         {/* Dedicated Mobile Search & Neighborhood Bar */}
         <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-2.5 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
-          <div className="flex min-w-0 w-full items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-1 shadow-2xs">
-            <div className="relative flex-1 flex items-center min-w-0">
-              <span className="text-slate-400 text-xs mr-1.5 shrink-0">🔍</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search places..."
-                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-
-            <div className="border-l border-slate-200 dark:border-slate-700 pl-1.5 shrink-0">
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="rounded-lg bg-transparent px-1 py-0.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer max-w-[105px] truncate"
-              >
-                <option value="">All Areas</option>
-                {areaOptions.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <AirbnbSearchBar
+            activeMetroName={domain?.name || activeMetro.name}
+            onSelectMetro={handleSelectMetro}
+            selectedCategory={selectedCategory}
+            categories={uniqueCategories}
+            onSelectCategory={handleSelectCategory}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSelectPlace={(id) => {
+              cardInteractionRef.current = true;
+              setActivePlaceId(id);
+            }}
+            places={allListings}
+            onLocateMe={handleLocateMe}
+            isLocating={isLocating}
+          />
         </div>
       </header>
 
-      {/* Top Flash Announcement Ad Banner Placement */}
-      <AdBannerSlot slotType="flash_banner" variant="flash" />
+      {/* Airbnb Horizontal Category Icon Carousel */}
+      <AirbnbCategoryCarousel
+        categories={uniqueCategories}
+        selectedCategory={selectedCategory}
+        onSelectCategory={handleSelectCategory}
+        activeFilterCount={activeFilterCount}
+        onOpenFilters={() => setIsFilterModalOpen(true)}
+      />
+
+      {/* Airbnb Comprehensive Filters Modal */}
+      <AirbnbFiltersModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={{
+          minRating,
+          radiusKm,
+          selectedAmenities,
+          featuredOnly,
+          verifiedOnly,
+          selectedArea: selectedLocation,
+        }}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+        totalMatchingPlaces={filteredListings.length}
+        availableAreas={areaOptions}
+        hasUserLocation={Boolean(userLocation)}
+        onLocateMe={handleLocateMe}
+      />
+
+      {/* Top Flash Announcement Ad Banner Placement (only on immersive mode) */}
+      {viewMode !== "split" && <AdBannerSlot slotType="flash_banner" variant="flash" />}
 
       {/* Location Permission Guidance Toast */}
       {locationErrorNotice && (
@@ -905,6 +985,7 @@ export function ModernDirectoryExplorer({
                 weatherType={simulatedWeather || liveWeather?.weatherType}
                 searchQuery={searchQuery}
                 radiusKm={radiusKm ?? 5}
+                onSearchArea={handleSearchArea}
                 onMapClick={(loc) => {
                   setUserLocation(loc);
                   setFlyToUserTrigger((prev) => prev + 1);
@@ -1139,169 +1220,18 @@ export function ModernDirectoryExplorer({
                               categoryId={selectedCategory || null}
                             />
                           )}
-                          <article
-                            data-listing-id={place.id}
-                            onMouseEnter={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
-                            onClick={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
-                          className={`group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md ${
-                            isSelected
-                              ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
-                              : "border-gray-200/90 hover:border-gray-400"
-                          }`}
-                        >
-                          {/* Top Badge Row */}
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="rounded bg-blue-50/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
-                                {catName}
-                              </span>
-                              <span className="rounded bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1 shadow-2xs">
-                                <span className="text-amber-500">★</span>
-                                <span>{ratingInfo.rating.toFixed(1)}</span>
-                                <span className="text-[9px] text-amber-700/80">({ratingInfo.reviewCount})</span>
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-1.5">
-                              {place.distanceKm !== null && place.distanceKm !== undefined ? (
-                                <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
-                                  <span>📍</span>
-                                    <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`} away</span>
-                                </span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleLocateMe();
-                                  }}
-                                  className="rounded bg-gray-100 hover:bg-blue-50 hover:text-blue-900 px-2 py-0.5 text-[10px] text-gray-500 font-medium cursor-pointer transition-colors"
-                                >
-                                  📍 Distance
-                                </button>
-                              )}
-                              {place.is_featured && (
-                                <span className="rounded bg-orange-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
-                                  <span>☆</span>
-                                  <span>FEATURED</span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Place Title + Brand Avatar */}
-                          <div className="flex items-center gap-3 mt-3">
-                            <CompanyBrandAvatar title={place.title} website={place.website} size={38} />
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-serif text-base sm:text-lg font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors truncate">
-                                <Link href={`/listing/${place.slug}`}>{place.title}</Link>
-                              </h3>
-                              {/* Rating Stars Line */}
-                              <div className="mt-0.5 flex items-center gap-1.5 text-xs">
-                                <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
-                                <span className="text-xs font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
-                                <span className="text-[11px] text-gray-500 font-medium">({ratingInfo.reviewCount} verified ratings)</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Address & Locality */}
-                          <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1 line-clamp-1">
-                            <span className="text-[#e26a4f]">📍</span>
-                            <span>{[place.locality, place.city].filter(Boolean).join(", ") || "Verified Location"}</span>
-                          </p>
-
-                          {/* Short Description */}
-                          {place.short_description && (
-                            <p className="mt-2 text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                              {place.short_description}
-                            </p>
-                          )}
-
-                          {/* Tech Park / SEZ Campus Badge & Cross-Atlas Link */}
-                          {(place.category_name?.toLowerCase().includes("tech park") ||
-                            place.title.toLowerCase().includes("tech park") ||
-                            place.title.toLowerCase().includes("business park") ||
-                            place.title.toLowerCase().includes("sez")) && (
-                            <div className="mt-2.5 flex items-center justify-between rounded-xl bg-indigo-50/90 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800/80 px-2.5 py-1.5 text-[11px]">
-                              <div className="flex items-center gap-1.5 font-bold text-indigo-900 dark:text-indigo-200">
-                                <span>🏢</span>
-                                <span>Tech Campus</span>
-                              </div>
-                              <Link
-                                href={`/tech-atlas?q=${encodeURIComponent(place.title.split(" ")[0])}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
-                              >
-                                <span>Explore Tech MNCs</span>
-                                <span>↗</span>
-                              </Link>
-                            </div>
-                          )}
-
-                          {/* Coworking Space Badge */}
-                          {(place.category_name?.toLowerCase().includes("cowork") ||
-                            place.title.toLowerCase().includes("wework") ||
-                            place.title.toLowerCase().includes("91springboard") ||
-                            place.title.toLowerCase().includes("innov8") ||
-                            place.title.toLowerCase().includes("indiqube") ||
-                            place.title.toLowerCase().includes("bhive") ||
-                            place.title.toLowerCase().includes("cowrks") ||
-                            place.title.toLowerCase().includes("awfis")) && (
-                            <div className="mt-2.5 flex items-center justify-between rounded-xl bg-emerald-50/90 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/80 px-2.5 py-1.5 text-[11px]">
-                              <div className="flex items-center gap-1.5 font-bold text-emerald-900 dark:text-emerald-200">
-                                <span>💻</span>
-                                <span>Coworking Hub</span>
-                              </div>
-                              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                                Hot Desks & Cabins
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Action Bar with Uber, WhatsApp & View */}
-                          <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
-                            <div className="flex items-center gap-1.5">
-                              {place.phone && (
-                                <a
-                                  href={generateWhatsAppInquiryLink(place.phone, place.title, place.category_name) || `tel:${place.phone}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition-colors shadow-2xs"
-                                >
-                                  <span>💬</span>
-                                  <span>WA</span>
-                                </a>
-                              )}
-                              {place.latitude && place.longitude && (
-                                <a
-                                  href={generateUberRideLink(place.latitude, place.longitude, place.title, place.locality)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-1 rounded-full border border-gray-900 bg-black px-2.5 py-1 text-[11px] font-bold text-white hover:bg-gray-800 transition-colors shadow-2xs"
-                                >
-                                  <span>🚕</span>
-                                  <span>Uber</span>
-                                </a>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <FavoriteButton listingId={place.id} className="py-1! px-2! text-xs!" />
-                              </div>
-                              <Link
-                                href={`/listing/${place.slug}`}
-                                className="font-bold text-xs text-[#e26a4f] hover:underline flex items-center gap-1 shrink-0"
-                              >
-                                <span>Details</span>
-                                <span>→</span>
-                              </Link>
-                            </div>
-                          </div>
-                        </article>
+                          <AirbnbListingCard
+                            place={place}
+                            isSelected={isSelected}
+                            onHover={(id) => {
+                              cardInteractionRef.current = true;
+                              setActivePlaceId(id);
+                            }}
+                            onSelect={(id) => {
+                              cardInteractionRef.current = true;
+                              setActivePlaceId(id);
+                            }}
+                          />
                       </div>
                     );
                     })}
@@ -1349,274 +1279,99 @@ export function ModernDirectoryExplorer({
       {/* VIEW MODE 2: SPLIT VIEW */}
       {viewMode === "split" && (
         <>
-          {/* HERO SECTION WITH CATEGORY PILLS */}
-          <section className="bg-white px-4 sm:px-6 py-6 sm:py-10">
-            <div className="mx-auto max-w-4xl text-center">
-              <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] text-[#e26a4f]">
-                EXPLORE & DISCOVER
-              </p>
-              <h1 className="mt-2 font-serif text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-950 leading-tight">
-                Find Places, Schools, Hospitals & Venues
-              </h1>
-              <p className="mt-2 text-xs sm:text-sm text-gray-500 max-w-xl mx-auto leading-relaxed">
-                Global interactive map directory with verified GPS coordinates, operating hours, and direct routes.
-              </p>
-
-              {/* Category Filter Chips Row */}
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5">
-                <button
-                  onClick={() => handleSelectCategory("")}
-                  className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-bold transition-all cursor-pointer ${
-                    !selectedCategory
-                      ? "bg-[#18181b] text-white shadow-xs"
-                      : "border border-gray-200/90 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                  }`}
-                >
-                  <span>🌐</span>
-                  <span>All Places</span>
-                </button>
-
-                {visibleCategories.map((cat) => {
-                  const isSelected = selectedCategory === cat.id;
-                  const icon = getCategoryIcon(cat.name);
-
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => handleSelectCategory(cat.id)}
-                      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-bold transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-[#18181b] text-white shadow-xs"
-                          : "border border-gray-200/90 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                      }`}
-                    >
-                      <span>{icon}</span>
-                      <span>{cat.name}</span>
-                    </button>
-                  );
-                })}
-                {additionalCategories.length > 0 && (
-                  <select
-                    value={additionalCategories.some((cat) => cat.id === selectedCategory) ? selectedCategory : ""}
-                    onChange={(event) => handleSelectCategory(event.target.value)}
-                    className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-gray-700 shadow-2xs outline-none cursor-pointer"
-                  >
-                    <option value="">More categories</option>
-                    {additionalCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </div>
-          </section>
-
           {/* SPLIT VIEW RESULTS */}
-          <section className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 pt-2 pb-12">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 pb-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
-                    {filteredListings.length} Places Found
-                  </h2>
-                  {userLocation && (
-                    <span className="rounded-full bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 flex items-center gap-1">
-                      <span>📍</span> Zoomed to 5 km around you · Zoom out to explore further
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Showing matching locations on the interactive map with coordinates.
-                </p>
+          <section className="mx-auto w-full max-w-[1440px] px-3 sm:px-6 pt-2.5 pb-10">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 dark:border-slate-800/80 pb-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-serif text-lg sm:text-xl font-bold text-gray-950 dark:text-white">
+                  {filteredListings.length} Places in {domain?.name || "India"}
+                </h1>
+                {userLocation && (
+                  <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                    <span>📍</span> 5 km radius
+                  </span>
+                )}
               </div>
 
               {renderViewSwitcher(viewMode)}
             </div>
 
-              {renderResultsCategoryFilters()}
-
             {/* TWO-COLUMN SPLIT: LEFT LISTINGS, RIGHT INTERACTIVE MAP */}
-            <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="mt-3.5 sm:mt-4 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               {/* LEFT: LISTINGS COLUMN */}
-              <div className="lg:col-span-6 space-y-4">
+              <div className={`lg:col-span-7 ${mobileShowMap ? "hidden lg:block" : "block"}`}>
                 {paginatedListings.length > 0 ? (
-<>
-                    <div className="space-y-3.5">
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                       {paginatedListings.map((place, index) => {
                         const isSelected = activePlaceId === place.id;
-                        const catName = getDisplayCategory(place).toUpperCase();
-                        const ratingInfo = getPlaceRating(place);
-
                         return (
-                          <div key={place.id} className="space-y-3.5">
+                          <div key={place.id} className="contents">
                             {index === 2 && (
-                              <AdBannerSlot
-                                placementLocation="in_feed"
-                                variant="in_feed"
-                                itemIndex={currentPage - 1}
-                                categoryId={selectedCategory || null}
-                                className="mb-3.5"
-                              />
+                              <div className="col-span-full">
+                                <AdBannerSlot
+                                  placementLocation="in_feed"
+                                  variant="in_feed"
+                                  itemIndex={currentPage - 1}
+                                  categoryId={selectedCategory || null}
+                                />
+                              </div>
                             )}
-                            <article
-                              data-listing-id={place.id}
-                              onMouseEnter={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
-                              onClick={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
-                            className={`group cursor-pointer rounded-2xl border bg-white p-4 sm:p-5 transition-all duration-200 shadow-xs hover:shadow-md ${
-                              isSelected
-                                ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
-                                : "border-gray-200/90 hover:border-gray-400"
-                            }`}
-                          >
-                            {/* Top Badge Row */}
-                            <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="rounded bg-blue-50/90 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
-                                  {catName}
-                                </span>
-                                <span className="rounded bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1 shadow-2xs">
-                                  <span className="text-amber-500">★</span>
-                                  <span>{ratingInfo.rating.toFixed(1)}</span>
-                                  <span className="text-[9px] text-amber-700/80">({ratingInfo.reviewCount})</span>
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-1.5">
-                                {place.distanceKm !== null && place.distanceKm !== undefined ? (
-                                  <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[11px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
-                                    <span>📍</span>
-                                    <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`} away</span>
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleLocateMe();
-                                    }}
-                                    className="rounded bg-gray-100 hover:bg-blue-50 hover:text-blue-900 px-2 py-0.5 text-[10px] text-gray-500 font-medium cursor-pointer transition-colors"
-                                  >
-                                    📍 Distance
-                                  </button>
-                                )}
-                              {place.is_featured && (
-                                <span className="rounded bg-orange-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
-                                  <span>☆</span>
-                                  <span>FEATURED</span>
-                                </span>
-                              )}
-                            </div>
+                            <AirbnbListingCard
+                              place={place}
+                              isSelected={isSelected}
+                              onHover={(id) => {
+                                cardInteractionRef.current = true;
+                                setActivePlaceId(id);
+                              }}
+                              onSelect={(id) => {
+                                cardInteractionRef.current = true;
+                                setActivePlaceId(id);
+                              }}
+                            />
                           </div>
-
-                          {/* Place Title */}
-                          <h3 className="font-serif text-lg font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors mt-3">
-                            <Link href={`/listing/${place.slug}`}>{place.title}</Link>
-                          </h3>
-
-                          {/* Rating Stars Line */}
-                          <div className="mt-1 flex items-center gap-1.5 text-xs">
-                            <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
-                            <span className="text-xs font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
-                            <span className="text-[11px] text-gray-500 font-medium">({ratingInfo.reviewCount} verified ratings)</span>
-                          </div>
-
-                          {/* Address & Locality */}
-                          <p className="mt-1.5 text-xs text-gray-500 flex items-center gap-1 line-clamp-1">
-                            <span className="text-[#e26a4f]">📍</span>
-                            <span>{[place.locality, place.city].filter(Boolean).join(", ") || "Verified Location"}</span>
-                          </p>
-
-                          {place.short_description && (
-                            <p className="mt-2 text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                              {place.short_description}
-                            </p>
-                          )}
-
-                          <div className="mt-3.5 flex items-center justify-between border-t border-gray-100 pt-2.5 text-xs">
-                            <div className="flex items-center gap-1.5">
-                              {place.phone && (
-                                <a
-                                  href={generateWhatsAppInquiryLink(place.phone, place.title, place.category_name) || `tel:${place.phone}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-800 hover:bg-emerald-100 transition-colors shadow-2xs"
-                                >
-                                  <span>💬</span>
-                                  <span>WA</span>
-                                </a>
-                              )}
-                              {place.latitude && place.longitude && (
-                                <a
-                                  href={generateUberRideLink(place.latitude, place.longitude, place.title, place.locality)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-1 rounded-full border border-gray-900 bg-black px-2.5 py-1 text-[11px] font-bold text-white hover:bg-gray-800 transition-colors shadow-2xs"
-                                >
-                                  <span>🚕</span>
-                                  <span>Uber</span>
-                                </a>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <FavoriteButton listingId={place.id} className="py-1! px-2! text-xs!" />
-                              </div>
-                              <Link
-                                href={`/listing/${place.slug}`}
-                                className="font-bold text-xs text-[#e26a4f] hover:underline flex items-center gap-1 shrink-0"
-                              >
-                                <span>Details</span>
-                                <span>→</span>
-                              </Link>
-                            </div>
-                          </div>
-                        </article>
-                      </div>
-                    );
-                    })}
-                  </div>
-
-                  {/* Pagination */}
-                  {filteredListings.length > pageSize && (
-                    <div className="mt-6 flex justify-center">
-                      <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        totalItems={filteredListings.length}
-                        pageSize={pageSize}
-                        onPageChange={handlePageChange}
-                      />
+                        );
+                      })}
                     </div>
-                  )}
+
+                    {/* Pagination */}
+                    {filteredListings.length > pageSize && (
+                      <div className="mt-8 flex justify-center">
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          totalItems={filteredListings.length}
+                          pageSize={pageSize}
+                          onPageChange={handlePageChange}
+                        />
+                      </div>
+                    )}
                   </>
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-gray-200 p-10 text-center">
-                    <span className="text-3xl">🔍</span>
-                    <h3 className="mt-3 font-serif text-lg font-bold text-gray-900">
-                      No places found
+                  <div className="rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center bg-slate-50/50 dark:bg-slate-900/50">
+                    <span className="text-4xl">🔍</span>
+                    <h3 className="mt-3 font-serif text-lg font-bold text-slate-900 dark:text-white">
+                      No places found in this view
                     </h3>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Try clearing the filters or searching another area.
+                    <p className="mt-1 text-xs text-slate-500">
+                      Try clearing filters or moving the map to another area.
                     </p>
                     <button
-                      onClick={() => {
-                        setSearchQuery("");
-                        setSelectedCategory("");
-                        setSelectedLocation("");
-                      }}
-                      className="mt-4 rounded-full bg-gray-900 px-5 py-2 text-xs font-bold text-white cursor-pointer"
+                      onClick={handleResetFilters}
+                      className="mt-4 rounded-full bg-slate-950 dark:bg-white px-5 py-2.5 text-xs font-bold text-white dark:text-slate-950 hover:opacity-90 transition-opacity cursor-pointer"
                     >
-                      Reset filters
+                      Reset all filters
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* RIGHT: MAP CANVAS */}
-              <div className="lg:col-span-6 relative h-[380px] sm:h-[500px] lg:h-[650px] w-full overflow-hidden rounded-2xl border border-gray-200 shadow-xs lg:sticky lg:top-24">
+              {/* RIGHT: STICKY MAP CANVAS */}
+              <div className={`lg:col-span-5 relative w-full overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md ${
+                mobileShowMap
+                  ? "block h-[calc(100vh-180px)]"
+                  : "hidden lg:block lg:sticky lg:top-[105px] lg:h-[calc(100vh-120px)]"
+              }`}>
                 <MapErrorBoundary fallbackText="Split map view encountered an issue. Click below to reload.">
                   <InteractiveLeafletCanvas
                     locatedListings={locatedListings}
@@ -1630,6 +1385,7 @@ export function ModernDirectoryExplorer({
                     weatherType={simulatedWeather || liveWeather?.weatherType}
                     searchQuery={searchQuery}
                     radiusKm={radiusKm ?? 5}
+                    onSearchArea={handleSearchArea}
                     onMapClick={(loc) => {
                       setUserLocation(loc);
                       setFlyToUserTrigger((prev) => prev + 1);
@@ -1642,6 +1398,18 @@ export function ModernDirectoryExplorer({
                   <AdBannerSlot placementLocation="map_overlay" variant="map_overlay" />
                 </div>
               </div>
+            </div>
+
+            {/* Mobile Floating Map/List Pill */}
+            <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[500]">
+              <button
+                type="button"
+                onClick={() => setMobileShowMap((prev) => !prev)}
+                className="flex items-center gap-2 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 px-5 py-3 text-xs font-bold shadow-2xl hover:scale-105 transition-all cursor-pointer"
+              >
+                <span>{mobileShowMap ? "📋" : "🗺️"}</span>
+                <span>{mobileShowMap ? "Show List" : "Show Map"}</span>
+              </button>
             </div>
           </section>
         </>
@@ -1665,6 +1433,7 @@ export function ModernDirectoryExplorer({
                 weatherType={simulatedWeather || liveWeather?.weatherType}
                 searchQuery={searchQuery}
                 radiusKm={radiusKm ?? 5}
+                onSearchArea={handleSearchArea}
                 onMapClick={(loc) => {
                   setUserLocation(loc);
                   setFlyToUserTrigger((prev) => prev + 1);
@@ -1766,96 +1535,19 @@ export function ModernDirectoryExplorer({
                   const ratingInfo = getPlaceRating(place);
 
                   return (
-                    <article
+                    <AirbnbListingCard
                       key={place.id}
-                      data-listing-id={place.id}
-                      onMouseEnter={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
-                      onClick={() => { cardInteractionRef.current = true; setActivePlaceId(place.id); }}
-                      className={`group cursor-pointer rounded-2xl border bg-white p-4 transition-all duration-200 shadow-xs hover:shadow-md ${
-                        isSelected
-                          ? "border-[#e26a4f] ring-2 ring-[#e26a4f]/20 bg-orange-50/20"
-                          : "border-gray-200/90 hover:border-gray-400"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="rounded bg-blue-50/90 px-2 py-0.5 text-[9px] font-bold tracking-wider text-blue-800 uppercase">
-                            {catName}
-                          </span>
-                          <span className="rounded bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 text-[9px] font-bold text-amber-900 flex items-center gap-0.5 shadow-2xs">
-                            <span className="text-amber-500">★</span>
-                            <span>{ratingInfo.rating.toFixed(1)}</span>
-                          </span>
-                        </div>
-
-                        {place.distanceKm !== null && place.distanceKm !== undefined ? (
-                          <span className="rounded-md bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800 flex items-center gap-1 shadow-2xs">
-                            <span>📍</span>
-                            <span>{place.distanceKm < 1 ? `${Math.round(place.distanceKm * 1000)}m` : `${place.distanceKm.toFixed(1)} km`} away</span>
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleLocateMe();
-                            }}
-                            className="rounded bg-gray-100 hover:bg-blue-50 hover:text-blue-900 px-1.5 py-0.5 text-[9px] text-gray-500 font-medium cursor-pointer transition-colors"
-                          >
-                            📍 Distance
-                          </button>
-                        )}
-                      </div>
-
-                      <h4 className="font-serif text-base font-bold text-gray-950 group-hover:text-[#e26a4f] transition-colors mt-2">
-                        <Link href={`/listing/${place.slug}`}>{place.title}</Link>
-                      </h4>
-
-                      <div className="mt-1 flex items-center gap-1.5 text-xs">
-                        <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
-                        <span className="text-[11px] font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
-                        <span className="text-[10px] text-gray-500 font-medium">({ratingInfo.reviewCount} reviews)</span>
-                      </div>
-
-                      <p className="mt-1 text-xs text-gray-500 flex items-center gap-1">
-                        <span className="text-[#e26a4f]">📍</span>
-                        <span>{place.locality || place.city || "Bangalore, India"}</span>
-                      </p>
-
-                      {place.short_description && (
-                        <p className="mt-1.5 text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                          {place.short_description}
-                        </p>
-                      )}
-
-                      <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          {place.phone && (
-                            <a
-                              href={`tel:${place.phone}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-gray-700"
-                            >
-                              📞 Call
-                            </a>
-                          )}
-                          {place.latitude && place.longitude && (
-                            <a
-                              href={`https://www.google.com/maps/dir/?api=1&destination=${place.latitude},${place.longitude}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-[11px] font-semibold text-gray-700"
-                            >
-                              🧭 Route
-                            </a>
-                          )}
-                        </div>
-                        <Link href={`/listing/${place.slug}`} className="font-bold text-xs text-[#e26a4f] hover:underline">
-                          Details →
-                        </Link>
-                      </div>
-                    </article>
+                      place={place}
+                      isSelected={isSelected}
+                      onHover={(id) => {
+                        cardInteractionRef.current = true;
+                        setActivePlaceId(id);
+                      }}
+                      onSelect={(id) => {
+                        cardInteractionRef.current = true;
+                        setActivePlaceId(id);
+                      }}
+                    />
                   );
                 })}
 

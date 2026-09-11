@@ -157,7 +157,7 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean): L.DivIcon
     <span style="font-size: 11px; line-height: 1; display: flex; align-items: center; justify-content: center;">${techIcon}</span>
   `;
 
-  // Wide 180px text pill is rendered ONLY for the actively selected / clicked pin.
+  // Active / Selected state: solid black or coral pill with full title and rating
   if (isSelected) {
     const shortTitle = place.title.length > 20 ? place.title.slice(0, 18) + "…" : place.title;
     const html = `
@@ -174,7 +174,7 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean): L.DivIcon
     `;
 
     const icon = L.divIcon({
-      className: "locatogo-pill-wrapper",
+      className: "locatogo-pill-wrapper is-active",
       html,
       iconSize: [180, 36],
       iconAnchor: [90, 36],
@@ -184,20 +184,23 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean): L.DivIcon
     return icon;
   }
 
+  // Normal Airbnb-style Pill Pin: compact white pill showing icon and star rating
   const html = `
-    <div class="locatogo-teardrop-pin" style="--theme-color: ${themeColor}; background: ${themeColor};">
-      <div class="locatogo-teardrop-inner" style="background: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+    <div class="locatogo-pill-pin" style="--theme-color: ${themeColor};">
+      <div class="locatogo-pin-icon-wrap" style="background: ${bgLight}; color: ${themeColor}; padding: 1px;">
         ${innerIconHtml}
       </div>
+      <span style="font-size: 11px; font-weight: 800; color: #0f172a; line-height: 1;">★${ratingInfo.rating.toFixed(1)}</span>
+      <div class="locatogo-pin-arrow"></div>
     </div>
   `;
 
   const icon = L.divIcon({
-    className: "locatogo-teardrop-wrapper",
+    className: "locatogo-pill-wrapper",
     html,
-    iconSize: [32, 38],
-    iconAnchor: [16, 38],
-    popupAnchor: [0, -40],
+    iconSize: [68, 30],
+    iconAnchor: [34, 30],
+    popupAnchor: [0, -32],
   });
   if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
   return icon;
@@ -289,6 +292,42 @@ function MapClickHandler({
       if (onMapClick) {
         onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
       }
+    },
+  });
+  return null;
+}
+
+export type MapViewportBounds = {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+};
+
+function MapBoundsController({
+  onUserMoved,
+}: {
+  onUserMoved: (bounds: MapViewportBounds) => void;
+}) {
+  const map = useMap();
+  useMapEvents({
+    dragend: () => {
+      const b = map.getBounds();
+      onUserMoved({
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      });
+    },
+    zoomend: () => {
+      const b = map.getBounds();
+      onUserMoved({
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      });
     },
   });
   return null;
@@ -703,6 +742,8 @@ export default function InteractiveLeafletCanvas({
   onMapClick,
   searchQuery,
   radiusKm = null,
+  onSearchArea,
+  searchAsMapMoves = false,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
@@ -719,12 +760,26 @@ export default function InteractiveLeafletCanvas({
   onMapClick?: (loc: { lat: number; lng: number }) => void;
   searchQuery?: string;
   radiusKm?: number | null;
+  onSearchArea?: (bounds: MapViewportBounds) => void;
+  searchAsMapMoves?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<(() => void) | null>(null);
   const zoomOutRef = useRef<(() => void) | null>(null);
   const [activeWeatherFx, setActiveWeatherFx] = useState<WeatherType | null>(weatherType ?? null);
   const [isFxEnabled, setIsFxEnabled] = useState(showWeatherOverlay);
+  const [userPannedBounds, setUserPannedBounds] = useState<MapViewportBounds | null>(null);
+
+  const handleUserMoved = useCallback(
+    (bounds: MapViewportBounds) => {
+      if (searchAsMapMoves && onSearchArea) {
+        onSearchArea(bounds);
+      } else {
+        setUserPannedBounds(bounds);
+      }
+    },
+    [searchAsMapMoves, onSearchArea]
+  );
 
   useEffect(() => {
     if (weatherType !== undefined) {
@@ -836,7 +891,27 @@ export default function InteractiveLeafletCanvas({
           setActivePlaceId={setActivePlaceId}
           userLocation={effectiveLocation}
         />
+        <MapBoundsController onUserMoved={handleUserMoved} />
       </MapContainer>
+
+      {/* Floating Airbnb-Style "Search this area" Button */}
+      {userPannedBounds && (
+        <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 z-[400] animate-in fade-in slide-in-from-top-3 duration-200">
+          <button
+            type="button"
+            onClick={() => {
+              if (onSearchArea && userPannedBounds) {
+                onSearchArea(userPannedBounds);
+              }
+              setUserPannedBounds(null);
+            }}
+            className="flex items-center gap-2 rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-900 dark:text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+          >
+            <span className="text-[#e26a4f] text-sm font-bold">🔄</span>
+            <span>Search this area</span>
+          </button>
+        </div>
+      )}
 
       {/* Atmospheric Animated Weather Layer (e.g. Rain, Storm, Sun shimmer) */}
       {isFxEnabled && activeWeatherFx && (

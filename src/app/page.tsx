@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ModernDirectoryExplorer, type Category, type PlaceListing } from "@/components/modern-directory-explorer";
 
 type Props = {
@@ -100,18 +101,39 @@ export default async function Home({ searchParams }: Props) {
 
   const domainList = domains ?? [];
   const metroTenantId = domainList.find((d) => d.slug !== "india-atlas")?.tenant_id;
-  const { data: categories } = await supabase
+  let { data: categories } = await supabase
     .from("categories")
     .select("id, name, slug")
     .eq("tenant_id", metroTenantId ?? "")
     .eq("is_active", true)
     .order("sort_order");
 
+  // Fallback to server-side admin client if anonymous client RLS yields no categories
+  if (!categories || categories.length === 0) {
+    try {
+      const adminClient = createSupabaseAdminClient();
+      let catQuery = adminClient
+        .from("categories")
+        .select("id, name, slug")
+        .eq("is_active", true);
+      if (metroTenantId) {
+        catQuery = catQuery.eq("tenant_id", metroTenantId);
+      }
+      const { data: adminCats } = await catQuery.order("sort_order");
+      if (adminCats && adminCats.length > 0) {
+        categories = adminCats;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   const categoryMap = new Map<string, Category>();
   (categories ?? []).forEach((c) => {
     if (c.slug && !categoryMap.has(c.slug)) categoryMap.set(c.slug, c as Category);
+    if (c.id && !categoryMap.has(c.id)) categoryMap.set(c.id, c as Category);
   });
-  const uniqueCategories = Array.from(categoryMap.values());
+  const uniqueCategories = Array.from(new Set(categories ?? [])).filter((c) => c.slug);
   const localCityDomain =
     savedCitySlug === "all"
       ? null
@@ -223,7 +245,7 @@ export default async function Home({ searchParams }: Props) {
       : (l.categories as { name?: string } | null)?.name;
     return {
       ...l,
-      category_name: categoryName ?? null,
+      category_name: categoryName ?? categoryMap.get(l.category_id)?.name ?? null,
     };
   });
 

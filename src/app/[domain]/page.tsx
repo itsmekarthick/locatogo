@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   ModernDirectoryExplorer,
   type PlaceListing,
@@ -74,7 +75,7 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
   }
 
   // Ultra-fast initial hydration (Loads in <50ms for instantaneous initial paint)
-  const [{ data: categories }, { data: rawListings }] = await Promise.all([
+  let [{ data: categories }, { data: rawListings }] = await Promise.all([
     supabase
       .from("categories")
       .select("id, name, slug, icon")
@@ -95,6 +96,30 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
       .order("is_featured", { ascending: false })
       .limit(400),
   ]);
+
+  if (!categories || categories.length === 0) {
+    try {
+      const adminClient = createSupabaseAdminClient();
+      const { data: adminCats } = await adminClient
+        .from("categories")
+        .select("id, name, slug, icon")
+        .eq("tenant_id", domain.tenant_id)
+        .or(`domain_id.is.null,domain_id.eq.${domain.id}`)
+        .eq("is_active", true)
+        .order("sort_order");
+      if (adminCats && adminCats.length > 0) {
+        categories = adminCats;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const categoryMap = new Map<string, { id: string; name: string; slug: string; icon?: string | null }>();
+  (categories ?? []).forEach((c) => {
+    if (c.slug) categoryMap.set(c.slug, c);
+    if (c.id) categoryMap.set(c.id, c);
+  });
 
   const listings: PlaceListing[] = (rawListings ?? []).map((l: any) => {
     const cat = Array.isArray(l.categories)
@@ -118,8 +143,8 @@ export default async function DirectoryPage({ params, searchParams }: Props) {
       is_featured: l.is_featured,
       verification_status: l.verification_status,
       category_id: l.category_id,
-      category_name: cat?.name,
-      category_icon: cat?.icon,
+      category_name: cat?.name ?? categoryMap.get(l.category_id)?.name,
+      category_icon: cat?.icon ?? categoryMap.get(l.category_id)?.icon,
     };
   });
 
