@@ -1265,7 +1265,7 @@ export async function createBlogAction(formData: FormData): Promise<{ success: b
   const excerpt = text(formData, "excerpt") || null;
   const content = text(formData, "content");
   const coverImageUrl = text(formData, "cover_image_url") || null;
-  const authorName = text(formData, "author_name") || "Locatogo Editorial";
+  const authorName = text(formData, "author_name") || "LocaToGo Editorial";
   const authorAvatarUrl = text(formData, "author_avatar_url") || null;
   const rawTags = text(formData, "tags");
   const readingTime = parseInt(text(formData, "reading_time_minutes") || "4", 10) || 4;
@@ -1349,7 +1349,7 @@ export async function updateBlogAction(
   const excerpt = text(formData, "excerpt") || null;
   const content = text(formData, "content");
   const coverImageUrl = text(formData, "cover_image_url") || null;
-  const authorName = text(formData, "author_name") || "Locatogo Editorial";
+  const authorName = text(formData, "author_name") || "LocaToGo Editorial";
   const authorAvatarUrl = text(formData, "author_avatar_url") || null;
   const rawTags = text(formData, "tags");
   const readingTime = parseInt(text(formData, "reading_time_minutes") || "4", 10) || 4;

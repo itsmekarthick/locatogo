@@ -5,7 +5,7 @@ import { BlogHubClient } from "@/components/blog-hub-client";
 import { PublicHeader } from "@/components/public-header";
 
 export const metadata: Metadata = {
-  title: "City Guides, Stories & Tech Insights | Locatogo",
+  title: "City Guides, Stories & Tech Insights | LocaToGo",
   description:
     "Curated neighborhood guides, coworking rankings, specialty coffee discoveries, and emerging tech corridors in Bengaluru and beyond.",
   alternates: {
@@ -33,7 +33,7 @@ export default async function BlogPage() {
       <div className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 py-12 sm:py-16">
         <div className="mx-auto max-w-[1300px] px-4 sm:px-6">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-            The Locatogo Journal
+            The LocaToGo Journal
           </p>
           <h1 className="mt-2 font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">
             Stories, City Guides & Tech Insights
@@ -52,7 +52,7 @@ export default async function BlogPage() {
       {/* Footer */}
       <footer className="border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#070b13] py-10 text-xs text-slate-500">
         <div className="mx-auto max-w-[1300px] px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Locatogo SaaS. Curated for place-first discovery.</p>
+          <p>© {new Date().getFullYear()} LocaToGo SaaS. Curated for place-first discovery.</p>
           <div className="flex items-center gap-4">
             <Link href="/blog/rss.xml" target="_blank" className="hover:text-slate-900 dark:hover:text-white flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
               <span>📡 RSS</span>

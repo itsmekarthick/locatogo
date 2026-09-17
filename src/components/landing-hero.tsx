@@ -47,25 +47,54 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
           Search thousands of verified businesses, healthcare centers, tech parks, cafes, and community assets with live map clustering, real-time weather, and 1-click transit.
         </p>
 
-        {/* Search Bar */}
+        {/* Search Bar - Unified Pill Style */}
         <form onSubmit={handleSearch} className="mx-auto mt-10 max-w-2xl">
-          <div className="group relative flex items-center rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-2 shadow-xl backdrop-blur-md transition-all focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10">
-            <div className="flex flex-1 items-center px-3 gap-3">
-              <span className="text-xl text-slate-400 dark:text-slate-500">🔍</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by place name, specialty, or neighborhood..."
-                className="w-full bg-transparent text-sm sm:text-base text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
-              />
+          <div className="group relative flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-2 shadow-xl backdrop-blur-md transition-all focus-within:border-slate-400 dark:focus-within:border-slate-600 focus-within:ring-4 focus-within:ring-slate-100 dark:focus-within:ring-slate-800/60">
+            {/* Segment 1: Where */}
+            <Link
+              href="/"
+              className="hidden sm:flex flex-col px-4 py-1 text-left border-r border-slate-200 dark:border-slate-800 shrink-0 hover:opacity-80 transition-opacity"
+            >
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Where
+              </span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                All 8 Metros
+              </span>
+            </Link>
+
+            {/* Segment 2: Keyword input */}
+            <div className="flex flex-1 items-center px-4 gap-3 min-w-0">
+              <div className="flex-1 min-w-0 text-left">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Search
+                </span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search place, company, tech park, hospital..."
+                  className="w-full bg-transparent text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
+                />
+              </div>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="text-xs text-slate-400 hover:text-slate-600"
+                >
+                  ✕
+                </button>
+              )}
             </div>
+
+            {/* Round Coral Action Button */}
             <button
               type="submit"
-              className="rounded-xl bg-indigo-600 px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition-all shrink-0 cursor-pointer flex items-center gap-1.5"
+              className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] text-white shadow-md hover:scale-105 transition-all shrink-0 cursor-pointer"
+              title="Search Atlas"
             >
-              <span>Explore</span>
-              <span>↗</span>
+              <span className="text-sm">🔍</span>
             </button>
           </div>
 

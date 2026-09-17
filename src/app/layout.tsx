@@ -15,10 +15,10 @@ const displayFont = Playfair_Display({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  title: "Locatogo | Directories with a sense of place",
+  title: "LocaToGo | Directories with a sense of place",
   description: "A directory and interactive map platform for discovering places, schools, and hospitals.",
   alternates: { canonical: "/" },
-  openGraph: { title: "Locatogo | Directories with a sense of place", description: "A global directory and interactive map platform.", type: "website" },
+  openGraph: { title: "LocaToGo | Directories with a sense of place", description: "A global directory and interactive map platform.", type: "website" },
 };
 
 import { Suspense } from "react";

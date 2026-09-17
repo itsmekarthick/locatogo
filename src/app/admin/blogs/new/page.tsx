@@ -3,7 +3,7 @@ import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminBlogForm } from "@/components/admin-blog-form";
 
 export const metadata = {
-  title: "New Editorial Story | Locatogo Admin",
+  title: "New Editorial Story | LocaToGo Admin",
 };
 
 export default async function NewBlogPage() {

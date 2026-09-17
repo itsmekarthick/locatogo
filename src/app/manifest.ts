@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Locatogo – Local Places Atlas",
-    short_name: "Locatogo",
+    name: "LocaToGo – Local Places Atlas",
+    short_name: "LocaToGo",
     description: "Discover verified schools, hospitals, cafes, landmarks and more on the live interactive map.",
     start_url: "/",
     display: "standalone",

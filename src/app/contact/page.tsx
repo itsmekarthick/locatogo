@@ -218,7 +218,7 @@ export default function ContactSupportPage() {
                 </div>
 
                 <div className="pt-3">
-                  <h4 className="font-bold text-gray-900">Is listing on Locatogo free?</h4>
+                  <h4 className="font-bold text-gray-900">Is listing on LocaToGo free?</h4>
                   <p className="mt-1 text-gray-500">Yes, standard directory listings and verified coordinates are 100% free.</p>
                 </div>
 
@@ -236,7 +236,7 @@ export default function ContactSupportPage() {
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            locatogo<span className="text-[#e26a4f]">.</span>
+            LocaToGo<span className="text-[#e26a4f]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
@@ -255,7 +255,7 @@ export default function ContactSupportPage() {
           </div>
 
           <p className="text-gray-400">
-            © 2026 locatogo. All rights reserved.
+            © 2026 LocaToGo. All rights reserved.
           </p>
         </div>
       </footer>

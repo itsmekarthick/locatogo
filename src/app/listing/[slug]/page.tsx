@@ -90,10 +90,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ogImageUrl = `/api/og?title=${encodeURIComponent(listing.title)}&category=${encodeURIComponent(categoryName)}&locality=${encodeURIComponent(listing.locality || listing.city || "Verified Place")}`;
 
   return {
-    title: `${listing.title} | Locatogo Atlas`,
+    title: `${listing.title} | LocaToGo Atlas`,
     description: listing.short_description ?? listing.description ?? `Explore ${listing.title}.`,
     openGraph: {
-      title: `${listing.title} | Locatogo`,
+      title: `${listing.title} | LocaToGo`,
       description: listing.short_description ?? `Explore ${listing.title}.`,
       images: [
         {
@@ -216,7 +216,7 @@ export default async function ListingDetailPage({ params }: Props) {
           {/* Logo & Badge */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-              locatogo<span className="text-[#e26a4f]">.</span>
+              LocaToGo<span className="text-[#e26a4f]">.</span>
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>
@@ -815,7 +815,7 @@ export default async function ListingDetailPage({ params }: Props) {
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="flex items-center gap-2 group font-serif text-xl font-bold tracking-tight text-gray-900">
             <BrandLogo size={24} />
-            <span>locatogo<span className="text-[#e26a4f]">.</span></span>
+            <span>LocaToGo<span className="text-[#e26a4f]">.</span></span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
@@ -834,7 +834,7 @@ export default async function ListingDetailPage({ params }: Props) {
           </div>
 
           <p className="text-gray-400">
-            © 2026 locatogo. All rights reserved.
+            © 2026 LocaToGo. All rights reserved.
           </p>
         </div>
       </footer>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "My Dashboard | Locatogo",
+  title: "My Dashboard | LocaToGo",
   description: "Manage your submitted places, claimed listings, and saved favorites.",
 };
 

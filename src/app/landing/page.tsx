@@ -7,7 +7,7 @@ import { PublicHeader } from "@/components/public-header";
 import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = {
-  title: "Locatogo | Global Interactive Map & Directory Platform",
+  title: "LocaToGo | Global Interactive Map & Directory Platform",
   description: "Discover curated places on interactive maps or launch your own branded vertical directory in minutes.",
 };
 
@@ -175,7 +175,7 @@ export default async function LandingPage() {
               Effortless Navigation
             </p>
             <h2 className="mt-1 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
-              How Locatogo Works
+              How LocaToGo Works
             </h2>
           </div>
 
@@ -230,7 +230,7 @@ export default async function LandingPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-                  The Locatogo Journal
+                  The LocaToGo Journal
                 </p>
                 <h2 className="mt-1 font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
                   Curated City Guides & Local Stories
@@ -314,7 +314,7 @@ export default async function LandingPage() {
             Ready to explore your community or build a directory atlas?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
-            Locatogo gives you all the tools — interactive Leaflet maps, geocoding, verified reviews, and full admin governance.
+            LocaToGo gives you all the tools — interactive Leaflet maps, geocoding, verified reviews, and full admin governance.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -343,7 +343,7 @@ export default async function LandingPage() {
               <div className="flex items-center gap-2">
                 <BrandLogo size={28} />
                 <span className="font-serif text-xl font-bold text-slate-900 dark:text-slate-100">
-                  locatogo<span className="text-indigo-600 dark:text-indigo-400">.</span>
+                  LocaToGo<span className="text-indigo-600 dark:text-indigo-400">.</span>
                 </span>
               </div>
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -356,7 +356,7 @@ export default async function LandingPage() {
               <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
                 <li><Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400">Live Atlas</Link></li>
                 <li><Link href="/blog" className="hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold text-indigo-600 dark:text-indigo-400">City Guides & Stories</Link></li>
-                <li><Link href="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400">About Locatogo</Link></li>
+                <li><Link href="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400">About LocaToGo</Link></li>
                 <li><Link href="/submit" className="hover:text-indigo-600 dark:hover:text-indigo-400">Add Business</Link></li>
               </ul>
             </div>
@@ -381,7 +381,7 @@ export default async function LandingPage() {
           </div>
 
           <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row text-xs text-slate-400 dark:text-slate-500">
-            <p>© {new Date().getFullYear()} Locatogo SaaS. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} LocaToGo SaaS. All rights reserved.</p>
             <p>Crafted for modern map-first discovery.</p>
           </div>
         </div>

@@ -16,7 +16,7 @@ export function BrandLogo({
     <div
       className={`relative inline-flex items-center justify-center shrink-0 select-none transition-transform hover:scale-105 ${className}`}
       style={{ width: size, height: size }}
-      title="locatogo"
+      title="LocaToGo"
     >
       <svg
         viewBox="0 0 128 128"

@@ -12,6 +12,7 @@ import { Pagination } from "@/components/ui/pagination";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { MapErrorBoundary } from "@/components/map-error-boundary";
 import { AdBannerSlot } from "@/components/ad-banner-slot";
+import { AirbnbSearchBar } from "@/components/airbnb-search-bar";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -64,6 +65,30 @@ export const GLOBAL_TECH_HUBS: TechHub[] = [
   { id: "berlin", name: "Berlin", country: "Germany", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
   { id: "dubai", name: "Dubai", country: "United Arab Emirates", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
   { id: "hyderabad", name: "Hyderabad", country: "India", flag: "🇮🇳", lat: 17.385, lng: 78.4867, zoom: 12 },
+];
+
+export const TECH_SECTORS = [
+  { id: "all", name: "All Sectors", icon: "🌐" },
+  { id: "ai_ml", name: "AI & Machine Learning", icon: "🤖" },
+  { id: "product_saas", name: "Product & SaaS", icon: "☁️" },
+  { id: "tech_giant_mnc", name: "Tech Giants & GCC", icon: "🏛️" },
+  { id: "fintech", name: "FinTech & Payments", icon: "💳" },
+  { id: "deeptech", name: "DeepTech & Hardware", icon: "⚡" },
+  { id: "enterprise", name: "Enterprise Software", icon: "🏢" },
+  { id: "healthtech", name: "HealthTech & Bio", icon: "🧬" },
+  { id: "ecommerce", name: "E-Commerce & Retail", icon: "🛍️" },
+];
+
+export const TECH_STAGES = [
+  "all",
+  "GCC",
+  "Unicorn",
+  "Public",
+  "Series C+",
+  "Series B",
+  "Series A",
+  "Seed",
+  "Bootstrapped",
 ];
 
 function formatTimeAgo(dateStr?: string | null): string {
@@ -343,17 +368,56 @@ export function GlobalTechExplorer({
       }));
   }, [filteredCompanies]);
 
+  // Autocomplete suggestions for Tech Atlas
+  const companySuggestions = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return companies
+      .filter((c) => {
+        return (
+          c.title.toLowerCase().includes(q) ||
+          (c.locality && c.locality.toLowerCase().includes(q)) ||
+          (c.city && c.city.toLowerCase().includes(q)) ||
+          (c.tech_stack && c.tech_stack.some((t) => t.toLowerCase().includes(q))) ||
+          (c.short_description && c.short_description.toLowerCase().includes(q))
+        );
+      })
+      .slice(0, 8)
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        subtitle: [c.locality, c.city || selectedHub.name].filter(Boolean).join(", "),
+        badge:
+          c.funding_stage ||
+          (c.company_type ? c.company_type.replace(/_/g, " ").toUpperCase() : "TECH"),
+        icon: "💼",
+      }));
+  }, [companies, searchQuery, selectedHub.name]);
+
+  const handleSelectCompanySuggestion = (companyId: string) => {
+    const comp = companies.find((c) => c.id === companyId);
+    if (comp) {
+      setSelectedCompany(comp);
+      setSearchQuery(comp.title);
+    }
+  };
+
+  const handleSelectHub = (hubOption: any) => {
+    const hub = GLOBAL_TECH_HUBS.find((h) => h.id === hubOption.id) || hubOption;
+    setSelectedHub(hub);
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-white dark:bg-[#070b13] font-sans antialiased text-slate-900 dark:text-slate-100">
       {/* Top Navbar */}
       <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-[1000] shadow-2xs">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-2 sm:gap-4">
-          {/* Logo & Hub Selector */}
+          {/* Logo & Dual Atlas Pill */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2 group" title="Mapora Atlas">
               <BrandLogo size={30} className="group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-                locatogo<span className="text-[#e26a4f]">.</span>
+                LocaToGo<span className="text-[#e26a4f]">.</span>
               </span>
             </Link>
 
@@ -376,48 +440,42 @@ export function GlobalTechExplorer({
                 <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
               </div>
             </div>
-
-            {/* City Hub Switcher Dropdown */}
-            <select
-              value={selectedHub.id}
-              onChange={(e) => {
-                const hub = GLOBAL_TECH_HUBS.find((h) => h.id === e.target.value);
-                if (hub) setSelectedHub(hub);
-              }}
-              className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs focus:outline-none cursor-pointer"
-            >
-              {GLOBAL_TECH_HUBS.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.flag} {h.name}
-                </option>
-              ))}
-            </select>
           </div>
 
-          {/* Center Group: Live Search Bar (Hidden when in dedicated Jobs view) */}
-          <div className="hidden md:flex flex-1 max-w-md lg:max-w-lg mx-2">
-            {viewMode !== "jobs" && (
-              <div className="relative w-full flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 px-3.5 py-1.5 focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:shadow-md transition-all">
-                <span className="text-slate-400 text-xs mr-2 shrink-0">
-                  {isSearchingServer ? "⏳" : "🔍"}
-                </span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search 67,000+ companies, tech stack, roles..."
-                  className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 pr-1 cursor-pointer shrink-0"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-            )}
+          {/* Desktop Center: Airbnb Unified Search Pill for Tech Atlas */}
+          <div className="hidden md:flex flex-1 max-w-xl mx-2 justify-center">
+            <AirbnbSearchBar
+              mode="tech_atlas"
+              activeWhereName={`${selectedHub.flag} ${selectedHub.name}`}
+              whereOptions={GLOBAL_TECH_HUBS.map((h) => ({
+                id: h.id,
+                name: h.name,
+                subtitle: h.country,
+                flag: h.flag,
+                isSelected: h.id === selectedHub.id,
+              }))}
+              onSelectWhere={handleSelectHub}
+              categoryLabel="Sector"
+              activeCategoryName={
+                selectedType !== "all"
+                  ? TECH_SECTORS.find((s) => s.id === selectedType)?.name || selectedType
+                  : selectedStage !== "all"
+                  ? `Stage: ${selectedStage}`
+                  : "All Sectors"
+              }
+              categoryOptions={TECH_SECTORS}
+              onSelectCategory={(typeId) => setSelectedType(typeId)}
+              selectedStage={selectedStage}
+              onSelectStage={(stage) => setSelectedStage(stage)}
+              stageOptions={TECH_STAGES}
+              searchPlaceholder="Search 67,000+ companies, tech stack, roles..."
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              suggestions={companySuggestions}
+              onSelectSuggestion={handleSelectCompanySuggestion}
+              totalCount={filteredCompanies.length}
+              totalLabel={`companies mapped in ${selectedHub.name}`}
+            />
           </div>
 
           {/* Desktop Right Group: Filters & 3-Way View Modes (md and up) */}
@@ -496,6 +554,42 @@ export function GlobalTechExplorer({
           </div>
         </div>
 
+        {/* Dedicated Mobile Search Bar */}
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-2.5 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
+          <AirbnbSearchBar
+            mode="tech_atlas"
+            activeWhereName={`${selectedHub.flag} ${selectedHub.name}`}
+            whereOptions={GLOBAL_TECH_HUBS.map((h) => ({
+              id: h.id,
+              name: h.name,
+              subtitle: h.country,
+              flag: h.flag,
+              isSelected: h.id === selectedHub.id,
+            }))}
+            onSelectWhere={handleSelectHub}
+            categoryLabel="Sector"
+            activeCategoryName={
+              selectedType !== "all"
+                ? TECH_SECTORS.find((s) => s.id === selectedType)?.name || selectedType
+                : selectedStage !== "all"
+                ? `Stage: ${selectedStage}`
+                : "All Sectors"
+            }
+            categoryOptions={TECH_SECTORS}
+            onSelectCategory={(typeId) => setSelectedType(typeId)}
+            selectedStage={selectedStage}
+            onSelectStage={(stage) => setSelectedStage(stage)}
+            stageOptions={TECH_STAGES}
+            searchPlaceholder="Companies, tech stack..."
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            suggestions={companySuggestions}
+            onSelectSuggestion={handleSelectCompanySuggestion}
+            totalCount={filteredCompanies.length}
+            totalLabel={`companies in ${selectedHub.name}`}
+          />
+        </div>
+
         {/* Dedicated Mobile Sub-Bar: View Switcher & Hiring Toggle */}
         <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/80 dark:bg-slate-900/80 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
           {/* View Switcher: Map vs Grid vs Jobs */}
@@ -561,27 +655,6 @@ export function GlobalTechExplorer({
             <span>Hiring ({totalOpenings})</span>
           </button>
         </div>
-
-        {/* Dedicated Mobile Search Bar */}
-        {viewMode !== "jobs" && (
-          <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
-            <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1 shadow-2xs">
-              <span className="text-slate-400 text-xs mr-2 shrink-0">🔍</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search companies, tech stack..."
-                className="w-full bg-transparent text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none min-w-0"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="text-xs text-slate-400">
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Top Flash Announcement Ad Banner */}

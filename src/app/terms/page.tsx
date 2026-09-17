@@ -3,8 +3,8 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/public-header";
 
 export const metadata: Metadata = {
-  title: "Terms & Conditions | Locatogo",
-  description: "Read the Terms and Conditions for using the Locatogo directory atlas platform and place discovery services.",
+  title: "Terms & Conditions | LocaToGo",
+  description: "Read the Terms and Conditions for using the LocaToGo directory atlas platform and place discovery services.",
 };
 
 export default function TermsPage() {
@@ -44,7 +44,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing, browsing, or using the Locatogo website, web applications, APIs, or directory services (collectively, &ldquo;Locatogo&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;), you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions. If you do not agree to these terms, please discontinue use of the platform.
+              By accessing, browsing, or using the LocaToGo website, web applications, APIs, or directory services (collectively, &ldquo;LocaToGo&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;), you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions. If you do not agree to these terms, please discontinue use of the platform.
             </p>
           </section>
 
@@ -53,7 +53,7 @@ export default function TermsPage() {
               2. Platform Services & Directory Information
             </h2>
             <p>
-              Locatogo serves as an interactive local directory platform mapping places, businesses, schools, medical centers, tech campuses, and points of interest. While we strive to verify coordinates, operational hours, contact numbers, and amenities, directory information is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis without warranties of any kind.
+              LocaToGo serves as an interactive local directory platform mapping places, businesses, schools, medical centers, tech campuses, and points of interest. While we strive to verify coordinates, operational hours, contact numbers, and amenities, directory information is provided on an &ldquo;as is&rdquo; and &ldquo;as available&rdquo; basis without warranties of any kind.
             </p>
             <p>
               We recommend contacting venues directly or confirming operational status for critical emergencies or strict schedule requirements.
@@ -70,7 +70,7 @@ export default function TermsPage() {
             <ul className="list-disc pl-5 space-y-1.5 text-gray-600">
               <li>You represent that all submitted information (business title, phone number, address, opening schedule) is accurate and truthful.</li>
               <li>You agree not to submit fraudulent, deceptive, defamatory, or copyright-infringing content or imagery.</li>
-              <li>Locatogo reserves the right to review, edit, reject, or remove any listing at our sole discretion without prior notice.</li>
+              <li>LocaToGo reserves the right to review, edit, reject, or remove any listing at our sole discretion without prior notice.</li>
             </ul>
           </section>
 
@@ -79,11 +79,11 @@ export default function TermsPage() {
               4. Third-Party Links & Transit Integrations
             </h2>
             <p>
-              Locatogo offers 1-click deep links to third-party services including Uber, Ola Cabs, WhatsApp, and Google Maps:
+              LocaToGo offers 1-click deep links to third-party services including Uber, Ola Cabs, WhatsApp, and Google Maps:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-gray-600">
               <li>Ride bookings, pricing, driver availability, and communication on external apps are governed entirely by the terms and policies of those third-party providers.</li>
-              <li>Locatogo is not liable for transactions, rides, communication outcomes, or services rendered by third-party platforms.</li>
+              <li>LocaToGo is not liable for transactions, rides, communication outcomes, or services rendered by third-party platforms.</li>
             </ul>
           </section>
 
@@ -92,7 +92,7 @@ export default function TermsPage() {
               5. Intellectual Property
             </h2>
             <p>
-              The Locatogo branding, design layout, map markers, database schema, and custom software code are the intellectual property of Locatogo. Map tiles and geographic data are provided under respective licenses from OpenStreetMap contributors and Esri/Maxar.
+              The LocaToGo branding, design layout, map markers, database schema, and custom software code are the intellectual property of LocaToGo. Map tiles and geographic data are provided under respective licenses from OpenStreetMap contributors and Esri/Maxar.
             </p>
           </section>
 
@@ -101,7 +101,7 @@ export default function TermsPage() {
               6. Limitation of Liability
             </h2>
             <p>
-              To the maximum extent permitted by applicable law, Locatogo, its founders, and contributors shall not be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use the platform, including inaccuracies in directions, travel times, or business hours.
+              To the maximum extent permitted by applicable law, LocaToGo, its founders, and contributors shall not be liable for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use the platform, including inaccuracies in directions, travel times, or business hours.
             </p>
           </section>
 
@@ -132,7 +132,7 @@ export default function TermsPage() {
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            locatogo<span className="text-[#e26a4f]">.</span>
+            LocaToGo<span className="text-[#e26a4f]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
@@ -151,7 +151,7 @@ export default function TermsPage() {
           </div>
 
           <p className="text-gray-400">
-            © 2026 locatogo. All rights reserved.
+            © 2026 LocaToGo. All rights reserved.
           </p>
         </div>
       </footer>

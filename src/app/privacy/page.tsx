@@ -3,8 +3,8 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/public-header";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Locatogo",
-  description: "Learn how Locatogo protects your privacy, handles location data, and manages user information.",
+  title: "Privacy Policy | LocaToGo",
+  description: "Learn how LocaToGo protects your privacy, handles location data, and manages user information.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -44,7 +44,7 @@ export default function PrivacyPolicyPage() {
               1. Overview & Commitment
             </h2>
             <p>
-              At Locatogo (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;), we respect your privacy and are committed to protecting any information collected while operating our local directory and mapping services. This policy outlines how we handle location data, listing submissions, and usage telemetry.
+              At LocaToGo (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;), we respect your privacy and are committed to protecting any information collected while operating our local directory and mapping services. This policy outlines how we handle location data, listing submissions, and usage telemetry.
             </p>
           </section>
 
@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
               2. Location Data & Geolocation
             </h2>
             <p>
-              Locatogo offers a &ldquo;My Location&rdquo; feature to calculate driving distance, walking time, and nearby places around your current position:
+              LocaToGo offers a &ldquo;My Location&rdquo; feature to calculate driving distance, walking time, and nearby places around your current position:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-gray-600">
               <li><strong>Client-Side Only:</strong> Your exact GPS coordinates are processed locally within your browser to center the map and calculate relative distances.</li>
@@ -129,7 +129,7 @@ export default function PrivacyPolicyPage() {
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            locatogo<span className="text-[#e26a4f]">.</span>
+            LocaToGo<span className="text-[#e26a4f]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
@@ -148,7 +148,7 @@ export default function PrivacyPolicyPage() {
           </div>
 
           <p className="text-gray-400">
-            © 2026 locatogo. All rights reserved.
+            © 2026 LocaToGo. All rights reserved.
           </p>
         </div>
       </footer>

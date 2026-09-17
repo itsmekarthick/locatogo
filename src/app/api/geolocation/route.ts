@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     const ipApiUrl = ip ? `https://ipwho.is/${ip}` : "https://ipwho.is/";
     const res = await fetch(ipApiUrl, {
       next: { revalidate: 3600 }, // cache 1 hour per IP
-      headers: { "User-Agent": "LocatogoApp/1.0" },
+      headers: { "User-Agent": "LocaToGoApp/1.0" },
     });
 
     if (!res.ok) {

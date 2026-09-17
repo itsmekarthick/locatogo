@@ -9,7 +9,7 @@ type Props = {
 };
 
 export const metadata = {
-  title: "Edit Story | Locatogo Admin",
+  title: "Edit Story | LocaToGo Admin",
 };
 
 export default async function EditBlogPage({ params }: Props) {

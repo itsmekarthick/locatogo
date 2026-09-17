@@ -4,7 +4,7 @@ import { PublicHeader } from "@/components/public-header";
 import { SponsorInquiryForm } from "@/components/sponsor-inquiry-form";
 
 export const metadata: Metadata = {
-  title: "Advertise & Partner with Mapora / Locatogo | Targeted Local & Tech Discovery",
+  title: "Advertise & Partner with Mapora / LocaToGo | Targeted Local & Tech Discovery",
   description: "Promote your business, coworking space, healthcare center, or tech startup to hundreds of thousands of active local explorers and tech professionals.",
 };
 
@@ -192,7 +192,7 @@ export default function AdvertisePage() {
 
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500">
-        <p>© 2026 locatogo. Strict multi-tenant directory network. All rights reserved.</p>
+        <p>© 2026 LocaToGo. Strict multi-tenant directory network. All rights reserved.</p>
       </footer>
     </div>
   );

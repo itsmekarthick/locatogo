@@ -824,10 +824,10 @@ export function ModernDirectoryExplorer({
         <div className="mx-auto flex min-w-0 max-w-[1440px] items-center justify-between px-2.5 sm:px-6 py-2.5 sm:py-3 gap-2 sm:gap-3">
           {/* Logo & Dual Atlas Switcher */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-4 shrink-0">
-            <Link href="/" className="flex items-center gap-2.5 group" title="locatogo">
+            <Link href="/" className="flex items-center gap-2.5 group" title="LocaToGo">
               <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-                locatogo<span className="text-[#e26a4f]">.</span>
+                LocaToGo<span className="text-[#e26a4f]">.</span>
               </span>
             </Link>
 
@@ -1685,7 +1685,7 @@ export function ModernDirectoryExplorer({
         <footer className="mt-auto border-t border-gray-200 bg-white py-8">
           <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
             <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-              locatogo<span className="text-[#e26a4f]">.</span>
+              LocaToGo<span className="text-[#e26a4f]">.</span>
             </Link>
 
             <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
@@ -1704,7 +1704,7 @@ export function ModernDirectoryExplorer({
             </div>
 
             <p className="text-gray-400">
-              © 2026 locatogo. All rights reserved.
+              © 2026 LocaToGo. All rights reserved.
             </p>
           </div>
         </footer>

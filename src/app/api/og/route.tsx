@@ -6,7 +6,7 @@ export const runtime = "edge";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const title = searchParams.get("title") || "Locatogo Atlas";
+    const title = searchParams.get("title") || "LocaToGo Atlas";
     const category = searchParams.get("category") || "Directory";
     const locality = searchParams.get("locality") || "Verified Location";
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
               📍
             </div>
             <div style={{ color: "#ffffff", fontSize: "28px", fontWeight: "bold" }}>
-              locatogo<span style={{ color: "#e26a4f" }}>.</span>
+              LocaToGo<span style={{ color: "#e26a4f" }}>.</span>
             </div>
             <div
               style={{

@@ -26,7 +26,7 @@ export function AdminBlogForm({
   const [excerpt, setExcerpt] = useState(initialBlog?.excerpt || "");
   const [content, setContent] = useState(initialBlog?.content || "");
   const [coverImageUrl, setCoverImageUrl] = useState(initialBlog?.cover_image_url || "");
-  const [authorName, setAuthorName] = useState(initialBlog?.author_name || "Locatogo Editorial");
+  const [authorName, setAuthorName] = useState(initialBlog?.author_name || "LocaToGo Editorial");
   const [authorAvatarUrl, setAuthorAvatarUrl] = useState(initialBlog?.author_avatar_url || "");
   const [tags, setTags] = useState(initialBlog?.tags?.join(", ") || "");
   const [readingTime, setReadingTime] = useState(String(initialBlog?.reading_time_minutes || 4));

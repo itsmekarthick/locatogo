@@ -6,8 +6,8 @@ import { GoogleSignInButton } from "@/app/auth/google-sign-in-button";
 import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = {
-  title: "Sign In | Locatogo",
-  description: "Sign in to your Locatogo account to explore places, save favorites, add listings, and manage your directory.",
+  title: "Sign In | LocaToGo",
+  description: "Sign in to your LocaToGo account to explore places, save favorites, add listings, and manage your directory.",
 };
 
 export default function LoginPage() {
@@ -34,7 +34,7 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-3 group">
             <BrandLogo size={36} className="group-hover:scale-105 transition-transform" />
             <span className="font-serif text-2xl font-bold tracking-tight text-white">
-              locatogo<span className="text-indigo-400">.</span>
+              LocaToGo<span className="text-indigo-400">.</span>
             </span>
           </Link>
 
@@ -103,7 +103,7 @@ export default function LoginPage() {
 
         {/* Bottom Social Proof / Brand Footer */}
         <div className="relative z-10 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Locatogo. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} LocaToGo. All rights reserved.</p>
           <div className="flex items-center gap-3">
             <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy</Link>
             <span>·</span>
@@ -119,7 +119,7 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-2.5">
             <BrandLogo size={32} />
             <span className="font-serif text-xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-              locatogo<span className="text-indigo-600 dark:text-indigo-400">.</span>
+              LocaToGo<span className="text-indigo-600 dark:text-indigo-400">.</span>
             </span>
           </Link>
           <Link

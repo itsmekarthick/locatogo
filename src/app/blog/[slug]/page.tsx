@@ -14,15 +14,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const blog = await getBlogBySlug(slug);
 
   if (!blog) {
-    return { title: "Story Not Found | Locatogo" };
+    return { title: "Story Not Found | LocaToGo" };
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const url = `${baseUrl}/blog/${blog.slug}`;
 
   return {
-    title: `${blog.title} | Locatogo Journal`,
-    description: blog.excerpt || `Read ${blog.title} on the Locatogo directory atlas.`,
+    title: `${blog.title} | LocaToGo Journal`,
+    description: blog.excerpt || `Read ${blog.title} on the LocaToGo directory atlas.`,
     alternates: {
       canonical: url,
     },
@@ -188,7 +188,7 @@ export default async function BlogPostPage({ params }: Props) {
     },
     publisher: {
       "@type": "Organization",
-      name: "Locatogo",
+      name: "LocaToGo",
       url: baseUrl,
     },
     mainEntityOfPage: {
@@ -259,7 +259,7 @@ export default async function BlogPostPage({ params }: Props) {
                   {blog.author_name}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Locatogo Editorial Contributor
+                  LocaToGo Editorial Contributor
                 </p>
               </div>
             </div>
@@ -392,7 +392,7 @@ export default async function BlogPostPage({ params }: Props) {
       {/* Footer */}
       <footer className="border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#070b13] py-10 text-xs text-slate-500">
         <div className="mx-auto max-w-[1100px] px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Locatogo Journal. Curated with pride for Bengaluru.</p>
+          <p>© {new Date().getFullYear()} LocaToGo Journal. Curated with pride for Bengaluru.</p>
           <div className="flex items-center gap-4">
             <Link href="/blog" className="hover:text-slate-900 dark:hover:text-white">All Stories</Link>
             <Link href="/" className="hover:text-slate-900 dark:hover:text-white">City Atlas</Link>

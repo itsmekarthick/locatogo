@@ -29,7 +29,7 @@ export async function GET() {
       const cleanExcerpt = xmlEscape(blog.excerpt || blog.title);
       const cleanTitle = xmlEscape(blog.title);
       const cleanCategory = xmlEscape(blog.category || "General");
-      const cleanAuthor = xmlEscape(blog.author_name || "Locatogo Editorial");
+      const cleanAuthor = xmlEscape(blog.author_name || "LocaToGo Editorial");
 
       return `    <item>
       <title>${cleanTitle}</title>
@@ -46,7 +46,7 @@ export async function GET() {
   const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Locatogo Journal | City Guides &amp; Tech Insights</title>
+    <title>LocaToGo Journal | City Guides &amp; Tech Insights</title>
     <link>${baseUrl}/blog</link>
     <description>Curated neighborhood guides, coworking spaces, specialty coffee, and tech corridors in Bengaluru and beyond.</description>
     <language>en</language>

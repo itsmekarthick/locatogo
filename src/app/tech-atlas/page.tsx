@@ -4,7 +4,7 @@ import { GlobalTechExplorer, type UnifiedJob } from "@/components/global-tech-ex
 import type { CompanyDetail, CompanyJob } from "@/components/company-detail-drawer";
 
 export const metadata: Metadata = {
-  title: "Global Tech Atlas & Startup Map | Locatogo",
+  title: "Global Tech Atlas & Startup Map | LocaToGo",
   description: "Interactive directory of 67,000+ IT companies, startups, and MNC GCCs across major tech hubs worldwide with real-time job openings.",
 };
 

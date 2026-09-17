@@ -2,7 +2,7 @@
 
 ## Product boundary
 
-locatogo is a strict multi-tenant SaaS. Platform data owns tenants; tenants own domains/directories; domains own categories, listings, custom fields, media, moderation, advertising, payments, and analytics. Every tenant-scoped row must resolve to `tenant_id`, directly or through a checked parent relationship.
+LocaToGo is a strict multi-tenant SaaS. Platform data owns tenants; tenants own domains/directories; domains own categories, listings, custom fields, media, moderation, advertising, payments, and analytics. Every tenant-scoped row must resolve to `tenant_id`, directly or through a checked parent relationship.
 
 ## Runtime
 

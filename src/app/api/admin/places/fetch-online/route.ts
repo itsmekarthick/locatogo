@@ -75,7 +75,7 @@ async function resolveCenterCoordinates(
       )}&format=json&addressdetails=1&limit=1`,
       {
         headers: {
-          "User-Agent": "Locatogo-Directory-Platform/1.0 (admin@locatogo.app)",
+          "User-Agent": "LocaToGo-Directory-Platform/1.0 (admin@locatogo.app)",
           "Accept-Language": "en",
         },
       }
@@ -130,7 +130,7 @@ async function fetchOverpassTechOffices(
       method: "POST",
       body: query,
       headers: {
-        "User-Agent": "Locatogo-Directory-Platform/1.0 (admin@locatogo.app)",
+        "User-Agent": "LocaToGo-Directory-Platform/1.0 (admin@locatogo.app)",
       },
     });
 
@@ -330,7 +330,7 @@ export async function GET(request: NextRequest) {
       try {
         const res = await fetch(url, {
           headers: {
-            "User-Agent": "Locatogo-Directory-Platform/1.0 (admin@locatogo.app)",
+            "User-Agent": "LocaToGo-Directory-Platform/1.0 (admin@locatogo.app)",
             "Accept-Language": "en",
           },
         });

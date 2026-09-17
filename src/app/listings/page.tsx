@@ -7,7 +7,7 @@ import {
 } from "@/components/modern-directory-explorer";
 
 export const metadata: Metadata = {
-  title: "Global Places Directory | Locatogo",
+  title: "Global Places Directory | LocaToGo",
   description: "Browse verified places, schools, hospitals, cafes, tech hubs, and infrastructure worldwide on the live interactive map.",
 };
 

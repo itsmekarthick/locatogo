@@ -59,6 +59,6 @@ export function generateWhatsAppInquiryLink(
     cleanPhone = cleanPhone.slice(1);
   }
 
-  const message = `Hello, I found ${title} (${categoryName || 'Place'}) on Locatogo. I would like to inquire about your timings and services.`;
+  const message = `Hello, I found ${title} (${categoryName || 'Place'}) on LocaToGo. I would like to inquire about your timings and services.`;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }

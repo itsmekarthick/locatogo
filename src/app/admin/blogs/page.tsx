@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 
 export const metadata = {
-  title: "Editorial Guides & Stories | Locatogo Workspace",
+  title: "Editorial Guides & Stories | LocaToGo Workspace",
 };
 
 export default async function AdminBlogsPage() {

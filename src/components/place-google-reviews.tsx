@@ -222,7 +222,7 @@ export function PlaceGoogleReviews({
             <div className="mt-4 pt-2.5 border-t border-gray-200/60 flex items-center justify-between text-[10px] text-gray-400 font-medium">
               <span className="flex items-center gap-1">
                 <span className="text-emerald-600 font-bold">✓</span>
-                <span>{isGoogleDirect ? "Google Maps Verified" : "Locatogo Verified"}</span>
+                <span>{isGoogleDirect ? "Google Maps Verified" : "LocaToGo Verified"}</span>
               </span>
               <span>{rev.relativeTime}</span>
             </div>

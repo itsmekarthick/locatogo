@@ -3,8 +3,8 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/public-header";
 
 export const metadata: Metadata = {
-  title: "About Us | Locatogo - Global Place & Directory Atlas",
-  description: "Learn more about Locatogo, the real-time global directory atlas for verified schools, hospitals, tech hubs, dining destinations, and civic infrastructure.",
+  title: "About Us | LocaToGo - Global Place & Directory Atlas",
+  description: "Learn more about LocaToGo, the real-time global directory atlas for verified schools, hospitals, tech hubs, dining destinations, and civic infrastructure.",
 };
 
 export default function AboutPage() {
@@ -21,7 +21,7 @@ export default function AboutPage() {
             Home
           </Link>
           <span>/</span>
-          <span className="text-gray-900 font-semibold">About Locatogo</span>
+          <span className="text-gray-900 font-semibold">About LocaToGo</span>
         </div>
 
         {/* Hero Banner */}
@@ -33,7 +33,7 @@ export default function AboutPage() {
             Mapping the world with precision, community intelligence, and speed.
           </h1>
           <p className="mt-4 text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl">
-            Locatogo is a next-generation local directory and infrastructure atlas. We help residents, newcomers, and travelers discover verified healthcare centers, schools, tech hubs, dining spots, and public amenities worldwide with real-time accuracy.
+            LocaToGo is a next-generation local directory and infrastructure atlas. We help residents, newcomers, and travelers discover verified healthcare centers, schools, tech hubs, dining spots, and public amenities worldwide with real-time accuracy.
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export default function AboutPage() {
               Exact GPS Precision
             </h3>
             <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Every listing on Locatogo is anchored to verified latitude and longitude coordinates. No approximate pins or guessing where the main gate or emergency casualty entrance is located.
+              Every listing on LocaToGo is anchored to verified latitude and longitude coordinates. No approximate pins or guessing where the main gate or emergency casualty entrance is located.
             </p>
           </div>
 
@@ -146,7 +146,7 @@ export default function AboutPage() {
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            locatogo<span className="text-[#e26a4f]">.</span>
+            LocaToGo<span className="text-[#e26a4f]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
@@ -165,7 +165,7 @@ export default function AboutPage() {
           </div>
 
           <p className="text-gray-400">
-            © 2026 locatogo. All rights reserved.
+            © 2026 LocaToGo. All rights reserved.
           </p>
         </div>
       </footer>

@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .single();
   return {
     title: data?.name ? `${data.name} | Map Directory` : "Map Directory",
-    description: data?.description ?? "Explore places on Locatogo.",
+    description: data?.description ?? "Explore places on LocaToGo.",
   };
 }
 

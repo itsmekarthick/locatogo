@@ -55,7 +55,7 @@ export function PublicHeader({
         <Link href="/" className="flex items-center gap-2.5 group shrink-0">
           <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
           <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-            locatogo<span className="text-indigo-600 dark:text-indigo-400">.</span>
+            LocaToGo<span className="text-indigo-600 dark:text-indigo-400">.</span>
           </span>
         </Link>
 

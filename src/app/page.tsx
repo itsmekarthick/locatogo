@@ -52,7 +52,7 @@ async function detectUserMetroDomain(
     const res = await fetch(ipApiUrl, {
       signal: controller.signal,
       next: { revalidate: 3600 },
-      headers: { "User-Agent": "LocatogoApp/1.0" },
+      headers: { "User-Agent": "LocaToGoApp/1.0" },
     });
     clearTimeout(timer);
 

@@ -5,7 +5,7 @@ import { LocationPinPicker } from "@/components/location-pin-picker";
 import { PublicHeader } from "@/components/public-header";
 
 export const metadata = {
-  title: "Suggest a Place | Locatogo",
+  title: "Suggest a Place | LocaToGo",
   description: "Contribute verified places, schools, hospitals, cafes, and landmarks to the community directory atlas.",
 };
 
