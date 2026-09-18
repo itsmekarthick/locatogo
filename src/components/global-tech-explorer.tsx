@@ -46,6 +46,7 @@ export type UnifiedJob = {
   experience_level?: string | null;
   salary_range?: string | null;
   apply_url: string;
+  company_careers_url?: string | null;
   posted_at?: string | null;
   listing_id?: string;
   company_title?: string;
@@ -125,6 +126,14 @@ export function GlobalTechExplorer({
   const [gridPage, setGridPage] = useState<number>(1);
   const GRID_PAGE_SIZE = 24;
 
+  // Split-Screen Map Workbench States
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [mobileTab, setMobileTab] = useState<"map" | "list">("map");
+  const [hoveredCompanyId, setHoveredCompanyId] = useState<string | null>(null);
+  const [sidebarSort, setSidebarSort] = useState<"jobs" | "name" | "stage">("jobs");
+  const [sidebarPage, setSidebarPage] = useState<number>(1);
+  const SIDEBAR_PAGE_SIZE = 40;
+
   // Job Board Search & Filters
   const [jobSearch, setJobSearch] = useState("");
   const [jobWorkplace, setJobWorkplace] = useState<string>("all");
@@ -133,9 +142,10 @@ export function GlobalTechExplorer({
   const [jobPage, setJobPage] = useState(1);
   const JOB_PAGE_SIZE = 12;
 
-  // Reset grid page when company filters change
+  // Reset grid & sidebar pages when company filters change
   useEffect(() => {
     setGridPage(1);
+    setSidebarPage(1);
   }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedHub]);
 
   // Reset job page when job filters change
@@ -342,6 +352,39 @@ export function GlobalTechExplorer({
     return filteredCompanies.slice(start, start + GRID_PAGE_SIZE);
   }, [filteredCompanies, gridPage]);
 
+  // Sidebar companies sorting and progressive hydration
+  const sidebarSortedCompanies = useMemo(() => {
+    const list = [...filteredCompanies];
+    if (sidebarSort === "jobs") {
+      list.sort((a, b) => {
+        const aJobs = a.jobs?.length || a.active_jobs_count || 0;
+        const bJobs = b.jobs?.length || b.active_jobs_count || 0;
+        return bJobs - aJobs;
+      });
+    } else if (sidebarSort === "name") {
+      list.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sidebarSort === "stage") {
+      const stageWeight: Record<string, number> = {
+        GCC: 10,
+        Unicorn: 9,
+        Public: 8,
+        "Series C+": 7,
+        "Series B": 6,
+        "Series A": 5,
+        Seed: 4,
+        Bootstrapped: 3,
+      };
+      list.sort(
+        (a, b) => (stageWeight[b.funding_stage || ""] || 0) - (stageWeight[a.funding_stage || ""] || 0)
+      );
+    }
+    return list;
+  }, [filteredCompanies, sidebarSort]);
+
+  const sidebarVisibleCompanies = useMemo(() => {
+    return sidebarSortedCompanies.slice(0, sidebarPage * SIDEBAR_PAGE_SIZE);
+  }, [sidebarSortedCompanies, sidebarPage, SIDEBAR_PAGE_SIZE]);
+
   const totalOpenings = useMemo(() => {
     return allJobs.length > 0
       ? allJobs.length
@@ -412,33 +455,20 @@ export function GlobalTechExplorer({
       {/* Top Navbar */}
       <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-[1000] shadow-2xs">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-2 sm:gap-4">
-          {/* Logo & Dual Atlas Pill */}
+          {/* Logo & Tech Atlas Badge */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <Link href="/" className="flex items-center gap-2 group" title="Mapora Atlas">
+            <Link href="/" className="flex items-center gap-2 group" title="LocaToGo Tech Atlas">
               <BrandLogo size={30} className="group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
                 LocaToGo<span className="text-[#e26a4f]">.</span>
               </span>
             </Link>
 
-            {/* Dual Atlas Mode Segmented Pill */}
-            <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 p-0.5 shadow-2xs">
-              <Link
-                href="/bangalore"
-                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-              >
-                <span>🏙️</span>
-                <span className="hidden md:inline">City Atlas</span>
-                <span className="md:hidden">City</span>
-              </Link>
-              <div
-                className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 shadow-xs"
-              >
-                <span>💼</span>
-                <span className="hidden md:inline">Tech Atlas</span>
-                <span className="md:hidden">Tech</span>
-                <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
-              </div>
+            {/* Live Tech Atlas Status Badge */}
+            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 px-3 py-1 shadow-2xs">
+              <span>💼</span>
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">Tech Atlas</span>
+              <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
             </div>
           </div>
 
@@ -446,7 +476,7 @@ export function GlobalTechExplorer({
           <div className="hidden md:flex flex-1 max-w-xl mx-2 justify-center">
             <AirbnbSearchBar
               mode="tech_atlas"
-              activeWhereName={`${selectedHub.flag} ${selectedHub.name}`}
+              activeWhereName={`${selectedHub.name}, ${selectedHub.country}`}
               whereOptions={GLOBAL_TECH_HUBS.map((h) => ({
                 id: h.id,
                 name: h.name,
@@ -657,40 +687,248 @@ export function GlobalTechExplorer({
         </div>
       </header>
 
-      {/* Top Flash Announcement Ad Banner */}
-      <AdBannerSlot placementLocation="flash" variant="flash" />
-
       {/* Main Content Area */}
       <main className="flex-1 w-full relative">
-        {/* VIEW MODE 1: INTERACTIVE MAP WITH CLUSTERS */}
+        {/* VIEW MODE 1: INTERACTIVE MAP WITH SPLIT WORKBENCH */}
         {viewMode === "map" && (
-          <div className="relative w-full h-[calc(100vh-62px)] bg-slate-100 dark:bg-slate-900 overflow-hidden">
-            <MapErrorBoundary fallbackText="The tech atlas map canvas encountered an issue. Click below to reload.">
-              <InteractiveLeafletCanvas
-                key={`tech-canvas-${selectedHub.id}`}
-                locatedListings={locatedListings}
-                activePlaceId={selectedCompany?.id || null}
-                setActivePlaceId={(id) => {
-                  const comp = companies.find((c) => c.id === id);
-                  if (comp) setSelectedCompany(comp);
-                }}
-                searchQuery={searchQuery}
-                initialPerspective="street"
-              />
-            </MapErrorBoundary>
+          <div className="relative w-full h-[calc(100vh-62px)] flex overflow-hidden bg-slate-100 dark:bg-slate-900">
+            {/* 1. COLLAPSIBLE LEFT DIRECTORY SIDEBAR */}
+            <aside
+              className={`
+                ${isSidebarOpen ? "w-full lg:w-[420px] xl:w-[460px]" : "w-0 overflow-hidden border-none"}
+                ${mobileTab === "list" ? "flex" : "hidden lg:flex"}
+                shrink-0 h-full flex-col bg-white dark:bg-[#0c121e] border-r border-slate-200/80 dark:border-slate-800 transition-all duration-300 z-10 shadow-xl lg:shadow-none
+              `}
+            >
+              {/* Sidebar Header & Filters Bar */}
+              <div className="p-3 sm:p-3.5 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-sm sticky top-0 z-20 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-base">{selectedHub.flag}</span>
+                      <h2 className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                        {selectedHub.name} Tech Directory
+                      </h2>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      {filteredCompanies.length.toLocaleString()} tech companies · {totalOpenings} hiring
+                    </p>
+                  </div>
 
-            {/* Floating Top Pill on Map */}
-            <div className="absolute top-4 left-4 z-[400] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3 shadow-lg max-w-sm hidden sm:block">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{selectedHub.flag}</span>
-                <div>
-                  <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100 leading-tight">
-                    {selectedHub.name} Tech Cluster
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
-                    {filteredCompanies.length.toLocaleString()} tech companies mapped · {totalOpenings} openings
-                  </p>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Sort Dropdown */}
+                    <select
+                      value={sidebarSort}
+                      onChange={(e) => setSidebarSort(e.target.value as any)}
+                      className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2 py-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+                      title="Sort companies"
+                    >
+                      <option value="jobs">Most Jobs</option>
+                      <option value="stage">Top Stage</option>
+                      <option value="name">Name (A-Z)</option>
+                    </select>
+
+                    {/* Collapse Button (Desktop) */}
+                    <button
+                      type="button"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="hidden lg:flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      title="Collapse sidebar for full map"
+                    >
+                      ◀
+                    </button>
+                  </div>
                 </div>
+
+                {/* Horizontal Quick Sector Filter Carousel */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+                  {TECH_SECTORS.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setSelectedType(s.id)}
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                        selectedType === s.id
+                          ? "bg-indigo-600 text-white shadow-2xs font-bold"
+                          : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      }`}
+                    >
+                      <span>{s.icon}</span>
+                      <span>{s.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Scrollable Company Cards Feed */}
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 scroll-smooth">
+                {sidebarVisibleCompanies.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <span className="text-3xl">🔍</span>
+                    <h3 className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">No matching companies</h3>
+                    <p className="mt-1 text-xs text-slate-500">Try clearing your filters or search query.</p>
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedType("all");
+                        setSelectedStage("all");
+                        setHiringOnly(false);
+                      }}
+                      className="mt-4 rounded-full bg-indigo-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-colors cursor-pointer"
+                    >
+                      Reset Filters
+                    </button>
+                  </div>
+                ) : (
+                  sidebarVisibleCompanies.map((comp) => {
+                    const isSelected = selectedCompany?.id === comp.id;
+                    const isHovered = hoveredCompanyId === comp.id;
+                    const jobCount = comp.jobs?.length || comp.active_jobs_count || 0;
+
+                    return (
+                      <article
+                        key={comp.id}
+                        onMouseEnter={() => setHoveredCompanyId(comp.id)}
+                        onMouseLeave={() => setHoveredCompanyId(null)}
+                        onClick={() => {
+                          setSelectedCompany(comp);
+                        }}
+                        className={`p-3 sm:p-3.5 transition-all cursor-pointer group flex flex-col justify-between gap-2 border-l-4 ${
+                          isSelected
+                            ? "bg-indigo-50/80 dark:bg-indigo-950/40 border-l-indigo-600"
+                            : isHovered
+                            ? "bg-slate-50 dark:bg-slate-800/50 border-l-indigo-400"
+                            : "bg-white dark:bg-[#0c121e] border-l-transparent hover:bg-slate-50/60 dark:hover:bg-slate-850/50"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <CompanyBrandAvatar
+                              title={comp.title}
+                              website={comp.website || undefined}
+                              size={36}
+                              className="rounded-xl shrink-0 shadow-2xs"
+                            />
+                            <div className="min-w-0">
+                              <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                                {comp.title}
+                              </h3>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                📍 {comp.locality || comp.city || selectedHub.name}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Hiring badge */}
+                          {jobCount > 0 && (
+                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                              {jobCount} {jobCount === 1 ? "job" : "jobs"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Badges & Tech Stack */}
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                          <span className="rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold px-1.5 py-0.5 uppercase tracking-wider">
+                            {(comp.company_type || "Tech").replace(/_/g, " ")}
+                          </span>
+                          {comp.funding_stage && (
+                            <span className="rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold px-1.5 py-0.5">
+                              {comp.funding_stage}
+                            </span>
+                          )}
+                          {comp.employee_range && (
+                            <span className="text-slate-400 font-mono">
+                              👥 {comp.employee_range}
+                            </span>
+                          )}
+                        </div>
+
+                        {comp.short_description && (
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-1 leading-snug">
+                            {comp.short_description}
+                          </p>
+                        )}
+                      </article>
+                    );
+                  })
+                )}
+
+                {/* Load More Button */}
+                {sidebarVisibleCompanies.length < sidebarSortedCompanies.length && (
+                  <div className="p-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setSidebarPage((p) => p + 1)}
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Load More Companies ({sidebarSortedCompanies.length - sidebarVisibleCompanies.length} remaining)
+                    </button>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            {/* 2. RIGHT MAP CANVAS */}
+            <div className={`flex-1 h-full relative overflow-hidden ${mobileTab === "map" ? "block" : "hidden lg:block"}`}>
+              <MapErrorBoundary fallbackText="The tech atlas map canvas encountered an issue. Click below to reload.">
+                <InteractiveLeafletCanvas
+                  key={`tech-canvas-${selectedHub.id}`}
+                  locatedListings={locatedListings}
+                  activePlaceId={hoveredCompanyId || selectedCompany?.id || null}
+                  setActivePlaceId={(id) => {
+                    const comp = companies.find((c) => c.id === id);
+                    if (comp) setSelectedCompany(comp);
+                  }}
+                  hubCenter={{ lat: selectedHub.lat, lng: selectedHub.lng, zoom: selectedHub.zoom }}
+                  isTechAtlas={true}
+                  searchQuery={searchQuery}
+                  initialPerspective="street"
+                />
+              </MapErrorBoundary>
+
+              {/* Floating Expand Sidebar Button (when sidebar is collapsed on desktop) */}
+              {!isSidebarOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="absolute top-4 left-4 z-[400] hidden lg:flex items-center gap-2 rounded-full border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 shadow-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:scale-105 transition-all cursor-pointer"
+                >
+                  <span>🏢</span>
+                  <span>Browse Companies ({filteredCompanies.length.toLocaleString()})</span>
+                  <span className="text-indigo-600 dark:text-indigo-400">▶</span>
+                </button>
+              )}
+            </div>
+
+            {/* 3. MOBILE FLOATING SEGMENTED TOGGLE (MAP VS LIST) */}
+            <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] shadow-2xl">
+              <div className="flex items-center rounded-full bg-slate-950/90 text-white p-1 border border-slate-800 backdrop-blur-md">
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("map")}
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    mobileTab === "map"
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  <span>🗺️</span>
+                  <span>Map</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMobileTab("list")}
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    mobileTab === "list"
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  <span>📋</span>
+                  <span>List ({filteredCompanies.length})</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1012,26 +1250,40 @@ export function GlobalTechExplorer({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                        <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                           {company ? (
                             <button
                               type="button"
                               onClick={() => setSelectedCompany(company)}
                               className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 cursor-pointer"
                             >
-                              🏢 About Company →
+                              🏢 Details →
                             </button>
                           ) : <div />}
 
-                          <a
-                            href={job.apply_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
-                          >
-                            <span>Apply Now</span>
-                            <span>↗</span>
-                          </a>
+                          <div className="flex items-center gap-2">
+                            {(job.company_careers_url || (company && (company.careers_url || company.website))) && (
+                              <a
+                                href={job.company_careers_url || company?.careers_url || company?.website || "#"}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 px-3 py-1.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                                title="Open Official Company Career Portal"
+                              >
+                                <span>🏢 Portal</span>
+                                <span>↗</span>
+                              </a>
+                            )}
+                            <a
+                              href={job.apply_url || job.company_careers_url || "#"}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>Apply Now</span>
+                              <span>↗</span>
+                            </a>
+                          </div>
                         </div>
                       </div>
                     );

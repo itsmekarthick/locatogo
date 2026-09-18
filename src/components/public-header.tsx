@@ -8,11 +8,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProfileMenu } from "@/components/user-profile-menu";
 
 const NAV_LINKS = [
-  { href: "/", label: "Map Explorer", icon: "🗺️" },
-  { href: "/tech-atlas", label: "Tech Atlas", icon: "💼", badge: "Jobs" },
+  { href: "/", label: "Tech Atlas", icon: "💼", badge: "Live" },
   { href: "/blog", label: "Stories & Guides", icon: "📖" },
   { href: "/about", label: "About", icon: "ℹ️" },
-  { href: "/submit", label: "Add Business", icon: "➕" },
+  { href: "/submit", label: "Add Company", icon: "➕" },
   { href: "/advertise", label: "Advertise", icon: "📢" },
 ];
 
@@ -155,8 +154,8 @@ export function PublicHeader({
               href="/"
               className="w-full flex items-center justify-center gap-2 rounded-full bg-slate-950 dark:bg-indigo-600 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition-all"
             >
-              <span>Explore Live City Atlas</span>
-              <span>🗺️</span>
+              <span>Explore Live Tech Atlas</span>
+              <span>💼</span>
             </Link>
           </div>
         </div>

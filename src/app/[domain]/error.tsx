@@ -21,10 +21,10 @@ export default function DomainError({
           📍
         </div>
         <h2 className="mt-4 font-serif text-2xl font-bold text-slate-950 dark:text-slate-50">
-          City Atlas Notice
+          Directory Notice
         </h2>
         <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-          We encountered an issue loading this city directory. Click retry to refresh the places and map canvas.
+          We encountered an issue loading this directory. Click retry to refresh the places and map canvas.
         </p>
 
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -38,7 +38,7 @@ export default function DomainError({
             href="/"
             className="w-full sm:w-auto rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all text-center"
           >
-            Main Atlas
+            Back to Tech Atlas
           </Link>
         </div>
       </div>

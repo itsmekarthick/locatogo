@@ -1,0 +1,21 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "overturemaps": true,
+        "/^python -c \"import os,json; from urllib\\.request import Request,urlopen; from pathlib import Path\nvals=\\{\\}\nfor line in Path\\('\\.env'\\)\\.read_text\\(\\)\\.splitlines\\(\\):\n if '=' in line:\n  k,v=line\\.split\\('=',1\\); vals\\[k\\.strip\\(\\)\\]=v\\.strip\\(\\)\\.strip\\(chr\\(34\\)\\)\nurl=vals\\.get\\('NEXT_PUBLIC_SUPABASE_URL'\\) or vals\\.get\\('SUPABASE_URL'\\); key=vals\\['SUPABASE_SERVICE_ROLE_KEY'\\]; q='domain_id=eq\\.461e4ee7-7a16-43b3-b342-5a968e44f306&company_type=not\\.is\\.null&select=title,website,latitude,longitude&limit=5'; req=Request\\(url\\+'/rest/v1/listings\\?'\\+q,headers=\\{'apikey':key,'Authorization':'Bearer '\\+key\\}\\); print\\(json\\.dumps\\(json\\.load\\(urlopen\\(req\\)\\),indent=2\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -c \"import json,os; from urllib\\.request import Request,urlopen; from pathlib import Path\nv=\\{\\};\nfor l in Path\\('\\.env'\\)\\.read_text\\(\\)\\.splitlines\\(\\):\n if '=' in l: k,x=l\\.split\\('=',1\\); v\\[k\\.strip\\(\\)\\]=x\\.strip\\(\\)\\.strip\\(chr\\(34\\)\\)\nu=v\\.get\\('NEXT_PUBLIC_SUPABASE_URL'\\) or v\\.get\\('SUPABASE_URL'\\); k=v\\['SUPABASE_SERVICE_ROLE_KEY'\\]; q='domain_id=eq\\.461e4ee7-7a16-43b3-b342-5a968e44f306&company_type=not\\.is\\.null&select=title,website&limit=100'; r=Request\\(u\\+'/rest/v1/listings\\?'\\+q,headers=\\{'apikey':k,'Authorization':'Bearer '\\+k\\}\\); rows=json\\.load\\(urlopen\\(r\\)\\); print\\('rows',len\\(rows\\),'unique_websites',len\\(\\{x\\.get\\('website'\\) for x in rows\\}\\)\\); print\\(json\\.dumps\\(rows\\[:12\\],indent=2\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python scripts/overture/import_metros\\.py --parquet scripts/overture/bangalore_places_fresh_2026-09-18\\.parquet --city bangalore --tech-only$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python -c \"import json; from pathlib import Path; from urllib\\.request import Request,urlopen\nv=\\{\\};\nfor l in Path\\('\\.env'\\)\\.read_text\\(\\)\\.splitlines\\(\\):\n if '=' in l: k,x=l\\.split\\('=',1\\); v\\[k\\.strip\\(\\)\\]=x\\.strip\\(\\)\\.strip\\(chr\\(34\\)\\)\nu=v\\.get\\('NEXT_PUBLIC_SUPABASE_URL'\\) or v\\.get\\('SUPABASE_URL'\\); k=v\\['SUPABASE_SERVICE_ROLE_KEY'\\]; q='domain_id=eq\\.461e4ee7-7a16-43b3-b342-5a968e44f306&company_type=not\\.is\\.null&select=title,website&limit=100'; r=Request\\(u\\+'/rest/v1/listings\\?'\\+q,headers=\\{'apikey':k,'Authorization':'Bearer '\\+k\\}\\); rows=json\\.load\\(urlopen\\(r\\)\\); print\\('rows',len\\(rows\\),'unique_websites',len\\(\\{x\\.get\\('website'\\) for x in rows\\}\\)\\); print\\(json\\.dumps\\(rows\\[:5\\],indent=2\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

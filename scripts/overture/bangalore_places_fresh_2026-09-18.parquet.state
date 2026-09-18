@@ -1,0 +1,14 @@
+{
+  "last_release": "2026-08-19.0",
+  "last_run": "2026-09-17T19:52:58.777051+00:00",
+  "theme": "places",
+  "type": "place",
+  "bbox": {
+    "xmin": 77.4,
+    "ymin": 12.8,
+    "xmax": 77.82,
+    "ymax": 13.18
+  },
+  "backend": "geoparquet",
+  "output": "D:\\Projects\\Mapora\\scripts\\overture\\bangalore_places_fresh_2026-09-18.parquet"
+}

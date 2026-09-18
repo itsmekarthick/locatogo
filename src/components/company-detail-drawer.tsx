@@ -138,13 +138,6 @@ export function CompanyDetailDrawer({
             )}
           </div>
 
-          <Link
-            href={`/bangalore?q=${encodeURIComponent(company.locality || company.title)}`}
-            className="rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 px-3 py-1 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
-          >
-            <span>🏙️ View in City Atlas</span>
-            <span>↗</span>
-          </Link>
         </div>
 
         {/* Tab Navigation */}
@@ -194,6 +187,34 @@ export function CompanyDetailDrawer({
           {/* TAB 1: LIVE CAREER OPENINGS */}
           {activeTab === "jobs" && (
             <div className="space-y-4">
+              {/* Official Company Job Portal Banner */}
+              {(company.careers_url || company.website) && (
+                <div className="rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/30 border border-indigo-200/80 dark:border-indigo-800/80 p-3.5 flex items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-8 w-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                      🏢
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                        Official Company Job Portal
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        Direct openings at {company.title}
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={company.careers_url || company.website || undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-all shrink-0 flex items-center gap-1 shadow-xs"
+                  >
+                    <span>Visit Portal</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+              )}
+
               {/* Department Filter Chips */}
               {departments.length > 1 && (
                 <div className="flex flex-wrap gap-1.5 pb-2">
@@ -265,14 +286,16 @@ export function CompanyDetailDrawer({
                           <span className="text-[11px] text-slate-400">Competitive salary & equity</span>
                         )}
 
-                        <a
-                          href={job.apply_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="rounded-full bg-slate-900 dark:bg-indigo-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all flex items-center gap-1"
-                        >
-                          <span>Apply ↗</span>
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={job.apply_url || company.careers_url || company.website || undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-full bg-slate-900 dark:bg-indigo-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all flex items-center gap-1"
+                          >
+                            <span>Apply on Portal ↗</span>
+                          </a>
+                        </div>
                       </div>
                     </div>
                   ))}

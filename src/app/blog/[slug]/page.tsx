@@ -342,7 +342,7 @@ export default async function BlogPostPage({ params }: Props) {
             href="/"
             className="rounded-full bg-slate-950 dark:bg-indigo-600 text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all shrink-0 flex items-center gap-2"
           >
-            <span>Open in City Atlas</span>
+            <span>Explore Tech Atlas</span>
             <span>🗺️</span>
           </Link>
         </div>
@@ -392,11 +392,10 @@ export default async function BlogPostPage({ params }: Props) {
       {/* Footer */}
       <footer className="border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#070b13] py-10 text-xs text-slate-500">
         <div className="mx-auto max-w-[1100px] px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} LocaToGo Journal. Curated with pride for Bengaluru.</p>
+          <p>© {new Date().getFullYear()} LocaToGo. Curated global tech intelligence.</p>
           <div className="flex items-center gap-4">
             <Link href="/blog" className="hover:text-slate-900 dark:hover:text-white">All Stories</Link>
-            <Link href="/" className="hover:text-slate-900 dark:hover:text-white">City Atlas</Link>
-            <Link href="/tech-atlas" className="hover:text-slate-900 dark:hover:text-white">Tech Atlas</Link>
+            <Link href="/" className="hover:text-slate-900 dark:hover:text-white">Tech Atlas</Link>
           </div>
         </div>
       </footer>

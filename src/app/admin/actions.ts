@@ -757,6 +757,7 @@ export async function processCsvImport(formData: FormData): Promise<void> {
 
   if (jobError || !job) throw new Error("Import results could not be saved.");
   revalidatePath("/admin/listings");
+  revalidatePath("/");
   revalidatePath("/tech-atlas");
   redirect(`/admin/import?job=${job.id}`);
 }
@@ -1106,6 +1107,7 @@ export async function syncCompanyCareers({
     .eq("tenant_id", tenant.id);
 
   revalidatePath(`/admin/listings/${listingId}`);
+  revalidatePath("/");
   revalidatePath("/tech-atlas");
   revalidatePath("/admin/listings");
 

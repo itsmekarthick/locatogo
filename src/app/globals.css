@@ -317,3 +317,8 @@ body {
 .locatogo-popup .btn-details * {
   color: #ffffff !important;
 }
+
+/* Dark theme for Leaflet map tiles */
+.leaflet-dark-tiles {
+  filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(115%) !important;
+}

@@ -240,7 +240,7 @@ export function UserProfileMenu({
           {/* Footer Shortcuts & Sign Out */}
           <div className="mt-1 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-0.5">
             <Link
-              href="/tech-atlas"
+              href="/"
               className="flex items-center justify-between rounded-xl px-3 py-1.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
             >
               <span>💼 Global Tech Atlas</span>

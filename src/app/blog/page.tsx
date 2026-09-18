@@ -57,8 +57,7 @@ export default async function BlogPage() {
             <Link href="/blog/rss.xml" target="_blank" className="hover:text-slate-900 dark:hover:text-white flex items-center gap-1 text-amber-600 dark:text-amber-400 font-semibold">
               <span>📡 RSS</span>
             </Link>
-            <Link href="/" className="hover:text-slate-900 dark:hover:text-white">Explore Atlas</Link>
-            <Link href="/tech-atlas" className="hover:text-slate-900 dark:hover:text-white">Tech Atlas</Link>
+            <Link href="/" className="hover:text-slate-900 dark:hover:text-white">Tech Atlas</Link>
             <Link href="/about" className="hover:text-slate-900 dark:hover:text-white">About</Link>
             <Link href="/submit" className="hover:text-slate-900 dark:hover:text-white">Add Place</Link>
           </div>

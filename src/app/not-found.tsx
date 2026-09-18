@@ -18,18 +18,13 @@ export default function NotFound() {
           The place, city directory, or company profile you are searching for does not exist or has been relocated.
         </p>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-8 flex items-center justify-center">
           <Link
             href="/"
-            className="w-full sm:w-auto rounded-full bg-[#e26a4f] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-[#d8583c] transition-all text-center"
+            className="w-full sm:w-auto rounded-full bg-indigo-600 px-8 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-indigo-700 transition-all text-center flex items-center justify-center gap-2"
           >
-            🗺️ Live City Atlas
-          </Link>
-          <Link
-            href="/tech-atlas"
-            className="w-full sm:w-auto rounded-full bg-indigo-600 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-indigo-700 transition-all text-center"
-          >
-            💼 Tech Atlas (67k+ MNCs)
+            <span>💼</span>
+            <span>Back to Tech Atlas</span>
           </Link>
         </div>
       </div>

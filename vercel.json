@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/sync-company-jobs",
-      "schedule": "0 3 * * 0"
+      "path": "/api/cron/sync-company-jobs?all=true",
+      "schedule": "0 2 * * 1"
     }
   ]
 }

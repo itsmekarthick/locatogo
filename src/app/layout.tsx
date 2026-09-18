@@ -15,10 +15,14 @@ const displayFont = Playfair_Display({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  title: "LocaToGo | Directories with a sense of place",
-  description: "A directory and interactive map platform for discovering places, schools, and hospitals.",
+  title: "LocaToGo | Global Tech Atlas & Startup Ecosystem Map",
+  description: "Explore 67,000+ tech companies, startups, hubs, and active hiring opportunities across the globe on an interactive map.",
   alternates: { canonical: "/" },
-  openGraph: { title: "LocaToGo | Directories with a sense of place", description: "A global directory and interactive map platform.", type: "website" },
+  openGraph: {
+    title: "LocaToGo | Global Tech Atlas & Startup Ecosystem Map",
+    description: "Explore 67,000+ tech companies, startups, hubs, and active hiring opportunities across the globe on an interactive map.",
+    type: "website"
+  },
 };
 
 import { Suspense } from "react";
