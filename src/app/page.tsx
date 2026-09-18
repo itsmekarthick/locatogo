@@ -31,9 +31,10 @@ export default async function Home({ searchParams }: Props) {
       .not("company_type", "is", null),
     supabase
       .from("company_jobs")
-      .select("*")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
       .eq("is_active", true)
-      .order("posted_at", { ascending: false }),
+      .order("posted_at", { ascending: false })
+      .limit(10000),
   ]);
 
   // 2. High-Speed Initial Paint Hydration (Loads in <50ms for instantaneous initial paint)

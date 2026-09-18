@@ -531,6 +531,7 @@ function MapUpdater({
   hubCenter,
   flyToUserTrigger,
   searchQuery,
+  isTechAtlas,
 }: {
   located: (PlaceListing & { latitude: number; longitude: number })[];
   activePlace: (PlaceListing & { latitude: number; longitude: number }) | null;
@@ -538,6 +539,7 @@ function MapUpdater({
   hubCenter?: { lat: number; lng: number; zoom?: number } | null;
   flyToUserTrigger: number;
   searchQuery?: string;
+  isTechAtlas?: boolean;
 }) {
   const map = useMap();
   const prevActiveIdRef = useRef<string | null>(null);
@@ -550,10 +552,10 @@ function MapUpdater({
   useEffect(() => {
     if (hubCenter) {
       const hubKey = `${hubCenter.lat.toFixed(4)},${hubCenter.lng.toFixed(4)}`;
-      if (prevHubRef.current && prevHubRef.current !== hubKey) {
+      if (prevHubRef.current !== hubKey) {
+        prevHubRef.current = hubKey;
         map.flyTo([hubCenter.lat, hubCenter.lng], hubCenter.zoom ?? 12, { duration: 1.2 });
       }
-      prevHubRef.current = hubKey;
     }
   }, [hubCenter, map]);
 
@@ -564,15 +566,15 @@ function MapUpdater({
     }
   }, [flyToUserTrigger, userLocation, map]);
 
-  // 2. Initial Mount user location fly-to -> focus on current location at 5km radius view (zoom 14)
+  // 2. Initial Mount user location fly-to -> only when not browsing a specific tech hub
   useEffect(() => {
-    if (userLocation && !prevUserLocRef.current && !searchQuery) {
+    if (userLocation && !prevUserLocRef.current && !searchQuery && !hubCenter && !isTechAtlas) {
       prevUserLocRef.current = userLocation;
       map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.0 });
     } else if (userLocation) {
       prevUserLocRef.current = userLocation;
     }
-  }, [userLocation, searchQuery, map]);
+  }, [userLocation, searchQuery, hubCenter, isTechAtlas, map]);
 
   // 3. Active Place Selection (clicking a card or marker popup)
   useEffect(() => {
@@ -1066,6 +1068,7 @@ export default function InteractiveLeafletCanvas({
           hubCenter={hubCenter}
           flyToUserTrigger={flyToUserTrigger}
           searchQuery={searchQuery}
+          isTechAtlas={isTechAtlas}
         />
 
         {/* User Location Radar Marker */}
