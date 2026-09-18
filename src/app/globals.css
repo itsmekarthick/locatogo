@@ -251,7 +251,119 @@ body {
   }
 }
 
-/* Cluster Marker Badge Styling */
+/* Compact Dot Pin for Overview Zoom (prevents text collision) */
+.locatogo-dot-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.locatogo-dot-pin {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid #4f46e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.locatogo-dot-pin:hover {
+  transform: scale(1.35);
+  border-color: #10b981;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
+  z-index: 1000 !important;
+}
+
+.locatogo-dot-pin.is-hiring {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2.5px rgba(16, 185, 129, 0.35);
+}
+
+/* Cluster Marker Badge Styling - Modern Tech Pill Overhaul */
+.locatogo-cluster-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.locatogo-cluster-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(15, 23, 42, 0.94);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 9999px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.locatogo-cluster-pill:hover {
+  transform: scale(1.14);
+  background: #4f46e5 !important;
+  border-color: #ffffff;
+  box-shadow: 0 6px 22px rgba(79, 70, 229, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.35);
+  z-index: 1000 !important;
+}
+
+.locatogo-cluster-pill.tier-md {
+  background: rgba(30, 27, 75, 0.96);
+  border-color: rgba(165, 180, 252, 0.9);
+}
+
+.locatogo-cluster-pill.tier-lg {
+  background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
+  border-color: #c7d2fe;
+  box-shadow: 0 6px 18px rgba(67, 56, 202, 0.5);
+}
+
+.locatogo-cluster-pill .cluster-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.locatogo-cluster-pill .cluster-count {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.locatogo-cluster-pill .cluster-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.locatogo-cluster-pill .cluster-hiring-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  animation: radar-pulse 2s infinite ease-out;
+}
+
+.locatogo-cluster-tooltip {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18) !important;
+  padding: 6px 8px !important;
+}
+
 .locatogo-cluster-marker {
   display: flex !important;
   align-items: center;

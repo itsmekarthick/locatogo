@@ -163,8 +163,8 @@ import { getCompanyLogoUrl, getCompanyInitials, getCompanyCategoryIcon } from "@
 
 const pinIconCache = new Map<string, L.DivIcon>();
 
-function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtlas = false): L.DivIcon {
-  const cacheKey = `${place.id}_${isSelected ? "sel" : "unsel"}_${isTechAtlas ? "tech" : "gen"}_${place.website || ""}`;
+function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtlas = false, zoom = 14): L.DivIcon {
+  const cacheKey = `${place.id}_${isSelected ? "sel" : "unsel"}_${isTechAtlas ? "tech" : "gen"}_${zoom < 14 ? "zOut" : "zIn"}_${place.website || ""}`;
   const cached = pinIconCache.get(cacheKey);
   if (cached) return cached;
 
@@ -251,6 +251,24 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
       iconSize: [190, 36],
       iconAnchor: [95, 36],
       popupAnchor: [0, -38],
+    });
+    if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
+    return icon;
+  }
+
+  // Compact Dot Pin for zoomed-out city overview to avoid visual clutter/overlap
+  if (isTechPlace && zoom < 14 && !isSelected && !place.is_featured) {
+    const html = `
+      <div class="locatogo-dot-pin ${isHiring ? "is-hiring" : ""}">
+        ${innerIconHtml}
+      </div>
+    `;
+    const icon = L.divIcon({
+      className: "locatogo-dot-wrapper",
+      html,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -15],
     });
     if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
     return icon;
@@ -678,9 +696,9 @@ function ClusteredMarkersLayer({
 
   const supercluster = useMemo(() => {
     const sc = new Supercluster({
-      radius: 55,
-      maxZoom: 16,
-      minPoints: 2,
+      radius: 72,
+      maxZoom: 15,
+      minPoints: 3,
     });
 
     const validPoints: Array<GeoJSON.Feature<GeoJSON.Point, PlaceListing & { latitude: number; longitude: number }>> =
@@ -745,11 +763,54 @@ function ClusteredMarkersLayer({
         };
 
         if (isCluster && pointCount) {
+          let leaves: any[] = [];
+          try {
+            leaves = supercluster.getLeaves(cluster.id as number, 4);
+          } catch {}
+
+          const hasHiring = leaves.some(
+            (l) => l.properties?.is_featured || (l.properties as any)?.active_jobs_count > 0
+          );
+
+          const genericCityNames = new Set([
+            "bangalore", "bengaluru", "delhi", "new delhi", "noida", "gurugram", "gurgaon",
+            "mumbai", "bombay", "chennai", "madras", "pune", "hyderabad", "kolkata", "calcutta",
+            "kochi", "cochin", "india"
+          ]);
+
+          const validLocalities = leaves
+            .map((l) => (l.properties?.locality || "").trim())
+            .filter((loc: string) => loc.length >= 3 && loc.length <= 16 && !genericCityNames.has(loc.toLowerCase()));
+          const topLoc = validLocalities.length > 0 ? validLocalities[0] : null;
+
+          const tier = pointCount < 10 ? "sm" : pointCount < 50 ? "md" : "lg";
+          const iconSize: [number, number] =
+            topLoc
+              ? [110, 30]
+              : pointCount < 10 ? [66, 28] : pointCount < 50 ? [80, 30] : [94, 32];
+          const iconAnchor: [number, number] = [iconSize[0] / 2, iconSize[1] / 2];
+
+          const clusterHtml = topLoc ? `
+            <div class="locatogo-cluster-pill tier-${tier} ${hasHiring ? "has-hiring" : ""}">
+              <span class="cluster-icon">📍</span>
+              <span class="cluster-count">${topLoc}</span>
+              <span class="cluster-label">${pointCount}</span>
+              ${hasHiring ? `<span class="cluster-hiring-dot" title="Active Hiring in cluster"></span>` : ""}
+            </div>
+          ` : `
+            <div class="locatogo-cluster-pill tier-${tier} ${hasHiring ? "has-hiring" : ""}">
+              <span class="cluster-icon">${pointCount >= 50 ? "🚀" : pointCount >= 10 ? "⚡" : "🏢"}</span>
+              <span class="cluster-count">${pointCount}</span>
+              <span class="cluster-label">${isTechAtlas ? "tech" : "cos"}</span>
+              ${hasHiring ? `<span class="cluster-hiring-dot" title="Active Hiring in cluster"></span>` : ""}
+            </div>
+          `;
+
           const clusterIcon = L.divIcon({
-            className: "locatogo-cluster-marker",
-            html: `<span>${pointCount}</span>`,
-            iconSize: [34, 34],
-            iconAnchor: [17, 17],
+            className: "locatogo-cluster-wrapper",
+            html: clusterHtml,
+            iconSize,
+            iconAnchor,
           });
 
           return (
@@ -766,13 +827,42 @@ function ClusteredMarkersLayer({
                   map.flyTo([latitude, longitude], targetZoom, { duration: 0.6 });
                 },
               }}
-            />
+            >
+              <Tooltip direction="top" offset={[0, -16]} opacity={1} className="locatogo-cluster-tooltip">
+                <div className="p-1 max-w-[220px] font-sans">
+                  <div className="flex items-center justify-between gap-1 pb-1 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white">
+                    <span>🏢 Cluster of {pointCount} Companies</span>
+                    {hasHiring && (
+                      <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-1 py-0.2 rounded font-semibold">
+                        Hiring
+                      </span>
+                    )}
+                  </div>
+                  <div className="py-1 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                    {leaves.slice(0, 3).map((l: any, i: number) => (
+                      <div key={i} className="truncate font-medium flex items-center gap-1">
+                        <span>•</span>
+                        <span className="truncate">{l.properties?.title || "Tech Company"}</span>
+                      </div>
+                    ))}
+                    {pointCount > 3 && (
+                      <div className="text-[10px] text-slate-400 font-semibold pt-0.5">
+                        +{pointCount - 3} more companies...
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[9px] text-indigo-500 font-semibold pt-0.5">
+                    Click to zoom & explore →
+                  </div>
+                </div>
+              </Tooltip>
+            </Marker>
           );
         }
 
         const place = cluster.properties as PlaceListing & { latitude: number; longitude: number };
         const isSelected = activePlaceId === place.id;
-        const icon = getCategoryPinIcon(place, isSelected, isTechAtlas);
+        const icon = getCategoryPinIcon(place, isSelected, isTechAtlas, zoom);
         const ratingInfo = getPlaceRating(place);
 
         return (
