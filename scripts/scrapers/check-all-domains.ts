@@ -13,28 +13,26 @@ fs.readFileSync(".env", "utf8")
     }
   });
 
-const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
-async function main() {
+async function run() {
   const { data: domains } = await supabase.from("domains").select("id, name, slug");
-  if (!domains) return;
-
-  for (const d of domains) {
-    const { count } = await supabase
+  console.log("DOMAINS IN DB:");
+  for (const d of domains || []) {
+    const { count: totalListings } = await supabase
       .from("listings")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("domain_id", d.id);
-
-    const { count: withType } = await supabase
+    const { count: techListings } = await supabase
       .from("listings")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("domain_id", d.id)
       .not("company_type", "is", null);
-
-    console.log(`Domain: ${d.name.padEnd(20)} (${d.slug}): ${count} total, ${withType} curated`);
+    console.log(`  ${d.name.padEnd(14)} (${d.slug.padEnd(12)}): total=${totalListings || 0}, tech=${techListings || 0}`);
   }
+
+  const { count: globalTotal } = await supabase.from("listings").select("id", { count: "exact", head: true });
+  console.log(`\nGLOBAL TOTAL LISTINGS IN DB: ${globalTotal}`);
 }
 
-main().catch(console.error);
+run();

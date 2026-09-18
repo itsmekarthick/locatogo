@@ -6,7 +6,18 @@ import type { CompanyDetail, CompanyJob } from "@/components/company-detail-draw
 
 export const metadata: Metadata = {
   title: "LocaToGo | Global Tech Atlas & Startup Map",
-  description: "Interactive directory and live map of 67,000+ IT companies, startups, AI ventures, and MNC GCCs worldwide with real-time job openings.",
+  description: "Interactive directory and live map of 19,000+ verified IT companies, startups, AI ventures, and MNC GCCs across India's top metro hubs with real-time job openings.",
+};
+
+const KNOWN_HUB_COUNTS: Record<string, number> = {
+  "bengaluru": 3484,
+  "delhi-ncr": 4873,
+  "mumbai": 2386,
+  "pune": 2149,
+  "chennai": 2128,
+  "hyderabad": 1939,
+  "kolkata": 1278,
+  "kochi": 858,
 };
 
 type Props = {
@@ -37,7 +48,7 @@ export default async function Home({ searchParams }: Props) {
       .limit(10000),
   ]);
 
-  // 2. High-Speed Initial Paint Hydration (Loads in <50ms for instantaneous initial paint)
+  // 2. High-Speed Initial Paint Hydration (Loads in <100ms)
   const { data: rawListings } = await supabase
     .from("listings")
     .select(`
@@ -64,7 +75,7 @@ export default async function Home({ searchParams }: Props) {
     .not("latitude", "is", null)
     .not("longitude", "is", null)
     .order("active_jobs_count", { ascending: false })
-    .limit(1500);
+    .limit(3000);
 
   // Group jobs by listing_id
   const jobsByListing = new Map<string, CompanyJob[]>();
@@ -130,8 +141,9 @@ export default async function Home({ searchParams }: Props) {
     <GlobalTechExplorer
       initialCompanies={initialCompanies}
       initialJobs={initialJobs}
-      totalDatabaseCompanies={totalTechCount || 67699}
+      totalDatabaseCompanies={totalTechCount || 19095}
       currentHub={params.hub || "bengaluru"}
+      knownHubCounts={KNOWN_HUB_COUNTS}
     />
   );
 }

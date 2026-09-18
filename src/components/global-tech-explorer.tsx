@@ -12,7 +12,7 @@ import { Pagination } from "@/components/ui/pagination";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { MapErrorBoundary } from "@/components/map-error-boundary";
 import { AdBannerSlot } from "@/components/ad-banner-slot";
-import { AirbnbSearchBar } from "@/components/airbnb-search-bar";
+import { TechAtlasSearch } from "@/components/tech-atlas-search";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -59,13 +59,19 @@ export type UnifiedJob = {
 
 export const GLOBAL_TECH_HUBS: TechHub[] = [
   { id: "bengaluru", name: "Bengaluru", country: "India", flag: "🇮🇳", lat: 12.9716, lng: 77.5946, zoom: 12 },
+  { id: "hyderabad", name: "Hyderabad", country: "India", flag: "🇮🇳", lat: 17.4399, lng: 78.375, zoom: 12 },
+  { id: "delhi-ncr", name: "Delhi NCR", country: "India", flag: "🇮🇳", lat: 28.4988, lng: 77.0898, zoom: 12 },
+  { id: "mumbai", name: "Mumbai", country: "India", flag: "🇮🇳", lat: 19.0689, lng: 72.8695, zoom: 12 },
+  { id: "chennai", name: "Chennai", country: "India", flag: "🇮🇳", lat: 12.9658, lng: 80.2458, zoom: 12 },
+  { id: "pune", name: "Pune", country: "India", flag: "🇮🇳", lat: 18.5912, lng: 73.7389, zoom: 12 },
+  { id: "kolkata", name: "Kolkata", country: "India", flag: "🇮🇳", lat: 22.5726, lng: 88.4339, zoom: 12 },
+  { id: "kochi", name: "Kochi", country: "India", flag: "🇮🇳", lat: 10.0159, lng: 76.3639, zoom: 13 },
   { id: "silicon-valley", name: "Silicon Valley & SF", country: "United States", flag: "🇺🇸", lat: 37.7749, lng: -122.4194, zoom: 11 },
   { id: "london", name: "London", country: "United Kingdom", flag: "🇬🇧", lat: 51.5074, lng: -0.1278, zoom: 12 },
   { id: "singapore", name: "Singapore", country: "Singapore", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
   { id: "new-york", name: "New York City", country: "United States", flag: "🇺🇸", lat: 40.7128, lng: -74.006, zoom: 12 },
   { id: "berlin", name: "Berlin", country: "Germany", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
   { id: "dubai", name: "Dubai", country: "United Arab Emirates", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
-  { id: "hyderabad", name: "Hyderabad", country: "India", flag: "🇮🇳", lat: 17.4399, lng: 78.3750, zoom: 12 },
 ];
 
 export const TECH_SECTORS = [
@@ -115,7 +121,44 @@ export function matchesHub(
     if (city.includes("bangalore") || city.includes("bengaluru") || loc.includes("bangalore") || loc.includes("bengaluru")) {
       return true;
     }
-    if (city.includes("hyderabad") || loc.includes("hyderabad") || addr.includes("hyderabad")) {
+    // Exclude other distinct Indian and global hubs
+    if (
+      city.includes("hyderabad") ||
+      city.includes("delhi") ||
+      city.includes("gurugram") ||
+      city.includes("gurgaon") ||
+      city.includes("noida") ||
+      city.includes("mumbai") ||
+      city.includes("chennai") ||
+      city.includes("pune") ||
+      city.includes("kolkata") ||
+      city.includes("kochi") ||
+      loc.includes("hyderabad") ||
+      loc.includes("delhi") ||
+      loc.includes("gurugram") ||
+      loc.includes("gurgaon") ||
+      loc.includes("noida") ||
+      loc.includes("mumbai") ||
+      loc.includes("bkc") ||
+      loc.includes("powai") ||
+      loc.includes("chennai") ||
+      loc.includes("omr") ||
+      loc.includes("sholinganallur") ||
+      loc.includes("pune") ||
+      loc.includes("hinjewadi") ||
+      loc.includes("kharadi") ||
+      loc.includes("kolkata") ||
+      loc.includes("salt lake") ||
+      loc.includes("kochi") ||
+      loc.includes("infopark") ||
+      addr.includes("hyderabad") ||
+      addr.includes("delhi") ||
+      addr.includes("mumbai") ||
+      addr.includes("chennai") ||
+      addr.includes("pune") ||
+      addr.includes("kolkata") ||
+      addr.includes("kochi")
+    ) {
       return false;
     }
     return !city; // default unassigned is bengaluru
@@ -131,6 +174,100 @@ export function matchesHub(
       loc.includes("financial district") ||
       loc.includes("kondapur") ||
       addr.includes("hyderabad")
+    );
+  }
+
+  if (hub.id === "delhi-ncr" || hub.id === "delhi") {
+    return (
+      city.includes("delhi") ||
+      city.includes("gurugram") ||
+      city.includes("gurgaon") ||
+      city.includes("noida") ||
+      loc.includes("delhi") ||
+      loc.includes("gurugram") ||
+      loc.includes("gurgaon") ||
+      loc.includes("noida") ||
+      loc.includes("cyber city") ||
+      loc.includes("cyberhub") ||
+      loc.includes("udyog vihar") ||
+      addr.includes("delhi") ||
+      addr.includes("gurugram") ||
+      addr.includes("noida")
+    );
+  }
+
+  if (hub.id === "mumbai") {
+    return (
+      city.includes("mumbai") ||
+      city.includes("navi mumbai") ||
+      city.includes("thane") ||
+      loc.includes("mumbai") ||
+      loc.includes("bkc") ||
+      loc.includes("bandra") ||
+      loc.includes("powai") ||
+      loc.includes("lower parel") ||
+      loc.includes("andheri") ||
+      loc.includes("vikhroli") ||
+      loc.includes("goregaon") ||
+      loc.includes("ghansoli") ||
+      addr.includes("mumbai")
+    );
+  }
+
+  if (hub.id === "chennai") {
+    return (
+      city.includes("chennai") ||
+      city.includes("madras") ||
+      loc.includes("chennai") ||
+      loc.includes("omr") ||
+      loc.includes("sholinganallur") ||
+      loc.includes("taramani") ||
+      loc.includes("siruseri") ||
+      loc.includes("guindy") ||
+      loc.includes("perungudi") ||
+      loc.includes("guduvanchery") ||
+      loc.includes("tidel") ||
+      addr.includes("chennai")
+    );
+  }
+
+  if (hub.id === "pune") {
+    return (
+      city.includes("pune") ||
+      loc.includes("pune") ||
+      loc.includes("hinjewadi") ||
+      loc.includes("kharadi") ||
+      loc.includes("magarpatta") ||
+      loc.includes("baner") ||
+      loc.includes("balewadi") ||
+      loc.includes("kalyani nagar") ||
+      loc.includes("yerwada") ||
+      addr.includes("pune")
+    );
+  }
+
+  if (hub.id === "kolkata") {
+    return (
+      city.includes("kolkata") ||
+      city.includes("calcutta") ||
+      loc.includes("kolkata") ||
+      loc.includes("salt lake") ||
+      loc.includes("rajarhat") ||
+      loc.includes("new town") ||
+      loc.includes("sector v") ||
+      addr.includes("kolkata")
+    );
+  }
+
+  if (hub.id === "kochi") {
+    return (
+      city.includes("kochi") ||
+      city.includes("cochin") ||
+      loc.includes("kochi") ||
+      loc.includes("infopark") ||
+      loc.includes("kakkanad") ||
+      loc.includes("smartcity") ||
+      addr.includes("kochi")
     );
   }
 
@@ -159,13 +296,15 @@ export function matchesHub(
 export function GlobalTechExplorer({
   initialCompanies,
   initialJobs = [],
-  totalDatabaseCompanies = 67699,
+  totalDatabaseCompanies = 19095,
   currentHub = "bengaluru",
+  knownHubCounts,
 }: {
   initialCompanies: CompanyDetail[];
   initialJobs?: UnifiedJob[];
   totalDatabaseCompanies?: number;
   currentHub?: string;
+  knownHubCounts?: Record<string, number>;
 }) {
   const [selectedHub, setSelectedHub] = useState<TechHub>(
     GLOBAL_TECH_HUBS.find((h) => h.id === currentHub) || GLOBAL_TECH_HUBS[0]
@@ -214,7 +353,7 @@ export function GlobalTechExplorer({
     let isCancelled = false;
 
     async function loadMoreInBatches() {
-      for (let page = 3; page < 12; page += 2) {
+      for (let page = 1; page < 15; page += 2) {
         if (isCancelled) break;
         try {
           const [res1, res2] = await Promise.all([
@@ -347,19 +486,17 @@ export function GlobalTechExplorer({
   const filteredJobs = useMemo(() => {
     return allJobs.filter((job) => {
       // 0. Hub filter for jobs
-      const city = (job.city || "").toLowerCase();
-      const loc = (job.location_name || job.locality || "").toLowerCase();
-
-      if (selectedHub.id === "bengaluru") {
-        if (!city.includes("bangalore") && !city.includes("bengaluru") && !loc.includes("bangalore") && !loc.includes("bengaluru") && city) {
-          if (city.includes("hyderabad")) return false;
-        }
-      } else if (selectedHub.id === "hyderabad") {
-        const isHyd = city.includes("hyderabad") || loc.includes("hyderabad") || loc.includes("hitec") || loc.includes("gachibowli") || loc.includes("madhapur") || loc.includes("financial district");
-        if (!isHyd) return false;
-      } else {
-        const matchesCurrentHub = city.includes(selectedHub.name.toLowerCase()) || loc.includes(selectedHub.name.toLowerCase());
-        if (!matchesCurrentHub && city) return false;
+      if (
+        !matchesHub(
+          {
+            city: job.city,
+            locality: job.locality || job.location_name,
+            address_line_1: job.location_name,
+          },
+          selectedHub
+        )
+      ) {
+        return false;
       }
 
       if (jobWorkplace !== "all" && job.workplace_type !== jobWorkplace) return false;
@@ -376,6 +513,15 @@ export function GlobalTechExplorer({
       return true;
     });
   }, [allJobs, selectedHub, jobWorkplace, jobExperience, jobDepartment, jobSearch]);
+
+  const hubCompanyCounts = useMemo(() => {
+    const counts: Record<string, number> = { ...(knownHubCounts || {}) };
+    for (const hub of GLOBAL_TECH_HUBS) {
+      const liveCount = companies.filter((c) => matchesHub(c, hub)).length;
+      counts[hub.id] = Math.max(counts[hub.id] || 0, liveCount);
+    }
+    return counts;
+  }, [companies, knownHubCounts]);
 
   const totalJobPages = Math.ceil(filteredJobs.length / JOB_PAGE_SIZE) || 1;
   const paginatedJobs = useMemo(() => {
@@ -513,12 +659,16 @@ export function GlobalTechExplorer({
       }));
   }, [companies, searchQuery, selectedHub.name]);
 
-  const handleSelectCompanySuggestion = (companyId: string) => {
-    const comp = companies.find((c) => c.id === companyId);
-    if (comp) {
-      setSelectedCompany(comp);
-      setSearchQuery(comp.title);
+  const handleSelectCompanyWithHub = (comp: CompanyDetail, targetHub?: TechHub) => {
+    if (targetHub && targetHub.id !== selectedHub.id) {
+      handleSelectHub(targetHub);
     }
+    setCompanies((prev) => {
+      if (prev.some((c) => c.id === comp.id)) return prev;
+      return [comp, ...prev];
+    });
+    setSelectedCompany(comp);
+    setSearchQuery("");
   };
 
   const handleSelectHub = (hubOption: any) => {
@@ -530,6 +680,44 @@ export function GlobalTechExplorer({
     setGridPage(1);
     setSidebarPage(1);
     setJobPage(1);
+
+    // Dynamic on-demand hydration for selected hub if not yet fully in memory
+    const loadedForHub = companies.filter((c) => matchesHub(c, hub)).length;
+    if (loadedForHub < 200) {
+      fetch(`/api/tech-atlas/companies?hub=${hub.id}&limit=2500`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.companies && data.companies.length > 0) {
+            const hubResults: CompanyDetail[] = data.companies.map((l: any) => ({
+              id: l.id,
+              title: l.title,
+              slug: l.slug,
+              short_description: l.short_description,
+              address_line_1: l.address_line_1,
+              locality: l.locality,
+              city: l.city,
+              latitude: l.latitude,
+              longitude: l.longitude,
+              website: l.website,
+              careers_url: l.careers_url,
+              company_type: l.company_type || "product_saas",
+              funding_stage: l.funding_stage || "Product",
+              employee_range: l.employee_range,
+              tech_stack: l.tech_stack || [],
+              founded_year: l.founded_year,
+              active_jobs_count: l.active_jobs_count || 0,
+              jobs: [],
+            }));
+
+            setCompanies((prev) => {
+              const existingIds = new Set(prev.map((c) => c.id));
+              const uniqueNew = hubResults.filter((c) => !existingIds.has(c.id));
+              return [...prev, ...uniqueNew];
+            });
+          }
+        })
+        .catch(() => {});
+    }
   };
 
   return (
@@ -554,39 +742,16 @@ export function GlobalTechExplorer({
             </div>
           </div>
 
-          {/* Desktop Center: Airbnb Unified Search Pill for Tech Atlas */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-2 justify-center">
-            <AirbnbSearchBar
-              mode="tech_atlas"
-              activeWhereName={`${selectedHub.name}, ${selectedHub.country}`}
-              whereOptions={GLOBAL_TECH_HUBS.map((h) => ({
-                id: h.id,
-                name: h.name,
-                subtitle: h.country,
-                flag: h.flag,
-                isSelected: h.id === selectedHub.id,
-              }))}
-              onSelectWhere={handleSelectHub}
-              categoryLabel="Sector"
-              activeCategoryName={
-                selectedType !== "all"
-                  ? TECH_SECTORS.find((s) => s.id === selectedType)?.name || selectedType
-                  : selectedStage !== "all"
-                  ? `Stage: ${selectedStage}`
-                  : "All Sectors"
-              }
-              categoryOptions={TECH_SECTORS}
-              onSelectCategory={(typeId) => setSelectedType(typeId)}
-              selectedStage={selectedStage}
-              onSelectStage={(stage) => setSelectedStage(stage)}
-              stageOptions={TECH_STAGES}
-              searchPlaceholder="Search 67,000+ companies, tech stack, roles..."
+          {/* Desktop Center: Direct Command-K Interactive Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-2xl mx-2 justify-center">
+            <TechAtlasSearch
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
-              suggestions={companySuggestions}
-              onSelectSuggestion={handleSelectCompanySuggestion}
-              totalCount={filteredCompanies.length}
-              totalLabel={`companies mapped in ${selectedHub.name}`}
+              companies={companies}
+              selectedHub={selectedHub}
+              onSelectCompany={handleSelectCompanyWithHub}
+              onSelectHub={handleSelectHub}
+              totalDatabaseCompanies={totalDatabaseCompanies}
             />
           </div>
 
@@ -667,38 +832,15 @@ export function GlobalTechExplorer({
         </div>
 
         {/* Dedicated Mobile Search Bar */}
-        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-2.5 py-1.5 bg-slate-50/70 dark:bg-slate-900/70">
-          <AirbnbSearchBar
-            mode="tech_atlas"
-            activeWhereName={`${selectedHub.flag} ${selectedHub.name}`}
-            whereOptions={GLOBAL_TECH_HUBS.map((h) => ({
-              id: h.id,
-              name: h.name,
-              subtitle: h.country,
-              flag: h.flag,
-              isSelected: h.id === selectedHub.id,
-            }))}
-            onSelectWhere={handleSelectHub}
-            categoryLabel="Sector"
-            activeCategoryName={
-              selectedType !== "all"
-                ? TECH_SECTORS.find((s) => s.id === selectedType)?.name || selectedType
-                : selectedStage !== "all"
-                ? `Stage: ${selectedStage}`
-                : "All Sectors"
-            }
-            categoryOptions={TECH_SECTORS}
-            onSelectCategory={(typeId) => setSelectedType(typeId)}
-            selectedStage={selectedStage}
-            onSelectStage={(stage) => setSelectedStage(stage)}
-            stageOptions={TECH_STAGES}
-            searchPlaceholder="Companies, tech stack..."
+        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-2 bg-slate-50/70 dark:bg-slate-900/70">
+          <TechAtlasSearch
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            suggestions={companySuggestions}
-            onSelectSuggestion={handleSelectCompanySuggestion}
-            totalCount={filteredCompanies.length}
-            totalLabel={`companies in ${selectedHub.name}`}
+            companies={companies}
+            selectedHub={selectedHub}
+            onSelectCompany={handleSelectCompanyWithHub}
+            onSelectHub={handleSelectHub}
+            totalDatabaseCompanies={totalDatabaseCompanies}
           />
         </div>
 
@@ -767,13 +909,50 @@ export function GlobalTechExplorer({
             <span>Hiring ({totalOpenings})</span>
           </button>
         </div>
+
+        {/* Horizontal Metro Tech Hubs Quick Bar */}
+        <div className="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-[#080d17]/90 px-3 sm:px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0 flex items-center gap-1">
+            <span>Tech Hubs:</span>
+          </span>
+          {GLOBAL_TECH_HUBS.map((hub) => {
+            const isSelected = selectedHub.id === hub.id;
+            const count = hubCompanyCounts[hub.id] || 0;
+            return (
+              <button
+                key={hub.id}
+                type="button"
+                onClick={() => handleSelectHub(hub)}
+                className={`shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  isSelected
+                    ? "bg-indigo-600 text-white shadow-xs font-bold ring-1 ring-indigo-400"
+                    : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <span>{hub.flag}</span>
+                <span>{hub.name}</span>
+                {count > 0 && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
+                      isSelected
+                        ? "bg-indigo-700/80 text-white"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium"
+                    }`}
+                  >
+                    {count.toLocaleString()}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 w-full relative">
         {/* VIEW MODE 1: INTERACTIVE MAP WITH SPLIT WORKBENCH */}
         {viewMode === "map" && (
-          <div className="relative w-full h-[calc(100vh-62px)] flex overflow-hidden bg-slate-100 dark:bg-slate-900">
+          <div className="relative w-full h-[calc(100vh-104px)] flex overflow-hidden bg-slate-100 dark:bg-slate-900">
             {/* 1. COLLAPSIBLE LEFT DIRECTORY SIDEBAR */}
             <aside
               className={`
@@ -859,20 +1038,16 @@ export function GlobalTechExplorer({
                     </p>
                     {filteredCompanies.length === 0 && !searchQuery.trim() ? (
                       <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={() => handleSelectHub(GLOBAL_TECH_HUBS.find((h) => h.id === "bengaluru"))}
-                          className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition-colors cursor-pointer"
-                        >
-                          🇮🇳 Bengaluru (219)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectHub(GLOBAL_TECH_HUBS.find((h) => h.id === "hyderabad"))}
-                          className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition-colors cursor-pointer"
-                        >
-                          🇮🇳 Hyderabad (46)
-                        </button>
+                        {GLOBAL_TECH_HUBS.filter((h) => (hubCompanyCounts[h.id] || 0) > 0).map((h) => (
+                          <button
+                            key={h.id}
+                            type="button"
+                            onClick={() => handleSelectHub(h)}
+                            className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition-colors cursor-pointer"
+                          >
+                            {h.flag} {h.name} ({hubCompanyCounts[h.id]})
+                          </button>
+                        ))}
                       </div>
                     ) : (
                       <button
