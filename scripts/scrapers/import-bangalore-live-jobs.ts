@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import fs from "fs";
 import path from "path";
-import { harvestLinkedInJobs, type HarvestedJob } from "./linkedin-jobs-harvester.ts";
+import { harvestLinkedInJobs, type HarvestedJob } from "./linkedin-jobs-harvester";
 
 const DOMAIN_ID = "461e4ee7-7a16-43b3-b342-5a968e44f306";
 const TENANT_ID = "1c186ac3-a365-4653-bd47-b87758890dfb";

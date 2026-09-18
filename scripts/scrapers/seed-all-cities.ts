@@ -55,6 +55,7 @@ interface CompanyEntry {
   lng: number;
   city: string;
   locality: string;
+  address_line_1?: string;
 }
 
 const COMPANIES: CompanyEntry[] = [

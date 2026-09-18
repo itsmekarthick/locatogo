@@ -55,7 +55,7 @@ export interface BangaloreCompanyEntry {
   careers_url: string;
   short_description: string;
   company_type: "tech_giant_mnc" | "product_saas" | "startup" | "it_services_consulting" | "deeptech_hardware" | "vc_accelerator";
-  funding_stage: "Seed" | "Series A" | "Series B" | "Series C+" | "Unicorn" | "Public" | "Bootstrapped" | "GCC";
+  funding_stage: "Seed" | "Series A" | "Series B" | "Series C+" | "Series D" | "Unicorn" | "Public" | "Bootstrapped" | "GCC";
   employee_range: string;
   founded_year: number;
   tech_stack: string[];
@@ -1449,7 +1449,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://practo.com/careers",
     short_description: "Integrated digital health platform facilitating online doctor consultations, clinic appointments, and electronic medical records.",
     company_type: "startup",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "1,001–5,000",
     founded_year: 2008,
     tech_stack: ["Java", "Python", "React Native", "MySQL", "AWS"],
@@ -1545,7 +1545,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://pratilipi.com/careers",
     short_description: "India's largest digital storytelling platform connecting millions of readers and writers across Indian languages.",
     company_type: "startup",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "201–500",
     founded_year: 2014,
     tech_stack: ["Python", "Go", "React Native", "PostgreSQL", "Kafka", "GCP"],
@@ -2443,7 +2443,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://indmoney.com/careers",
     short_description: "Super money app enabling Indian retail investors to manage all financial assets and invest in US stocks.",
     company_type: "startup",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "201–500",
     founded_year: 2019,
     tech_stack: ["Go", "Python", "Flutter", "PostgreSQL", "Kafka", "AWS"],
@@ -2523,7 +2523,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://mswipe.com/careers",
     short_description: "Independent merchant financial services provider offering smart POS terminals and business loans.",
     company_type: "startup",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "1,001–5,000",
     founded_year: 2011,
     tech_stack: ["Java", "Android SDK", "Spring", "MySQL", "AWS"],
@@ -2573,7 +2573,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://capillarytech.com/careers",
     short_description: "Enterprise customer loyalty management, AI marketing automation, and omnichannel commerce platform.",
     company_type: "product_saas",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "501–1,000",
     founded_year: 2008,
     tech_stack: ["Java", "Python", "Kafka", "MySQL", "React", "AWS"],
@@ -2849,7 +2849,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://classplus.co/careers",
     short_description: "Mobile operating system empowering private educators and content creators to build their online teaching apps.",
     company_type: "startup",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "501–1,000",
     founded_year: 2018,
     tech_stack: ["Go", "Node.js", "React Native", "PostgreSQL", "AWS"],
@@ -2897,7 +2897,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://simplilearn.com/careers",
     short_description: "World's leading digital skills training provider offering bootcamp certifications in AI, cloud, and data science.",
     company_type: "product_saas",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "1,001–5,000",
     founded_year: 2010,
     tech_stack: ["Java", "PHP", "React", "MySQL", "AWS"],
@@ -3481,7 +3481,7 @@ export const BANGALORE_COMPANIES: BangaloreCompanyEntry[] = [
     careers_url: "https://jobs.ashbyhq.com/bounce",
     short_description: "Smart urban mobility platform offering dockless two-wheeler rentals and indigenous electric scooters.",
     company_type: "startup",
-    funding_stage: "Series D",
+    funding_stage: "Series C+",
     employee_range: "201–500",
     founded_year: 2014,
     tech_stack: ["IoT", "Go", "Python", "React Native", "AWS", "MQTT"],

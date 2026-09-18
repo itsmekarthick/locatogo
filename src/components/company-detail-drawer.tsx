@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 
@@ -47,15 +47,69 @@ export function CompanyDetailDrawer({
 }) {
   const [activeTab, setActiveTab] = useState<"jobs" | "about" | "transit">("jobs");
   const [deptFilter, setDeptFilter] = useState<string>("all");
+  const [roleSearch, setRoleSearch] = useState<string>("");
+  const [dynamicJobs, setDynamicJobs] = useState<CompanyJob[] | null>(null);
+  const [isLoadingJobs, setIsLoadingJobs] = useState<boolean>(false);
+
+  // Dynamic job fetcher whenever company changes
+  useEffect(() => {
+    if (!company) {
+      setDynamicJobs(null);
+      setIsLoadingJobs(false);
+      return;
+    }
+
+    setDeptFilter("all");
+    setRoleSearch("");
+
+    // If preloaded with jobs, initialize immediately
+    if (company.jobs && company.jobs.length > 0) {
+      setDynamicJobs(company.jobs);
+    } else {
+      setDynamicJobs(null);
+    }
+
+    const companyId = company.id;
+    let isCancelled = false;
+    async function loadJobs() {
+      setIsLoadingJobs(true);
+      try {
+        const res = await fetch(`/api/companies/${companyId}/jobs`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled && data.jobs && Array.isArray(data.jobs)) {
+            setDynamicJobs(data.jobs);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch company jobs:", err);
+      } finally {
+        if (!isCancelled) setIsLoadingJobs(false);
+      }
+    }
+
+    loadJobs();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [company?.id]);
 
   if (!company) return null;
 
-  const jobs = company.jobs ?? [];
+  const jobs = dynamicJobs ?? company.jobs ?? [];
   const departments = Array.from(new Set(jobs.map((j) => j.department).filter(Boolean))) as string[];
 
   const filteredJobs = jobs.filter((j) => {
-    if (deptFilter === "all") return true;
-    return j.department === deptFilter;
+    if (deptFilter !== "all" && j.department !== deptFilter) return false;
+    if (roleSearch.trim()) {
+      const q = roleSearch.toLowerCase();
+      const matchTitle = j.title.toLowerCase().includes(q);
+      const matchDept = (j.department || "").toLowerCase().includes(q);
+      const matchLoc = (j.location_name || "").toLowerCase().includes(q);
+      if (!matchTitle && !matchDept && !matchLoc) return false;
+    }
+    return true;
   });
 
   const uberUrl = `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${company.latitude}&dropoff[longitude]=${company.longitude}&dropoff[nickname]=${encodeURIComponent(
@@ -152,8 +206,12 @@ export function CompanyDetailDrawer({
             }`}
           >
             <span>💼 Live Openings</span>
-            <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 text-[10px]">
-              {jobs.length}
+            <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
+              {isLoadingJobs && jobs.length === 0
+                ? "..."
+                : jobs.length > 0
+                ? jobs.length
+                : (company.active_jobs_count || 0)}
             </span>
           </button>
 
@@ -215,6 +273,29 @@ export function CompanyDetailDrawer({
                 </div>
               )}
 
+              {/* Dedicated Role Search Input */}
+              {jobs.length > 3 && (
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-xs text-slate-400">🔍</span>
+                  <input
+                    type="text"
+                    value={roleSearch}
+                    onChange={(e) => setRoleSearch(e.target.value)}
+                    placeholder={`Search ${jobs.length} roles at ${company.title}...`}
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 pl-9 pr-8 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  {roleSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setRoleSearch("")}
+                      className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Department Filter Chips */}
               {departments.length > 1 && (
                 <div className="flex flex-wrap gap-1.5 pb-2">
@@ -246,8 +327,13 @@ export function CompanyDetailDrawer({
                 </div>
               )}
 
-              {/* Jobs List */}
-              {filteredJobs.length > 0 ? (
+              {/* Loading indicator or Jobs List */}
+              {isLoadingJobs && jobs.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center space-y-2">
+                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Fetching verified live openings...</p>
+                </div>
+              ) : filteredJobs.length > 0 ? (
                 <div className="space-y-3">
                   {filteredJobs.map((job) => (
                     <div
@@ -303,16 +389,19 @@ export function CompanyDetailDrawer({
               ) : (
                 <div className="rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center text-xs text-slate-500 dark:text-slate-400">
                   <span className="text-3xl block mb-2">💼</span>
-                  No open roles listed for this department currently.
+                  {roleSearch.trim() || deptFilter !== "all"
+                    ? "No open roles match your current search or department filter."
+                    : "No individual job listings indexed currently."}
                   {company.careers_url && (
                     <div className="mt-4">
                       <a
                         href={company.careers_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-full bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition-all"
+                        className="rounded-full bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition-all inline-flex items-center gap-1.5 shadow-xs"
                       >
-                        Check Direct Career Site ↗
+                        <span>Explore All Roles on Direct Careers Portal</span>
+                        <span>↗</span>
                       </a>
                     </div>
                   )}
