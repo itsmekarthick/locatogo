@@ -75,7 +75,7 @@ if (typeof window !== "undefined" && L && L.Layer) {
   }
 }
 
-export type MapStyleId = "clean_light" | "cyber_dark" | "satellite" | "classic_osm" | "topo";
+export type MapStyleId = "street" | "satellite";
 
 export const MAP_LAYERS: Record<
   MapStyleId,
@@ -91,51 +91,22 @@ export const MAP_LAYERS: Record<
     className?: string;
   }
 > = {
-  clean_light: {
-    id: "clean_light",
-    label: "Clean Light",
-    icon: "☀️",
-    description: "Crisp vector-grade street layout",
+  street: {
+    id: "street",
+    label: "Street View",
+    icon: "🗺️",
+    description: "Vector-grade street layout",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
     attribution: "&copy; Esri, DeLorme, NAVTEQ",
     maxZoom: 19,
-  },
-  cyber_dark: {
-    id: "cyber_dark",
-    label: "Cyber Dark",
-    icon: "🌙",
-    description: "High-contrast midnight theme",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-    attribution: "&copy; Esri, DeLorme, NAVTEQ",
-    maxZoom: 19,
-    className: "leaflet-dark-tiles",
   },
   satellite: {
     id: "satellite",
     label: "Satellite",
     icon: "🛰️",
-    description: "Esri high-resolution aerial imagery",
+    description: "High-resolution satellite imagery",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: "&copy; Esri, Maxar, Earthstar Geographics",
-    maxZoom: 19,
-  },
-  classic_osm: {
-    id: "classic_osm",
-    label: "Classic OSM",
-    icon: "🗺️",
-    description: "OpenStreetMap Humanitarian edition",
-    url: "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    subdomains: "abc",
-    maxZoom: 19,
-  },
-  topo: {
-    id: "topo",
-    label: "Topographic",
-    icon: "⛰️",
-    description: "Elevation contours & geographic relief",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-    attribution: "&copy; Esri, USGS, NOAA",
     maxZoom: 19,
   },
 };
@@ -696,9 +667,9 @@ function ClusteredMarkersLayer({
 
   const supercluster = useMemo(() => {
     const sc = new Supercluster({
-      radius: 72,
+      radius: 80,
       maxZoom: 15,
-      minPoints: 3,
+      minPoints: 2,
     });
 
     const validPoints: Array<GeoJSON.Feature<GeoJSON.Point, PlaceListing & { latitude: number; longitude: number }>> =
@@ -753,9 +724,55 @@ function ClusteredMarkersLayer({
     }
   }, [supercluster, bounds, zoom]);
 
+  // Viewport Capping for 60fps Silk Performance & Clean Map Appearance
+  const visibleClusters = useMemo(() => {
+    if (!clusters.length) return [];
+
+    const clusterItems: any[] = [];
+    const placeItems: any[] = [];
+
+    for (const c of clusters) {
+      if ((c.properties as any)?.cluster) {
+        clusterItems.push(c);
+      } else {
+        placeItems.push(c);
+      }
+    }
+
+    // Sort clusters by pointCount desc (biggest hubs first)
+    clusterItems.sort(
+      (a, b) => ((b.properties as any)?.point_count || 0) - ((a.properties as any)?.point_count || 0)
+    );
+
+    // Sort place items: actively selected first, then featured/hiring, then others
+    placeItems.sort((a, b) => {
+      const aSelected = a.properties?.id === activePlaceId ? 1 : 0;
+      const bSelected = b.properties?.id === activePlaceId ? 1 : 0;
+      if (aSelected !== bSelected) return bSelected - aSelected;
+      const aHiring = (a.properties as any)?.is_featured ? 1 : 0;
+      const bHiring = (b.properties as any)?.is_featured ? 1 : 0;
+      return bHiring - aHiring;
+    });
+
+    // At overview zoom (zoom < 14):
+    // Display up to 32 key cluster beacons + up to 14 top hiring landmarks
+    // Limits DOM nodes to ~45 max, completely eliminating lag and visual clutter
+    if (zoom < 14) {
+      const topClusters = clusterItems.slice(0, 32);
+      const topPlaces = placeItems
+        .filter((p) => p.properties?.id === activePlaceId || (p.properties as any)?.is_featured)
+        .slice(0, 14);
+      return [...topClusters, ...topPlaces];
+    }
+
+    // At street zoom (zoom >= 14):
+    // Render up to 15 subclusters and up to 45 individual street pins
+    return [...clusterItems.slice(0, 15), ...placeItems.slice(0, 45)];
+  }, [clusters, activePlaceId, zoom]);
+
   return (
     <>
-      {clusters.map((cluster) => {
+      {visibleClusters.map((cluster) => {
         const [longitude, latitude] = cluster.geometry.coordinates;
         const { cluster: isCluster, point_count: pointCount } = cluster.properties as {
           cluster?: boolean;
@@ -1054,14 +1071,10 @@ export default function InteractiveLeafletCanvas({
   const [mapStyle, setMapStyle] = useState<MapStyleId>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("locatogo_map_style") as MapStyleId | null;
-      if (saved && MAP_LAYERS[saved]) return saved;
-      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        return "cyber_dark";
-      }
+      if (saved && (saved === "satellite" || saved === "street")) return saved;
     }
     if (initialPerspective === "satellite") return "satellite";
-    if (initialPerspective && (initialPerspective as string) in MAP_LAYERS) return initialPerspective as MapStyleId;
-    return "clean_light";
+    return "street";
   });
 
   useEffect(() => {
@@ -1103,7 +1116,7 @@ export default function InteractiveLeafletCanvas({
 
   const initialZoom = hubCenter?.zoom ?? (locatedListings.length ? 13 : 2);
 
-  const currentTiles = MAP_LAYERS[mapStyle] || MAP_LAYERS.clean_light;
+  const currentTiles = MAP_LAYERS[mapStyle] || MAP_LAYERS.street;
 
   const handleRegisterZoomFunctions = useCallback((zoomIn: () => void, zoomOut: () => void) => {
     zoomInRef.current = zoomIn;
