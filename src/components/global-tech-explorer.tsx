@@ -13,6 +13,7 @@ import type { PlaceListing } from "@/components/modern-directory-explorer";
 import { MapErrorBoundary } from "@/components/map-error-boundary";
 import { AdBannerSlot } from "@/components/ad-banner-slot";
 import { TechAtlasSearch } from "@/components/tech-atlas-search";
+import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -443,9 +444,19 @@ export function GlobalTechExplorer({
             }));
 
             setCompanies((prev) => {
+              const serverMap = new Map(serverResults.map((c) => [c.id, c]));
+              const updatedExisting = prev.map((c) => {
+                const item = serverMap.get(c.id);
+                if (!item) return c;
+                return {
+                  ...c,
+                  ...item,
+                  active_jobs_count: Math.max(c.active_jobs_count || 0, item.active_jobs_count || 0),
+                };
+              });
               const existingIds = new Set(prev.map((c) => c.id));
               const uniqueNew = serverResults.filter((c) => !existingIds.has(c.id));
-              return [...uniqueNew, ...prev];
+              return [...uniqueNew, ...updatedExisting];
             });
           }
         }
@@ -485,17 +496,29 @@ export function GlobalTechExplorer({
   // Filter Jobs by Hub and criteria
   const filteredJobs = useMemo(() => {
     return allJobs.filter((job) => {
-      // 0. Hub filter for jobs
-      if (
-        !matchesHub(
-          {
-            city: job.city,
-            locality: job.locality || job.location_name,
-            address_line_1: job.location_name,
-          },
-          selectedHub
-        )
-      ) {
+      // 0. Hub filter for jobs: verify actual job location matches the selected hub
+      const isHubInIndia = [
+        "bengaluru",
+        "hyderabad",
+        "delhi-ncr",
+        "mumbai",
+        "pune",
+        "chennai",
+        "kolkata",
+        "kochi",
+      ].includes(selectedHub.id);
+      const isRemoteIndia =
+        job.workplace_type === "remote" &&
+        (job.location_name?.toLowerCase().includes("india") ||
+          job.location_name?.toLowerCase().includes("remote")) &&
+        isHubInIndia;
+
+      const locMatch =
+        jobMatchesLocation(job.location_name, selectedHub.id) ||
+        jobMatchesLocation(job.location_name, selectedHub.name) ||
+        isRemoteIndia;
+
+      if (!locMatch) {
         return false;
       }
 
@@ -577,8 +600,8 @@ export function GlobalTechExplorer({
     const list = [...filteredCompanies];
     if (sidebarSort === "jobs") {
       list.sort((a, b) => {
-        const aJobs = a.jobs?.length || a.active_jobs_count || 0;
-        const bJobs = b.jobs?.length || b.active_jobs_count || 0;
+        const aJobs = Math.max(a.active_jobs_count || 0, a.jobs?.length || 0);
+        const bJobs = Math.max(b.active_jobs_count || 0, b.jobs?.length || 0);
         return bJobs - aJobs;
       });
     } else if (sidebarSort === "name") {
@@ -626,7 +649,7 @@ export function GlobalTechExplorer({
         city: c.city,
         latitude: c.latitude,
         longitude: c.longitude,
-        is_featured: (c.jobs?.length || c.active_jobs_count || 0) > 0,
+        is_featured: Math.max(c.active_jobs_count || 0, c.jobs?.length || 0) > 0,
         verification_status: "verified",
         category_name: c.company_type ? c.company_type.replace(/_/g, " ").toUpperCase() : "TECH COMPANY",
         website: c.website,
@@ -664,7 +687,22 @@ export function GlobalTechExplorer({
       handleSelectHub(targetHub);
     }
     setCompanies((prev) => {
-      if (prev.some((c) => c.id === comp.id)) return prev;
+      const idx = prev.findIndex((c) => c.id === comp.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        const mergedJobsCount = Math.max(
+          updated[idx].active_jobs_count || 0,
+          comp.active_jobs_count || 0,
+          comp.jobs?.length || 0
+        );
+        updated[idx] = {
+          ...updated[idx],
+          ...comp,
+          active_jobs_count: mergedJobsCount,
+          jobs: comp.jobs && comp.jobs.length > 0 ? comp.jobs : updated[idx].jobs,
+        };
+        return updated;
+      }
       return [comp, ...prev];
     });
     setSelectedCompany(comp);
@@ -710,9 +748,19 @@ export function GlobalTechExplorer({
             }));
 
             setCompanies((prev) => {
+              const serverMap = new Map(hubResults.map((c) => [c.id, c]));
+              const updatedExisting = prev.map((c) => {
+                const item = serverMap.get(c.id);
+                if (!item) return c;
+                return {
+                  ...c,
+                  ...item,
+                  active_jobs_count: Math.max(c.active_jobs_count || 0, item.active_jobs_count || 0),
+                };
+              });
               const existingIds = new Set(prev.map((c) => c.id));
               const uniqueNew = hubResults.filter((c) => !existingIds.has(c.id));
-              return [...prev, ...uniqueNew];
+              return [...uniqueNew, ...updatedExisting];
             });
           }
         })
@@ -1068,7 +1116,7 @@ export function GlobalTechExplorer({
                   sidebarVisibleCompanies.map((comp) => {
                     const isSelected = selectedCompany?.id === comp.id;
                     const isHovered = hoveredCompanyId === comp.id;
-                    const jobCount = comp.jobs?.length || comp.active_jobs_count || 0;
+                    const jobCount = Math.max(comp.active_jobs_count || 0, comp.jobs?.length || 0);
 
                     return (
                       <article
@@ -1606,7 +1654,23 @@ export function GlobalTechExplorer({
       </main>
 
       {/* Slide-over Company Detail & Jobs Drawer */}
-      <CompanyDetailDrawer company={selectedCompany} onClose={() => setSelectedCompany(null)} />
+      <CompanyDetailDrawer
+        company={selectedCompany}
+        onClose={() => setSelectedCompany(null)}
+        onJobsLoaded={(companyId, count, jobs) => {
+          setCompanies((prev) =>
+            prev.map((c) =>
+              c.id === companyId
+                ? {
+                    ...c,
+                    active_jobs_count: count,
+                    jobs: jobs,
+                  }
+                : c
+            )
+          );
+        }}
+      />
     </div>
   );
 }

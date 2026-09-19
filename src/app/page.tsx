@@ -104,7 +104,7 @@ export default async function Home({ searchParams }: Props) {
     employee_range: l.employee_range,
     tech_stack: l.tech_stack || [],
     founded_year: l.founded_year,
-    active_jobs_count: l.active_jobs_count || (jobsByListing.get(l.id)?.length || 0),
+    active_jobs_count: Math.max(l.active_jobs_count || 0, jobsByListing.get(l.id)?.length || 0),
     jobs: jobsByListing.get(l.id) || [],
   }));
 

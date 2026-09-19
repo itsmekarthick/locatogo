@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
+import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 export type CompanyJob = {
   id: string;
@@ -41,44 +42,61 @@ export type CompanyDetail = {
 export function CompanyDetailDrawer({
   company,
   onClose,
+  onJobsLoaded,
 }: {
   company: CompanyDetail | null;
   onClose: () => void;
+  onJobsLoaded?: (companyId: string, count: number, jobs: CompanyJob[]) => void;
 }) {
   const [activeTab, setActiveTab] = useState<"jobs" | "about" | "transit">("jobs");
   const [deptFilter, setDeptFilter] = useState<string>("all");
   const [roleSearch, setRoleSearch] = useState<string>("");
+  const [locationScope, setLocationScope] = useState<"place" | "all">("place");
   const [dynamicJobs, setDynamicJobs] = useState<CompanyJob[] | null>(null);
+  const [allAvailableJobs, setAllAvailableJobs] = useState<CompanyJob[] | null>(null);
   const [isLoadingJobs, setIsLoadingJobs] = useState<boolean>(false);
 
   // Dynamic job fetcher whenever company changes
   useEffect(() => {
     if (!company) {
       setDynamicJobs(null);
+      setAllAvailableJobs(null);
       setIsLoadingJobs(false);
       return;
     }
 
+    setLocationScope("place");
     setDeptFilter("all");
     setRoleSearch("");
 
     // If preloaded with jobs, initialize immediately
     if (company.jobs && company.jobs.length > 0) {
       setDynamicJobs(company.jobs);
+      setAllAvailableJobs(company.jobs);
     } else {
       setDynamicJobs(null);
+      setAllAvailableJobs(null);
     }
 
     const companyId = company.id;
+    const companyCity = company.city || "Bangalore";
     let isCancelled = false;
+
     async function loadJobs() {
       setIsLoadingJobs(true);
       try {
-        const res = await fetch(`/api/companies/${companyId}/jobs`);
+        const res = await fetch(`/api/companies/${companyId}/jobs?city=${encodeURIComponent(companyCity)}`);
         if (res.ok) {
           const data = await res.json();
-          if (!isCancelled && data.jobs && Array.isArray(data.jobs)) {
-            setDynamicJobs(data.jobs);
+          if (!isCancelled) {
+            if (data.allJobs && Array.isArray(data.allJobs)) {
+              setAllAvailableJobs(data.allJobs);
+            }
+            if (data.jobs && Array.isArray(data.jobs)) {
+              setDynamicJobs(data.jobs);
+              const accurateCount = data.localCount ?? data.jobs.length;
+              onJobsLoaded?.(companyId, accurateCount, data.jobs);
+            }
           }
         }
       } catch (err) {
@@ -93,11 +111,17 @@ export function CompanyDetailDrawer({
     return () => {
       isCancelled = true;
     };
-  }, [company?.id]);
+  }, [company?.id, company?.city]);
 
   if (!company) return null;
 
-  const jobs = dynamicJobs ?? company.jobs ?? [];
+  const companyCity = company.city || "Bangalore";
+  const rawPool = allAvailableJobs ?? dynamicJobs ?? company.jobs ?? [];
+  const localJobs = rawPool.filter((j) => jobMatchesLocation(j.location_name, companyCity));
+  const hasLocalJobs = localJobs.length > 0;
+
+  // Active pool defaults to local jobs matching place selection
+  const jobs = locationScope === "place" && hasLocalJobs ? localJobs : rawPool;
   const departments = Array.from(new Set(jobs.map((j) => j.department).filter(Boolean))) as string[];
 
   const filteredJobs = jobs.filter((j) => {
@@ -209,6 +233,8 @@ export function CompanyDetailDrawer({
             <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
               {isLoadingJobs && jobs.length === 0
                 ? "..."
+                : hasLocalJobs && locationScope === "place"
+                ? localJobs.length
                 : jobs.length > 0
                 ? jobs.length
                 : (company.active_jobs_count || 0)}
@@ -270,6 +296,62 @@ export function CompanyDetailDrawer({
                     <span>Visit Portal</span>
                     <span>↗</span>
                   </a>
+                </div>
+              )}
+
+              {/* Place-Aware Location Filter Banner */}
+              {rawPool.length > 0 && (
+                <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 text-xs shrink-0 shadow-2xs">
+                      📍
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                        {hasLocalJobs ? (
+                          <>
+                            Showing positions in <span className="font-bold text-indigo-600 dark:text-indigo-400">{companyCity}</span>
+                          </>
+                        ) : (
+                          <>
+                            All Verified Openings ({rawPool.length})
+                          </>
+                        )}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {hasLocalJobs
+                          ? `${localJobs.length} verified openings for ${companyCity}`
+                          : `No direct ${companyCity} listings found • Showing global openings`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {rawPool.length > localJobs.length && (
+                    <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800/80 p-0.5 rounded-xl self-start sm:self-auto shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setLocationScope("place")}
+                        className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                          locationScope === "place" && hasLocalJobs
+                            ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs"
+                            : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                        }`}
+                      >
+                        📍 {companyCity} ({localJobs.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLocationScope("all")}
+                        className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                          locationScope === "all" || !hasLocalJobs
+                            ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs"
+                            : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                        }`}
+                      >
+                        🌐 All Locations ({rawPool.length})
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -345,8 +427,21 @@ export function CompanyDetailDrawer({
                           <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
                             {job.title}
                           </h4>
-                          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                            {job.department || "Engineering"} • 📍 {job.location_name}
+                          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                            <span>{job.department || "Engineering"}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <span>📍</span>
+                              <span
+                                className={
+                                  jobMatchesLocation(job.location_name, companyCity)
+                                    ? "font-semibold text-emerald-600 dark:text-emerald-400"
+                                    : ""
+                                }
+                              >
+                                {job.location_name}
+                              </span>
+                            </span>
                           </p>
                         </div>
 

@@ -1,0 +1,179 @@
+/**
+ * location-matcher.ts
+ *
+ * Provides normalized city key resolution and location matching for jobs
+ * across all supported metro tech hubs.
+ */
+
+export function normalizeCityKey(city: string): string {
+  const c = city.toLowerCase().trim();
+  if (c.includes("bangalore") || c.includes("bengaluru") || c === "blr") return "bangalore";
+  if (c.includes("hyderabad") || c.includes("secunderabad") || c === "hyd") return "hyderabad";
+  if (c.includes("chennai") || c.includes("madras") || c === "maa") return "chennai";
+  if (c.includes("pune") || c === "pnq") return "pune";
+  if (c.includes("delhi") || c.includes("noida") || c.includes("gurgaon") || c.includes("gurugram")) return "delhi";
+  if (c.includes("mumbai") || c.includes("bombay") || c.includes("thane") || c.includes("navi mumbai")) return "mumbai";
+  if (c.includes("kolkata") || c.includes("calcutta")) return "kolkata";
+  if (c.includes("kochi") || c.includes("cochin")) return "kochi";
+  if (c.includes("san francisco") || c.includes("silicon valley") || c.includes("bay area")) return "silicon-valley";
+  if (c.includes("london")) return "london";
+  if (c.includes("singapore")) return "singapore";
+  if (c.includes("berlin")) return "berlin";
+  if (c.includes("dubai")) return "dubai";
+  if (c.includes("new york") || c.includes("nyc")) return "new-york";
+  return c;
+}
+
+/**
+ * Checks whether a job's reported location matches the target city/metro place.
+ */
+export function jobMatchesLocation(
+  jobLocation: string | null | undefined,
+  targetCity: string | null | undefined
+): boolean {
+  if (!targetCity) return true;
+  if (!jobLocation) return false;
+
+  const loc = jobLocation.toLowerCase();
+  const cityKey = normalizeCityKey(targetCity);
+
+  if (cityKey === "bangalore") {
+    return (
+      loc.includes("bangalore") ||
+      loc.includes("bengaluru") ||
+      loc.includes("blr") ||
+      loc.includes("whitefield") ||
+      loc.includes("electronic city") ||
+      loc.includes("koramangala") ||
+      loc.includes("bellandur") ||
+      loc.includes("adugodi") ||
+      loc.includes("indiranagar") ||
+      loc.includes("marathahalli") ||
+      loc.includes("kadubeesanahalli") ||
+      loc.includes("manyata") ||
+      loc.includes("domlur") ||
+      loc.includes("hebbal") ||
+      loc.includes("harlur") ||
+      loc.includes("sarjapur")
+    );
+  }
+
+  if (cityKey === "hyderabad") {
+    return (
+      loc.includes("hyderabad") ||
+      loc.includes("secunderabad") ||
+      loc.includes("hitec") ||
+      loc.includes("gachibowli") ||
+      loc.includes("madhapur") ||
+      loc.includes("kondapur") ||
+      loc.includes("financial district") ||
+      loc.includes("raidurg") ||
+      loc.includes("nanakramguda") ||
+      loc.includes("kokapet") ||
+      loc.includes("begumpet")
+    );
+  }
+
+  if (cityKey === "chennai") {
+    return (
+      loc.includes("chennai") ||
+      loc.includes("madras") ||
+      loc.includes("omr") ||
+      loc.includes("sholinganallur") ||
+      loc.includes("taramani") ||
+      loc.includes("siruseri") ||
+      loc.includes("guindy") ||
+      loc.includes("perungudi") ||
+      loc.includes("tidel") ||
+      loc.includes("guduvanchery")
+    );
+  }
+
+  if (cityKey === "pune") {
+    return (
+      loc.includes("pune") ||
+      loc.includes("hinjewadi") ||
+      loc.includes("kharadi") ||
+      loc.includes("magarpatta") ||
+      loc.includes("baner") ||
+      loc.includes("balewadi") ||
+      loc.includes("yerwada") ||
+      loc.includes("kalyani nagar") ||
+      loc.includes("viman nagar")
+    );
+  }
+
+  if (cityKey === "delhi") {
+    return (
+      loc.includes("delhi") ||
+      loc.includes("gurugram") ||
+      loc.includes("gurgaon") ||
+      loc.includes("noida") ||
+      loc.includes("greater noida") ||
+      loc.includes("cyber city") ||
+      loc.includes("cyberhub") ||
+      loc.includes("faridabad") ||
+      loc.includes("udyog vihar") ||
+      loc.includes("connaught place")
+    );
+  }
+
+  if (cityKey === "mumbai") {
+    return (
+      loc.includes("mumbai") ||
+      loc.includes("navi mumbai") ||
+      loc.includes("thane") ||
+      loc.includes("bkc") ||
+      loc.includes("bandra") ||
+      loc.includes("powai") ||
+      loc.includes("andheri") ||
+      loc.includes("lower parel") ||
+      loc.includes("vikhroli") ||
+      loc.includes("goregaon") ||
+      loc.includes("ghansoli")
+    );
+  }
+
+  if (cityKey === "kolkata") {
+    return (
+      loc.includes("kolkata") ||
+      loc.includes("calcutta") ||
+      loc.includes("salt lake") ||
+      loc.includes("rajarhat") ||
+      loc.includes("new town") ||
+      loc.includes("sector v")
+    );
+  }
+
+  if (cityKey === "kochi") {
+    return (
+      loc.includes("kochi") ||
+      loc.includes("cochin") ||
+      loc.includes("infopark") ||
+      loc.includes("kakkanad") ||
+      loc.includes("smartcity")
+    );
+  }
+
+  if (cityKey === "silicon-valley") {
+    return (
+      loc.includes("san francisco") ||
+      loc.includes("mountain view") ||
+      loc.includes("palo alto") ||
+      loc.includes("sunnyvale") ||
+      loc.includes("san jose") ||
+      loc.includes("menlo park") ||
+      loc.includes("silicon valley") ||
+      loc.includes("bay area")
+    );
+  }
+
+  if (cityKey === "london") return loc.includes("london");
+  if (cityKey === "singapore") return loc.includes("singapore");
+  if (cityKey === "berlin") return loc.includes("berlin");
+  if (cityKey === "dubai") return loc.includes("dubai");
+  if (cityKey === "new-york") return loc.includes("new york") || loc.includes("nyc") || loc.includes("manhattan");
+
+  const raw = targetCity.toLowerCase().trim();
+  return loc.includes(raw);
+}

@@ -238,30 +238,119 @@ async function fetchAshby(token: string): Promise<ExternalJob[]> {
   }));
 }
 
-async function fetchSmartRecruiters(token: string): Promise<ExternalJob[]> {
+import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
+
+export type FetchJobsOptions = {
+  city?: string;
+  country?: string;
+};
+
+async function fetchSmartRecruiters(token: string, options?: FetchJobsOptions): Promise<ExternalJob[]> {
   const jobs: ExternalJob[] = [];
-  for (let offset = 0; ; offset += 100) {
-    const data = await getJson(`https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(token)}/postings?limit=100&offset=${offset}`);
+  const targetCity = options?.city?.trim();
+
+  // If city is specified, attempt targeted city queries first
+  if (targetCity) {
+    const cityQueries: string[] = [targetCity];
+    const lower = targetCity.toLowerCase();
+    if (lower.includes("bangalore") || lower.includes("bengaluru")) {
+      cityQueries.push("Bengaluru", "Bangalore");
+    }
+
+    const seenIds = new Set<string>();
+    for (const cq of Array.from(new Set(cityQueries))) {
+      try {
+        const data = await getJson(
+          `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(token)}/postings?city=${encodeURIComponent(cq)}&limit=100`
+        );
+        const page = data.content || [];
+        for (const job of page) {
+          if (!seenIds.has(String(job.id))) {
+            seenIds.add(String(job.id));
+            jobs.push({
+              providerJobId: String(job.id),
+              title: job.name,
+              department: job.department?.label || null,
+              locationName: job.location?.city
+                ? [job.location.city, job.location.country].filter(Boolean).join(", ")
+                : "Unspecified",
+              workplaceType: workplaceType(`${job.name} ${job.location?.city || ""}`),
+              applyUrl: job.ref || `https://jobs.smartrecruiters.com/${token}/${job.id}`,
+              postedAt: stringValue(job.releasedDate),
+            });
+          }
+        }
+      } catch (err) {
+        console.warn(`SmartRecruiters query error for ${cq}:`, err);
+      }
+    }
+
+    if (jobs.length > 0) {
+      return jobs;
+    }
+  }
+
+  // Fallback to general paginated postings
+  for (let offset = 0; offset < 300; offset += 100) {
+    const countryParam = options?.country ? `&country=${encodeURIComponent(options.country)}` : "";
+    const data = await getJson(
+      `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(token)}/postings?limit=100&offset=${offset}${countryParam}`
+    );
     const page = data.content || [];
-    jobs.push(...page.map((job: any) => ({
-      providerJobId: String(job.id),
-      title: job.name,
-      department: job.department?.label || null,
-      locationName: job.location?.city ? [job.location.city, job.location.country].filter(Boolean).join(", ") : "Unspecified",
-      workplaceType: workplaceType(`${job.name} ${job.location?.city || ""}`),
-      applyUrl: job.ref || `https://jobs.smartrecruiters.com/${token}/${job.id}`,
-      postedAt: stringValue(job.releasedDate),
-    })));
+    jobs.push(
+      ...page.map((job: any) => ({
+        providerJobId: String(job.id),
+        title: job.name,
+        department: job.department?.label || null,
+        locationName: job.location?.city
+          ? [job.location.city, job.location.country].filter(Boolean).join(", ")
+          : "Unspecified",
+        workplaceType: workplaceType(`${job.name} ${job.location?.city || ""}`),
+        applyUrl: job.ref || `https://jobs.smartrecruiters.com/${token}/${job.id}`,
+        postedAt: stringValue(job.releasedDate),
+      }))
+    );
     if (page.length < 100) break;
   }
+
+  // If a target city was requested, prioritize jobs matching that city
+  if (targetCity) {
+    jobs.sort((a, b) => {
+      const aMatch = jobMatchesLocation(a.locationName, targetCity) ? 1 : 0;
+      const bMatch = jobMatchesLocation(b.locationName, targetCity) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }
+
   return jobs;
 }
 
-export async function fetchJobs(board: Board): Promise<ExternalJob[]> {
+export async function fetchJobs(board: Board, options?: FetchJobsOptions): Promise<ExternalJob[]> {
+  let list: ExternalJob[] = [];
   switch (board.provider) {
-    case "greenhouse": return fetchGreenhouse(board.token);
-    case "lever": return fetchLever(board.token);
-    case "ashby": return fetchAshby(board.token);
-    case "smartrecruiters": return fetchSmartRecruiters(board.token);
+    case "greenhouse":
+      list = await fetchGreenhouse(board.token);
+      break;
+    case "lever":
+      list = await fetchLever(board.token);
+      break;
+    case "ashby":
+      list = await fetchAshby(board.token);
+      break;
+    case "smartrecruiters":
+      list = await fetchSmartRecruiters(board.token, options);
+      break;
   }
+
+  if (options?.city) {
+    const city = options.city;
+    list.sort((a, b) => {
+      const aMatch = jobMatchesLocation(a.locationName, city) ? 1 : 0;
+      const bMatch = jobMatchesLocation(b.locationName, city) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }
+
+  return list;
 }
+
