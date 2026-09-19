@@ -253,7 +253,7 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
         <div class="locatogo-pin-icon-wrap" style="background: #eef2ff; color: #4f46e5; padding: 1px;">
           ${innerIconHtml}
         </div>
-        <span class="locatogo-pin-title" style="font-size: 11px; font-weight: 700; color: #0f172a; line-height: 1;">${cleanTitle}</span>
+        <span class="locatogo-pin-title" style="font-size: 11px; font-weight: 700; line-height: 1;">${cleanTitle}</span>
         ${isHiring ? `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; flex-shrink: 0;" title="Actively Hiring"></span>` : ""}
         <div class="locatogo-pin-arrow"></div>
       </div>
@@ -276,7 +276,7 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
       <div class="locatogo-pin-icon-wrap" style="background: ${bgLight}; color: ${themeColor}; padding: 1px;">
         ${innerIconHtml}
       </div>
-      <span style="font-size: 11px; font-weight: 800; color: #0f172a; line-height: 1;">★${ratingInfo.rating.toFixed(1)}</span>
+      <span class="locatogo-pin-rating" style="font-size: 11px; font-weight: 800; line-height: 1;">★${ratingInfo.rating.toFixed(1)}</span>
       <div class="locatogo-pin-arrow"></div>
     </div>
   `;
@@ -894,19 +894,19 @@ function ClusteredMarkersLayer({
             {!isSelected && (
               <Tooltip direction="top" offset={[0, -28]} opacity={1} className="locatogo-hover-tooltip">
                 <div className="flex items-center gap-1.5 px-1 py-0.5 font-sans">
-                  <span className="font-bold text-xs text-gray-900">{place.title}</span>
+                  <span className="font-bold text-xs text-slate-900 dark:text-slate-100">{place.title}</span>
                   {isTechAtlas || place.is_featured ? (
                     place.is_featured ? (
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200/60">
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-1 py-0.2 rounded border border-emerald-200/60 dark:border-emerald-800">
                         🟢 Hiring
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-1 py-0.2 rounded border border-indigo-200/60">
+                      <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 px-1 py-0.2 rounded border border-indigo-200/60 dark:border-indigo-800">
                         {place.category_name || "Tech"}
                       </span>
                     )
                   ) : (
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60">
+                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-1 py-0.2 rounded border border-amber-200/60 dark:border-amber-800">
                       ★{ratingInfo.rating.toFixed(1)}
                     </span>
                   )}
@@ -921,11 +921,11 @@ function ClusteredMarkersLayer({
                   <div className="flex items-center justify-between gap-1.5 mb-1.5">
                     <div className="flex items-center gap-1">
                       {place.category_name && (
-                        <span className="rounded-full bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900">
+                        <span className="rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900 dark:text-blue-300">
                           {place.category_name}
                         </span>
                       )}
-                      <span className="rounded-md bg-amber-50 border border-amber-200/90 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-0.5">
+                      <span className="rounded-md bg-amber-50 dark:bg-amber-950/70 border border-amber-200/90 dark:border-amber-800 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-0.5">
                         <span className="text-amber-500">★</span>
                         <span>{ratingInfo.rating.toFixed(1)}</span>
                       </span>
@@ -939,14 +939,14 @@ function ClusteredMarkersLayer({
                           : null);
                       if (dist === null) return null;
                       return (
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-md">
+                        <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
                           🚗 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)} km`}
                         </span>
                       );
                     })()}
                   </div>
 
-                  <h4 className="font-serif font-bold text-sm text-gray-950 leading-tight">
+                  <h4 className="font-serif font-bold text-sm text-slate-950 dark:text-slate-100 leading-tight">
                     <Link href={`/listing/${place.slug}`} className="hover:text-[#e26a4f] transition-colors">
                       {place.title}
                     </Link>
@@ -954,22 +954,22 @@ function ClusteredMarkersLayer({
 
                   <div className="mt-1 flex items-center gap-1.5 text-xs">
                     <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
-                    <span className="text-[11px] font-bold text-gray-800">{ratingInfo.rating.toFixed(1)}</span>
-                    <span className="text-[10px] text-gray-500 font-medium">({ratingInfo.reviewCount} reviews)</span>
+                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{ratingInfo.rating.toFixed(1)}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">({ratingInfo.reviewCount} reviews)</span>
                   </div>
 
-                  <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
                     <span>📍</span>
                     <span>{[place.locality, place.city].filter(Boolean).join(", ")}</span>
                   </p>
 
                   {place.short_description && (
-                    <p className="text-[11px] text-gray-600 mt-1.5 line-clamp-2 leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1.5 line-clamp-2 leading-snug">
                       {place.short_description}
                     </p>
                   )}
 
-                  <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                     <a
                       href={generateUberRideLink(place.latitude, place.longitude, place.title, place.locality)}
                       target="_blank"
@@ -1239,7 +1239,7 @@ export default function InteractiveLeafletCanvas({
       )}
 
       {/* Top Floating Map Layer & Zoom Switcher */}
-      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[400] flex items-center gap-0.5 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 backdrop-blur-md p-0.5 sm:p-1 border border-gray-200/90 shadow-md text-[10px] sm:text-xs font-semibold">
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[400] flex items-center gap-0.5 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-0.5 sm:p-1 border border-gray-200/90 dark:border-slate-800 shadow-md text-[10px] sm:text-xs font-semibold">
         {/* Quick Weather FX Cycle / Toggle */}
         <button
           onClick={() => {
@@ -1256,7 +1256,7 @@ export default function InteractiveLeafletCanvas({
           className={`flex items-center gap-1 px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
             activeWeatherFx === "rain" || activeWeatherFx === "thunderstorm"
               ? "bg-blue-600 text-white font-bold shadow-xs animate-pulse"
-              : "text-gray-700 hover:bg-gray-100"
+              : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
           }`}
         >
           <span>{activeWeatherFx === "thunderstorm" ? "⚡" : activeWeatherFx === "rain" ? "🌧️" : "🌦️"}</span>
@@ -1271,11 +1271,11 @@ export default function InteractiveLeafletCanvas({
             type="button"
             onClick={() => setIsStyleMenuOpen((prev) => !prev)}
             title="Change Map Style"
-            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl font-bold bg-gray-100 hover:bg-gray-200/80 text-gray-900 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl font-bold bg-gray-100 dark:bg-slate-800 hover:bg-gray-200/80 dark:hover:bg-slate-700 text-gray-900 dark:text-slate-100 transition-all cursor-pointer"
           >
             <span>{currentTiles.icon}</span>
             <span className="hidden sm:inline text-[11px] sm:text-xs font-semibold">{currentTiles.label}</span>
-            <span className="text-[9px] text-gray-500">▼</span>
+            <span className="text-[9px] text-gray-500 dark:text-slate-400">▼</span>
           </button>
 
           {isStyleMenuOpen && (
@@ -1316,18 +1316,18 @@ export default function InteractiveLeafletCanvas({
         </div>
 
         {/* Explicit 1-Step Click Zoom Buttons */}
-        <div className="flex items-center border-l border-gray-200 pl-0.5 sm:pl-1.5 gap-0.5">
+        <div className="flex items-center border-l border-gray-200 dark:border-slate-800 pl-0.5 sm:pl-1.5 gap-0.5">
           <button
             onClick={() => zoomInRef.current?.()}
             title="Zoom In (1 Step)"
-            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 font-bold text-xs sm:text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             +
           </button>
           <button
             onClick={() => zoomOutRef.current?.()}
             title="Zoom Out (1 Step)"
-            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 text-gray-900 font-bold text-xs sm:text-sm hover:bg-gray-200 transition-colors cursor-pointer"
+            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 font-bold text-xs sm:text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             −
           </button>
@@ -1337,7 +1337,7 @@ export default function InteractiveLeafletCanvas({
           <button
             onClick={onToggleFullscreen}
             title={isFullscreen ? "Exit Full Screen Map" : "Full Screen Map"}
-            className="border-l border-gray-200 pl-1.5 pr-1 text-gray-600 hover:text-gray-950 text-[10px] sm:text-xs font-bold cursor-pointer"
+            className="border-l border-gray-200 dark:border-slate-800 pl-1.5 pr-1 text-gray-600 dark:text-slate-400 hover:text-gray-950 dark:hover:text-white text-[10px] sm:text-xs font-bold cursor-pointer"
           >
             {isFullscreen ? "✕" : "⛶"}
           </button>
@@ -1349,7 +1349,7 @@ export default function InteractiveLeafletCanvas({
         <button
           onClick={handleTriggerLocate}
           title="Auto-detect & Center on My Location"
-          className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-lg backdrop-blur-md hover:bg-gray-50 transition-all cursor-pointer"
+          className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-3.5 py-2 text-xs font-bold text-gray-800 dark:text-slate-100 shadow-lg backdrop-blur-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
         >
           <span className="text-sm">🎯</span>
           <span className="hidden sm:inline">My Location</span>

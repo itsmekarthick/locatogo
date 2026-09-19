@@ -14,17 +14,14 @@ import { MapErrorBoundary } from "@/components/map-error-boundary";
 import { AdBannerSlot } from "@/components/ad-banner-slot";
 import { TechAtlasSearch } from "@/components/tech-atlas-search";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
+import { MapCanvasSkeleton } from "@/components/tech-atlas-skeleton";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
   () => import("@/components/interactive-leaflet-canvas"),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-slate-900 text-xs font-semibold text-slate-500">
-        <span className="animate-pulse">Loading Interactive Tech Map...</span>
-      </div>
-    ),
+    loading: () => <MapCanvasSkeleton />,
   }
 );
 
