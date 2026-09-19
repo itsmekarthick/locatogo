@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { GlobalTechExplorer, type UnifiedJob } from "@/components/global-tech-explorer";
-import type { CompanyDetail, CompanyJob } from "@/components/company-detail-drawer";
+import { CompanyDetailDrawer, type CompanyDetail, type CompanyJob } from "@/components/company-detail-drawer";
+import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 export const metadata: Metadata = {
   title: "LocaToGo | Global Tech Atlas & Startup Map",
@@ -33,8 +34,17 @@ export default async function Home({ searchParams }: Props) {
     supabase = await createSupabaseServerClient();
   }
 
-  // 1. Get exact total count and active jobs in parallel
-  const [{ count: totalTechCount }, { data: rawJobs }] = await Promise.all([
+  // 1. Get exact total count, all active jobs (bypassing PostgREST 1000-row cap via parallel ranges), and listings in parallel
+  const [
+    { count: totalTechCount },
+    jobsPage1,
+    jobsPage2,
+    jobsPage3,
+    jobsPage4,
+    listingsPage1,
+    listingsPage2,
+    listingsPage3,
+  ] = await Promise.all([
     supabase
       .from("listings")
       .select("id", { count: "exact", head: true })
@@ -45,37 +55,127 @@ export default async function Home({ searchParams }: Props) {
       .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
-      .limit(10000),
+      .order("id", { ascending: true })
+      .range(0, 999),
+    supabase
+      .from("company_jobs")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .eq("is_active", true)
+      .order("posted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(1000, 1999),
+    supabase
+      .from("company_jobs")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .eq("is_active", true)
+      .order("posted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(2000, 2999),
+    supabase
+      .from("company_jobs")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .eq("is_active", true)
+      .order("posted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(3000, 3999),
+    supabase
+      .from("listings")
+      .select(`
+        id,
+        title,
+        slug,
+        short_description,
+        address_line_1,
+        locality,
+        city,
+        latitude,
+        longitude,
+        website,
+        careers_url,
+        company_type,
+        funding_stage,
+        employee_range,
+        tech_stack,
+        founded_year,
+        active_jobs_count
+      `)
+      .eq("status", "published")
+      .not("company_type", "is", null)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("active_jobs_count", { ascending: false })
+      .order("id", { ascending: true })
+      .range(0, 999),
+    supabase
+      .from("listings")
+      .select(`
+        id,
+        title,
+        slug,
+        short_description,
+        address_line_1,
+        locality,
+        city,
+        latitude,
+        longitude,
+        website,
+        careers_url,
+        company_type,
+        funding_stage,
+        employee_range,
+        tech_stack,
+        founded_year,
+        active_jobs_count
+      `)
+      .eq("status", "published")
+      .not("company_type", "is", null)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("active_jobs_count", { ascending: false })
+      .order("id", { ascending: true })
+      .range(1000, 1999),
+    supabase
+      .from("listings")
+      .select(`
+        id,
+        title,
+        slug,
+        short_description,
+        address_line_1,
+        locality,
+        city,
+        latitude,
+        longitude,
+        website,
+        careers_url,
+        company_type,
+        funding_stage,
+        employee_range,
+        tech_stack,
+        founded_year,
+        active_jobs_count
+      `)
+      .eq("status", "published")
+      .not("company_type", "is", null)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("active_jobs_count", { ascending: false })
+      .order("id", { ascending: true })
+      .range(2000, 2999),
   ]);
 
-  // 2. High-Speed Initial Paint Hydration (Loads in <100ms)
-  const { data: rawListings } = await supabase
-    .from("listings")
-    .select(`
-      id,
-      title,
-      slug,
-      short_description,
-      address_line_1,
-      locality,
-      city,
-      latitude,
-      longitude,
-      website,
-      careers_url,
-      company_type,
-      funding_stage,
-      employee_range,
-      tech_stack,
-      founded_year,
-      active_jobs_count
-    `)
-    .eq("status", "published")
-    .not("company_type", "is", null)
-    .not("latitude", "is", null)
-    .not("longitude", "is", null)
-    .order("active_jobs_count", { ascending: false })
-    .limit(3000);
+  const rawJobs = [
+    ...(jobsPage1.data || []),
+    ...(jobsPage2.data || []),
+    ...(jobsPage3.data || []),
+    ...(jobsPage4.data || []),
+  ];
+
+  const rawListings = [
+    ...(listingsPage1.data || []),
+    ...(listingsPage2.data || []),
+    ...(listingsPage3.data || []),
+  ];
 
   // Group jobs by listing_id
   const jobsByListing = new Map<string, CompanyJob[]>();
@@ -87,26 +187,39 @@ export default async function Home({ searchParams }: Props) {
     }
   });
 
-  const initialCompanies: CompanyDetail[] = (rawListings || []).map((l: any) => ({
-    id: l.id,
-    title: l.title,
-    slug: l.slug,
-    short_description: l.short_description,
-    address_line_1: l.address_line_1,
-    locality: l.locality,
-    city: l.city,
-    latitude: l.latitude,
-    longitude: l.longitude,
-    website: l.website,
-    careers_url: l.careers_url,
-    company_type: l.company_type || "product_saas",
-    funding_stage: l.funding_stage || "Product",
-    employee_range: l.employee_range,
-    tech_stack: l.tech_stack || [],
-    founded_year: l.founded_year,
-    active_jobs_count: Math.max(l.active_jobs_count || 0, jobsByListing.get(l.id)?.length || 0),
-    jobs: jobsByListing.get(l.id) || [],
-  }));
+  const initialCompanies: CompanyDetail[] = (rawListings || []).map((l: any) => {
+    const compJobs = jobsByListing.get(l.id) || [];
+    const localJobs = l.city
+      ? compJobs.filter((j) => jobMatchesLocation(j.location_name, l.city))
+      : compJobs;
+    // When verified jobs exist in company_jobs, strictly use local jobs count.
+    // If no jobs match local city, it is 0. Only fallback to l.active_jobs_count if zero jobs exist in company_jobs table.
+    const accurateJobCount =
+      compJobs.length > 0
+        ? localJobs.length
+        : (l.active_jobs_count || 0);
+
+    return {
+      id: l.id,
+      title: l.title,
+      slug: l.slug,
+      short_description: l.short_description,
+      address_line_1: l.address_line_1,
+      locality: l.locality,
+      city: l.city,
+      latitude: l.latitude,
+      longitude: l.longitude,
+      website: l.website,
+      careers_url: l.careers_url,
+      company_type: l.company_type || "product_saas",
+      funding_stage: l.funding_stage || "Product",
+      employee_range: l.employee_range,
+      tech_stack: l.tech_stack || [],
+      founded_year: l.founded_year,
+      active_jobs_count: accurateJobCount,
+      jobs: compJobs,
+    };
+  });
 
   // 3. Build unified job listings for the Live Jobs Board
   const companyInfoMap = new Map<string, any>();

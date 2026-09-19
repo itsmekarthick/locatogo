@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import type { CompanyDetail } from "@/components/company-detail-drawer";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { GLOBAL_TECH_HUBS, type TechHub } from "@/components/global-tech-explorer";
+import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 export type TechAtlasSearchProps = {
   searchQuery: string;
@@ -273,8 +274,19 @@ export function TechAtlasSearch({
     const pool = new Map<string, CompanyDetail>();
     // Add local memory companies
     companies.forEach((c) => pool.set(c.id, c));
-    // Merge server results
-    serverResults.forEach((c) => pool.set(c.id, c));
+    // Merge server results while preserving rich local job data and localized counts
+    serverResults.forEach((c) => {
+      const existing = pool.get(c.id);
+      if (existing) {
+        pool.set(c.id, {
+          ...c,
+          active_jobs_count: existing.active_jobs_count,
+          jobs: existing.jobs && existing.jobs.length > 0 ? existing.jobs : c.jobs,
+        });
+      } else {
+        pool.set(c.id, c);
+      }
+    });
 
     const scoredList: { company: CompanyDetail; score: number; targetHub: TechHub }[] = [];
 
@@ -503,7 +515,18 @@ export function TechAtlasSearch({
                 const { company, targetHub } = item;
                 const isHighlighted = idx === highlightedIndex;
                 const isCrossHub = targetHub.id !== selectedHub.id;
-                const activeJobs = company.active_jobs_count || (company.jobs ? company.jobs.length : 0);
+                const matchingJobs =
+                  company.jobs && company.jobs.length > 0
+                    ? company.jobs.filter(
+                        (j) =>
+                          jobMatchesLocation(j.location_name, targetHub.id) ||
+                          jobMatchesLocation(j.location_name, targetHub.name)
+                      )
+                    : [];
+                const activeJobs =
+                  company.jobs && company.jobs.length > 0
+                    ? matchingJobs.length
+                    : (company.active_jobs_count || 0);
 
                 return (
                   <button
