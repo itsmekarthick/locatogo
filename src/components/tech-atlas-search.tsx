@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import type { CompanyDetail } from "@/components/company-detail-drawer";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
-import { GLOBAL_TECH_HUBS, type TechHub } from "@/components/global-tech-explorer";
+import { GLOBAL_TECH_HUBS, type TechHub } from "@/lib/constants/tech-hubs";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 export type TechAtlasSearchProps = {
@@ -602,6 +603,17 @@ export function TechAtlasSearch({
                           <span>{targetHub.name}</span>
                         </span>
                       )}
+
+                      {/* Direct Page Link */}
+                      <Link
+                        href={`/company/${company.slug}`}
+                        target="_blank"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors text-xs font-bold"
+                        title={`Open ${company.title} full profile page in new tab`}
+                      >
+                        ↗
+                      </Link>
 
                       <span className="text-slate-400 text-xs hidden sm:inline-block">➔</span>
                     </div>

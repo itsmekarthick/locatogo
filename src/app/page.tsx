@@ -7,7 +7,34 @@ import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 export const metadata: Metadata = {
   title: "LocaToGo | Global Tech Atlas & Startup Map",
-  description: "Interactive directory and live map of 19,000+ verified IT companies, startups, AI ventures, and MNC GCCs across India's top metro hubs with real-time job openings.",
+  description:
+    "Interactive directory and live map of 19,000+ verified IT companies, startups, AI ventures, and MNC GCCs across India's top metro hubs with real-time job openings.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "LocaToGo | Global Tech Atlas & Startup Map",
+    description:
+      "Explore 19,000+ verified tech companies, MNC GCCs, AI labs, and live job openings across Bengaluru, Hyderabad, Delhi NCR, Mumbai, and global hubs.",
+    url: "https://locatogo.com",
+    siteName: "LocaToGo",
+    images: [
+      {
+        url: "/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies",
+        width: 1200,
+        height: 630,
+        alt: "LocaToGo Tech Atlas",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LocaToGo | Global Tech Atlas & Startup Map",
+    description:
+      "Interactive directory of 19,000+ verified tech companies and live openings across Bengaluru, Hyderabad, Delhi NCR, and global hubs.",
+    images: ["/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies"],
+  },
 };
 
 const KNOWN_HUB_COUNTS: Record<string, number> = {
@@ -251,12 +278,94 @@ export default async function Home({ searchParams }: Props) {
   });
 
   return (
-    <GlobalTechExplorer
-      initialCompanies={initialCompanies}
-      initialJobs={initialJobs}
-      totalDatabaseCompanies={totalTechCount || 19095}
-      currentHub={params.hub || "bengaluru"}
-      knownHubCounts={KNOWN_HUB_COUNTS}
-    />
+    <>
+      {/* 1. Fast Interactive Client Atlas Application */}
+      <GlobalTechExplorer
+        initialCompanies={initialCompanies}
+        initialJobs={initialJobs}
+        totalDatabaseCompanies={totalTechCount || 19095}
+        knownHubCounts={KNOWN_HUB_COUNTS}
+      />
+
+      {/* 2. Semantic Crawlable SSR Architecture for Search Engines & Robots */}
+      <section className="sr-only" aria-label="Global Tech Atlas Directory Index">
+        <h1>LocaToGo — Global Tech Atlas &amp; Startup Directory</h1>
+        <p>
+          Interactive directory and live ecosystem map of over 19,000+ verified technology companies,
+          MNC Global Capability Centers (GCCs), artificial intelligence labs, SaaS enterprises, and funded startups
+          with real-time verified hiring positions.
+        </p>
+
+        {/* Index of Top Metro Tech Hubs */}
+        <h2>Explore Top Metro Tech Hubs</h2>
+        <nav aria-label="Metro Tech Hubs">
+          <ul>
+            <li><a href="/bengaluru">Bengaluru Tech Companies &amp; Startup Directory</a></li>
+            <li><a href="/hyderabad">Hyderabad Tech Companies &amp; HITEC City GCCs</a></li>
+            <li><a href="/delhi-ncr">Delhi NCR, Gurugram &amp; Noida Tech Companies</a></li>
+            <li><a href="/mumbai">Mumbai &amp; BKC Tech Companies &amp; FinTech Hubs</a></li>
+            <li><a href="/pune">Pune Tech Companies &amp; Hinjewadi IT Park</a></li>
+            <li><a href="/chennai">Chennai Tech Companies &amp; OMR IT Corridor</a></li>
+            <li><a href="/kolkata">Kolkata Tech Companies &amp; Salt Lake Sector V</a></li>
+            <li><a href="/kochi">Kochi Tech Companies &amp; Infopark Startups</a></li>
+            <li><a href="/silicon-valley">Silicon Valley &amp; San Francisco Tech Companies</a></li>
+            <li><a href="/london">London Tech Companies &amp; FinTech Ventures</a></li>
+          </ul>
+        </nav>
+
+        {/* Index of Top Verified Tech Companies with links to /company/[slug] */}
+        <h2>Featured Tech Companies &amp; Open Positions</h2>
+        <ul>
+          {initialCompanies.slice(0, 40).map((c) => (
+            <li key={c.id}>
+              <article>
+                <h3><a href={`/company/${c.slug}`}>{c.title}</a></h3>
+                <p>{c.short_description}</p>
+                <p>Location: {c.locality ? `${c.locality}, ` : ""}{c.city || "Bengaluru"}</p>
+                <p>Type: {(c.company_type || "Tech").replace(/_/g, " ")} | Stage: {c.funding_stage || "Established"}</p>
+                {(c.active_jobs_count ?? 0) > 0 && <p>Openings: {c.active_jobs_count} verified jobs</p>}
+              </article>
+            </li>
+          ))}
+        </ul>
+
+        {/* Structured Data JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": "https://locatogo.com/#website",
+                  "url": "https://locatogo.com",
+                  "name": "LocaToGo",
+                  "description": "Global Tech Atlas & Startup Directory",
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://locatogo.com/?q={search_term_string}",
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+                {
+                  "@type": "ItemList",
+                  "itemListElement": initialCompanies.slice(0, 30).map((c, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "item": {
+                      "@type": "Organization",
+                      "name": c.title,
+                      "url": `https://locatogo.com/company/${c.slug}`,
+                      "description": c.short_description,
+                    },
+                  })),
+                },
+              ],
+            }),
+          }}
+        />
+      </section>
+    </>
   );
 }

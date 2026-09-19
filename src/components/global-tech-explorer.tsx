@@ -25,76 +25,23 @@ const InteractiveLeafletCanvas = dynamic(
   }
 );
 
-export type TechHub = {
-  id: string;
-  name: string;
-  country: string;
-  flag: string;
-  lat: number;
-  lng: number;
-  zoom: number;
-};
+export {
+  type TechHub,
+  type UnifiedJob,
+  GLOBAL_TECH_HUBS,
+  TECH_SECTORS,
+  TECH_STAGES,
+  matchesHub,
+} from "@/lib/constants/tech-hubs";
 
-export type UnifiedJob = {
-  id: string;
-  title: string;
-  department?: string | null;
-  location_name: string;
-  workplace_type: "on_site" | "hybrid" | "remote";
-  experience_level?: string | null;
-  salary_range?: string | null;
-  apply_url: string;
-  company_careers_url?: string | null;
-  posted_at?: string | null;
-  listing_id?: string;
-  company_title?: string;
-  company_slug?: string;
-  company_type?: string | null;
-  funding_stage?: string | null;
-  locality?: string | null;
-  city?: string | null;
-};
-
-export const GLOBAL_TECH_HUBS: TechHub[] = [
-  { id: "bengaluru", name: "Bengaluru", country: "India", flag: "🇮🇳", lat: 12.9716, lng: 77.5946, zoom: 12 },
-  { id: "hyderabad", name: "Hyderabad", country: "India", flag: "🇮🇳", lat: 17.4399, lng: 78.375, zoom: 12 },
-  { id: "delhi-ncr", name: "Delhi NCR", country: "India", flag: "🇮🇳", lat: 28.4988, lng: 77.0898, zoom: 12 },
-  { id: "mumbai", name: "Mumbai", country: "India", flag: "🇮🇳", lat: 19.0689, lng: 72.8695, zoom: 12 },
-  { id: "chennai", name: "Chennai", country: "India", flag: "🇮🇳", lat: 12.9658, lng: 80.2458, zoom: 12 },
-  { id: "pune", name: "Pune", country: "India", flag: "🇮🇳", lat: 18.5912, lng: 73.7389, zoom: 12 },
-  { id: "kolkata", name: "Kolkata", country: "India", flag: "🇮🇳", lat: 22.5726, lng: 88.4339, zoom: 12 },
-  { id: "kochi", name: "Kochi", country: "India", flag: "🇮🇳", lat: 10.0159, lng: 76.3639, zoom: 13 },
-  { id: "silicon-valley", name: "Silicon Valley & SF", country: "United States", flag: "🇺🇸", lat: 37.7749, lng: -122.4194, zoom: 11 },
-  { id: "london", name: "London", country: "United Kingdom", flag: "🇬🇧", lat: 51.5074, lng: -0.1278, zoom: 12 },
-  { id: "singapore", name: "Singapore", country: "Singapore", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
-  { id: "new-york", name: "New York City", country: "United States", flag: "🇺🇸", lat: 40.7128, lng: -74.006, zoom: 12 },
-  { id: "berlin", name: "Berlin", country: "Germany", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
-  { id: "dubai", name: "Dubai", country: "United Arab Emirates", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
-];
-
-export const TECH_SECTORS = [
-  { id: "all", name: "All Sectors", icon: "🌐" },
-  { id: "ai_ml", name: "AI & Machine Learning", icon: "🤖" },
-  { id: "product_saas", name: "Product & SaaS", icon: "☁️" },
-  { id: "tech_giant_mnc", name: "Tech Giants & GCC", icon: "🏛️" },
-  { id: "fintech", name: "FinTech & Payments", icon: "💳" },
-  { id: "deeptech", name: "DeepTech & Hardware", icon: "⚡" },
-  { id: "enterprise", name: "Enterprise Software", icon: "🏢" },
-  { id: "healthtech", name: "HealthTech & Bio", icon: "🧬" },
-  { id: "ecommerce", name: "E-Commerce & Retail", icon: "🛍️" },
-];
-
-export const TECH_STAGES = [
-  "all",
-  "GCC",
-  "Unicorn",
-  "Public",
-  "Series C+",
-  "Series B",
-  "Series A",
-  "Seed",
-  "Bootstrapped",
-];
+import {
+  type TechHub,
+  type UnifiedJob,
+  GLOBAL_TECH_HUBS,
+  TECH_SECTORS,
+  TECH_STAGES,
+  matchesHub,
+} from "@/lib/constants/tech-hubs";
 
 function formatTimeAgo(dateStr?: string | null): string {
   if (!dateStr) return "Recently";
@@ -107,189 +54,6 @@ function formatTimeAgo(dateStr?: string | null): string {
   return `${months}mo ago`;
 }
 
-export function matchesHub(
-  c: { city?: string | null; locality?: string | null; address_line_1?: string | null },
-  hub: TechHub
-): boolean {
-  const city = (c.city || "").toLowerCase().trim();
-  const loc = (c.locality || "").toLowerCase().trim();
-  const addr = (c.address_line_1 || "").toLowerCase().trim();
-
-  if (hub.id === "bengaluru") {
-    if (city.includes("bangalore") || city.includes("bengaluru") || loc.includes("bangalore") || loc.includes("bengaluru")) {
-      return true;
-    }
-    // Exclude other distinct Indian and global hubs
-    if (
-      city.includes("hyderabad") ||
-      city.includes("delhi") ||
-      city.includes("gurugram") ||
-      city.includes("gurgaon") ||
-      city.includes("noida") ||
-      city.includes("mumbai") ||
-      city.includes("chennai") ||
-      city.includes("pune") ||
-      city.includes("kolkata") ||
-      city.includes("kochi") ||
-      loc.includes("hyderabad") ||
-      loc.includes("delhi") ||
-      loc.includes("gurugram") ||
-      loc.includes("gurgaon") ||
-      loc.includes("noida") ||
-      loc.includes("mumbai") ||
-      loc.includes("bkc") ||
-      loc.includes("powai") ||
-      loc.includes("chennai") ||
-      loc.includes("omr") ||
-      loc.includes("sholinganallur") ||
-      loc.includes("pune") ||
-      loc.includes("hinjewadi") ||
-      loc.includes("kharadi") ||
-      loc.includes("kolkata") ||
-      loc.includes("salt lake") ||
-      loc.includes("kochi") ||
-      loc.includes("infopark") ||
-      addr.includes("hyderabad") ||
-      addr.includes("delhi") ||
-      addr.includes("mumbai") ||
-      addr.includes("chennai") ||
-      addr.includes("pune") ||
-      addr.includes("kolkata") ||
-      addr.includes("kochi")
-    ) {
-      return false;
-    }
-    return !city; // default unassigned is bengaluru
-  }
-
-  if (hub.id === "hyderabad") {
-    return (
-      city.includes("hyderabad") ||
-      loc.includes("hyderabad") ||
-      loc.includes("hitec") ||
-      loc.includes("gachibowli") ||
-      loc.includes("madhapur") ||
-      loc.includes("financial district") ||
-      loc.includes("kondapur") ||
-      addr.includes("hyderabad")
-    );
-  }
-
-  if (hub.id === "delhi-ncr" || hub.id === "delhi") {
-    return (
-      city.includes("delhi") ||
-      city.includes("gurugram") ||
-      city.includes("gurgaon") ||
-      city.includes("noida") ||
-      loc.includes("delhi") ||
-      loc.includes("gurugram") ||
-      loc.includes("gurgaon") ||
-      loc.includes("noida") ||
-      loc.includes("cyber city") ||
-      loc.includes("cyberhub") ||
-      loc.includes("udyog vihar") ||
-      addr.includes("delhi") ||
-      addr.includes("gurugram") ||
-      addr.includes("noida")
-    );
-  }
-
-  if (hub.id === "mumbai") {
-    return (
-      city.includes("mumbai") ||
-      city.includes("navi mumbai") ||
-      city.includes("thane") ||
-      loc.includes("mumbai") ||
-      loc.includes("bkc") ||
-      loc.includes("bandra") ||
-      loc.includes("powai") ||
-      loc.includes("lower parel") ||
-      loc.includes("andheri") ||
-      loc.includes("vikhroli") ||
-      loc.includes("goregaon") ||
-      loc.includes("ghansoli") ||
-      addr.includes("mumbai")
-    );
-  }
-
-  if (hub.id === "chennai") {
-    return (
-      city.includes("chennai") ||
-      city.includes("madras") ||
-      loc.includes("chennai") ||
-      loc.includes("omr") ||
-      loc.includes("sholinganallur") ||
-      loc.includes("taramani") ||
-      loc.includes("siruseri") ||
-      loc.includes("guindy") ||
-      loc.includes("perungudi") ||
-      loc.includes("guduvanchery") ||
-      loc.includes("tidel") ||
-      addr.includes("chennai")
-    );
-  }
-
-  if (hub.id === "pune") {
-    return (
-      city.includes("pune") ||
-      loc.includes("pune") ||
-      loc.includes("hinjewadi") ||
-      loc.includes("kharadi") ||
-      loc.includes("magarpatta") ||
-      loc.includes("baner") ||
-      loc.includes("balewadi") ||
-      loc.includes("kalyani nagar") ||
-      loc.includes("yerwada") ||
-      addr.includes("pune")
-    );
-  }
-
-  if (hub.id === "kolkata") {
-    return (
-      city.includes("kolkata") ||
-      city.includes("calcutta") ||
-      loc.includes("kolkata") ||
-      loc.includes("salt lake") ||
-      loc.includes("rajarhat") ||
-      loc.includes("new town") ||
-      loc.includes("sector v") ||
-      addr.includes("kolkata")
-    );
-  }
-
-  if (hub.id === "kochi") {
-    return (
-      city.includes("kochi") ||
-      city.includes("cochin") ||
-      loc.includes("kochi") ||
-      loc.includes("infopark") ||
-      loc.includes("kakkanad") ||
-      loc.includes("smartcity") ||
-      addr.includes("kochi")
-    );
-  }
-
-  if (hub.id === "silicon-valley") {
-    return (
-      city.includes("san francisco") ||
-      city.includes("mountain view") ||
-      city.includes("palo alto") ||
-      city.includes("sunnyvale") ||
-      city.includes("san jose") ||
-      city.includes("menlo park") ||
-      loc.includes("silicon valley") ||
-      loc.includes("bay area")
-    );
-  }
-
-  if (hub.id === "london") return city.includes("london") || loc.includes("london");
-  if (hub.id === "singapore") return city.includes("singapore") || loc.includes("singapore");
-  if (hub.id === "new-york") return city.includes("new york") || city.includes("nyc") || loc.includes("manhattan");
-  if (hub.id === "berlin") return city.includes("berlin") || loc.includes("berlin");
-  if (hub.id === "dubai") return city.includes("dubai") || loc.includes("dubai");
-
-  return city.includes(hub.name.toLowerCase()) || loc.includes(hub.name.toLowerCase());
-}
 
 export function GlobalTechExplorer({
   initialCompanies,
@@ -1176,13 +940,24 @@ export function GlobalTechExplorer({
                             </div>
                           </div>
 
-                          {/* Hiring badge */}
-                          {jobCount > 0 && (
-                            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                              {jobCount} {jobCount === 1 ? "job" : "jobs"}
-                            </span>
-                          )}
+                          {/* Hiring badge & Company Page Link */}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {jobCount > 0 && (
+                              <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                {jobCount} {jobCount === 1 ? "job" : "jobs"}
+                              </span>
+                            )}
+                            <Link
+                              href={`/company/${comp.slug}`}
+                              target="_blank"
+                              onClick={(e) => e.stopPropagation()}
+                              className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-all text-xs font-bold"
+                              title={`Open ${comp.title} page in new tab`}
+                            >
+                              ↗
+                            </Link>
+                          </div>
                         </div>
 
                         {/* Badges & Tech Stack */}
@@ -1393,9 +1168,22 @@ export function GlobalTechExplorer({
                         <span className="text-slate-400 text-[11px]">No active roles</span>
                       )}
 
-                      <span className="text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">
-                        Details →
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <Link
+                          href={`/company/${comp.slug}`}
+                          target="_blank"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 text-xs font-semibold flex items-center gap-0.5 cursor-pointer"
+                          title={`Open ${comp.title} profile page`}
+                        >
+                          <span>Profile</span>
+                          <span className="text-[10px]">↗</span>
+                        </Link>
+                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                        <span className="text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform cursor-pointer">
+                          Details →
+                        </span>
+                      </div>
                     </div>
                   </article>
                 );
@@ -1608,13 +1396,24 @@ export function GlobalTechExplorer({
                         {/* Action Buttons */}
                         <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                           {company ? (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedCompany(company)}
-                              className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 cursor-pointer"
-                            >
-                              🏢 Details →
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedCompany(company)}
+                                className="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 cursor-pointer"
+                              >
+                                🏢 Details →
+                              </button>
+                              <Link
+                                href={`/company/${company.slug}`}
+                                target="_blank"
+                                className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                                title={`Open ${company.title} Profile`}
+                              >
+                                <span>Profile</span>
+                                <span className="text-[10px]">↗</span>
+                              </Link>
+                            </div>
                           ) : <div />}
 
                           <div className="flex items-center gap-2">

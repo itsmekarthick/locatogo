@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect, RedirectType } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PlaceMiniMap } from "@/components/place-mini-map";
 import { PlaceWeatherBadge } from "@/components/place-weather-badge";
@@ -86,6 +86,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!result) return { title: "Listing not found" };
 
   const { listing } = result;
+  if (listing.company_type) {
+    redirect(`/company/${listing.slug}`, RedirectType.replace);
+  }
+
   const categoryName = (listing.categories as any)?.name ?? "Place";
   const ogImageUrl = `/api/og?title=${encodeURIComponent(listing.title)}&category=${encodeURIComponent(categoryName)}&locality=${encodeURIComponent(listing.locality || listing.city || "Verified Place")}`;
 
@@ -120,6 +124,11 @@ export default async function ListingDetailPage({ params }: Props) {
   if (!result) notFound();
 
   const { listing, hours, media, reviews, placeDetails, weather } = result;
+
+  // Seamlessly redirect tech companies to dedicated /company/[slug]
+  if (listing.company_type) {
+    redirect(`/company/${listing.slug}`, RedirectType.replace);
+  }
 
   // Generate Authentic Editorial Overview and Highlights
   const categoryName = (listing.categories as any)?.name ?? "Place";

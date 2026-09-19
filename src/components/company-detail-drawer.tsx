@@ -180,27 +180,48 @@ export function CompanyDetailDrawer({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/company/${company.slug}`}
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all shadow-2xs group cursor-pointer"
+              title={`Open full dedicated profile for ${company.title} in a new tab`}
+            >
+              <span>Full Page</span>
+              <span className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform text-[11px]">↗</span>
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Close drawer"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Action / Links Strip */}
         <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-semibold bg-white dark:bg-slate-900">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 flex-wrap">
+            <Link
+              href={`/company/${company.slug}`}
+              target="_blank"
+              className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+              title={`Open ${company.title} page`}
+            >
+              <span>🏢 Company Profile</span>
+              <span className="text-[10px]">↗</span>
+            </Link>
             {company.website && (
               <a
                 href={company.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-center gap-1"
               >
                 <span>Website</span>
-                <span>↗</span>
+                <span className="text-[10px]">↗</span>
               </a>
             )}
             {company.careers_url && (
@@ -211,11 +232,10 @@ export function CompanyDetailDrawer({
                 className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
               >
                 <span>Careers Portal</span>
-                <span>↗</span>
+                <span className="text-[10px]">↗</span>
               </a>
             )}
           </div>
-
         </div>
 
         {/* Tab Navigation */}
