@@ -13,23 +13,40 @@ export function AuthForm({ action, signup = false }: { action: AuthAction; signu
   return (
     <form action={formAction} className="space-y-4">
       {signup && (
-        <div>
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-            Full Name <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <input
-              name="displayName"
-              required
-              autoComplete="name"
-              placeholder="e.g. Jordan Miller"
-              className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
-            />
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">
-              👤
-            </span>
+        <>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              I am a... <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3 mb-2 text-sm">
+              <label className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <input type="radio" name="role" value="user" defaultChecked className="accent-indigo-600" />
+                <span className="font-semibold text-slate-900 dark:text-slate-100">Business / Admin</span>
+              </label>
+              <label className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <input type="radio" name="role" value="tech_user" className="accent-indigo-600" />
+                <span className="font-semibold text-slate-900 dark:text-slate-100">Tech Professional</span>
+              </label>
+            </div>
           </div>
-        </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              Full Name <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                name="displayName"
+                required
+                autoComplete="name"
+                placeholder="e.g. Jordan Miller"
+                className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
+              />
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">
+                👤
+              </span>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Email Address */}

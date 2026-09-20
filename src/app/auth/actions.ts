@@ -9,6 +9,7 @@ import type { ActionResult } from "@/lib/validation/directory";
 const credentialsSchema = z.object({ email: z.string().trim().email(), password: z.string().min(8) });
 const signupSchema = credentialsSchema.extend({
   displayName: z.string().trim().min(2, "Name must be at least 2 characters.").max(120),
+  role: z.enum(["user", "tech_user"]).default("user"),
 });
 const resetEmailSchema = z.object({ email: z.string().trim().email() });
 const updatePasswordSchema = z.object({
@@ -27,8 +28,17 @@ export async function login(_state: ActionResult | undefined, formData: FormData
   const parsed = credentialsSchema.safeParse({ email: value(formData, "email"), password: value(formData, "password") });
   if (!parsed.success) return { error: "Enter a valid email and a password of at least 8 characters." };
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data: authData, error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) return { error: "Unable to sign in with those credentials." };
+  
+  if (authData.user) {
+    const { data: profile } = await supabase.from("profiles").select("platform_role").eq("id", authData.user.id).single();
+    if (profile?.platform_role === "tech_user") {
+      revalidatePath("/tech", "layout");
+      redirect("/tech");
+    }
+  }
+
   revalidatePath("/admin", "layout");
   redirect("/admin");
 }
@@ -38,6 +48,7 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
     displayName: value(formData, "displayName"),
     email: value(formData, "email"),
     password: value(formData, "password"),
+    role: value(formData, "role") || "user",
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message || "Please check your name, email, and password." };
@@ -51,6 +62,7 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
   const randomSuffix = Math.random().toString(36).substring(2, 7);
   const tenantSlug = `${baseSlug}-${randomSuffix}`;
   const tenantName = `${displayName}'s Workspace`;
+  const isTechUser = parsed.data.role === "tech_user";
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
@@ -59,13 +71,19 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
     options: {
       data: {
         display_name: displayName,
-        tenant_name: tenantName,
-        tenant_slug: tenantSlug,
+        tenant_name: isTechUser ? null : tenantName,
+        tenant_slug: isTechUser ? null : tenantSlug,
+        platform_role: isTechUser ? 'tech_user' : 'user',
       },
     },
   });
   if (error || !data.user) return { error: error?.message || "Unable to create the account." };
   if (!data.session) return { success: "Account created! Confirm your email, then sign in to get started." };
+  
+  if (isTechUser) {
+    redirect("/tech");
+  }
+  
   redirect("/admin");
 }
 
