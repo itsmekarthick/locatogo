@@ -1010,6 +1010,7 @@ export async function bulkInsertOnlinePlaces(
       title: cleanTitle,
       slug: uniqueSlug,
       short_description: place.shortDescription || `Verified landmark in ${place.locality || "Bengaluru"}.`,
+      description: place.shortDescription || `Verified landmark in ${place.locality || "Bengaluru"}.`,
       address_line_1: place.addressLine1,
       locality: place.locality || "Bengaluru",
       city: place.city || "Bengaluru",

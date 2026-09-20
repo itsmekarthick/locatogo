@@ -115,6 +115,47 @@ async function findCareersUrl(website: string, companyName: string): Promise<str
   return undefined;
 }
 
+/**
+ * FREE: Scrape the company's website HTML and extract the <meta name="description"> or og:description.
+ */
+async function fetchMetaDescription(website: string): Promise<string | undefined> {
+  if (!website) return undefined;
+  
+  try {
+    const res = await fetch(website, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+      },
+      signal: AbortSignal.timeout(5000),
+      redirect: "follow"
+    });
+    
+    if (!res.ok) return undefined;
+    
+    const html = await res.text();
+    
+    // Extract description from meta tags
+    const descMatch = html.match(/<meta[^>]+name="description"[^>]+content="([^">]+)"/i) || 
+                      html.match(/<meta[^>]+content="([^">]+)"[^>]+name="description"/i) ||
+                      html.match(/<meta[^>]+property="og:description"[^>]+content="([^">]+)"/i) ||
+                      html.match(/<meta[^>]+content="([^">]+)"[^>]+property="og:description"/i);
+                      
+    if (descMatch && descMatch[1]) {
+      // Decode simple HTML entities and trim
+      return descMatch[1]
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+    }
+  } catch (_) {}
+  return undefined;
+}
+
 // Tag mapping for category queries (strictly avoiding collision between tech parks and leisure parks)
 const CATEGORY_TAG_MAP: Record<string, { param: string; value: string }[]> = {
   hospital: [{ param: "amenity", value: "hospital" }, { param: "amenity", value: "clinic" }],
@@ -519,6 +560,14 @@ export async function GET(request: NextRequest) {
         let careersUrl: string | undefined;
         if (isActuallyTech && website) {
           careersUrl = await findCareersUrl(website, rawTitle);
+          
+          // Also fetch real meta description from website if we didn't get one from Wikidata
+          if (!description || description.length < 50) {
+            const metaDesc = await fetchMetaDescription(website);
+            if (metaDesc) {
+              description = metaDesc;
+            }
+          }
         }
 
         enriched[i] = {
