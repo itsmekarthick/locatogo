@@ -13,6 +13,7 @@ export function UserProfileMenu({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string>("user");
   const [isLoaded, setIsLoaded] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -22,14 +23,29 @@ export function UserProfileMenu({
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
 
+    const fetchRole = async (userId: string) => {
+      const { data } = await supabase.from("profiles").select("platform_role").eq("id", userId).single();
+      if (data) {
+        setRole(data.platform_role);
+      }
+    };
+
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
-      setIsLoaded(true);
+      if (data.user) {
+        fetchRole(data.user.id).finally(() => setIsLoaded(true));
+      } else {
+        setIsLoaded(true);
+      }
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setIsLoaded(true);
+      if (session?.user) {
+        fetchRole(session.user.id).finally(() => setIsLoaded(true));
+      } else {
+        setIsLoaded(true);
+      }
     });
 
     return () => {
@@ -114,6 +130,7 @@ export function UserProfileMenu({
 
   const initials = displayName.slice(0, 2).toUpperCase();
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+  const isTechUser = role === "tech_user";
 
   return (
     <div ref={menuRef} className={`relative inline-block text-left ${className}`}>
@@ -187,54 +204,77 @@ export function UserProfileMenu({
 
           {/* Navigation Items */}
           <div className="space-y-0.5 py-1">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-            >
-              <span className="text-sm">📊</span>
-              <div className="flex-1">
-                <p className="font-bold leading-tight">Dashboard</p>
-                <p className="text-[10px] text-slate-400 font-normal">My submissions, saves & stats</p>
-              </div>
-            </Link>
-
-            <Link
-              href="/admin"
-              className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-            >
-              <span className="text-sm">⚡</span>
-              <div className="flex-1">
-                <p className="font-bold leading-tight">Admin Console</p>
-                <p className="text-[10px] text-slate-400 font-normal">Directory management & KPIs</p>
-              </div>
-              <span className="rounded bg-[#e26a4f]/15 px-1.5 py-0.2 text-[9px] font-extrabold text-[#e26a4f] uppercase">
-                Hub
-              </span>
-            </Link>
-
-            <Link
-              href="/admin/listings"
-              className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-            >
-              <span className="text-sm">📍</span>
-              <span className="flex-1 font-medium">All Listings</span>
-            </Link>
-
-            <Link
-              href="/submit"
-              className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-            >
-              <span className="text-sm">➕</span>
-              <span className="flex-1 font-medium">Add New Place</span>
-            </Link>
-
-            <Link
-              href="/admin/settings"
-              className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-            >
-              <span className="text-sm">⚙️</span>
-              <span className="flex-1 font-medium">Account Settings</span>
-            </Link>
+            {isTechUser ? (
+              <>
+                <Link
+                  href="/tech"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <span className="text-sm">👨‍💻</span>
+                  <div className="flex-1">
+                    <p className="font-bold leading-tight">Tech Dashboard</p>
+                    <p className="text-[10px] text-slate-400 font-normal">Manage your profile & skills</p>
+                  </div>
+                </Link>
+                <Link
+                  href="/tech/jobs"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <span className="text-sm">💼</span>
+                  <div className="flex-1">
+                    <p className="font-bold leading-tight">Jobs & Applications</p>
+                    <p className="text-[10px] text-slate-400 font-normal">Track your opportunities</p>
+                  </div>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <span className="text-sm">📊</span>
+                  <div className="flex-1">
+                    <p className="font-bold leading-tight">Dashboard</p>
+                    <p className="text-[10px] text-slate-400 font-normal">My submissions, saves & stats</p>
+                  </div>
+                </Link>
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <span className="text-sm">⚡</span>
+                  <div className="flex-1">
+                    <p className="font-bold leading-tight">Admin Console</p>
+                    <p className="text-[10px] text-slate-400 font-normal">Directory management & KPIs</p>
+                  </div>
+                  <span className="rounded bg-[#e26a4f]/15 px-1.5 py-0.2 text-[9px] font-extrabold text-[#e26a4f] uppercase">
+                    Hub
+                  </span>
+                </Link>
+                <Link
+                  href="/admin/listings"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <span className="text-sm">📍</span>
+                  <span className="flex-1 font-medium">All Listings</span>
+                </Link>
+                <Link
+                  href="/submit"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <span className="text-sm">➕</span>
+                  <span className="flex-1 font-medium">Add New Place</span>
+                </Link>
+                <Link
+                  href="/admin/settings"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                >
+                  <span className="text-sm">⚙️</span>
+                  <span className="flex-1 font-medium">Account Settings</span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Footer Shortcuts & Sign Out */}
