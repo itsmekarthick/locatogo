@@ -45,9 +45,9 @@ export function BrandLogo({
           fill={`url(#brand-grad-${id})`}
         />
         
-        {/* 2. The Forward/Play Arrow (ToGo) */}
-        <polygon
-          points="44,30 44,54 62,42"
+        {/* 2. The Business/Tech Skyline Inside */}
+        <path
+          d="M 38 54 L 38 38 L 45 38 L 45 28 L 55 28 L 55 38 L 62 38 L 62 54 Z"
           fill={`url(#brand-grad-${id})`}
         />
       </svg>

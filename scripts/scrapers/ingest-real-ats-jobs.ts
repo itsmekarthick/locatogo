@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import * as fs from "fs";
-import { detectBoard, fetchJobs } from "../../src/lib/jobs/providers";
+import { detectBoard, fetchJobs, fetchCareerPageJobs } from "../../src/lib/jobs/providers";
 
 const env: Record<string, string> = {};
 fs.readFileSync(".env", "utf8")
@@ -23,11 +23,11 @@ async function main() {
 
   const { data: companies } = await supabase
     .from("listings")
-    .select("id, tenant_id, title, city, careers_url, active_jobs_count")
-    .not("careers_url", "is", null);
+    .select("id, tenant_id, title, city, careers_url, website, active_jobs_count, description, short_description")
+    .or("careers_url.not.is.null,website.not.is.null");
 
   if (!companies || companies.length === 0) {
-    console.log("No companies with careers_url found.");
+    console.log("No companies with careers_url or website found.");
     return;
   }
 
@@ -35,16 +35,44 @@ async function main() {
   let companiesProcessed = 0;
 
   for (const company of companies) {
-    if (!company.careers_url) continue;
-    const board = detectBoard(company.careers_url);
-    if (!board) continue;
+    if (!company.careers_url && !company.website) continue;
+    let jobs = [];
+    let board = company.careers_url ? detectBoard(company.careers_url) : null;
+    let providerName = board ? board.provider.toUpperCase() : "CRAWL";
 
-    console.log(`\n⏳ Fetching live jobs for [${board.provider.toUpperCase()}] ${company.title} (${company.city})...`);
+    console.log(`\n⏳ Fetching jobs for [${providerName}] ${company.title} (${company.city})...`);
+
+    if (!company.description && company.website) {
+      try {
+        const res = await fetch(company.website, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (res.ok) {
+          const html = await res.text();
+          const match = html.match(/<meta[^>]+(?:name|property)=["'](?:description|og:description)["'][^>]+content=["']([^"']+)["']/i) 
+                     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:name|property)=["'](?:description|og:description)["']/i);
+          if (match && match[1]) {
+            const desc = match[1].trim();
+            console.log(`   📝 Found description: ${desc.substring(0, 80)}...`);
+            await supabase.from("listings").update({
+              description: desc,
+              short_description: company.short_description || desc.substring(0, 150)
+            }).eq("id", company.id);
+          }
+        }
+      } catch (e) {
+        // ignore fetch errors
+      }
+    }
 
     try {
-      const jobs = await fetchJobs(board);
+      if (board) {
+        jobs = await fetchJobs(board);
+      } else {
+        const urlToCrawl = company.careers_url || company.website;
+        jobs = await fetchCareerPageJobs(urlToCrawl);
+      }
+
       if (!jobs || jobs.length === 0) {
-        console.log(`   ℹ️ 0 jobs returned from ${company.careers_url}`);
+        console.log(`   ℹ️ 0 jobs returned for ${company.title}`);
         continue;
       }
 
@@ -57,7 +85,7 @@ async function main() {
       const maxJobs = company.title.toLowerCase().includes("servicenow") ? 650 : 150;
       const jobsToInsert = jobs.slice(0, maxJobs).map((j) => {
         let cleanApplyUrl = j.applyUrl;
-        if (board.provider === "smartrecruiters" && j.providerJobId) {
+        if (board && board.provider === "smartrecruiters" && j.providerJobId) {
           cleanApplyUrl = `https://careers.smartrecruiters.com/${board.token}/${j.providerJobId}`;
         }
 
@@ -70,7 +98,7 @@ async function main() {
           workplace_type: j.workplaceType || "hybrid",
           experience_level: "mid",
           apply_url: cleanApplyUrl,
-          ats_job_id: `${board.provider}:${j.providerJobId}`,
+          ats_job_id: board ? `${board.provider}:${j.providerJobId}` : `crawl:${j.providerJobId}`,
           posted_at: j.postedAt || new Date().toISOString(),
           is_active: true,
         };

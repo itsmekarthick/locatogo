@@ -1,52 +1,24 @@
-<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Warm Radiant Blue Gradient Background -->
-    <linearGradient id="warmBlueBg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="45%" stop-color="#2563eb" />
-      <stop offset="100%" stop-color="#1d4ed8" />
+    <mask id="pin-hole">
+      <rect width="100" height="100" fill="white" />
+      <circle cx="50" cy="42" r="20" fill="black" />
+    </mask>
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee" />
+      <stop offset="50%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#0284c7" />
     </linearGradient>
-
-    <!-- Warm Golden Sunbeam Gradient -->
-    <linearGradient id="warmGold" x1="50" y1="36" x2="78" y2="76" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#fef08a" />
-      <stop offset="40%" stop-color="#f59e0b" />
-      <stop offset="100%" stop-color="#ea580c" />
-    </linearGradient>
-
-    <!-- White Porcelain Pin Gradient -->
-    <linearGradient id="porcelainPin" x1="32" y1="24" x2="96" y2="104" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="100%" stop-color="#f0f9ff" />
-    </linearGradient>
-
-    <filter id="softShadow" x="14" y="16" width="100" height="102" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.25" />
-    </filter>
   </defs>
-
-  <!-- 1. Warm Radiant Sapphire Squircle Base -->
-  <rect width="128" height="128" rx="32" fill="url(#warmBlueBg)" />
-  <rect x="1.5" y="1.5" width="125" height="125" rx="30.5" stroke="white" stroke-opacity="0.35" stroke-width="2.5" />
-
-  <!-- 2. Warm Ambient Sunlit Glow -->
-  <circle cx="64" cy="56" r="30" fill="#fef08a" fill-opacity="0.2" />
-
-  <!-- 3. Modern Pin & Warm Navigator Needle -->
-  <g filter="url(#softShadow)">
-    <!-- Outer Precision Pin Loop -->
-    <path
-      d="M64 22C45.2223 22 30 37.2223 30 56C30 76.8 54 99.4 62.4 104.8C63.4 105.4 64.6 105.4 65.6 104.8C74 99.4 98 76.8 98 56C98 37.2223 82.7777 22 64 22ZM64 74C54.0589 74 46 65.9411 46 56C46 46.0589 54.0589 38 64 38C73.9411 38 82 46.0589 82 56C82 65.9411 73.9411 74 64 74Z"
-      fill="url(#porcelainPin)"
-    />
-
-    <!-- Dynamic Warm Amber/Gold Compass Needle (North-East Heading) -->
-    <path
-      d="M64 42L74 64L64 60L54 64L64 42Z"
-      fill="url(#warmGold)"
-    />
-
-    <!-- Radiant Center Pinpoint -->
-    <circle cx="64" cy="58" r="3.5" fill="#1e3a8a" />
-  </g>
+  
+  <path
+    mask="url(#pin-hole)"
+    d="M 50 4 C 22 4 10 26 10 46 C 10 75 50 96 50 96 C 50 96 90 75 90 46 C 90 26 78 4 50 4 Z"
+    fill="url(#brand-grad)"
+  />
+  
+  <path
+    d="M 38 54 L 38 38 L 45 38 L 45 28 L 55 28 L 55 38 L 62 38 L 62 54 Z"
+    fill="url(#brand-grad)"
+  />
 </svg>
