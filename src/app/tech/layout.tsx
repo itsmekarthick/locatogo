@@ -31,13 +31,13 @@ export default function TechLayout({ children }: Readonly<{ children: React.Reac
           >
             Go to Map
           </Link>
-          <Link
+          <a
             href="/auth/sign-out"
             className="h-8 w-8 rounded-full bg-[var(--background)] flex items-center justify-center font-bold text-xs shadow-xs hover:bg-[var(--line)] transition-colors border border-[var(--line)]"
             title="Sign Out"
           >
             👋
-          </Link>
+          </a>
         </div>
       </header>
 
