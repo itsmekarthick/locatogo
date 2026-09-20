@@ -915,6 +915,8 @@ export type OnlinePlaceToInsert = {
   postalCode?: string;
   shortDescription?: string;
   website?: string;
+  careersUrl?: string;
+  phone?: string;
   companyType?: string;
   fundingStage?: string;
   techStack?: string[];
@@ -1021,6 +1023,8 @@ export async function bulkInsertOnlinePlaces(
       is_featured: false,
       published_at: new Date().toISOString(),
       website: place.website || null,
+      careers_url: place.careersUrl || null,
+      phone: place.phone || null,
       company_type: place.companyType || null,
       funding_stage: place.fundingStage || null,
       tech_stack: place.techStack || null,

@@ -192,6 +192,11 @@ export function AdminOnlinePlaceFetcher({
           </span>
         </div>
 
+        {/* Multi-search tip */}
+        <div className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 px-4 py-2.5 text-xs text-amber-800 dark:text-amber-300">
+          <span className="font-bold">💡 Import more companies:</span> Run multiple searches with different keywords — e.g. <span className="font-mono">"IT Companies"</span>, <span className="font-mono">"Tech Parks"</span>, <span className="font-mono">"Startups"</span>, <span className="font-mono">"Software Companies"</span> — each returns up to 500 unique results per search.
+        </div>
+
         {/* Preset Quick Chips */}
         <div className="mt-5 flex flex-wrap gap-2">
           {presets.map((preset) => (
@@ -258,6 +263,9 @@ export function AdminOnlinePlaceFetcher({
               <option value={20}>20 Places</option>
               <option value={50}>50 Places (Recommended)</option>
               <option value={100}>100 Places (City-wide)</option>
+              <option value={200}>200 Places (Bulk)</option>
+              <option value={300}>300 Places (Bulk+)</option>
+              <option value={500}>500 Places (Max)</option>
             </select>
           </div>
 

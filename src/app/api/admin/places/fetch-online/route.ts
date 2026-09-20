@@ -3,11 +3,10 @@ import { requireTenantContext } from "@/lib/auth/tenant-context";
 
 // Cache for geocoded city centers to avoid repeated lookups
 const cityCenterCache = new Map<string, { lat: number; lon: number; countryCode?: string }>();
+// Cache for Wikidata enrichment results
+const wikidataCache = new Map<string, { website?: string; description?: string }>();
 
-function generateMockCompanyDetails(companyName: string) {
-  const cleanName = companyName.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const website = `https://www.${cleanName || "company"}.com`;
-  
+function generateMockCompanyDetails() {
   const companyTypes = ["product_saas", "tech_giant_mnc", "it_services_consulting", "deeptech_hardware", "startup"];
   const stages = ["Series A", "Series B", "Series C+", "Public", "Bootstrapped", "Unicorn"];
   const stacks = [["React", "Node.js", "AWS"], ["Python", "Django", "PostgreSQL"], ["Java", "Spring Boot", "Microservices"], ["Go", "Kubernetes", "GCP"], ["C++", "CUDA", "Hardware"], ["TypeScript", "Next.js", "Vercel"]];
@@ -28,7 +27,7 @@ function generateMockCompanyDetails(companyName: string) {
       dept: "Engineering",
       type: "hybrid",
       salary: "₹30L - ₹50L",
-      apply: `${website}/careers`
+      apply: "#"
     }
   ];
 
@@ -38,11 +37,82 @@ function generateMockCompanyDetails(companyName: string) {
       dept: "Product",
       type: "on_site",
       salary: "₹25L - ₹40L",
-      apply: `${website}/careers`
+      apply: "#"
     });
   }
 
-  return { website, companyType: type, fundingStage: stage, techStack, jobs };
+  return { companyType: type, fundingStage: stage, techStack, jobs };
+}
+
+/**
+ * FREE: Wikidata API lookup — gets official website + description for well-known companies.
+ * No auth required. Works great for large companies like Infosys, TCS, Freshworks, etc.
+ */
+async function enrichFromWikidata(companyName: string): Promise<{ website?: string; description?: string }> {
+  const cacheKey = companyName.toLowerCase().trim();
+  if (wikidataCache.has(cacheKey)) return wikidataCache.get(cacheKey)!;
+
+  try {
+    // Step 1: Search Wikidata for the entity
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(companyName)}&format=json&language=en&type=item&limit=1&origin=*`;
+    const searchRes = await fetch(searchUrl, { headers: { "User-Agent": "LocaToGo/1.0 (admin@locatogo.app)" }, signal: AbortSignal.timeout(5000) });
+    if (!searchRes.ok) return {};
+    const searchData = await searchRes.json();
+    const entity = searchData?.search?.[0];
+    if (!entity?.id) return {};
+
+    // Step 2: Fetch the entity's properties
+    const entityUrl = `https://www.wikidata.org/wiki/Special:EntityData/${entity.id}.json`;
+    const entityRes = await fetch(entityUrl, { headers: { "User-Agent": "LocaToGo/1.0" }, signal: AbortSignal.timeout(5000) });
+    if (!entityRes.ok) return {};
+    const entityData = await entityRes.json();
+    const claims = entityData?.entities?.[entity.id]?.claims;
+
+    // P856 = official website
+    const websiteClaim = claims?.P856?.[0]?.mainsnak?.datavalue?.value;
+    // description from entity labels
+    const description = entity.description || "";
+
+    const result = { website: websiteClaim || undefined, description: description || undefined };
+    wikidataCache.set(cacheKey, result);
+    return result;
+  } catch (_) {
+    return {};
+  }
+}
+
+/**
+ * FREE: Test known ATS patterns to auto-discover a company's careers portal URL.
+ * Tests Greenhouse, Lever, Workday, SmartRecruiters, Ashby patterns.
+ */
+async function findCareersUrl(website: string, companyName: string): Promise<string | undefined> {
+  if (!website) return undefined;
+
+  try {
+    const domain = new URL(website).hostname.replace(/^www\./, "").split(".")[0];
+    const slug = companyName.toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 30);
+
+    const candidates = [
+      `https://boards.greenhouse.io/${domain}`,
+      `https://boards.greenhouse.io/${slug}`,
+      `https://jobs.lever.co/${domain}`,
+      `https://jobs.lever.co/${slug}`,
+      `https://careers.smartrecruiters.com/${domain}`,
+      `https://careers.smartrecruiters.com/${slug}`,
+      `https://jobs.ashbyhq.com/${domain}`,
+      `https://jobs.ashbyhq.com/${slug}`,
+      `${website.replace(/\/$/, "")}/careers`,
+      `${website.replace(/\/$/, "")}/jobs`,
+    ];
+
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(3000), redirect: "follow" });
+        if (res.ok && res.status < 400) return url;
+      } catch (_) {}
+    }
+  } catch (_) {}
+  return undefined;
 }
 
 // Tag mapping for category queries (strictly avoiding collision between tech parks and leisure parks)
@@ -207,6 +277,9 @@ async function fetchOverpassTechOffices(
             postcode: postcode,
             country_code: "in",
           },
+          website: el.tags?.website || el.tags?.["contact:website"] || "",
+          phone: el.tags?.phone || el.tags?.["contact:phone"] || "",
+          osmDescription: el.tags?.description || "",
         };
       })
       .filter(Boolean);
@@ -223,7 +296,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const rawQuery = (searchParams.get("q") || "").trim();
     const domainId = searchParams.get("domainId");
-    const requestedLimit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50", 10), 10), 100);
+    const requestedLimit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50", 10), 10), 500);
 
     if (!rawQuery) {
       return NextResponse.json({ error: "Search query is required" }, { status: 400 });
@@ -402,49 +475,76 @@ export async function GET(request: NextRequest) {
       return bMatches - aMatches;
     });
 
-    const places = sortedItems.map((item: any) => {
-      const addressParts = item.display_name.split(", ");
-      const rawTitle = item.name || addressParts[0];
-      const street = item.address?.road || item.address?.pedestrian || item.address?.street || addressParts[1] || "";
-      const locality =
-        item.address?.suburb ||
-        item.address?.neighbourhood ||
-        item.address?.city_district ||
-        item.address?.residential ||
-        item.address?.quarter ||
-        item.address?.town ||
-        targetCityName;
-      const city = item.address?.city || item.address?.town || item.address?.county || targetCityName;
-      const state = item.address?.state || item.address?.province || "";
-      const countryCode = (item.address?.country_code || center.countryCode || "in").toUpperCase();
-      const postalCode = item.address?.postcode || "";
+    // Enrich each place with Wikidata + ATS careers URL (parallel, capped at 10 concurrent)
+    const ENRICH_CONCURRENCY = 10;
+    const enriched: any[] = new Array(sortedItems.length);
+    let enrichIdx = 0;
 
-      const fullAddress = [street, locality, city, postalCode].filter(Boolean).join(", ");
+    async function enrichWorker() {
+      while (enrichIdx < sortedItems.length) {
+        const i = enrichIdx++;
+        const item = sortedItems[i];
+        const addressParts = item.display_name.split(", ");
+        const rawTitle = item.name || addressParts[0];
+        const street = item.address?.road || item.address?.pedestrian || item.address?.street || addressParts[1] || "";
+        const locality =
+          item.address?.suburb ||
+          item.address?.neighbourhood ||
+          item.address?.city_district ||
+          item.address?.residential ||
+          item.address?.quarter ||
+          item.address?.town ||
+          targetCityName;
+        const city = item.address?.city || item.address?.town || item.address?.county || targetCityName;
+        const state = item.address?.state || item.address?.province || "";
+        const countryCode = (item.address?.country_code || center.countryCode || "in").toUpperCase();
+        const postalCode = item.address?.postcode || "";
+        const fullAddress = [street, locality, city, postalCode].filter(Boolean).join(", ");
+        const slug = rawTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        const rawCategory = item.type || item.category || "company";
+        const isActuallyTech = isTechSearch || ["company", "office", "commercial", "it", "coworking"].includes(rawCategory.toLowerCase());
 
-      const slug = rawTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+        // OSM website first
+        let website: string = item.website || item.extratags?.website || item.extratags?.["contact:website"] || item.osmDescription || "";
 
-      const rawCategory = item.type || item.category || "company";
-      const isActuallyTech = isTechSearch || ["company", "office", "commercial", "it", "coworking"].includes(rawCategory.toLowerCase());
+        // Fallback: Wikidata lookup for well-known companies
+        let description = "";
+        if (isActuallyTech) {
+          const wikidata = await enrichFromWikidata(rawTitle);
+          if (!website && wikidata.website) website = wikidata.website;
+          if (wikidata.description) description = wikidata.description;
+        }
 
-      return {
-        title: rawTitle,
-        slug: `${slug}-${Math.floor(1000 + Math.random() * 9000)}`,
-        latitude: parseFloat(item.lat),
-        longitude: parseFloat(item.lon),
-        addressLine1: street || fullAddress,
-        locality: locality,
-        city: city,
-        administrativeArea: state,
-        countryCode: countryCode,
-        postalCode: postalCode,
-        rawCategory: rawCategory,
-        displayName: item.display_name,
-        ...(isActuallyTech ? generateMockCompanyDetails(rawTitle) : {}),
-      };
-    });
+        // Find careers URL by testing ATS patterns against the website
+        let careersUrl: string | undefined;
+        if (isActuallyTech && website) {
+          careersUrl = await findCareersUrl(website, rawTitle);
+        }
+
+        enriched[i] = {
+          title: rawTitle,
+          slug: `${slug}-${Math.floor(1000 + Math.random() * 9000)}`,
+          latitude: parseFloat(item.lat),
+          longitude: parseFloat(item.lon),
+          addressLine1: street || fullAddress,
+          locality,
+          city,
+          administrativeArea: state,
+          countryCode,
+          postalCode,
+          rawCategory,
+          displayName: item.display_name,
+          website,
+          careersUrl: careersUrl || "",
+          shortDescription: description,
+          phone: item.phone || "",
+          ...(isActuallyTech ? generateMockCompanyDetails() : {}),
+        };
+      }
+    }
+
+    await Promise.all(Array.from({ length: ENRICH_CONCURRENCY }, enrichWorker));
+    const places = enriched;
 
     return NextResponse.json({
       success: true,
