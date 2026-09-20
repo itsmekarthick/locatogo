@@ -38,14 +38,14 @@ export const metadata: Metadata = {
 };
 
 const KNOWN_HUB_COUNTS: Record<string, number> = {
-  "bengaluru": 3484,
-  "delhi-ncr": 4873,
-  "mumbai": 2386,
-  "pune": 2149,
-  "chennai": 2128,
-  "hyderabad": 1939,
-  "kolkata": 1278,
-  "kochi": 858,
+  "bengaluru": 0,
+  "delhi-ncr": 0,
+  "mumbai": 0,
+  "pune": 0,
+  "chennai": 0,
+  "hyderabad": 0,
+  "kolkata": 0,
+  "kochi": 0,
 };
 
 type Props = {
