@@ -23,7 +23,7 @@ export function GoogleSignInButton({
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://locatogo.com/auth/callback",
+          redirectTo: `${origin}/auth/callback`,
         },
       });
 

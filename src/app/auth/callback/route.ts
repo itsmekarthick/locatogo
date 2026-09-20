@@ -16,6 +16,16 @@ export async function GET(request: Request) {
       if (type === "recovery") {
         return NextResponse.redirect(`${origin}/auth/reset-password`);
       }
+      
+      // Check user role to determine redirect
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("platform_role").eq("id", user.id).single();
+        if (profile?.platform_role === "tech_user") {
+          return NextResponse.redirect(`${origin}/tech`);
+        }
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
     console.error("Auth callback error exchanging code:", error.message);
