@@ -77,7 +77,7 @@ export function NavigationProgressBar() {
       className="fixed top-0 left-0 right-0 z-[99999] h-[3px] pointer-events-none bg-transparent"
     >
       <div
-        className="h-full bg-gradient-to-r from-[#06b6d4] via-[#ea580c] to-cyan-600 shadow-[0_0_12px_rgba(226,106,79,0.9)] transition-all duration-200 ease-out"
+        className="h-full bg-gradient-to-r from-[#0ea5e9] via-[#ea580c] to-cyan-600 shadow-[0_0_12px_rgba(226,106,79,0.9)] transition-all duration-200 ease-out"
         style={{
           width: `${progress}%`,
           opacity: progress === 100 ? 0 : 1,

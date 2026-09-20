@@ -369,7 +369,7 @@ export function AdBannerSlot({
             </div>
           )}
 
-          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-[#06b6d4] transition-colors line-clamp-2">
+          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-[#0ea5e9] transition-colors line-clamp-2">
             {activeSlot.title}
           </h4>
 

@@ -33,8 +33,8 @@ export function BrandLogo({
           {/* Premium Brand Gradient (Cyber Cyan) */}
           <linearGradient id={`brand-grad-${id}`} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#22d3ee" />
-            <stop offset="50%" stopColor="#06b6d4" />
-            <stop offset="100%" stopColor="#0891b2" />
+            <stop offset="50%" stopColor="#0ea5e9" />
+            <stop offset="100%" stopColor="#0284c7" />
           </linearGradient>
         </defs>
         

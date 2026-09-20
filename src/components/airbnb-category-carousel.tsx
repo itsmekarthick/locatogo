@@ -152,7 +152,7 @@ export function AirbnbCategoryCarousel({
             <span className="text-xs">🎛️</span>
             <span>Filters</span>
             {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#06b6d4] text-[9px] text-white font-bold">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#0ea5e9] text-[9px] text-white font-bold">
                 {activeFilterCount}
               </span>
             )}

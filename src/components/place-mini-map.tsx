@@ -48,7 +48,7 @@ export function PlaceMiniMap({
             onClick={() => setMapPerspective("satellite")}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
               mapPerspective === "satellite"
-                ? "bg-[#06b6d4] text-white shadow-2xs font-bold"
+                ? "bg-[#0ea5e9] text-white shadow-2xs font-bold"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >

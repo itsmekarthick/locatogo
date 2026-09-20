@@ -416,7 +416,7 @@ export function TechAtlasSearch({
                 handleSelect(rankedResults[0].company, rankedResults[0].targetHub);
               }
             }}
-            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#06b6d4] to-[#0891b2] text-white shadow-2xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#0ea5e9] to-[#0284c7] text-white shadow-2xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
             title="Search"
           >
             <span className="text-xs">➔</span>

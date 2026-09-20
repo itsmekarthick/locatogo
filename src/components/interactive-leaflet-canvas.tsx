@@ -153,14 +153,14 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
 
   const cat = (place.category_name || "").toLowerCase();
 
-  let themeColor = "#06b6d4";
+  let themeColor = "#0ea5e9";
   let bgLight = "#eef2ff";
 
   if (cat.includes("hospital") || cat.includes("health") || cat.includes("clinic") || cat.includes("medical") || cat.includes("care")) {
     themeColor = "#dc2626";
     bgLight = "#fef2f2";
   } else if (cat.includes("school") || cat.includes("education") || cat.includes("college") || cat.includes("academy") || cat.includes("institute")) {
-    themeColor = "#0891b2";
+    themeColor = "#0284c7";
     bgLight = "#eef2ff";
   } else if (cat.includes("cafe") || cat.includes("restaurant") || cat.includes("food") || cat.includes("dine") || cat.includes("bakery")) {
     themeColor = "#ea580c";
@@ -261,8 +261,8 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
   if (isTechPlace) {
     const cleanTitle = place.title.length > 15 ? place.title.slice(0, 14) + "…" : place.title;
     const html = `
-      <div class="locatogo-pill-pin" style="--theme-color: #0891b2; max-width: 145px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 5px;">
-        <div class="locatogo-pin-icon-wrap" style="background: #eef2ff; color: #0891b2; padding: 1px;">
+      <div class="locatogo-pill-pin" style="--theme-color: #0284c7; max-width: 145px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 5px;">
+        <div class="locatogo-pin-icon-wrap" style="background: #eef2ff; color: #0284c7; padding: 1px;">
           ${innerIconHtml}
         </div>
         <span class="locatogo-pin-title" style="font-size: 11px; font-weight: 700; line-height: 1;">${cleanTitle}</span>
@@ -959,7 +959,7 @@ function ClusteredMarkersLayer({
                   </div>
 
                   <h4 className="font-serif font-bold text-sm text-slate-950 dark:text-slate-100 leading-tight">
-                    <Link href={`/listing/${place.slug}`} className="hover:text-[#06b6d4] transition-colors">
+                    <Link href={`/listing/${place.slug}`} className="hover:text-[#0ea5e9] transition-colors">
                       {place.title}
                     </Link>
                   </h4>
@@ -994,7 +994,7 @@ function ClusteredMarkersLayer({
 
                     <Link
                       href={`/listing/${place.slug}`}
-                      className="btn-details flex items-center gap-1 rounded-full !bg-[#06b6d4] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#0891b2] transition-colors shadow-xs cursor-pointer"
+                      className="btn-details flex items-center gap-1 rounded-full !bg-[#0ea5e9] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#0284c7] transition-colors shadow-xs cursor-pointer"
                     >
                       <span className="!text-white font-bold">Details</span>
                       <span className="!text-white font-bold">→</span>
@@ -1206,8 +1206,8 @@ export default function InteractiveLeafletCanvas({
             center={[effectiveLocation.lat, effectiveLocation.lng]}
             radius={radiusKm * 1000}
             pathOptions={{
-              color: "#0891b2",
-              fillColor: "#06b6d4",
+              color: "#0284c7",
+              fillColor: "#0ea5e9",
               fillOpacity: 0.08,
               weight: 1.5,
               dashArray: "6, 6",
@@ -1239,7 +1239,7 @@ export default function InteractiveLeafletCanvas({
             }}
             className="flex items-center gap-2 rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-900 dark:text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
           >
-            <span className="text-[#06b6d4] text-sm font-bold">🔄</span>
+            <span className="text-[#0ea5e9] text-sm font-bold">🔄</span>
             <span>Search this area</span>
           </button>
         </div>

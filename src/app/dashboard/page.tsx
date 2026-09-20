@@ -71,7 +71,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/submit"
-            className="rounded-full bg-[#06b6d4] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#0891b2] transition-colors"
+            className="rounded-full bg-[#0ea5e9] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#0284c7] transition-colors"
           >
             + Add a Place
           </Link>
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
               </p>
               <Link
                 href="/submit"
-                className="mt-3 inline-block text-xs font-bold text-[#06b6d4] hover:underline"
+                className="mt-3 inline-block text-xs font-bold text-[#0ea5e9] hover:underline"
               >
                 Suggest a place →
               </Link>
@@ -124,7 +124,7 @@ export default async function DashboardPage() {
                     {s.status === "published" && (
                       <Link
                         href={`/listing/${s.slug}`}
-                        className="text-xs text-[#06b6d4] font-semibold hover:underline"
+                        className="text-xs text-[#0ea5e9] font-semibold hover:underline"
                       >
                         View →
                       </Link>
@@ -209,7 +209,7 @@ export default async function DashboardPage() {
                   >
                     <span className="text-xl shrink-0">❤️</span>
                     <div className="min-w-0">
-                      <p className="font-semibold text-sm text-gray-900 group-hover:text-[#06b6d4] transition-colors line-clamp-1">
+                      <p className="font-semibold text-sm text-gray-900 group-hover:text-[#0ea5e9] transition-colors line-clamp-1">
                         {(listing as any)?.title ?? "Unknown Place"}
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">

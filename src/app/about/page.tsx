@@ -128,7 +128,7 @@ export default function AboutPage() {
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/submit"
-              className="rounded-xl bg-[#06b6d4] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#0891b2] transition-colors shadow-xs"
+              className="rounded-xl bg-[#0ea5e9] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#0284c7] transition-colors shadow-xs"
             >
               + Submit Listing
             </Link>
@@ -146,7 +146,7 @@ export default function AboutPage() {
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            LocaToGo<span className="text-[#06b6d4]">.</span>
+            LocaToGo<span className="text-[#0ea5e9]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
