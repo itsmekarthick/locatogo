@@ -48,7 +48,7 @@ export default async function TechDashboardPage() {
           <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-[var(--foreground)]">Technical Profile</h2>
-              <button className="text-xs font-semibold text-indigo-500 hover:text-indigo-600 transition-colors">
+              <button className="text-xs font-semibold text-cyan-500 hover:text-cyan-600 transition-colors">
                 Edit Profile
               </button>
             </div>
@@ -66,7 +66,7 @@ export default async function TechDashboardPage() {
                 {techProfile?.skills && techProfile.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {techProfile.skills.map((skill: string) => (
-                      <span key={skill} className="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-xs font-semibold border border-indigo-100 dark:border-indigo-900/60">
+                      <span key={skill} className="px-3 py-1 rounded-full bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 text-xs font-semibold border border-cyan-100 dark:border-cyan-900/60">
                         {skill}
                       </span>
                     ))}
@@ -89,7 +89,7 @@ export default async function TechDashboardPage() {
               <p className="text-xs text-[var(--ink-muted)] mt-1 mb-4">Explore the atlas to find your next role.</p>
               <Link 
                 href="/company" 
-                className="rounded-xl bg-indigo-600 text-white px-5 py-2.5 text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors"
+                className="rounded-xl bg-cyan-600 text-white px-5 py-2.5 text-xs font-bold shadow-sm hover:bg-cyan-700 transition-colors"
               >
                 Explore Companies
               </Link>
@@ -143,7 +143,7 @@ export default async function TechDashboardPage() {
                   <p className="text-xs font-bold text-[var(--foreground)]">Resume</p>
                   <p className="text-xs text-[var(--ink-muted)] truncate">
                     {techProfile?.resume_url ? (
-                      <a href={techProfile.resume_url} target="_blank" rel="noreferrer" className="hover:underline text-indigo-500">View Document</a>
+                      <a href={techProfile.resume_url} target="_blank" rel="noreferrer" className="hover:underline text-cyan-500">View Document</a>
                     ) : (
                       "No resume uploaded"
                     )}

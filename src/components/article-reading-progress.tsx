@@ -26,7 +26,7 @@ export function ArticleReadingProgress() {
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 transition-all duration-75 ease-out shadow-xs"
+        className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-600 transition-all duration-75 ease-out shadow-xs"
         style={{ width: `${progress}%` }}
       />
     </div>

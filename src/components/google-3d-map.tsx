@@ -111,7 +111,7 @@ export function Google3DMap({
         <button
           onClick={() => setMapMode("3d")}
           className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-            mapMode === "3d" ? "bg-[#e26a4f] text-white font-bold shadow-xs" : "text-gray-300 hover:text-white"
+            mapMode === "3d" ? "bg-[#06b6d4] text-white font-bold shadow-xs" : "text-gray-300 hover:text-white"
           }`}
         >
           <span>🏙️</span>
@@ -124,7 +124,7 @@ export function Google3DMap({
             title="Auto-Rotate 3D Perspective"
             className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               isRotating
-                ? "bg-blue-600 text-white animate-pulse"
+                ? "bg-cyan-600 text-white animate-pulse"
                 : "bg-gray-800 text-gray-200 hover:bg-gray-700"
             }`}
           >
@@ -169,9 +169,9 @@ export function Google3DMap({
           >
             {/* Pulsing Target Radar */}
             <div className="relative flex items-center justify-center">
-              <span className="absolute h-12 w-12 animate-ping rounded-full bg-[#e26a4f]/40"></span>
-              <span className="absolute h-7 w-7 rounded-full bg-[#e26a4f]/70"></span>
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[#e26a4f] text-white shadow-lg border-2 border-white">
+              <span className="absolute h-12 w-12 animate-ping rounded-full bg-[#06b6d4]/40"></span>
+              <span className="absolute h-7 w-7 rounded-full bg-[#06b6d4]/70"></span>
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[#06b6d4] text-white shadow-lg border-2 border-white">
                 <span className="text-xs">📍</span>
               </div>
             </div>
@@ -180,7 +180,7 @@ export function Google3DMap({
             <div className="mt-2 rounded-xl bg-black/85 backdrop-blur-md px-3.5 py-1.5 text-center border border-white/20 shadow-xl pointer-events-auto">
               <Link
                 href={`/listing/${centerPlace.slug}`}
-                className="text-white text-xs font-bold tracking-tight hover:text-[#e26a4f] transition-colors whitespace-nowrap block"
+                className="text-white text-xs font-bold tracking-tight hover:text-[#06b6d4] transition-colors whitespace-nowrap block"
               >
                 {centerPlace.title} ↗
               </Link>

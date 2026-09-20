@@ -85,7 +85,7 @@ export function Pagination({
               onClick={() => onPageChange(pageNum)}
               className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 isActive
-                  ? "bg-[#18181b] text-white border border-[#18181b] dark:bg-indigo-600 dark:border-indigo-500 shadow-xs"
+                  ? "bg-[#18181b] text-white border border-[#18181b] dark:bg-cyan-600 dark:border-cyan-500 shadow-xs"
                   : "border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-950 dark:hover:text-white"
               }`}
             >

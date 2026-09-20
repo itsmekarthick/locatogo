@@ -34,7 +34,7 @@ export function PlaceWeatherBadge({
         <button
           onClick={() => setIsModalOpen(true)}
           title="Click to view 5-Day Prediction & Hourly Timeline"
-          className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-gray-200/90 bg-white/95 px-2.5 sm:px-3 py-1 text-xs font-semibold text-gray-700 shadow-2xs backdrop-blur-xs hover:border-blue-400 hover:bg-blue-50/40 transition-all cursor-pointer group max-w-[140px] sm:max-w-none truncate"
+          className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-gray-200/90 bg-white/95 px-2.5 sm:px-3 py-1 text-xs font-semibold text-gray-700 shadow-2xs backdrop-blur-xs hover:border-cyan-400 hover:bg-cyan-50/40 transition-all cursor-pointer group max-w-[140px] sm:max-w-none truncate"
         >
           <span>{weather.weatherIcon}</span>
           <span className="font-bold">{weather.temperature}°C</span>
@@ -44,11 +44,11 @@ export function PlaceWeatherBadge({
             <span className="sm:hidden">{weather.aqi} AQI</span>
           </span>
           {isRain && (
-            <span className="rounded-full bg-blue-500/10 px-1.5 py-0.2 text-[10px] font-bold text-blue-600 animate-pulse">
+            <span className="rounded-full bg-cyan-500/10 px-1.5 py-0.2 text-[10px] font-bold text-cyan-600 animate-pulse">
               🌧️
             </span>
           )}
-          <span className="text-gray-400 group-hover:text-blue-600 text-[10px]">↗</span>
+          <span className="text-gray-400 group-hover:text-cyan-600 text-[10px]">↗</span>
         </button>
 
         <WeatherForecastModal
@@ -67,7 +67,7 @@ export function PlaceWeatherBadge({
     <>
       <div
         onClick={() => setIsModalOpen(true)}
-        className="rounded-2xl border border-gray-200/90 bg-gradient-to-br from-blue-50/50 via-white to-gray-50/50 p-4 shadow-2xs hover:border-blue-300 transition-all cursor-pointer group"
+        className="rounded-2xl border border-gray-200/90 bg-gradient-to-br from-cyan-50/50 via-white to-gray-50/50 p-4 shadow-2xs hover:border-cyan-300 transition-all cursor-pointer group"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ export function PlaceWeatherBadge({
             <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${weather.aqiColor}`}>
               AQI {weather.aqi} · {weather.aqiStatus}
             </span>
-            <span className="block text-[10px] text-blue-600 font-semibold mt-0.5 group-hover:underline">
+            <span className="block text-[10px] text-cyan-600 font-semibold mt-0.5 group-hover:underline">
               View 5-Day Forecast ↗
             </span>
           </div>

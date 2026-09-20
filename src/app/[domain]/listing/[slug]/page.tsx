@@ -156,7 +156,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-              LocaToGo<span className="text-[#e26a4f]">.</span>
+              LocaToGo<span className="text-[#06b6d4]">.</span>
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>
@@ -215,7 +215,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
         <section className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs mb-6 sm:mb-8">
           <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="rounded bg-blue-50/90 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
+              <span className="rounded bg-cyan-50/90 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-cyan-800 uppercase">
                 {categoryName}
               </span>
 
@@ -233,7 +233,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
               )}
 
               {listing.is_featured && (
-                <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
+                <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#06b6d4] uppercase flex items-center gap-1">
                   <span>☆</span>
                   <span>FEATURED</span>
                 </span>
@@ -265,7 +265,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
 
             <Link
               href={`/${directory.slug}/listing/${listing.slug}/claim`}
-              className="text-xs font-bold text-[#e26a4f] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#06b6d4] hover:underline flex items-center gap-1"
             >
               <span>🏷️ Claim</span>
             </Link>
@@ -277,7 +277,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
             </h1>
             <div className="mt-1.5 sm:mt-2 flex items-center gap-3 flex-wrap">
               <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5 font-medium">
-                <span className="text-[#e26a4f] shrink-0">📍</span>
+                <span className="text-[#06b6d4] shrink-0">📍</span>
                 <span>{placeDetails.formattedAddress || address || "Bangalore, Karnataka, India"}</span>
               </p>
               <a
@@ -601,7 +601,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
       <footer className="border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            LocaToGo<span className="text-[#e26a4f]">.</span>
+            LocaToGo<span className="text-[#06b6d4]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">

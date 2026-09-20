@@ -72,7 +72,7 @@ export function AdminCareerSyncCard({
     <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm space-y-6">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 text-2xl">
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 dark:bg-cyan-950/70 text-cyan-600 dark:text-cyan-400 text-2xl">
             ⚡
           </span>
           <div>
@@ -116,7 +116,7 @@ export function AdminCareerSyncCard({
                 setProvider(p.provider as any);
                 setBoardToken(p.token);
               }}
-              className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:border-indigo-300 dark:hover:bg-indigo-950/50 transition-all cursor-pointer"
+              className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-cyan-50 hover:border-cyan-300 dark:hover:bg-cyan-950/50 transition-all cursor-pointer"
             >
               {p.label} ({p.provider})
             </button>
@@ -133,7 +133,7 @@ export function AdminCareerSyncCard({
           <select
             value={provider}
             onChange={(e) => setProvider(e.target.value as any)}
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-cyan-500"
           >
             <option value="greenhouse">Greenhouse.io</option>
             <option value="lever">Lever.co</option>
@@ -152,13 +152,13 @@ export function AdminCareerSyncCard({
               value={boardToken}
               onChange={(e) => setBoardToken(e.target.value)}
               placeholder="e.g. swiggy, razorpay, postman, or linear"
-              className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 font-mono"
+              className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-cyan-500 font-mono"
             />
             <button
               type="button"
               disabled={isPending}
               onClick={handleSync}
-              className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-5 py-2 text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="rounded-2xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2 text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {isPending ? (
                 <>

@@ -277,7 +277,7 @@ export function AdminListingsTabbedView({
               type="checkbox"
               checked={isAllSelected}
               onChange={toggleSelectAll}
-              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
               title="Select all on this page"
             />
             <span>Place & GPS Coordinates</span>
@@ -293,7 +293,7 @@ export function AdminListingsTabbedView({
                 <div
                   key={listing.id}
                   className={`flex flex-col justify-between gap-3 px-6 py-4 transition-colors hover:bg-[var(--background)]/40 sm:flex-row sm:items-center ${
-                    isSelected ? "bg-indigo-50/40 dark:bg-indigo-950/20" : ""
+                    isSelected ? "bg-cyan-50/40 dark:bg-cyan-950/20" : ""
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -301,7 +301,7 @@ export function AdminListingsTabbedView({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleSelect(listing.id)}
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0"
+                      className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0"
                     />
                     <div>
                       <div className="flex items-center gap-2">

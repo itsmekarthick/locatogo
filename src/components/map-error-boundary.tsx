@@ -45,7 +45,7 @@ export class MapErrorBoundary extends Component<Props, State> {
           </p>
           <button
             onClick={this.handleReset}
-            className="mt-4 rounded-full bg-[#e26a4f] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#d8583c] transition-colors cursor-pointer"
+            className="mt-4 rounded-full bg-[#06b6d4] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#0891b2] transition-colors cursor-pointer"
           >
             ↻ Reload Map
           </button>

@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
 
         {/* Title Card */}
         <div className="border-b border-gray-200 pb-8 mb-8">
-          <span className="rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-[11px] font-bold text-blue-900 uppercase tracking-wider">
+          <span className="rounded-full bg-cyan-50 border border-cyan-200 px-3 py-1 text-[11px] font-bold text-cyan-900 uppercase tracking-wider">
             Your Data & Privacy
           </span>
           <h1 className="mt-3 font-serif text-3xl sm:text-4xl font-bold text-gray-950">
@@ -110,7 +110,7 @@ export default function PrivacyPolicyPage() {
               6. Data Retention & Deletion
             </h2>
             <p>
-              Business owners and users have the right to request modification or complete deletion of their listing data or contact records at any time by contacting our support team at <a href="mailto:support@locatogo.in" className="text-[#e26a4f] hover:underline font-semibold">support@locatogo.in</a>.
+              Business owners and users have the right to request modification or complete deletion of their listing data or contact records at any time by contacting our support team at <a href="mailto:support@locatogo.in" className="text-[#06b6d4] hover:underline font-semibold">support@locatogo.in</a>.
             </p>
           </section>
 
@@ -129,7 +129,7 @@ export default function PrivacyPolicyPage() {
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            LocaToGo<span className="text-[#e26a4f]">.</span>
+            LocaToGo<span className="text-[#06b6d4]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">

@@ -120,7 +120,7 @@ export function CompanyJobsFilter({
             href={careersUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline shrink-0"
           >
             <span>Browse all on careers portal</span>
             <span>↗</span>
@@ -149,7 +149,7 @@ export function CompanyJobsFilter({
                   onClick={() => handleScopeChange("place")}
                   className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     locationScope === "place"
-                      ? "bg-indigo-600 text-white shadow-sm"
+                      ? "bg-cyan-600 text-white shadow-sm"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
@@ -160,7 +160,7 @@ export function CompanyJobsFilter({
                   onClick={() => handleScopeChange("all")}
                   className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                     locationScope === "all"
-                      ? "bg-indigo-600 text-white shadow-sm"
+                      ? "bg-cyan-600 text-white shadow-sm"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
@@ -181,7 +181,7 @@ export function CompanyJobsFilter({
                 value={roleSearch}
                 onChange={(e) => setRoleSearch(e.target.value)}
                 placeholder={`Search ${activePool.length} roles at ${companyTitle}...`}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 pl-9 pr-8 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 pl-9 pr-8 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
               {roleSearch && (
                 <button
@@ -216,7 +216,7 @@ export function CompanyJobsFilter({
                   onClick={() => setDeptFilter(dept)}
                   className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all cursor-pointer ${
                     deptFilter === dept
-                      ? "bg-indigo-600 text-white shadow-xs"
+                      ? "bg-cyan-600 text-white shadow-xs"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
                   }`}
                 >
@@ -235,7 +235,7 @@ export function CompanyJobsFilter({
                   className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-slate-50/50 dark:hover:bg-slate-850/40 rounded-xl px-2 transition-colors"
                 >
                   <div className="space-y-1 min-w-0">
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                       {job.title}
                     </h3>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
@@ -268,7 +268,7 @@ export function CompanyJobsFilter({
                               job.workplace_type === "remote"
                                 ? "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
                                 : job.workplace_type === "hybrid"
-                                ? "bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
+                                ? "bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800"
                                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                             }`}
                           >
@@ -299,7 +299,7 @@ export function CompanyJobsFilter({
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800 px-3.5 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800 px-3.5 py-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all cursor-pointer"
                     >
                       <span>Apply on Portal</span>
                       <span>↗</span>
@@ -319,7 +319,7 @@ export function CompanyJobsFilter({
                   href={careersUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition-all"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-cyan-500 transition-all"
                 >
                   <span>Explore All Roles on Careers Portal</span>
                   <span>↗</span>
@@ -344,7 +344,7 @@ export function CompanyJobsFilter({
               href={careersUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-colors"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-cyan-700 transition-colors"
             >
               <span>Open {companyTitle} Careers</span>
               <span>↗</span>

@@ -353,7 +353,7 @@ export function TechAtlasSearch({
       <div
         className={`group relative flex items-center w-full rounded-full border bg-white dark:bg-slate-900 transition-all duration-200 shadow-2xs ${
           isOpen
-            ? "border-indigo-500/80 dark:border-indigo-500/80 shadow-md ring-3 ring-indigo-500/10"
+            ? "border-cyan-500/80 dark:border-cyan-500/80 shadow-md ring-3 ring-cyan-500/10"
             : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs"
         }`}
       >
@@ -384,7 +384,7 @@ export function TechAtlasSearch({
         {/* Right Action Icons: Spinner / Clear / ⌘K Badge */}
         <div className="flex items-center gap-1.5 pr-2 sm:pr-3 shrink-0">
           {isSearchingServer && (
-            <span className="animate-spin text-xs text-indigo-500" title="Searching database...">
+            <span className="animate-spin text-xs text-cyan-500" title="Searching database...">
               ⏳
             </span>
           )}
@@ -416,7 +416,7 @@ export function TechAtlasSearch({
                 handleSelect(rankedResults[0].company, rankedResults[0].targetHub);
               }
             }}
-            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#e26a4f] to-[#d8583c] text-white shadow-2xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#06b6d4] to-[#0891b2] text-white shadow-2xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
             title="Search"
           >
             <span className="text-xs">➔</span>
@@ -447,7 +447,7 @@ export function TechAtlasSearch({
                 onClick={() => setFilterScope("hub")}
                 className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
                   filterScope === "hub"
-                    ? "bg-indigo-600 text-white shadow-2xs font-bold ring-1 ring-indigo-400"
+                    ? "bg-cyan-600 text-white shadow-2xs font-bold ring-1 ring-cyan-400"
                     : "bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
                 }`}
               >
@@ -485,7 +485,7 @@ export function TechAtlasSearch({
                       No tech companies found matching &ldquo;{searchQuery}&rdquo;
                     </p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
-                      Try searching by tech stack (e.g. <span className="text-indigo-500">Python</span>, <span className="text-indigo-500">AI</span>, <span className="text-indigo-500">React</span>), role, or switch filter to <span className="font-semibold">All Metros</span>.
+                      Try searching by tech stack (e.g. <span className="text-cyan-500">Python</span>, <span className="text-cyan-500">AI</span>, <span className="text-cyan-500">React</span>), role, or switch filter to <span className="font-semibold">All Metros</span>.
                     </p>
                   </>
                 ) : (
@@ -502,7 +502,7 @@ export function TechAtlasSearch({
                             onSearchChange(tag);
                             inputRef.current?.focus();
                           }}
-                          className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                          className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition-colors cursor-pointer"
                         >
                           {tag}
                         </button>
@@ -560,7 +560,7 @@ export function TechAtlasSearch({
 
                           {/* Funding Stage / Type Badge */}
                           {company.funding_stage && (
-                            <span className="rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/50 px-1.5 py-0.2 text-[10px] font-semibold">
+                            <span className="rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/50 dark:border-cyan-800/50 px-1.5 py-0.2 text-[10px] font-semibold">
                               {company.funding_stage}
                             </span>
                           )}
@@ -609,7 +609,7 @@ export function TechAtlasSearch({
                         href={`/company/${company.slug}`}
                         target="_blank"
                         onClick={(e) => e.stopPropagation()}
-                        className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition-colors text-xs font-bold"
+                        className="p-1 rounded-md text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/60 transition-colors text-xs font-bold"
                         title={`Open ${company.title} full profile page in new tab`}
                       >
                         ↗

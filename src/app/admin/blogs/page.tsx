@@ -42,7 +42,7 @@ export default async function AdminBlogsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/admin/blogs/new"
-            className="rounded-full bg-slate-900 dark:bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all shadow-xs flex items-center gap-1.5"
+            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all shadow-xs flex items-center gap-1.5"
           >
             <span>+ Write Article</span>
           </Link>
@@ -62,7 +62,7 @@ export default async function AdminBlogsPage() {
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-4 shadow-2xs">
           <p className="text-xs font-bold text-[var(--ink-muted)] uppercase tracking-wider">Total Articles</p>
           <p className="mt-2 font-display text-2xl font-bold text-[var(--foreground)]">{articles.length}</p>
-          <p className="mt-1 text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold">Editorial pieces</p>
+          <p className="mt-1 text-[11px] text-cyan-600 dark:text-cyan-400 font-semibold">Editorial pieces</p>
         </div>
 
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-4 shadow-2xs">
@@ -119,7 +119,7 @@ export default async function AdminBlogsPage() {
                           className="h-10 w-14 rounded-lg object-cover shrink-0 border border-[var(--line)]"
                         />
                       ) : (
-                        <div className="h-10 w-14 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-xs flex items-center justify-center shrink-0">
+                        <div className="h-10 w-14 rounded-lg bg-cyan-100 dark:bg-cyan-950 text-xs flex items-center justify-center shrink-0">
                           📰
                         </div>
                       )}
@@ -134,7 +134,7 @@ export default async function AdminBlogsPage() {
                     </div>
                   </td>
                   <td className="py-3.5 px-3">
-                    <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 text-[10px] font-bold">
+                    <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 px-2 py-0.5 text-[10px] font-bold">
                       {art.category}
                     </span>
                   </td>
@@ -159,14 +159,14 @@ export default async function AdminBlogsPage() {
                     <div className="inline-flex items-center gap-3">
                       <Link
                         href={`/admin/blogs/${art.id}/edit`}
-                        className="text-xs font-bold text-[var(--foreground)] hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="text-xs font-bold text-[var(--foreground)] hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
                       >
                         Edit ✏️
                       </Link>
                       <Link
                         href={`/blog/${art.slug}`}
                         target="_blank"
-                        className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"
+                        className="text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline inline-flex items-center gap-1"
                       >
                         <span>View</span>
                         <span>↗</span>

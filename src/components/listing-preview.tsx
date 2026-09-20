@@ -50,7 +50,7 @@ export function ListingPreview({ data }: { data: PreviewData }) {
               </span>
             )}
             {data.verificationStatus === "verified" && (
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold text-blue-700">
+              <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[9px] font-bold text-cyan-700">
                 ✓ Verified
               </span>
             )}

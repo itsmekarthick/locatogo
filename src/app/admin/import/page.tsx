@@ -25,7 +25,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
     <div className="space-y-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">Data Operations & Ingestion</p>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-600 dark:text-cyan-400">Data Operations & Ingestion</p>
           <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-slate-900 dark:text-slate-100 sm:text-4xl">
             Directory Data Hub
           </h1>

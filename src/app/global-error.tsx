@@ -28,7 +28,7 @@ export default function GlobalError({
           <div className="mt-6 flex justify-center gap-3">
             <button
               onClick={() => reset()}
-              className="rounded-full bg-[#e26a4f] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg hover:bg-[#d8583c] transition-all cursor-pointer"
+              className="rounded-full bg-[#06b6d4] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg hover:bg-[#0891b2] transition-all cursor-pointer"
             >
               ↻ Reload Application
             </button>

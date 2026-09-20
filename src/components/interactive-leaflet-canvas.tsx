@@ -153,14 +153,14 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
 
   const cat = (place.category_name || "").toLowerCase();
 
-  let themeColor = "#6366f1";
+  let themeColor = "#06b6d4";
   let bgLight = "#eef2ff";
 
   if (cat.includes("hospital") || cat.includes("health") || cat.includes("clinic") || cat.includes("medical") || cat.includes("care")) {
     themeColor = "#dc2626";
     bgLight = "#fef2f2";
   } else if (cat.includes("school") || cat.includes("education") || cat.includes("college") || cat.includes("academy") || cat.includes("institute")) {
-    themeColor = "#4f46e5";
+    themeColor = "#0891b2";
     bgLight = "#eef2ff";
   } else if (cat.includes("cafe") || cat.includes("restaurant") || cat.includes("food") || cat.includes("dine") || cat.includes("bakery")) {
     themeColor = "#ea580c";
@@ -261,8 +261,8 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
   if (isTechPlace) {
     const cleanTitle = place.title.length > 15 ? place.title.slice(0, 14) + "…" : place.title;
     const html = `
-      <div class="locatogo-pill-pin" style="--theme-color: #4f46e5; max-width: 145px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 5px;">
-        <div class="locatogo-pin-icon-wrap" style="background: #eef2ff; color: #4f46e5; padding: 1px;">
+      <div class="locatogo-pill-pin" style="--theme-color: #0891b2; max-width: 145px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 5px;">
+        <div class="locatogo-pin-icon-wrap" style="background: #eef2ff; color: #0891b2; padding: 1px;">
           ${innerIconHtml}
         </div>
         <span class="locatogo-pin-title" style="font-size: 11px; font-weight: 700; line-height: 1;">${cleanTitle}</span>
@@ -880,7 +880,7 @@ function ClusteredMarkersLayer({
                       </div>
                     )}
                   </div>
-                  <div className="text-[9px] text-indigo-500 font-semibold pt-0.5">
+                  <div className="text-[9px] text-cyan-500 font-semibold pt-0.5">
                     Click to zoom & explore →
                   </div>
                 </div>
@@ -913,7 +913,7 @@ function ClusteredMarkersLayer({
                         🟢 Hiring
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 px-1 py-0.2 rounded border border-indigo-200/60 dark:border-indigo-800">
+                      <span className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/70 px-1 py-0.2 rounded border border-cyan-200/60 dark:border-cyan-800">
                         {place.category_name || "Tech"}
                       </span>
                     )
@@ -933,7 +933,7 @@ function ClusteredMarkersLayer({
                   <div className="flex items-center justify-between gap-1.5 mb-1.5">
                     <div className="flex items-center gap-1">
                       {place.category_name && (
-                        <span className="rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-900 dark:text-blue-300">
+                        <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200/80 dark:border-cyan-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-cyan-900 dark:text-cyan-300">
                           {place.category_name}
                         </span>
                       )}
@@ -959,7 +959,7 @@ function ClusteredMarkersLayer({
                   </div>
 
                   <h4 className="font-serif font-bold text-sm text-slate-950 dark:text-slate-100 leading-tight">
-                    <Link href={`/listing/${place.slug}`} className="hover:text-[#e26a4f] transition-colors">
+                    <Link href={`/listing/${place.slug}`} className="hover:text-[#06b6d4] transition-colors">
                       {place.title}
                     </Link>
                   </h4>
@@ -994,7 +994,7 @@ function ClusteredMarkersLayer({
 
                     <Link
                       href={`/listing/${place.slug}`}
-                      className="btn-details flex items-center gap-1 rounded-full !bg-[#e26a4f] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#d8583c] transition-colors shadow-xs cursor-pointer"
+                      className="btn-details flex items-center gap-1 rounded-full !bg-[#06b6d4] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#0891b2] transition-colors shadow-xs cursor-pointer"
                     >
                       <span className="!text-white font-bold">Details</span>
                       <span className="!text-white font-bold">→</span>
@@ -1191,7 +1191,7 @@ export default function InteractiveLeafletCanvas({
           <Marker position={[effectiveLocation.lat, effectiveLocation.lng]} icon={userLocationIcon}>
             <Popup className="locatogo-popup">
               <div className="p-2 text-center font-sans">
-                <span className="font-bold text-xs text-blue-700">📍 You Are Here</span>
+                <span className="font-bold text-xs text-cyan-700">📍 You Are Here</span>
                 <p className="text-[10px] text-gray-500 mt-0.5">
                   Showing distances & nearby places
                 </p>
@@ -1206,8 +1206,8 @@ export default function InteractiveLeafletCanvas({
             center={[effectiveLocation.lat, effectiveLocation.lng]}
             radius={radiusKm * 1000}
             pathOptions={{
-              color: "#4f46e5",
-              fillColor: "#6366f1",
+              color: "#0891b2",
+              fillColor: "#06b6d4",
               fillOpacity: 0.08,
               weight: 1.5,
               dashArray: "6, 6",
@@ -1239,7 +1239,7 @@ export default function InteractiveLeafletCanvas({
             }}
             className="flex items-center gap-2 rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-900 dark:text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
           >
-            <span className="text-[#e26a4f] text-sm font-bold">🔄</span>
+            <span className="text-[#06b6d4] text-sm font-bold">🔄</span>
             <span>Search this area</span>
           </button>
         </div>
@@ -1266,7 +1266,7 @@ export default function InteractiveLeafletCanvas({
           }}
           title={`Weather Effects: ${activeWeatherFx || "Auto"} (Click to cycle Rain/Storm/Sun)`}
           className={`flex items-center gap-1 px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${activeWeatherFx === "rain" || activeWeatherFx === "thunderstorm"
-              ? "bg-blue-600 text-white font-bold shadow-xs animate-pulse"
+              ? "bg-cyan-600 text-white font-bold shadow-xs animate-pulse"
               : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
             }`}
         >
@@ -1303,7 +1303,7 @@ export default function InteractiveLeafletCanvas({
                       type="button"
                       onClick={() => handleSelectStyle(layer.id)}
                       className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${isSelected
-                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold"
+                          ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-bold"
                           : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                         }`}
                     >
@@ -1316,7 +1316,7 @@ export default function InteractiveLeafletCanvas({
                           </p>
                         </div>
                       </div>
-                      {isSelected && <span className="text-blue-600 dark:text-blue-400 font-bold">✓</span>}
+                      {isSelected && <span className="text-cyan-600 dark:text-cyan-400 font-bold">✓</span>}
                     </button>
                   );
                 })}

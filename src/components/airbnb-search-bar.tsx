@@ -340,7 +340,7 @@ export function AirbnbSearchBar({
                 ✕
               </button>
             )}
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] text-white shadow-xs hover:scale-105 transition-transform">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white shadow-xs hover:scale-105 transition-transform">
               <span className="text-xs">🔍</span>
             </div>
           </div>
@@ -401,7 +401,7 @@ export function AirbnbSearchBar({
                       ? "Search companies, tech stacks (React, Python, Go), roles..."
                       : "Type name, company, hospital, cafe, locality..."
                   }
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#e26a4f] focus:ring-1 focus:ring-[#e26a4f]"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#06b6d4] focus:ring-1 focus:ring-[#06b6d4]"
                 />
                 {searchQuery && (
                   <button
@@ -441,7 +441,7 @@ export function AirbnbSearchBar({
                         </div>
                       </div>
                       {item.badge && (
-                        <span className="rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/50 px-2 py-0.5 text-[10px] font-semibold shrink-0">
+                        <span className="rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/50 dark:border-cyan-800/50 px-2 py-0.5 text-[10px] font-semibold shrink-0">
                           {item.badge}
                         </span>
                       )}
@@ -466,7 +466,7 @@ export function AirbnbSearchBar({
                       onLocateMe();
                       setIsOpen(false);
                     }}
-                    className="flex items-center gap-1.5 text-xs font-bold text-[#e26a4f] hover:underline cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#06b6d4] hover:underline cursor-pointer"
                   >
                     <span>{isLocating ? "⏳" : "🎯"}</span>
                     <span>{isLocating ? "Detecting GPS..." : "Near Me (GPS)"}</span>
@@ -574,7 +574,7 @@ export function AirbnbSearchBar({
                           onClick={() => onSelectStage(stg)}
                           className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${
                             isStgSelected
-                              ? "bg-indigo-600 text-white border-indigo-600 font-bold shadow-xs"
+                              ? "bg-cyan-600 text-white border-cyan-600 font-bold shadow-xs"
                               : "bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400"
                           }`}
                         >

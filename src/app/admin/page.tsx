@@ -165,7 +165,7 @@ export default async function AdminPage() {
           description="Across all directories"
           sparklineData={sparklineValues}
           trend={weeklyTrend !== 0 ? { value: weeklyTrend, label: "vs last week" } : null}
-          accentClass="bg-gradient-to-r from-blue-500 to-indigo-500"
+          accentClass="bg-gradient-to-r from-cyan-500 to-cyan-500"
           href="/admin/listings"
         />
         <AdminKpiCard
@@ -204,7 +204,7 @@ export default async function AdminPage() {
           value={verifiedCount ?? 0}
           icon="🔵"
           description="Confirmed places"
-          accentClass="bg-gradient-to-r from-sky-400 to-blue-500"
+          accentClass="bg-gradient-to-r from-sky-400 to-cyan-500"
         />
         <AdminKpiCard
           title="Directories"

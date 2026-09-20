@@ -35,7 +35,7 @@ export function SettingsForm({ tenant, membership, userEmail, userId, logoutActi
 
   // Editable fields
   const [workspaceName, setWorkspaceName] = useState(tenant.name);
-  const [primaryColor, setPrimaryColor] = useState("#e26a4f");
+  const [primaryColor, setPrimaryColor] = useState("#06b6d4");
   const [secondaryColor, setSecondaryColor] = useState("#1b5e20");
   const [defaultTimezone, setDefaultTimezone] = useState("UTC");
   const [defaultCurrency, setDefaultCurrency] = useState("USD");
@@ -151,7 +151,7 @@ export function SettingsForm({ tenant, membership, userEmail, userId, logoutActi
                     value={primaryColor}
                     onChange={(e) => setPrimaryColor(e.target.value)}
                     className="flex-1 rounded-xl border border-[var(--line)] bg-transparent px-3 py-2 text-sm font-mono focus:outline-none"
-                    placeholder="#e26a4f"
+                    placeholder="#06b6d4"
                   />
                 </div>
               </div>

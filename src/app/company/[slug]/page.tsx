@@ -223,12 +223,12 @@ export default async function CompanyProfilePage({ params }: Props) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 group">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-lg shadow-md group-hover:scale-105 transition-transform">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-600 text-white font-black text-lg shadow-md group-hover:scale-105 transition-transform">
                 📍
               </span>
               <div className="flex flex-col">
                 <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white leading-none">
-                  LocaToGo<span className="text-indigo-600">.</span>
+                  LocaToGo<span className="text-cyan-600">.</span>
                 </span>
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">
                   Tech Atlas
@@ -239,7 +239,7 @@ export default async function CompanyProfilePage({ params }: Props) {
             {/* Breadcrumb path */}
             <nav className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-500">
               <span>/</span>
-              <Link href={`/${matchingCityHub.id}`} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+              <Link href={`/${matchingCityHub.id}`} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
                 {matchingCityHub.flag} {matchingCityHub.name}
               </Link>
               {company.locality && (
@@ -256,7 +256,7 @@ export default async function CompanyProfilePage({ params }: Props) {
           <div className="flex items-center gap-3">
             <Link
               href={`/${matchingCityHub.id}`}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-2xs"
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition-colors shadow-2xs"
             >
               <span>🗺️</span>
               <span>Open {matchingCityHub.name} Map</span>
@@ -295,7 +295,7 @@ export default async function CompanyProfilePage({ params }: Props) {
                     📍 {company.locality ? `${company.locality}, ` : ""}{companyCity}
                   </span>
                   <span>•</span>
-                  <span className="rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">
+                  <span className="rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/60 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">
                     {typeDisplay}
                   </span>
                   {company.funding_stage && (
@@ -326,7 +326,7 @@ export default async function CompanyProfilePage({ params }: Props) {
                   href={company.careers_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-3 text-center shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-5 py-3 text-center shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>🚀</span>
                   <span>Official Careers Portal</span>
@@ -337,7 +337,7 @@ export default async function CompanyProfilePage({ params }: Props) {
                   href={company.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-3 text-center shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-5 py-3 text-center shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>🌐</span>
                   <span>Visit Website</span>
@@ -370,7 +370,7 @@ export default async function CompanyProfilePage({ params }: Props) {
           <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/60">
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Openings</p>
-              <p className="text-xl font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
+              <p className="text-xl font-black text-cyan-600 dark:text-cyan-400 mt-0.5">
                 {activeJobsCount} {activeJobsCount === 1 ? "Role" : "Roles"}
               </p>
             </div>
@@ -451,7 +451,7 @@ export default async function CompanyProfilePage({ params }: Props) {
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 href={`/${matchingCityHub.id}`}
-                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition-colors"
               >
                 View on {matchingCityHub.name} Atlas →
               </Link>
@@ -472,7 +472,7 @@ export default async function CompanyProfilePage({ params }: Props) {
                 <Link
                   key={rel.id}
                   href={`/company/${rel.slug}`}
-                  className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0d1424] p-4 shadow-2xs hover:shadow-md hover:border-indigo-400 transition-all flex flex-col justify-between group"
+                  className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0d1424] p-4 shadow-2xs hover:shadow-md hover:border-cyan-400 transition-all flex flex-col justify-between group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
@@ -483,7 +483,7 @@ export default async function CompanyProfilePage({ params }: Props) {
                         className="rounded-lg shadow-2xs shrink-0"
                       />
                       <div className="min-w-0">
-                        <h3 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                        <h3 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
                           {rel.title}
                         </h3>
                         <p className="text-[11px] text-slate-400 truncate">
@@ -494,7 +494,7 @@ export default async function CompanyProfilePage({ params }: Props) {
                   </div>
 
                   <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-                    <span className="rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 font-bold uppercase text-[9px]">
+                    <span className="rounded bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 px-1.5 py-0.5 font-bold uppercase text-[9px]">
                       {(rel.company_type || "Tech").replace(/_/g, " ")}
                     </span>
                     {rel.active_jobs_count > 0 ? (
@@ -517,10 +517,10 @@ export default async function CompanyProfilePage({ params }: Props) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} LocaToGo. Global Tech Atlas &amp; Startup Directory.</p>
           <div className="flex items-center gap-4">
-            <Link href="/" className="hover:text-indigo-600">Global Map</Link>
-            <Link href={`/${matchingCityHub.id}`} className="hover:text-indigo-600">{matchingCityHub.name} Directory</Link>
-            <Link href="/about" className="hover:text-indigo-600">About</Link>
-            <Link href="/submit" className="hover:text-indigo-600">List Company</Link>
+            <Link href="/" className="hover:text-cyan-600">Global Map</Link>
+            <Link href={`/${matchingCityHub.id}`} className="hover:text-cyan-600">{matchingCityHub.name} Directory</Link>
+            <Link href="/about" className="hover:text-cyan-600">About</Link>
+            <Link href="/submit" className="hover:text-cyan-600">List Company</Link>
           </div>
         </div>
       </footer>

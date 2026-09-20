@@ -32,7 +32,7 @@ export default async function BlogPage() {
       {/* Hero Headline Strip */}
       <div className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 py-12 sm:py-16">
         <div className="mx-auto max-w-[1300px] px-4 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+          <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
             The LocaToGo Journal
           </p>
           <h1 className="mt-2 font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-950 dark:text-slate-100">

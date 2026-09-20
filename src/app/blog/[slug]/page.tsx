@@ -144,7 +144,7 @@ function renderMarkdownContent(content: string) {
       formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-950 dark:text-white">$1</strong>');
       elements.push(
         <div key={idx} className="my-2 text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed flex items-start gap-2">
-          <span className="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">→</span>
+          <span className="font-bold text-cyan-600 dark:text-cyan-400 shrink-0">→</span>
           <span dangerouslySetInnerHTML={{ __html: formatted }} />
         </div>
       );
@@ -216,7 +216,7 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Article Metadata Header */}
         <header className="space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-3 py-1 text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+            <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800 px-3 py-1 text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
               {blog.category}
             </span>
             <span className="text-xs text-slate-400">·</span>
@@ -250,7 +250,7 @@ export default async function BlogPostPage({ params }: Props) {
                   className="h-11 w-11 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow-2xs"
                 />
               ) : (
-                <div className="h-11 w-11 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-sm shadow-2xs">
+                <div className="h-11 w-11 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-bold flex items-center justify-center text-sm shadow-2xs">
                   ✍️
                 </div>
               )}
@@ -293,7 +293,7 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Interactive Table of Contents (for long guides & Google Jump-to links) */}
         {headings.length >= 2 && (
           <nav aria-label="Table of contents" className="my-8 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/80 p-5 sm:p-6 shadow-2xs">
-            <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5 mb-3">
+            <p className="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 flex items-center gap-1.5 mb-3">
               <span>📑</span>
               <span>Table of Contents</span>
             </p>
@@ -302,7 +302,7 @@ export default async function BlogPostPage({ params }: Props) {
                 <li key={`${h.id}-${i}`} className={h.level === 3 ? "pl-4 text-xs" : ""}>
                   <a
                     href={`#${h.id}`}
-                    className={`hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-baseline gap-2 transition-colors ${
+                    className={`hover:text-cyan-600 dark:hover:text-cyan-400 hover:underline flex items-baseline gap-2 transition-colors ${
                       h.level === 3
                         ? "text-slate-600 dark:text-slate-400 font-normal"
                         : "text-slate-900 dark:text-slate-100 font-bold"
@@ -325,9 +325,9 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
 
         {/* "Explore on Map" Sticky Callout Banner */}
-        <div className="my-12 rounded-3xl border-2 border-indigo-200 dark:border-indigo-800/80 bg-gradient-to-br from-indigo-50/70 via-white to-purple-50/50 dark:from-indigo-950/40 dark:via-slate-900 dark:to-purple-950/30 p-6 sm:p-8 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="my-12 rounded-3xl border-2 border-cyan-200 dark:border-cyan-800/80 bg-gradient-to-br from-cyan-50/70 via-white to-purple-50/50 dark:from-cyan-950/40 dark:via-slate-900 dark:to-purple-950/30 p-6 sm:p-8 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <span className="rounded-full bg-indigo-600 text-white px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="rounded-full bg-cyan-600 text-white px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider">
               Interactive Map
             </span>
             <h3 className="mt-2 font-serif text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -340,7 +340,7 @@ export default async function BlogPostPage({ params }: Props) {
 
           <Link
             href="/"
-            className="rounded-full bg-slate-950 dark:bg-indigo-600 text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all shrink-0 flex items-center gap-2"
+            className="rounded-full bg-slate-950 dark:bg-cyan-600 text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all shrink-0 flex items-center gap-2"
           >
             <span>Explore Tech Atlas</span>
             <span>🗺️</span>
@@ -371,14 +371,14 @@ export default async function BlogPostPage({ params }: Props) {
                         />
                       </div>
                     )}
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
                       {rel.category}
                     </span>
-                    <h4 className="mt-1 font-serif text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+                    <h4 className="mt-1 font-serif text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug">
                       {rel.title}
                     </h4>
                   </div>
-                  <p className="mt-3 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                  <p className="mt-3 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1">
                     <span>Read Guide</span>
                     <span>→</span>
                   </p>

@@ -52,7 +52,7 @@ export default function ListingDetailLoading() {
             <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 space-y-4 shadow-xs">
               <div className="h-5 w-28 rounded bg-slate-200 dark:bg-slate-800" />
               <div className="h-48 w-full rounded-2xl bg-slate-100 dark:bg-slate-800" />
-              <div className="h-10 w-full rounded-full bg-[#e26a4f]/20" />
+              <div className="h-10 w-full rounded-full bg-[#06b6d4]/20" />
             </div>
           </div>
         </div>

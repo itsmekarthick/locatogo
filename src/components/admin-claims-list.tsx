@@ -42,7 +42,7 @@ export function AdminClaimsList({ claims }: { claims: ClaimItem[] }) {
             >
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div>
-                  <span className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-800">
+                  <span className="rounded-full bg-cyan-50 border border-cyan-200 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cyan-800">
                     Ownership Verification Request
                   </span>
                   <h2 className="mt-3 font-display text-2xl font-bold text-[var(--foreground)]">

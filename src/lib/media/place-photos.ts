@@ -303,7 +303,7 @@ export function getUniquePlacePhotos(slug: string, title: string, category: stri
     const brewPools = [PHOTO_POOLS.brewery_pub_1, PHOTO_POOLS.brewery_pub_2];
     return brewPools[hash % brewPools.length].map(p => ({ ...p, alt: `${title} - ${p.caption}` }));
   }
-  if (s.includes("coffee") || s.includes("third-wave") || s.includes("pascucci") || s.includes("dyu") || s.includes("blue-tokai")) {
+  if (s.includes("coffee") || s.includes("third-wave") || s.includes("pascucci") || s.includes("dyu") || s.includes("cyan-tokai")) {
     const cafePools = [PHOTO_POOLS.specialty_coffee, PHOTO_POOLS.artisan_cafe];
     return cafePools[hash % cafePools.length].map(p => ({ ...p, alt: `${title} - ${p.caption}` }));
   }

@@ -119,10 +119,10 @@ export function DetailsAutocompleteSearch() {
           }}
           onKeyDown={handleKeyDown}
           placeholder="Search places by name or address..."
-          className="w-full rounded-full border border-gray-200 bg-gray-50/70 py-2 pl-9 pr-8 text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:border-[#e26a4f] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#e26a4f]/20 transition-all shadow-2xs"
+          className="w-full rounded-full border border-gray-200 bg-gray-50/70 py-2 pl-9 pr-8 text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:border-[#06b6d4] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#06b6d4]/20 transition-all shadow-2xs"
         />
         {isLoading ? (
-          <div className="absolute right-3 h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-[#e26a4f]" />
+          <div className="absolute right-3 h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-[#06b6d4]" />
         ) : query.length > 0 ? (
           <button
             type="button"
@@ -168,7 +168,7 @@ export function DetailsAutocompleteSearch() {
                             {item.title}
                           </p>
                           {item.is_featured && (
-                            <span className="rounded bg-orange-50 px-1.5 py-0.2 text-[9px] font-bold text-[#e26a4f]">
+                            <span className="rounded bg-orange-50 px-1.5 py-0.2 text-[9px] font-bold text-[#06b6d4]">
                               ★
                             </span>
                           )}
@@ -193,7 +193,7 @@ export function DetailsAutocompleteSearch() {
                 <Link
                   href={`/?q=${encodeURIComponent(query.trim())}`}
                   onClick={() => setIsOpen(false)}
-                  className="block text-center text-[11px] font-bold text-[#e26a4f] hover:underline py-1"
+                  className="block text-center text-[11px] font-bold text-[#06b6d4] hover:underline py-1"
                 >
                   Explore all results for &quot;{query.trim()}&quot; on live map →
                 </Link>

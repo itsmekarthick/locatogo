@@ -8,11 +8,11 @@ export default function TechLayout({ children }: Readonly<{ children: React.Reac
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--line)] bg-[var(--paper)]/90 px-6 py-4 backdrop-blur-md sm:px-10">
         <div className="flex items-center gap-6">
           <Link href="/tech" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded bg-indigo-600 flex items-center justify-center text-white font-bold">
+            <div className="h-8 w-8 rounded bg-cyan-600 flex items-center justify-center text-white font-bold">
               T
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-500">Tech Professional</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-cyan-500">Tech Professional</p>
               <p className="font-display text-base font-bold text-[var(--foreground)] leading-none">Dashboard</p>
             </div>
           </Link>

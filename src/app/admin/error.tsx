@@ -30,7 +30,7 @@ export default function AdminError({
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={() => reset()}
-            className="w-full sm:w-auto rounded-full bg-[#e26a4f] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-[#d8583c] transition-all cursor-pointer"
+            className="w-full sm:w-auto rounded-full bg-[#06b6d4] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-[#0891b2] transition-all cursor-pointer"
           >
             ↻ Retry Query
           </button>

@@ -46,10 +46,10 @@ export function AdminTechAtlasSeederButton() {
   }
 
   return (
-    <div className="rounded-3xl border border-indigo-200/80 dark:border-indigo-900/60 bg-gradient-to-r from-indigo-50/90 via-sky-50/70 to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 p-6 shadow-sm space-y-5">
+    <div className="rounded-3xl border border-cyan-200/80 dark:border-cyan-900/60 bg-gradient-to-r from-cyan-50/90 via-sky-50/70 to-white dark:from-cyan-950/40 dark:via-slate-900 dark:to-slate-900 p-6 shadow-sm space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white font-bold text-2xl shadow-md">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-600 text-white font-bold text-2xl shadow-md">
             🚀
           </span>
           <div>
@@ -66,7 +66,7 @@ export function AdminTechAtlasSeederButton() {
           type="button"
           disabled={isPending}
           onClick={handleSeed}
-          className="rounded-full bg-indigo-600 hover:bg-indigo-500 px-5 py-2 text-xs font-bold text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
+          className="rounded-full bg-cyan-600 hover:bg-cyan-500 px-5 py-2 text-xs font-bold text-white shadow-md transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer shrink-0"
         >
           {isPending ? (
             <>
@@ -92,7 +92,7 @@ export function AdminTechAtlasSeederButton() {
               key={idx}
               href={part.file}
               download={part.file.split("/").pop()}
-              className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50/60 dark:bg-indigo-950/40 px-3 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors shadow-2xs"
+              className="rounded-full border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/40 px-3 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition-colors shadow-2xs"
             >
               📄 {part.label}
             </a>

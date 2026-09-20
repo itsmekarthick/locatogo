@@ -87,7 +87,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         </p>
         <Link
           href="/admin/listings"
-          className="mt-6 inline-flex rounded-full bg-slate-900 dark:bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-slate-800"
+          className="mt-6 inline-flex rounded-full bg-slate-900 dark:bg-cyan-600 px-5 py-2 text-xs font-bold text-white hover:bg-slate-800"
         >
           ← Back to Directory Listings
         </Link>
@@ -102,14 +102,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+          <p className="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
             Listing Manager
           </p>
           <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">
             Edit: {listing.title}
           </h1>
           <p className="text-xs text-slate-500">
-            Slug: <span className="font-mono text-indigo-600 dark:text-indigo-400">/{listing.slug}</span>
+            Slug: <span className="font-mono text-cyan-600 dark:text-cyan-400">/{listing.slug}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">

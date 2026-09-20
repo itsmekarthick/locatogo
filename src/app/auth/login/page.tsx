@@ -17,7 +17,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-[48%] xl:w-[50%] bg-[#070b13] border-r border-slate-800/80 relative overflow-hidden flex-col justify-between p-12 xl:p-16 text-white select-none">
         {/* Ambient Aurora Glow Background Effects */}
         <div
-          className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/25 rounded-full blur-3xl pointer-events-none"
+          className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-600/25 rounded-full blur-3xl pointer-events-none"
           aria-hidden="true"
         />
         <div
@@ -25,7 +25,7 @@ export default function LoginPage() {
           aria-hidden="true"
         />
         <div
-          className="absolute -bottom-40 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"
+          className="absolute -bottom-40 left-1/4 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"
           aria-hidden="true"
         />
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-3 group">
             <BrandLogo size={36} className="group-hover:scale-105 transition-transform" />
             <span className="font-serif text-2xl font-bold tracking-tight text-white">
-              LocaToGo<span className="text-indigo-400">.</span>
+              LocaToGo<span className="text-cyan-400">.</span>
             </span>
           </Link>
 
@@ -49,7 +49,7 @@ export default function LoginPage() {
         {/* Centerpiece Value Highlights */}
         <div className="relative z-10 my-auto py-12 max-w-lg space-y-8">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-950/80 border border-indigo-700/60 px-3 py-1 text-[11px] font-bold text-indigo-300 uppercase tracking-wider shadow-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-950/80 border border-cyan-700/60 px-3 py-1 text-[11px] font-bold text-cyan-300 uppercase tracking-wider shadow-xs">
               <span>✨</span>
               <span>Next-Gen Directory & Place Engine</span>
             </span>
@@ -64,7 +64,7 @@ export default function LoginPage() {
           {/* Core Feature Pillars */}
           <div className="space-y-3.5">
             <div className="flex items-start gap-3.5 rounded-2xl border border-slate-800/80 bg-slate-900/50 p-3.5 backdrop-blur-sm shadow-2xs">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-950 text-indigo-400 text-lg shrink-0 border border-indigo-800/60">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-950 text-cyan-400 text-lg shrink-0 border border-cyan-800/60">
                 🎯
               </div>
               <div>
@@ -119,7 +119,7 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-2.5">
             <BrandLogo size={32} />
             <span className="font-serif text-xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-              LocaToGo<span className="text-indigo-600 dark:text-indigo-400">.</span>
+              LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span>
             </span>
           </Link>
           <Link
@@ -134,7 +134,7 @@ export default function LoginPage() {
         <div className="my-auto mx-auto w-full max-w-md">
           {/* Top Badge & Header */}
           <div className="mb-8">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/70 dark:border-indigo-800/60 px-3 py-1 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/70 dark:border-cyan-800/60 px-3 py-1 text-xs font-bold text-cyan-700 dark:text-cyan-300">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>Secure Sign In</span>
             </span>
@@ -167,7 +167,7 @@ export default function LoginPage() {
               Don&apos;t have an account yet?{" "}
               <Link
                 href="/auth/signup"
-                className="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:underline transition-colors"
+                className="font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 hover:underline transition-colors"
               >
                 Create a free account →
               </Link>

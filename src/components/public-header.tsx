@@ -54,7 +54,7 @@ export function PublicHeader({
         <Link href="/" className="flex items-center gap-2.5 group shrink-0">
           <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
           <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-            LocaToGo<span className="text-indigo-600 dark:text-indigo-400">.</span>
+            LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span>
           </span>
         </Link>
 
@@ -68,19 +68,19 @@ export function PublicHeader({
                 href={item.href}
                 className={`flex items-center gap-1.5 transition-colors py-1 px-1 relative ${
                   active
-                    ? "text-indigo-600 dark:text-indigo-400 font-bold"
+                    ? "text-cyan-600 dark:text-cyan-400 font-bold"
                     : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                 }`}
               >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
                 {item.badge && (
-                  <span className="rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-1.5 py-0.2 text-[9px] uppercase font-bold">
+                  <span className="rounded-full bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 px-1.5 py-0.2 text-[9px] uppercase font-bold">
                     {item.badge}
                   </span>
                 )}
                 {active && (
-                  <span className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full" />
+                  <span className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-cyan-600 dark:bg-cyan-400 rounded-full" />
                 )}
               </Link>
             );
@@ -95,7 +95,7 @@ export function PublicHeader({
           {/* Primary CTA (Desktop) */}
           <Link
             href="/"
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-slate-950 dark:bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 dark:hover:bg-indigo-500 hover:scale-[1.02] transition-all shrink-0"
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-slate-950 dark:bg-cyan-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 dark:hover:bg-cyan-500 hover:scale-[1.02] transition-all shrink-0"
           >
             <span>Live Atlas</span>
             <span>🗺️</span>
@@ -131,7 +131,7 @@ export function PublicHeader({
                   href={item.href}
                   className={`flex items-center justify-between rounded-2xl px-4 py-3 text-xs font-bold transition-colors ${
                     active
-                      ? "bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
+                      ? "bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800"
                       : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
                   }`}
                 >
@@ -140,7 +140,7 @@ export function PublicHeader({
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 text-[9px] uppercase font-bold text-indigo-700 dark:text-indigo-300">
+                    <span className="rounded-full bg-cyan-100 dark:bg-cyan-900/60 px-2 py-0.5 text-[9px] uppercase font-bold text-cyan-700 dark:text-cyan-300">
                       {item.badge}
                     </span>
                   )}
@@ -152,7 +152,7 @@ export function PublicHeader({
           <div className="mt-6 pt-5 border-t border-slate-200/70 dark:border-slate-800/70">
             <Link
               href="/"
-              className="w-full flex items-center justify-center gap-2 rounded-full bg-slate-950 dark:bg-indigo-600 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition-all"
+              className="w-full flex items-center justify-center gap-2 rounded-full bg-slate-950 dark:bg-cyan-600 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition-all"
             >
               <span>Explore Live Tech Atlas</span>
               <span>💼</span>

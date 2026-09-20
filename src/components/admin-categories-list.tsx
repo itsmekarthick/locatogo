@@ -100,7 +100,7 @@ export function AdminCategoriesList({
                     </span>
                     <div className="flex items-center gap-2">
                       {domainName ? (
-                        <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 text-[10px] font-bold">
+                        <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 px-2.5 py-0.5 text-[10px] font-bold">
                           📍 {domainName}
                         </span>
                       ) : (

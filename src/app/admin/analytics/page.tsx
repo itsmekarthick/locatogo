@@ -112,7 +112,7 @@ export default async function TenantAnalyticsPage() {
           icon="👀"
           description="Directory & listing views"
           sparklineData={sparklineValues}
-          accentClass="bg-gradient-to-r from-blue-500 to-indigo-500"
+          accentClass="bg-gradient-to-r from-cyan-500 to-cyan-500"
         />
         <AdminKpiCard
           title="Search Inquiries"
@@ -168,7 +168,7 @@ export default async function TenantAnalyticsPage() {
 
           <div className="mt-6 space-y-3">
             {[
-              { label: "Directory & Place Views", count: pageViews, color: "bg-blue-500", icon: "👀" },
+              { label: "Directory & Place Views", count: pageViews, color: "bg-cyan-500", icon: "👀" },
               { label: "Search Queries", count: searches, color: "bg-amber-500", icon: "🔍" },
               { label: "Map Clicks & Exploration", count: mapInteractions, color: "bg-emerald-500", icon: "🗺️" },
               { label: "Outbound Leads (WhatsApp/Uber)", count: outboundLeads, color: "bg-rose-500", icon: "🚀" },

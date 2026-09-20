@@ -49,7 +49,7 @@ export default async function AdvertisingPage() {
           </Link>
           <Link
             href="/admin/advertising/new"
-            className="rounded-full bg-slate-900 dark:bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-700 transition-colors shadow-sm"
+            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-700 transition-colors shadow-sm"
           >
             + Create Advertisement 📢
           </Link>
@@ -77,7 +77,7 @@ export default async function AdvertisingPage() {
           <p className="mt-2 font-display text-2xl font-bold text-[var(--foreground)]">
             {(impressionCount ?? 0).toLocaleString()}
           </p>
-          <p className="mt-1 text-indigo-600 font-semibold">Ad views tracked</p>
+          <p className="mt-1 text-cyan-600 font-semibold">Ad views tracked</p>
         </div>
 
         <div className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-4 shadow-2xs">

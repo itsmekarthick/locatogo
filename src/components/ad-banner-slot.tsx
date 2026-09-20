@@ -369,7 +369,7 @@ export function AdBannerSlot({
             </div>
           )}
 
-          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-[#e26a4f] transition-colors line-clamp-2">
+          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-[#06b6d4] transition-colors line-clamp-2">
             {activeSlot.title}
           </h4>
 
@@ -486,7 +486,7 @@ export function AdBannerSlot({
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleAdClick}
-            className="rounded-lg bg-slate-900 dark:bg-indigo-600 text-white font-bold px-2.5 py-1 text-[10px] hover:bg-slate-800 transition-colors"
+            className="rounded-lg bg-slate-900 dark:bg-cyan-600 text-white font-bold px-2.5 py-1 text-[10px] hover:bg-slate-800 transition-colors"
           >
             {cta} ↗
           </a>
@@ -500,10 +500,10 @@ export function AdBannerSlot({
     return (
       <div
         ref={containerRef}
-        className={`rounded-3xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-br from-indigo-50/50 via-white to-purple-50/40 dark:from-indigo-950/30 dark:via-slate-900 dark:to-purple-950/20 p-5 shadow-xs relative overflow-hidden ${className}`}
+        className={`rounded-3xl border border-cyan-200 dark:border-cyan-900/60 bg-gradient-to-br from-cyan-50/50 via-white to-purple-50/40 dark:from-cyan-950/30 dark:via-slate-900 dark:to-purple-950/20 p-5 shadow-xs relative overflow-hidden ${className}`}
       >
         <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+          <span className="rounded-md bg-cyan-100 dark:bg-cyan-950 text-cyan-800 dark:text-cyan-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
             {badge}
           </span>
           <span className="text-[11px] font-bold text-slate-500">
@@ -532,13 +532,13 @@ export function AdBannerSlot({
           </p>
         )}
 
-        <div className="mt-4 pt-3 border-t border-indigo-100 dark:border-indigo-900/60">
+        <div className="mt-4 pt-3 border-t border-cyan-100 dark:border-cyan-900/60">
           <a
             href={targetLink}
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleAdClick}
-            className="block w-full text-center rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 text-xs shadow-xs transition-colors cursor-pointer"
+            className="block w-full text-center rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 text-xs shadow-xs transition-colors cursor-pointer"
           >
             {cta} ↗
           </a>
@@ -566,13 +566,13 @@ export function AdBannerSlot({
                 />
               </div>
             ) : (
-              <div className="h-14 w-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl shrink-0 font-bold">
+              <div className="h-14 w-14 rounded-2xl bg-cyan-600 text-white flex items-center justify-center text-xl shrink-0 font-bold">
                 ⭐
               </div>
             )}
             <div>
               <div className="flex items-center gap-2">
-                <span className="rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                <span className="rounded bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                   {badge}
                 </span>
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -596,7 +596,7 @@ export function AdBannerSlot({
               target="_blank"
               rel="noopener noreferrer"
               onClick={handleAdClick}
-              className="rounded-full bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="rounded-full bg-slate-900 dark:bg-cyan-600 hover:bg-slate-800 text-white font-bold px-5 py-2.5 text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <span>{cta}</span>
               <span>↗</span>
@@ -611,19 +611,19 @@ export function AdBannerSlot({
   return (
     <div
       ref={containerRef}
-      className={`rounded-2xl border border-indigo-300 dark:border-indigo-800/80 bg-gradient-to-r from-indigo-900/90 via-slate-900 to-purple-900/90 text-white p-4 sm:p-5 shadow-lg relative overflow-hidden ${className}`}
+      className={`rounded-2xl border border-cyan-300 dark:border-cyan-800/80 bg-gradient-to-r from-cyan-900/90 via-slate-900 to-purple-900/90 text-white p-4 sm:p-5 shadow-lg relative overflow-hidden ${className}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1 max-w-2xl">
           <div className="flex items-center gap-2">
-            <span className="rounded-md bg-indigo-500/30 text-indigo-300 border border-indigo-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+            <span className="rounded-md bg-cyan-500/30 text-cyan-300 border border-cyan-400/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
               {badge}
             </span>
-            <span className="text-xs font-bold text-indigo-200">{activeSlot.sponsor_name}</span>
+            <span className="text-xs font-bold text-cyan-200">{activeSlot.sponsor_name}</span>
           </div>
           <h3 className="text-sm sm:text-base font-bold text-white">{activeSlot.title}</h3>
           {activeSlot.description && (
-            <p className="text-xs text-indigo-200/80 line-clamp-1">{activeSlot.description}</p>
+            <p className="text-xs text-cyan-200/80 line-clamp-1">{activeSlot.description}</p>
           )}
         </div>
 

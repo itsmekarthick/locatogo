@@ -157,7 +157,7 @@ export function AirbnbFiltersModal({
                 onClick={() => setDraft((p) => ({ ...p, featuredOnly: !p.featuredOnly }))}
                 className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
                   draft.featuredOnly
-                    ? "border-[#e26a4f] bg-[#e26a4f] text-white shadow-xs"
+                    ? "border-[#06b6d4] bg-[#06b6d4] text-white shadow-xs"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200"
                 }`}
               >
@@ -170,7 +170,7 @@ export function AirbnbFiltersModal({
                     Top rated & curated landmarks
                   </p>
                 </div>
-                <div className={`h-5 w-5 rounded-full border flex items-center justify-center text-xs ${draft.featuredOnly ? "bg-white text-[#e26a4f] border-transparent" : "border-slate-400"}`}>
+                <div className={`h-5 w-5 rounded-full border flex items-center justify-center text-xs ${draft.featuredOnly ? "bg-white text-[#06b6d4] border-transparent" : "border-slate-400"}`}>
                   {draft.featuredOnly && "✓"}
                 </div>
               </button>
@@ -221,7 +221,7 @@ export function AirbnbFiltersModal({
                 <button
                   type="button"
                   onClick={onLocateMe}
-                  className="text-xs font-bold text-[#e26a4f] hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-bold text-[#06b6d4] hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <span>📍</span> Enable GPS
                 </button>
@@ -347,7 +347,7 @@ export function AirbnbFiltersModal({
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] px-6 py-3 text-xs font-bold text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
+            className="rounded-full bg-gradient-to-r from-[#06b6d4] to-[#0891b2] px-6 py-3 text-xs font-bold text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
           >
             Show {totalMatchingPlaces} places
           </button>

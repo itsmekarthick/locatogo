@@ -171,7 +171,7 @@ export function AdminOnlinePlaceFetcher({
             </p>
           </div>
 
-          <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 px-3 py-1 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">
+          <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 px-3 py-1 text-[11px] font-bold text-cyan-700 dark:text-cyan-300">
             Real GPS Coordinates
           </span>
         </div>
@@ -186,7 +186,7 @@ export function AdminOnlinePlaceFetcher({
                 setQuery(preset.q);
                 handleFetch(preset.q);
               }}
-              className="rounded-full border border-[var(--line)] bg-[var(--background)] px-3.5 py-1.5 text-xs font-medium text-[var(--foreground)] hover:border-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer shadow-2xs"
+              className="rounded-full border border-[var(--line)] bg-[var(--background)] px-3.5 py-1.5 text-xs font-medium text-[var(--foreground)] hover:border-cyan-400 hover:text-cyan-600 transition-colors cursor-pointer shadow-2xs"
             >
               {preset.label}
             </button>
@@ -212,7 +212,7 @@ export function AdminOnlinePlaceFetcher({
                 type="button"
                 onClick={() => handleFetch()}
                 disabled={isLoading}
-                className="rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5"
+                className="rounded-xl bg-cyan-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-cyan-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5"
               >
                 {isLoading ? (
                   <>
@@ -336,7 +336,7 @@ export function AdminOnlinePlaceFetcher({
                   onClick={() => toggleIndex(idx)}
                   className={`rounded-2xl border p-4 transition-all cursor-pointer flex gap-3.5 ${
                     isSelected
-                      ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/30 shadow-xs"
+                      ? "border-cyan-500 bg-cyan-50/30 dark:bg-cyan-950/30 shadow-xs"
                       : "border-[var(--line)] bg-[var(--background)] opacity-70"
                   }`}
                 >
@@ -344,7 +344,7 @@ export function AdminOnlinePlaceFetcher({
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => toggleIndex(idx)}
-                    className="mt-1 h-4 w-4 rounded accent-indigo-600 cursor-pointer shrink-0"
+                    className="mt-1 h-4 w-4 rounded accent-cyan-600 cursor-pointer shrink-0"
                   />
 
                   <div className="min-w-0 flex-1">
@@ -354,7 +354,7 @@ export function AdminOnlinePlaceFetcher({
                     <p className="mt-1 text-[11px] text-[var(--ink-muted)] line-clamp-1">
                       📍 {place.addressLine1}
                     </p>
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px] font-mono text-indigo-600 dark:text-indigo-400">
+                    <div className="mt-2 flex items-center gap-1.5 text-[10px] font-mono text-cyan-600 dark:text-cyan-400">
                       <span>Lat: {place.latitude.toFixed(4)}</span>
                       <span>•</span>
                       <span>Lng: {place.longitude.toFixed(4)}</span>

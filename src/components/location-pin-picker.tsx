@@ -20,7 +20,7 @@ const InnerMap = dynamic(
       className: "custom-pin-marker",
       html: `
         <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
-          <div style="position: absolute; width: 14px; height: 14px; background: #e26a4f; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(226,106,79,0.7);"></div>
+          <div style="position: absolute; width: 14px; height: 14px; background: #06b6d4; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(226,106,79,0.7);"></div>
           <div style="position: absolute; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(226,106,79,0.4); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
         </div>
       `,
@@ -82,8 +82,18 @@ const InnerMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-gray-100 text-xs font-semibold text-gray-400 animate-pulse">
-        Initializing Interactive Map...
+      <div className="flex h-full w-full flex-col items-center justify-center bg-[var(--paper)] text-[var(--ink-muted)]">
+        <div className="relative flex h-16 w-16 items-center justify-center mb-2">
+          {/* Outer Radar Wave */}
+          <div className="absolute h-16 w-16 rounded-full border-2 border-[#06b6d4] opacity-20 animate-ping" style={{ animationDuration: '1.5s' }} />
+          {/* Inner Radar Wave */}
+          <div className="absolute h-10 w-10 rounded-full border-2 border-[#06b6d4] opacity-40 animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.3s' }} />
+          {/* Core Map Dot */}
+          <div className="relative h-4 w-4 rounded-full bg-[#06b6d4] shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#06b6d4] animate-pulse">
+          Initializing Map
+        </span>
       </div>
     ),
   }

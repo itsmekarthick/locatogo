@@ -214,7 +214,7 @@ export function AdminAdCreationForm({
                 key={idx}
                 type="button"
                 onClick={() => applyPreset(p)}
-                className="rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer shadow-2xs"
+                className="rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:border-cyan-400 hover:bg-cyan-50/30 transition-all cursor-pointer shadow-2xs"
               >
                 {p.label}
               </button>
@@ -241,7 +241,7 @@ export function AdminAdCreationForm({
                     onClick={() => handleSelectPlacement(opt)}
                     className={`text-left rounded-2xl border p-3.5 transition-all cursor-pointer ${
                       isSelected
-                        ? "border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/40 ring-1 ring-indigo-600 shadow-xs"
+                        ? "border-cyan-600 bg-cyan-50/40 dark:bg-cyan-950/40 ring-1 ring-cyan-600 shadow-xs"
                         : "border-[var(--line)] bg-[var(--background)] hover:border-slate-300"
                     }`}
                   >
@@ -251,13 +251,13 @@ export function AdminAdCreationForm({
                         <span>{opt.name}</span>
                       </span>
                       {isSelected && (
-                        <span className="h-2 w-2 rounded-full bg-indigo-600 shrink-0" />
+                        <span className="h-2 w-2 rounded-full bg-cyan-600 shrink-0" />
                       )}
                     </div>
                     <p className="text-[11px] text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
                       {opt.description}
                     </p>
-                    <p className="mt-2 text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-400">
+                    <p className="mt-2 text-[10px] font-mono font-bold text-cyan-700 dark:text-cyan-400">
                       Standard: ${opt.defaultPrice}
                     </p>
                   </button>
@@ -276,7 +276,7 @@ export function AdminAdCreationForm({
                 name="target_category_id"
                 value={targetCategoryId}
                 onChange={(e) => setTargetCategoryId(e.target.value)}
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
               >
                 <option value="">🌐 Show Across All Categories</option>
                 {categories.map((c) => (
@@ -295,7 +295,7 @@ export function AdminAdCreationForm({
                 name="target_city"
                 value={targetCity}
                 onChange={(e) => setTargetCity(e.target.value)}
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
               >
                 <option value="all">🌐 All Locations & Global Tech Hubs</option>
                 <option value="bengaluru">Bengaluru / Bangalore Only</option>
@@ -319,7 +319,7 @@ export function AdminAdCreationForm({
                 value={sponsorName}
                 onChange={(e) => setSponsorName(e.target.value)}
                 placeholder="e.g. WeWork Bengaluru, AWS"
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
 
@@ -334,7 +334,7 @@ export function AdminAdCreationForm({
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Get 20% off dedicated coworking suites"
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
           </div>
@@ -350,7 +350,7 @@ export function AdminAdCreationForm({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief value proposition to entice clicks..."
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
             />
           </div>
 
@@ -366,7 +366,7 @@ export function AdminAdCreationForm({
                 value={targetUrl}
                 onChange={(e) => setTargetUrl(e.target.value)}
                 placeholder="https://sponsor.com/landing"
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono text-[11px]"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500 font-mono text-[11px]"
               />
             </div>
 
@@ -380,7 +380,7 @@ export function AdminAdCreationForm({
                 value={bannerUrl}
                 onChange={(e) => setBannerUrl(e.target.value)}
                 placeholder="https://images.unsplash.com/..."
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono text-[11px]"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500 font-mono text-[11px]"
               />
             </div>
           </div>
@@ -397,7 +397,7 @@ export function AdminAdCreationForm({
                 value={ctaText}
                 onChange={(e) => setCtaText(e.target.value)}
                 placeholder="e.g. Claim Offer, Apply Now, Learn More"
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
 
@@ -411,7 +411,7 @@ export function AdminAdCreationForm({
                 value={badgeText}
                 onChange={(e) => setBadgeText(e.target.value)}
                 placeholder="e.g. Sponsored, Partner Spotlight"
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-3.5 py-2 text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
           </div>
@@ -495,7 +495,7 @@ export function AdminAdCreationForm({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-full bg-slate-900 dark:bg-indigo-600 px-6 py-3 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-md cursor-pointer disabled:opacity-50"
+              className="w-full rounded-full bg-slate-900 dark:bg-cyan-600 px-6 py-3 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-700 transition-all shadow-md cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? "Creating Advertisement..." : `Publish to ${currentPlacement.name} 🚀`}
             </button>
@@ -510,7 +510,7 @@ export function AdminAdCreationForm({
             <h3 className="font-bold text-xs uppercase tracking-wider text-[var(--ink-muted)]">
               Simulated Placement Preview
             </h3>
-            <span className="rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold px-2.5 py-0.5">
+            <span className="rounded-full bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 text-[10px] font-bold px-2.5 py-0.5">
               {currentPlacement.icon} {currentPlacement.name}
             </span>
           </div>
@@ -586,14 +586,14 @@ export function AdminAdCreationForm({
                   </div>
                 </div>
               ) : (
-                <div className="h-24 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold p-4 text-center">
+                <div className="h-24 bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold p-4 text-center">
                   <span>{sponsorName || "Sponsor Spotlight"}</span>
                 </div>
               )}
 
               <div className="p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+                  <span className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400">
                     {sponsorName || "Sponsor Name"}
                   </span>
                   <span className="text-[10px] text-[var(--ink-muted)] font-mono">
@@ -615,7 +615,7 @@ export function AdminAdCreationForm({
                   <span className="text-[10px] text-[var(--ink-muted)]">
                     Direct Link ↗
                   </span>
-                  <span className="rounded-xl bg-slate-900 dark:bg-indigo-600 text-white text-xs font-bold px-3 py-1.5 shadow-2xs">
+                  <span className="rounded-xl bg-slate-900 dark:bg-cyan-600 text-white text-xs font-bold px-3 py-1.5 shadow-2xs">
                     {ctaText || "Learn More"}
                   </span>
                 </div>

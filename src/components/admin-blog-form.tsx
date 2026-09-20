@@ -123,7 +123,7 @@ export function AdminBlogForm({
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="e.g. Top 10 High-Growth Coworking Spaces in Bengaluru"
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
 
@@ -138,7 +138,7 @@ export function AdminBlogForm({
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 placeholder="top-coworking-spaces-bengaluru"
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2 text-xs font-mono text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2 text-xs font-mono text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
 
@@ -153,7 +153,7 @@ export function AdminBlogForm({
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
                 placeholder="Brief summary to entice readers..."
-                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2 text-xs leading-relaxed text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2 text-xs leading-relaxed text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
               />
             </div>
           </div>
@@ -176,14 +176,14 @@ export function AdminBlogForm({
               value={content}
               onChange={(e) => handleContentChange(e.target.value)}
               placeholder="Write your article in markdown format...&#10;&#10;## Section Heading&#10;Paragraph text here...&#10;&#10;### Subheading&#10;- Bullet point 1&#10;- Bullet point 2"
-              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4 text-xs font-mono leading-relaxed text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-2xl border border-[var(--line)] bg-[var(--background)] p-4 text-xs font-mono leading-relaxed text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-cyan-500"
             />
 
             <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)] pt-1">
               <span>
                 {content.trim().split(/\s+/).filter(Boolean).length} words · {content.length} characters
               </span>
-              <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+              <span className="font-semibold text-cyan-600 dark:text-cyan-400">
                 ⚡ Auto-calculated read time: ~{readingTime} min
               </span>
             </div>
@@ -219,7 +219,7 @@ export function AdminBlogForm({
                 type="checkbox"
                 checked={isFeatured}
                 onChange={(e) => setIsFeatured(e.target.checked)}
-                className="h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                className="h-4 w-4 rounded text-cyan-600 focus:ring-cyan-500 cursor-pointer"
               />
               <div>
                 <p className="text-xs font-bold text-[var(--foreground)]">★ Featured Hero Spotlight</p>
@@ -232,7 +232,7 @@ export function AdminBlogForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-full bg-slate-900 dark:bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full rounded-full bg-slate-900 dark:bg-cyan-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting
                   ? "Saving Article..."

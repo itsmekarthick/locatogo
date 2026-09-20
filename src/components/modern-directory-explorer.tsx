@@ -815,7 +815,7 @@ export function ModernDirectoryExplorer({
             <Link href="/" className="flex items-center gap-2.5 group" title="LocaToGo">
               <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-                LocaToGo<span className="text-[#e26a4f]">.</span>
+                LocaToGo<span className="text-[#06b6d4]">.</span>
               </span>
             </Link>
 
@@ -831,16 +831,16 @@ export function ModernDirectoryExplorer({
               </Link>
               <Link
                 href="/tech-atlas"
-                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors group"
               >
                 <span>💼</span>
                 <span className="hidden md:inline">Tech Atlas</span>
                 <span className="md:hidden">Tech</span>
-                <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-600 animate-pulse"></span>
               </Link>
               <Link
                 href="/blog"
-                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
+                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors group"
                 title="City Guides & Stories"
               >
                 <span>📖</span>
@@ -874,7 +874,7 @@ export function ModernDirectoryExplorer({
             <Link
               href="/submit"
               title="Add a New Place"
-              className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-md hover:scale-[1.02] transition-all"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#0891b2] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-md hover:scale-[1.02] transition-all"
             >
               <span className="text-sm font-bold leading-none">+</span>
               <span className="hidden sm:inline">Add Place</span>
@@ -1084,7 +1084,7 @@ export function ModernDirectoryExplorer({
                     {filteredListings.length} Places Found
                   </h2>
                   {userLocation && (
-                    <span className="rounded-full bg-indigo-50 border border-indigo-200/80 px-2.5 py-0.5 text-xs font-semibold text-indigo-700 flex items-center gap-1">
+                    <span className="rounded-full bg-cyan-50 border border-cyan-200/80 px-2.5 py-0.5 text-xs font-semibold text-cyan-700 flex items-center gap-1">
                       <span>📍</span> Zoomed to 5 km around you · Zoom out to explore further
                     </span>
                   )}
@@ -1162,7 +1162,7 @@ export function ModernDirectoryExplorer({
                   onClick={() => setVerifiedOnly(!verifiedOnly)}
                   className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
                     verifiedOnly
-                      ? "bg-blue-100 border border-blue-300 text-blue-900 font-bold"
+                      ? "bg-cyan-100 border border-cyan-300 text-cyan-900 font-bold"
                       : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                   }`}
                 >
@@ -1275,7 +1275,7 @@ export function ModernDirectoryExplorer({
                   {filteredListings.length} Places in {domain?.name || "India"}
                 </h1>
                 {userLocation && (
-                  <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                  <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/50 border border-cyan-200/80 dark:border-cyan-800 px-2 py-0.5 text-[11px] font-semibold text-cyan-700 dark:text-cyan-300 flex items-center gap-1">
                     <span>📍</span> 5 km radius
                   </span>
                 )}
@@ -1592,12 +1592,12 @@ export function ModernDirectoryExplorer({
                 📍 {filteredListings.length} Places Found
               </span>
               {selectedCategory && (
-                <span className="rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold">
+                <span className="rounded bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 text-[10px] font-bold">
                   Filtered
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-bold text-[#e26a4f]">
+            <div className="flex items-center gap-1 text-[11px] font-bold text-[#06b6d4]">
               <span>{mobileSheetSnap === "full" ? "Slide Down ↓" : mobileSheetSnap === "half" ? "Expand ↑" : "Slide Up ↑"}</span>
             </div>
           </div>
@@ -1623,12 +1623,12 @@ export function ModernDirectoryExplorer({
                   }}
                   className={`rounded-xl border p-3 bg-white dark:bg-slate-800 transition-all ${
                     isSelected
-                      ? "border-[#e26a4f] bg-orange-50/20 ring-1 ring-[#e26a4f]"
+                      ? "border-[#06b6d4] bg-orange-50/20 ring-1 ring-[#06b6d4]"
                       : "border-slate-200 dark:border-slate-700"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold uppercase text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-bold uppercase text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/60 px-2 py-0.5 rounded">
                       {place.category_name || "Place"}
                     </span>
                     <span className="text-[10px] font-bold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
@@ -1655,7 +1655,7 @@ export function ModernDirectoryExplorer({
                     ) : <span />}
                     <Link
                       href={`/listing/${place.slug}`}
-                      className="font-bold text-[#e26a4f]"
+                      className="font-bold text-[#06b6d4]"
                       onClick={(e) => e.stopPropagation()}
                     >
                       View Details →
@@ -1673,7 +1673,7 @@ export function ModernDirectoryExplorer({
         <footer className="mt-auto border-t border-gray-200 bg-white py-8">
           <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
             <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-              LocaToGo<span className="text-[#e26a4f]">.</span>
+              LocaToGo<span className="text-[#06b6d4]">.</span>
             </Link>
 
             <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">

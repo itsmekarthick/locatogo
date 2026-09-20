@@ -81,7 +81,7 @@ export async function NearbyPlaces({
           >
             <span className="text-2xl shrink-0">📍</span>
             <div className="min-w-0">
-              <p className="font-semibold text-sm text-gray-900 group-hover:text-[#e26a4f] transition-colors line-clamp-1">
+              <p className="font-semibold text-sm text-gray-900 group-hover:text-[#06b6d4] transition-colors line-clamp-1">
                 {place.title}
               </p>
               <p className="text-xs text-gray-400 mt-0.5">

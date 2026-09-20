@@ -39,7 +39,7 @@ export default async function LandingPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 selection:bg-indigo-500 selection:text-white font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 selection:bg-cyan-500 selection:text-white font-sans">
       {/* Unified Public Navigation Header */}
       <PublicHeader />
 
@@ -59,7 +59,7 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+              <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                 Taxonomy & Sectors
               </p>
               <h2 className="mt-1 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
@@ -68,7 +68,7 @@ export default async function LandingPage() {
             </div>
             <Link
               href="/"
-              className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
             >
               <span>View all on live map</span>
               <span>→</span>
@@ -80,20 +80,20 @@ export default async function LandingPage() {
               <Link
                 key={cat.id}
                 href={`/?category=${cat.id}`}
-                className="group flex items-center justify-between rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 p-4 shadow-2xs transition-all duration-200 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md hover:-translate-y-0.5"
+                className="group flex items-center justify-between rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/90 p-4 shadow-2xs transition-all duration-200 hover:border-cyan-400 dark:hover:border-cyan-600 hover:shadow-md hover:-translate-y-0.5"
               >
                 <div className="flex items-center gap-3.5">
                   <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-xl shadow-xs transition-transform group-hover:scale-110">
                     🏷️
                   </span>
                   <div>
-                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                       {cat.name}
                     </h3>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">Curated listings</p>
                   </div>
                 </div>
-                <span className="text-xs text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                <span className="text-xs text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                   →
                 </span>
               </Link>
@@ -107,7 +107,7 @@ export default async function LandingPage() {
         <section className="py-20 sm:py-28">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+              <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                 Curated Highlights
               </p>
               <h2 className="mt-1 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
@@ -123,12 +123,12 @@ export default async function LandingPage() {
                 <Link
                   key={place.id}
                   href={`/listing/${place.slug}`}
-                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs transition-all duration-300 hover:shadow-xl hover:border-indigo-300 dark:hover:border-indigo-800 hover:-translate-y-1"
+                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs transition-all duration-300 hover:shadow-xl hover:border-cyan-300 dark:hover:border-cyan-800 hover:-translate-y-1"
                 >
                   <div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider">
+                        <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800 px-2.5 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider">
                           ★ Featured
                         </span>
                         {place.verification_status === "verified" && (
@@ -145,7 +145,7 @@ export default async function LandingPage() {
                       )}
                     </div>
 
-                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
                       {place.title}
                     </h3>
 
@@ -156,7 +156,7 @@ export default async function LandingPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 text-xs font-bold text-cyan-600 dark:text-cyan-400">
                     <span>View Place Details</span>
                     <span className="transition-transform group-hover:translate-x-1">→</span>
                   </div>
@@ -171,7 +171,7 @@ export default async function LandingPage() {
       <section className="py-20 bg-white dark:bg-slate-900/60 border-t border-slate-200/80 dark:border-slate-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+            <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
               Effortless Navigation
             </p>
             <h2 className="mt-1 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
@@ -204,7 +204,7 @@ export default async function LandingPage() {
                 key={item.step}
                 className="relative rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 p-8 shadow-2xs"
               >
-                <span className="font-mono text-3xl font-black text-indigo-300 dark:text-indigo-800/80">
+                <span className="font-mono text-3xl font-black text-cyan-300 dark:text-cyan-800/80">
                   {item.step}
                 </span>
                 <span className="mt-4 block text-2xl">{item.icon}</span>
@@ -229,7 +229,7 @@ export default async function LandingPage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                   The LocaToGo Journal
                 </p>
                 <h2 className="mt-1 font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
@@ -242,7 +242,7 @@ export default async function LandingPage() {
 
               <Link
                 href="/blog"
-                className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-slate-50 dark:bg-slate-900 px-5 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all shadow-2xs flex items-center gap-1.5 shrink-0"
+                className="rounded-full border border-cyan-200 dark:border-cyan-800 bg-slate-50 dark:bg-slate-900 px-5 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 transition-all shadow-2xs flex items-center gap-1.5 shrink-0"
               >
                 <span>Read All Stories</span>
                 <span>→</span>
@@ -254,7 +254,7 @@ export default async function LandingPage() {
                 <Link
                   key={article.id}
                   href={`/blog/${article.slug}`}
-                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-300 dark:hover:border-indigo-800"
+                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300 dark:hover:border-cyan-800"
                 >
                   <div>
                     {article.cover_image_url && (
@@ -274,7 +274,7 @@ export default async function LandingPage() {
                       </div>
                     )}
 
-                    <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+                    <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug">
                       {article.title}
                     </h3>
 
@@ -285,7 +285,7 @@ export default async function LandingPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                  <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-cyan-600 dark:text-cyan-400">
                     <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                       By {article.author_name}
                     </span>
@@ -302,12 +302,12 @@ export default async function LandingPage() {
       )}
 
       {/* Bottom CTA Banner — Deep Midnight Indigo Gradient (No orange) */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 py-24 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 py-24 text-white">
         {/* Glow orb */}
-        <div className="pointer-events-none absolute -top-24 left-1/2 -z-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 left-1/2 -z-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl" />
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6">
-          <span className="rounded-full bg-indigo-500/20 border border-indigo-400/30 px-4 py-1.5 text-xs font-semibold text-indigo-300">
+          <span className="rounded-full bg-cyan-500/20 border border-cyan-400/30 px-4 py-1.5 text-xs font-semibold text-cyan-300">
             Launch in Minutes
           </span>
           <h2 className="mt-6 font-serif text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
@@ -327,7 +327,7 @@ export default async function LandingPage() {
             </Link>
             <Link
               href="/auth/signup"
-              className="rounded-full border border-indigo-400/50 bg-indigo-900/40 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-indigo-900/70 transition-all backdrop-blur-md"
+              className="rounded-full border border-cyan-400/50 bg-cyan-900/40 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-cyan-900/70 transition-all backdrop-blur-md"
             >
               Create Free Account
             </Link>
@@ -343,7 +343,7 @@ export default async function LandingPage() {
               <div className="flex items-center gap-2">
                 <BrandLogo size={28} />
                 <span className="font-serif text-xl font-bold text-slate-900 dark:text-slate-100">
-                  LocaToGo<span className="text-indigo-600 dark:text-indigo-400">.</span>
+                  LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span>
                 </span>
               </div>
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
@@ -354,28 +354,28 @@ export default async function LandingPage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Directory</p>
               <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <li><Link href="/" className="hover:text-indigo-600 dark:hover:text-indigo-400">Live Atlas</Link></li>
-                <li><Link href="/blog" className="hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold text-indigo-600 dark:text-indigo-400">City Guides & Stories</Link></li>
-                <li><Link href="/about" className="hover:text-indigo-600 dark:hover:text-indigo-400">About LocaToGo</Link></li>
-                <li><Link href="/submit" className="hover:text-indigo-600 dark:hover:text-indigo-400">Add Business</Link></li>
+                <li><Link href="/" className="hover:text-cyan-600 dark:hover:text-cyan-400">Live Atlas</Link></li>
+                <li><Link href="/blog" className="hover:text-cyan-600 dark:hover:text-cyan-400 font-semibold text-cyan-600 dark:text-cyan-400">City Guides & Stories</Link></li>
+                <li><Link href="/about" className="hover:text-cyan-600 dark:hover:text-cyan-400">About LocaToGo</Link></li>
+                <li><Link href="/submit" className="hover:text-cyan-600 dark:hover:text-cyan-400">Add Business</Link></li>
               </ul>
             </div>
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Administration</p>
               <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <li><Link href="/admin" className="hover:text-indigo-600 dark:hover:text-indigo-400">Admin Dashboard</Link></li>
-                <li><Link href="/admin/analytics" className="hover:text-indigo-600 dark:hover:text-indigo-400">Visitor Analytics</Link></li>
-                <li><Link href="/admin/team" className="hover:text-indigo-600 dark:hover:text-indigo-400">Team & Permissions</Link></li>
+                <li><Link href="/admin" className="hover:text-cyan-600 dark:hover:text-cyan-400">Admin Dashboard</Link></li>
+                <li><Link href="/admin/analytics" className="hover:text-cyan-600 dark:hover:text-cyan-400">Visitor Analytics</Link></li>
+                <li><Link href="/admin/team" className="hover:text-cyan-600 dark:hover:text-cyan-400">Team & Permissions</Link></li>
               </ul>
             </div>
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Legal & Trust</p>
               <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <li><Link href="/privacy" className="hover:text-indigo-600 dark:hover:text-indigo-400">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-indigo-600 dark:hover:text-indigo-400">Terms of Service</Link></li>
-                <li><Link href="/contact" className="hover:text-indigo-600 dark:hover:text-indigo-400">Contact Support</Link></li>
+                <li><Link href="/privacy" className="hover:text-cyan-600 dark:hover:text-cyan-400">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-cyan-600 dark:hover:text-cyan-400">Terms of Service</Link></li>
+                <li><Link href="/contact" className="hover:text-cyan-600 dark:hover:text-cyan-400">Contact Support</Link></li>
               </ul>
             </div>
           </div>

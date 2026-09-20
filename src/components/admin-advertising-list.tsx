@@ -109,7 +109,7 @@ export function AdminAdvertisingList({ slots }: { slots: AdSlotItem[] }) {
                       />
                     </div>
                   ) : (
-                    <div className="h-14 w-20 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-lg shrink-0 shadow-2xs">
+                    <div className="h-14 w-20 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white text-lg shrink-0 shadow-2xs">
                       📢
                     </div>
                   )}
@@ -119,7 +119,7 @@ export function AdminAdvertisingList({ slots }: { slots: AdSlotItem[] }) {
                       <span className="font-bold text-[var(--foreground)] text-sm">
                         {slot.sponsor_name}
                       </span>
-                      <span className="rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                      <span className="rounded bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                         {slotTypeLabel}
                       </span>
                       {slot.badge_text && (
@@ -154,7 +154,7 @@ export function AdminAdvertisingList({ slots }: { slots: AdSlotItem[] }) {
                             href={slot.target_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                            className="text-cyan-600 dark:text-cyan-400 hover:underline"
                           >
                             Destination ↗
                           </a>

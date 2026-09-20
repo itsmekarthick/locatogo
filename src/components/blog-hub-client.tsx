@@ -47,7 +47,7 @@ export function BlogHubClient({
                 />
               )}
               <div className="absolute top-4 left-4 flex items-center gap-2">
-                <span className="rounded-full bg-indigo-600 text-white px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider shadow-md">
+                <span className="rounded-full bg-cyan-600 text-white px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider shadow-md">
                   ★ Featured Guide
                 </span>
                 <span className="rounded-full bg-black/60 backdrop-blur-md text-white px-2.5 py-1 text-[10px] font-semibold">
@@ -59,10 +59,10 @@ export function BlogHubClient({
             {/* Content Column */}
             <div className="lg:col-span-5 p-6 sm:p-8 lg:p-10 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                <span className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
                   {featuredBlog.category}
                 </span>
-                <h2 className="mt-2.5 font-serif text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">
+                <h2 className="mt-2.5 font-serif text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors leading-tight">
                   {featuredBlog.title}
                 </h2>
                 {featuredBlog.excerpt && (
@@ -82,7 +82,7 @@ export function BlogHubClient({
                       className="h-8 w-8 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-bold text-xs flex items-center justify-center">
                       ✍️
                     </div>
                   )}
@@ -96,7 +96,7 @@ export function BlogHubClient({
                   </div>
                 </div>
 
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
                   <span>Read Guide</span>
                   <span>→</span>
                 </span>
@@ -119,7 +119,7 @@ export function BlogHubClient({
                 onClick={() => setSelectedCategory(cat)}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-2xs ${
                   isActive
-                    ? "bg-slate-950 dark:bg-indigo-600 text-white shadow-sm"
+                    ? "bg-slate-950 dark:bg-cyan-600 text-white shadow-sm"
                     : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
                 }`}
               >
@@ -137,7 +137,7 @@ export function BlogHubClient({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search guides & articles..."
-            className="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-8 pr-8 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 shadow-2xs"
+            className="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-8 pr-8 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-cyan-500 shadow-2xs"
           />
           {searchQuery && (
             <button
@@ -177,7 +177,7 @@ export function BlogHubClient({
                   </div>
                 )}
 
-                <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2 leading-snug">
+                <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug">
                   <Link href={`/blog/${blog.slug}`}>{blog.title}</Link>
                 </h3>
 
@@ -207,7 +207,7 @@ export function BlogHubClient({
 
                 <Link
                   href={`/blog/${blog.slug}`}
-                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 group-hover:underline flex items-center gap-1"
+                  className="text-xs font-bold text-cyan-600 dark:text-cyan-400 group-hover:underline flex items-center gap-1"
                 >
                   <span>Read</span>
                   <span>→</span>
@@ -231,7 +231,7 @@ export function BlogHubClient({
               setSelectedCategory("All Stories");
               setSearchQuery("");
             }}
-            className="mt-4 rounded-full bg-slate-900 dark:bg-indigo-600 text-white px-4 py-2 text-xs font-bold cursor-pointer"
+            className="mt-4 rounded-full bg-slate-900 dark:bg-cyan-600 text-white px-4 py-2 text-xs font-bold cursor-pointer"
           >
             Reset Filters
           </button>

@@ -176,7 +176,7 @@ export function AdminDuplicateMergeModal({
                     onClick={() => setChosenFields((prev) => ({ ...prev, [key]: "primary" }))}
                     className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
                       isChosenPrimary
-                        ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 ring-1 ring-indigo-500"
+                        ? "border-cyan-500 bg-cyan-50/40 dark:bg-cyan-950/30 ring-1 ring-cyan-500"
                         : "border-[var(--line)] bg-[var(--paper)] hover:border-slate-300"
                     }`}
                   >
@@ -185,7 +185,7 @@ export function AdminDuplicateMergeModal({
                       name={`field-${key}`}
                       checked={isChosenPrimary}
                       onChange={() => setChosenFields((prev) => ({ ...prev, [key]: "primary" }))}
-                      className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                      className="mt-0.5 text-cyan-600 focus:ring-cyan-500"
                     />
                     <span className="font-semibold text-[var(--foreground)] break-words leading-relaxed">
                       {primaryVal}
@@ -197,7 +197,7 @@ export function AdminDuplicateMergeModal({
                     onClick={() => setChosenFields((prev) => ({ ...prev, [key]: "duplicate" }))}
                     className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
                       !isChosenPrimary
-                        ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 ring-1 ring-indigo-500"
+                        ? "border-cyan-500 bg-cyan-50/40 dark:bg-cyan-950/30 ring-1 ring-cyan-500"
                         : "border-[var(--line)] bg-[var(--paper)] hover:border-slate-300"
                     }`}
                   >
@@ -206,7 +206,7 @@ export function AdminDuplicateMergeModal({
                       name={`field-${key}`}
                       checked={!isChosenPrimary}
                       onChange={() => setChosenFields((prev) => ({ ...prev, [key]: "duplicate" }))}
-                      className="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                      className="mt-0.5 text-cyan-600 focus:ring-cyan-500"
                     />
                     <span className="font-semibold text-[var(--foreground)] break-words leading-relaxed">
                       {duplicateVal}

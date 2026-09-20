@@ -51,7 +51,7 @@ export default async function EditBlogPage({ params }: Props) {
           <Link
             href={`/blog/${blog.slug}`}
             target="_blank"
-            className="rounded-full border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/40 px-3.5 py-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 transition-colors shadow-2xs flex items-center gap-1"
+            className="rounded-full border border-cyan-200 dark:border-cyan-800 bg-cyan-50/50 dark:bg-cyan-950/40 px-3.5 py-1.5 text-xs font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 transition-colors shadow-2xs flex items-center gap-1"
           >
             <span>View Live</span>
             <span>↗</span>

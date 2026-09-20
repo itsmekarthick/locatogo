@@ -8,7 +8,7 @@ export default function NotFound() {
         <div className="flex justify-center mb-4">
           <BrandLogo size={44} />
         </div>
-        <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/80 dark:border-indigo-800 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+        <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
           404 • Page Not Found
         </span>
         <h1 className="mt-4 font-serif text-3xl font-bold text-slate-950 dark:text-slate-50">
@@ -21,7 +21,7 @@ export default function NotFound() {
         <div className="mt-8 flex items-center justify-center">
           <Link
             href="/"
-            className="w-full sm:w-auto rounded-full bg-indigo-600 px-8 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-indigo-700 transition-all text-center flex items-center justify-center gap-2"
+            className="w-full sm:w-auto rounded-full bg-cyan-600 px-8 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-cyan-700 transition-all text-center flex items-center justify-center gap-2"
           >
             <span>💼</span>
             <span>Back to Tech Atlas</span>

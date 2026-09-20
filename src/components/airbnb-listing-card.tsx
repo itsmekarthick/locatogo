@@ -50,7 +50,7 @@ export function AirbnbListingCard({ place, isSelected, onHover, onSelect }: Prop
             {categoryName}
           </span>
           {place.is_featured && (
-            <span className="rounded-full bg-[#e26a4f] text-white px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase shadow-xs">
+            <span className="rounded-full bg-[#06b6d4] text-white px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase shadow-xs">
               ⭐ Featured
             </span>
           )}
@@ -70,7 +70,7 @@ export function AirbnbListingCard({ place, isSelected, onHover, onSelect }: Prop
             <CompanyBrandAvatar title={place.title} website={place.website} size={32} />
           </div>
           {place.verification_status === "verified" && (
-            <span className="rounded-full bg-blue-500 text-white px-1.5 py-0.5 text-[9px] font-bold shadow-xs">
+            <span className="rounded-full bg-cyan-500 text-white px-1.5 py-0.5 text-[9px] font-bold shadow-xs">
               ✓ Verified
             </span>
           )}
@@ -91,7 +91,7 @@ export function AirbnbListingCard({ place, isSelected, onHover, onSelect }: Prop
         <div>
           {/* Row 1: Title + Star Rating */}
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-serif text-base sm:text-lg font-bold text-slate-950 dark:text-white group-hover:text-[#e26a4f] transition-colors truncate flex-1">
+            <h3 className="font-serif text-base sm:text-lg font-bold text-slate-950 dark:text-white group-hover:text-[#06b6d4] transition-colors truncate flex-1">
               <Link href={`/listing/${place.slug}`} onClick={(e) => e.stopPropagation()}>
                 {place.title}
               </Link>
@@ -109,7 +109,7 @@ export function AirbnbListingCard({ place, isSelected, onHover, onSelect }: Prop
 
           {/* Row 2: Locality & Area */}
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1 truncate">
-            <span className="text-[#e26a4f]">📍</span>
+            <span className="text-[#06b6d4]">📍</span>
             <span>{[place.locality, place.city].filter(Boolean).join(", ") || "Verified Destination"}</span>
           </p>
 
@@ -155,7 +155,7 @@ export function AirbnbListingCard({ place, isSelected, onHover, onSelect }: Prop
           <Link
             href={`/listing/${place.slug}`}
             onClick={(e) => e.stopPropagation()}
-            className="font-bold text-xs text-[#e26a4f] hover:underline flex items-center gap-1"
+            className="font-bold text-xs text-[#06b6d4] hover:underline flex items-center gap-1"
           >
             <span>Details</span>
             <span>→</span>

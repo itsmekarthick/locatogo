@@ -167,13 +167,13 @@ export function getCompanyInitials(title: string): string {
 }
 
 const BRAND_GRADIENTS = [
-  "from-indigo-600 to-violet-700 text-white",
-  "from-blue-600 to-indigo-700 text-white",
+  "from-cyan-600 to-violet-700 text-white",
+  "from-cyan-600 to-cyan-700 text-white",
   "from-teal-600 to-emerald-700 text-white",
   "from-rose-600 to-pink-700 text-white",
   "from-amber-500 to-orange-600 text-white",
   "from-purple-600 to-fuchsia-700 text-white",
-  "from-cyan-600 to-blue-700 text-white",
+  "from-cyan-600 to-cyan-700 text-white",
   "from-slate-700 to-slate-900 text-white",
 ];
 

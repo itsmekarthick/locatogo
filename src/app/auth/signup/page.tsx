@@ -17,7 +17,7 @@ export default function SignupPage() {
       <div className="hidden lg:flex lg:w-[48%] xl:w-[50%] bg-[#070b13] border-r border-slate-800/80 relative overflow-hidden flex-col justify-between p-12 xl:p-16 text-white select-none">
         {/* Ambient Aurora Glow Background Effects */}
         <div
-          className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/25 rounded-full blur-3xl pointer-events-none"
+          className="absolute -top-40 -left-40 w-96 h-96 bg-cyan-600/25 rounded-full blur-3xl pointer-events-none"
           aria-hidden="true"
         />
         <div
@@ -34,7 +34,7 @@ export default function SignupPage() {
           <Link href="/" className="flex items-center gap-3 group">
             <BrandLogo size={36} className="group-hover:scale-105 transition-transform" />
             <span className="font-serif text-2xl font-bold tracking-tight text-white">
-              LocaToGo<span className="text-indigo-400">.</span>
+              LocaToGo<span className="text-cyan-400">.</span>
             </span>
           </Link>
 
@@ -64,7 +64,7 @@ export default function SignupPage() {
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-slate-800/80 bg-slate-900/50 p-4 backdrop-blur-sm shadow-2xs">
-              <p className="text-2xl font-extrabold font-serif text-indigo-400">67,000+</p>
+              <p className="text-2xl font-extrabold font-serif text-cyan-400">67,000+</p>
               <p className="text-xs text-slate-300 font-semibold mt-0.5">Verified Places</p>
               <p className="text-[11px] text-slate-400 mt-1">Schools, hospitals, cafes, tech companies & more.</p>
             </div>
@@ -110,7 +110,7 @@ export default function SignupPage() {
           <Link href="/" className="flex items-center gap-2.5">
             <BrandLogo size={32} />
             <span className="font-serif text-xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-              LocaToGo<span className="text-indigo-600 dark:text-indigo-400">.</span>
+              LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span>
             </span>
           </Link>
           <Link
@@ -158,7 +158,7 @@ export default function SignupPage() {
               Already have an account?{" "}
               <Link
                 href="/auth/login"
-                className="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:underline transition-colors"
+                className="font-bold text-cyan-600 dark:text-cyan-400 hover:text-cyan-500 hover:underline transition-colors"
               >
                 Sign in to your account →
               </Link>

@@ -76,7 +76,7 @@ export function PlaceStreetViewButton({
                   href={streetViewDirectUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-orange-600 to-[#e26a4f] text-white font-bold text-xs hover:from-orange-500 hover:to-orange-600 transition-all shadow-lg cursor-pointer"
+                  className="flex items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-orange-600 to-[#06b6d4] text-white font-bold text-xs hover:from-orange-500 hover:to-orange-600 transition-all shadow-lg cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
                     <span className="text-lg">👁️</span>

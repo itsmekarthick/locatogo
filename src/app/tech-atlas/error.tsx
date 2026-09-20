@@ -17,7 +17,7 @@ export default function TechAtlasError({
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-[#090d16] px-6 text-center font-sans text-slate-900 dark:text-slate-100">
       <div className="w-full max-w-md rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 text-2xl">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-100 dark:bg-cyan-900/40 text-2xl">
           💼
         </div>
         <h2 className="mt-4 font-serif text-2xl font-bold text-slate-950 dark:text-slate-50">
@@ -30,7 +30,7 @@ export default function TechAtlasError({
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={() => reset()}
-            className="w-full sm:w-auto rounded-full bg-indigo-600 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-indigo-700 transition-all cursor-pointer"
+            className="w-full sm:w-auto rounded-full bg-cyan-600 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-cyan-700 transition-all cursor-pointer"
           >
             ↻ Reconnect
           </button>

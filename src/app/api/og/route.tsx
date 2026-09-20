@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
                   width: "48px",
                   height: "48px",
                   borderRadius: "14px",
-                  backgroundColor: "#4f46e5",
+                  backgroundColor: "#0891b2",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
                 📍
               </div>
               <div style={{ color: "#ffffff", fontSize: "32px", fontWeight: "900", letterSpacing: "-0.5px" }}>
-                LocaToGo<span style={{ color: "#6366f1" }}>.</span>
+                LocaToGo<span style={{ color: "#06b6d4" }}>.</span>
               </div>
             </div>
 
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
             }}
           >
             <span>Verified Tech Ecosystem Directory &amp; Live Atlas</span>
-            <span style={{ color: "#818cf8", fontWeight: "bold" }}>locatogo.com</span>
+            <span style={{ color: "#22d3ee", fontWeight: "bold" }}>locatogo.com</span>
           </div>
         </div>
       ),

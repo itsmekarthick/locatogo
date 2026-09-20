@@ -157,7 +157,7 @@ export function CompanyDetailDrawer({
                   {company.title}
                 </h2>
                 {company.funding_stage && (
-                  <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
+                  <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800 px-2.5 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300">
                     {company.funding_stage}
                   </span>
                 )}
@@ -184,7 +184,7 @@ export function CompanyDetailDrawer({
             <Link
               href={`/company/${company.slug}`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all shadow-2xs group cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-cyan-200 dark:border-cyan-800/80 bg-cyan-50 dark:bg-cyan-950/60 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300 text-xs font-bold transition-all shadow-2xs group cursor-pointer"
               title={`Open full dedicated profile for ${company.title} in a new tab`}
             >
               <span>Full Page</span>
@@ -207,7 +207,7 @@ export function CompanyDetailDrawer({
             <Link
               href={`/company/${company.slug}`}
               target="_blank"
-              className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold"
+              className="text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-bold"
               title={`Open ${company.title} page`}
             >
               <span>🏢 Company Profile</span>
@@ -218,7 +218,7 @@ export function CompanyDetailDrawer({
                 href={company.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-center gap-1"
+                className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:underline flex items-center gap-1"
               >
                 <span>Website</span>
                 <span className="text-[10px]">↗</span>
@@ -245,12 +245,12 @@ export function CompanyDetailDrawer({
             onClick={() => setActiveTab("jobs")}
             className={`py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
               activeTab === "jobs"
-                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
             <span>💼 Live Openings</span>
-            <span className="rounded-full bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
+            <span className="rounded-full bg-cyan-100 dark:bg-cyan-900/60 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300">
               {isLoadingJobs && jobs.length === 0
                 ? "..."
                 : hasLocalJobs && locationScope === "place"
@@ -266,7 +266,7 @@ export function CompanyDetailDrawer({
             onClick={() => setActiveTab("about")}
             className={`py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
               activeTab === "about"
-                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
@@ -278,7 +278,7 @@ export function CompanyDetailDrawer({
             onClick={() => setActiveTab("transit")}
             className={`py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
               activeTab === "transit"
-                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
@@ -293,9 +293,9 @@ export function CompanyDetailDrawer({
             <div className="space-y-4">
               {/* Official Company Job Portal Banner */}
               {(company.careers_url || company.website) && (
-                <div className="rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/30 border border-indigo-200/80 dark:border-indigo-800/80 p-3.5 flex items-center justify-between gap-3 shadow-2xs">
+                <div className="rounded-2xl bg-gradient-to-r from-cyan-50 to-purple-50 dark:from-cyan-950/40 dark:to-purple-950/30 border border-cyan-200/80 dark:border-cyan-800/80 p-3.5 flex items-center justify-between gap-3 shadow-2xs">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="h-8 w-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                    <div className="h-8 w-8 rounded-xl bg-cyan-600 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
                       🏢
                     </div>
                     <div className="min-w-0">
@@ -311,7 +311,7 @@ export function CompanyDetailDrawer({
                     href={company.careers_url || company.website || undefined}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-all shrink-0 flex items-center gap-1 shadow-xs"
+                    className="rounded-xl bg-cyan-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-cyan-700 transition-all shrink-0 flex items-center gap-1 shadow-xs"
                   >
                     <span>Visit Portal</span>
                     <span>↗</span>
@@ -330,7 +330,7 @@ export function CompanyDetailDrawer({
                       <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
                         {hasLocalJobs ? (
                           <>
-                            Showing positions in <span className="font-bold text-indigo-600 dark:text-indigo-400">{companyCity}</span>
+                            Showing positions in <span className="font-bold text-cyan-600 dark:text-cyan-400">{companyCity}</span>
                           </>
                         ) : (
                           <>
@@ -384,7 +384,7 @@ export function CompanyDetailDrawer({
                     value={roleSearch}
                     onChange={(e) => setRoleSearch(e.target.value)}
                     placeholder={`Search ${jobs.length} roles at ${company.title}...`}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 pl-9 pr-8 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 pl-9 pr-8 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500"
                   />
                   {roleSearch && (
                     <button
@@ -419,7 +419,7 @@ export function CompanyDetailDrawer({
                       onClick={() => setDeptFilter(dept)}
                       className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all cursor-pointer ${
                         deptFilter === dept
-                          ? "bg-indigo-600 text-white shadow-xs"
+                          ? "bg-cyan-600 text-white shadow-xs"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
                       }`}
                     >
@@ -432,7 +432,7 @@ export function CompanyDetailDrawer({
               {/* Loading indicator or Jobs List */}
               {isLoadingJobs && jobs.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center space-y-2">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-cyan-600 border-t-transparent"></div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Fetching verified live openings...</p>
                 </div>
               ) : filteredJobs.length > 0 ? (
@@ -440,7 +440,7 @@ export function CompanyDetailDrawer({
                   {filteredJobs.map((job) => (
                     <div
                       key={job.id}
-                      className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-4 shadow-2xs hover:border-indigo-400 dark:hover:border-indigo-600 transition-all space-y-2.5"
+                      className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-4 shadow-2xs hover:border-cyan-400 dark:hover:border-cyan-600 transition-all space-y-2.5"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
@@ -470,7 +470,7 @@ export function CompanyDetailDrawer({
                             job.workplace_type === "remote"
                               ? "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200"
                               : job.workplace_type === "hybrid"
-                              ? "bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-200"
+                              ? "bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                           }`}
                         >
@@ -492,7 +492,7 @@ export function CompanyDetailDrawer({
                             href={job.apply_url || company.careers_url || company.website || undefined}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rounded-full bg-slate-900 dark:bg-indigo-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all flex items-center gap-1"
+                            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-1"
                           >
                             <span>Apply on Portal ↗</span>
                           </a>
@@ -513,7 +513,7 @@ export function CompanyDetailDrawer({
                         href={company.careers_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-full bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition-all inline-flex items-center gap-1.5 shadow-xs"
+                        className="rounded-full bg-cyan-600 px-5 py-2 text-xs font-bold text-white hover:bg-cyan-500 transition-all inline-flex items-center gap-1.5 shadow-xs"
                       >
                         <span>Explore All Roles on Direct Careers Portal</span>
                         <span>↗</span>
@@ -530,7 +530,7 @@ export function CompanyDetailDrawer({
             <div className="space-y-6">
               {company.short_description && (
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
                     Company Overview
                   </h4>
                   <p className="mt-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -542,7 +542,7 @@ export function CompanyDetailDrawer({
               {/* Tech Stack Pills */}
               {company.tech_stack && company.tech_stack.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
                     Engineering Tech Stack
                   </h4>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -559,7 +559,7 @@ export function CompanyDetailDrawer({
               )}
 
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
                   Office Location
                 </h4>
                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">

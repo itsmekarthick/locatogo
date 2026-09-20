@@ -6,7 +6,7 @@ export default function CompanyProfileLoading() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl bg-indigo-600/30 dark:bg-indigo-600/20 animate-pulse flex items-center justify-center text-white text-sm">
+              <div className="h-9 w-9 rounded-xl bg-cyan-600/30 dark:bg-cyan-600/20 animate-pulse flex items-center justify-center text-white text-sm">
                 📍
               </div>
               <div className="space-y-1">
@@ -48,7 +48,7 @@ export default function CompanyProfileLoading() {
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
                   <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <div className="h-4 w-24 bg-indigo-100/60 dark:bg-indigo-950/40 rounded animate-pulse" />
+                  <div className="h-4 w-24 bg-cyan-100/60 dark:bg-cyan-950/40 rounded animate-pulse" />
                   <span className="text-slate-300 dark:text-slate-700">•</span>
                   <div className="h-4 w-28 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
                 </div>
@@ -61,7 +61,7 @@ export default function CompanyProfileLoading() {
 
             {/* Action Buttons Skeleton */}
             <div className="flex flex-col gap-2.5 shrink-0 w-full sm:w-52">
-              <div className="h-11 w-full bg-indigo-600/30 dark:bg-indigo-600/20 rounded-xl animate-pulse" />
+              <div className="h-11 w-full bg-cyan-600/30 dark:bg-cyan-600/20 rounded-xl animate-pulse" />
               <div className="h-10 w-full bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
             </div>
           </div>

@@ -20,15 +20,15 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
   return (
     <section className="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-32">
       {/* Ambient background glows with Indigo & Cyan gradient (Zero orange) */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[650px] w-[950px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-indigo-500/20 via-sky-400/15 to-violet-500/20 blur-3xl opacity-70 dark:opacity-35" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[650px] w-[950px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-cyan-500/20 via-sky-400/15 to-violet-500/20 blur-3xl opacity-70 dark:opacity-35" />
       <div className="pointer-events-none absolute top-1/2 right-0 -z-10 h-[400px] w-[500px] rounded-full bg-emerald-500/10 blur-3xl opacity-50" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
         {/* Release Pill Badge */}
-        <div className="inline-flex items-center gap-2.5 rounded-full border border-indigo-200/60 bg-indigo-50/70 dark:border-indigo-900/60 dark:bg-indigo-950/50 px-4 py-1.5 text-xs font-semibold text-indigo-900 dark:text-indigo-200 shadow-2xs backdrop-blur-md transition-all hover:scale-105">
-          <span className="flex h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+        <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-200/60 bg-cyan-50/70 dark:border-cyan-900/60 dark:bg-cyan-950/50 px-4 py-1.5 text-xs font-semibold text-cyan-900 dark:text-cyan-200 shadow-2xs backdrop-blur-md transition-all hover:scale-105">
+          <span className="flex h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
           <span>Next-Gen Multi-Domain Atlas</span>
-          <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+          <span className="rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
             v4.0 Live
           </span>
         </div>
@@ -36,7 +36,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
         {/* Main Headline */}
         <h1 className="mt-8 font-serif text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-7xl leading-[1.1]">
           Explore the world with an{" "}
-          <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-sky-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-cyan-600 via-violet-600 to-sky-500 bg-clip-text text-transparent">
             intelligent interactive atlas
           </span>
           .
@@ -91,7 +91,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
             {/* Round Coral Action Button */}
             <button
               type="submit"
-              className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gradient-to-r from-[#e26a4f] to-[#d8583c] text-white shadow-md hover:scale-105 transition-all shrink-0 cursor-pointer"
+              className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white shadow-md hover:scale-105 transition-all shrink-0 cursor-pointer"
               title="Search Atlas"
             >
               <span className="text-sm">🔍</span>
@@ -105,7 +105,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
               <Link
                 key={tag}
                 href={`/?q=${encodeURIComponent(tag)}`}
-                className="rounded-full border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 px-3 py-1 font-medium text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors shadow-2xs"
+                className="rounded-full border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 px-3 py-1 font-medium text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors shadow-2xs"
               >
                 {tag}
               </Link>
@@ -117,7 +117,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/"
-            className="rounded-full bg-slate-900 dark:bg-indigo-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all flex items-center gap-2"
+            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-2"
           >
             <span>Launch Live Atlas</span>
             <span>🗺️</span>
@@ -130,7 +130,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
           </Link>
           <Link
             href="/admin"
-            className="rounded-full border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/50 dark:bg-indigo-950/40 px-8 py-3.5 text-sm font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100/70 transition-all"
+            className="rounded-full border border-cyan-200 dark:border-cyan-800/80 bg-cyan-50/50 dark:bg-cyan-950/40 px-8 py-3.5 text-sm font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100/70 transition-all"
           >
             Admin Workspace ⚙️
           </Link>
@@ -160,12 +160,12 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
           </div>
 
           {/* Mockup Preview Visual Content */}
-          <div className="relative h-[260px] sm:h-[340px] w-full bg-gradient-to-br from-slate-100 to-indigo-50/40 dark:from-slate-950 dark:to-indigo-950/20 p-6 flex items-center justify-center overflow-hidden">
+          <div className="relative h-[260px] sm:h-[340px] w-full bg-gradient-to-br from-slate-100 to-cyan-50/40 dark:from-slate-950 dark:to-cyan-950/20 p-6 flex items-center justify-center overflow-hidden">
             {/* Grid Pattern overlay */}
             <div
               className="absolute inset-0 opacity-40 dark:opacity-20"
               style={{
-                backgroundImage: "radial-gradient(#6366f1 1px, transparent 1px)",
+                backgroundImage: "radial-gradient(#06b6d4 1px, transparent 1px)",
                 backgroundSize: "24px 24px",
               }}
             />
@@ -174,7 +174,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
             <div className="relative z-10 grid gap-4 sm:grid-cols-3 max-w-3xl w-full">
               <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-4 shadow-lg backdrop-blur-md transition-transform hover:-translate-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-blue-100 dark:bg-blue-950 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase">
+                  <span className="rounded-full bg-cyan-100 dark:bg-cyan-950 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 uppercase">
                     Healthcare
                   </span>
                   <span className="text-[11px] text-slate-400">★ 4.9</span>
@@ -182,7 +182,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
                 <h4 className="mt-2 font-bold text-sm text-slate-900 dark:text-slate-100">Apollo Multi-Specialty</h4>
                 <p className="mt-1 text-xs text-slate-500">📍 Bannerghatta Road</p>
                 <div className="mt-3 flex gap-2">
-                  <span className="rounded-lg bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                  <span className="rounded-lg bg-cyan-50 dark:bg-cyan-950 px-2 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">
                     Open 24/7
                   </span>
                   <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">
@@ -191,9 +191,9 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
                 </div>
               </div>
 
-              <div className="hidden sm:block rounded-2xl border border-indigo-300 dark:border-indigo-700 bg-white/95 dark:bg-slate-900/95 p-4 shadow-xl backdrop-blur-md ring-2 ring-indigo-500/20 transform sm:-translate-y-2">
+              <div className="hidden sm:block rounded-2xl border border-cyan-300 dark:border-cyan-700 bg-white/95 dark:bg-slate-900/95 p-4 shadow-xl backdrop-blur-md ring-2 ring-cyan-500/20 transform sm:-translate-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-indigo-100 dark:bg-indigo-950 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase">
+                  <span className="rounded-full bg-cyan-100 dark:bg-cyan-950 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 uppercase">
                     ⭐ Featured Tech
                   </span>
                   <span className="text-[11px] text-amber-500 font-bold">★ 5.0</span>

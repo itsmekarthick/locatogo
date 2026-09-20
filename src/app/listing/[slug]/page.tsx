@@ -225,7 +225,7 @@ export default async function ListingDetailPage({ params }: Props) {
           {/* Logo & Badge */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-              LocaToGo<span className="text-[#e26a4f]">.</span>
+              LocaToGo<span className="text-[#06b6d4]">.</span>
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>
@@ -283,7 +283,7 @@ export default async function ListingDetailPage({ params }: Props) {
           {/* Category & Badges Row */}
           <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="rounded bg-blue-50/90 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-blue-800 uppercase">
+              <span className="rounded bg-cyan-50/90 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-cyan-800 uppercase">
                 {categoryName}
               </span>
 
@@ -296,7 +296,7 @@ export default async function ListingDetailPage({ params }: Props) {
               </span>
 
               {listing.is_featured && (
-                <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#e26a4f] uppercase flex items-center gap-1">
+                <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#06b6d4] uppercase flex items-center gap-1">
                   <span>☆</span>
                   <span>FEATURED</span>
                 </span>
@@ -328,7 +328,7 @@ export default async function ListingDetailPage({ params }: Props) {
 
             <Link
               href={`/listing/${listing.slug}/claim`}
-              className="text-xs font-bold text-[#e26a4f] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#06b6d4] hover:underline flex items-center gap-1"
             >
               <span>🏷️ Claim</span>
             </Link>
@@ -341,7 +341,7 @@ export default async function ListingDetailPage({ params }: Props) {
             </h1>
             <div className="mt-1.5 sm:mt-2 flex items-center gap-3 flex-wrap">
               <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5 font-medium">
-                <span className="text-[#e26a4f] shrink-0">📍</span>
+                <span className="text-[#06b6d4] shrink-0">📍</span>
                 <span>{placeDetails.formattedAddress || address || "Bangalore, Karnataka, India"}</span>
               </p>
               <a
@@ -778,7 +778,7 @@ export default async function ListingDetailPage({ params }: Props) {
             </h3>
             <Link
               href="/advertise"
-              className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
             >
               Partner with us ↗
             </Link>
@@ -812,7 +812,7 @@ export default async function ListingDetailPage({ params }: Props) {
             href={`https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`}
             target="_blank"
             rel="noreferrer"
-            className="flex-1 rounded-xl bg-[#e26a4f] py-2.5 text-center text-xs font-bold text-white shadow-xs"
+            className="flex-1 rounded-xl bg-[#06b6d4] py-2.5 text-center text-xs font-bold text-white shadow-xs"
           >
             Navigate 🧭
           </a>
@@ -824,7 +824,7 @@ export default async function ListingDetailPage({ params }: Props) {
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="flex items-center gap-2 group font-serif text-xl font-bold tracking-tight text-gray-900">
             <BrandLogo size={24} />
-            <span>LocaToGo<span className="text-[#e26a4f]">.</span></span>
+            <span>LocaToGo<span className="text-[#06b6d4]">.</span></span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">

@@ -196,7 +196,7 @@ export function PlaceGoogleReviews({
                       className="h-8 w-8 rounded-full object-cover border border-gray-200"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-900 text-xs font-bold shadow-2xs">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-100 text-cyan-900 text-xs font-bold shadow-2xs">
                       {rev.author.charAt(0)}
                     </div>
                   )}

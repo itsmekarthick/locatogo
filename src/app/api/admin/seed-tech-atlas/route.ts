@@ -671,7 +671,7 @@ export async function POST() {
           name: "Tech & Software Hubs",
           slug: "tech-software",
           icon: "💻",
-          pin_color: "#6366f1",
+          pin_color: "#06b6d4",
         })
         .select("id")
         .single();

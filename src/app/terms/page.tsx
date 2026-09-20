@@ -122,7 +122,7 @@ export default function TermsPage() {
               If you have any questions regarding these Terms & Conditions, please contact us at:
             </p>
             <p className="font-semibold text-gray-900">
-              Email: <a href="mailto:support@locatogo.in" className="text-[#e26a4f] hover:underline">support@locatogo.in</a>
+              Email: <a href="mailto:support@locatogo.in" className="text-[#06b6d4] hover:underline">support@locatogo.in</a>
             </p>
           </section>
         </div>
@@ -132,7 +132,7 @@ export default function TermsPage() {
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            LocaToGo<span className="text-[#e26a4f]">.</span>
+            LocaToGo<span className="text-[#06b6d4]">.</span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
