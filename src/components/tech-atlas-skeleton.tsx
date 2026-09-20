@@ -117,7 +117,12 @@ export function TechAtlasSkeleton() {
       </div>
 
       <div className="z-10 flex flex-col items-center text-center space-y-2">
+<<<<<<< HEAD
         <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)] animate-pulse"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
+=======
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)] animate-pulse">
+          LocaToGo<span className="text-[#0ea5e9]">.</span>
+>>>>>>> 063ea189457a8a7d441686e2e35c1384a1583947
         </h1>
         <div className="flex items-center gap-2 text-xs font-semibold text-[var(--ink-muted)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[#0ea5e9] animate-pulse" />

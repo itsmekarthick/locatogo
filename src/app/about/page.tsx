@@ -145,7 +145,12 @@ export default function AboutPage() {
       {/* Footer */}
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
+<<<<<<< HEAD
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
+=======
+          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
+            LocaToGo<span className="text-[#0ea5e9]">.</span>
+>>>>>>> 063ea189457a8a7d441686e2e35c1384a1583947
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">

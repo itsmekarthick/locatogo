@@ -158,7 +158,11 @@ export default async function DomainListingDetailPage({ params }: Props) {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900 group">
               <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+<<<<<<< HEAD
               <span><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span></span>
+=======
+              <span>LocaToGo<span className="text-[#0ea5e9]">.</span></span>
+>>>>>>> 063ea189457a8a7d441686e2e35c1384a1583947
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>
@@ -601,7 +605,12 @@ export default async function DomainListingDetailPage({ params }: Props) {
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
+<<<<<<< HEAD
           <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
+=======
+          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
+            LocaToGo<span className="text-[#0ea5e9]">.</span>
+>>>>>>> 063ea189457a8a7d441686e2e35c1384a1583947
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
