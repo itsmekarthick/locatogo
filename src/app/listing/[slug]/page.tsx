@@ -8,8 +8,6 @@ import { PlaceStreetViewButton } from "@/components/place-street-view-modal";
 import { PlaceDistanceBadge } from "@/components/place-distance-badge";
 import { PlaceGoogleReviews } from "@/components/place-google-reviews";
 import { DetailsAutocompleteSearch } from "@/components/details-autocomplete-search";
-import { BrandLogo } from "@/components/brand-logo";
-
 export const revalidate = 3600;
 import { getComprehensiveAboutText } from "@/lib/media/place-overview";
 import { fetchPlaceWeather } from "@/lib/services/weather";

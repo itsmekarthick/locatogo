@@ -20,8 +20,8 @@ const InnerMap = dynamic(
       className: "custom-pin-marker",
       html: `
         <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px;">
-          <div style="position: absolute; width: 14px; height: 14px; background: #06b6d4; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(226,106,79,0.7);"></div>
-          <div style="position: absolute; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(226,106,79,0.4); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="position: absolute; width: 14px; height: 14px; background: #06b6d4; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(6,182,212,0.7);"></div>
+          <div style="position: absolute; width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(6,182,212,0.4); animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
         </div>
       `,
       iconSize: [36, 36],
