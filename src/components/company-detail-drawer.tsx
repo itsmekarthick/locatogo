@@ -346,7 +346,7 @@ export function CompanyDetailDrawer({
                     </div>
                   </div>
 
-                  {rawPool.length > localJobs.length && (
+                  {true && (
                     <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800/80 p-0.5 rounded-xl self-start sm:self-auto shrink-0">
                       <button
                         type="button"
@@ -399,7 +399,7 @@ export function CompanyDetailDrawer({
               )}
 
               {/* Department Filter Chips */}
-              {departments.length > 1 && (
+              {departments.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 pb-2">
                   <button
                     type="button"

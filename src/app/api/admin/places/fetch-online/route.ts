@@ -426,6 +426,9 @@ export async function GET(request: NextRequest) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
+      const rawCategory = item.type || item.category || "company";
+      const isActuallyTech = isTechSearch || ["company", "office", "commercial", "it", "coworking"].includes(rawCategory.toLowerCase());
+
       return {
         title: rawTitle,
         slug: `${slug}-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -437,9 +440,9 @@ export async function GET(request: NextRequest) {
         administrativeArea: state,
         countryCode: countryCode,
         postalCode: postalCode,
-        rawCategory: item.type || item.category || "company",
+        rawCategory: rawCategory,
         displayName: item.display_name,
-        ...(isTechSearch ? generateMockCompanyDetails(rawTitle) : {}),
+        ...(isActuallyTech ? generateMockCompanyDetails(rawTitle) : {}),
       };
     });
 
