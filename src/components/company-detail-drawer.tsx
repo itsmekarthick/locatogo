@@ -48,7 +48,7 @@ export function CompanyDetailDrawer({
   onClose: () => void;
   onJobsLoaded?: (companyId: string, count: number, jobs: CompanyJob[]) => void;
 }) {
-  const [activeTab, setActiveTab] = useState<"jobs" | "about" | "transit">("jobs");
+  const [activeTab, setActiveTab] = useState<"jobs" | "about">("jobs");
   const [deptFilter, setDeptFilter] = useState<string>("all");
   const [roleSearch, setRoleSearch] = useState<string>("");
   const [locationScope, setLocationScope] = useState<"place" | "all">("place");
@@ -136,13 +136,6 @@ export function CompanyDetailDrawer({
     return true;
   });
 
-  const uberUrl = `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${company.latitude}&dropoff[longitude]=${company.longitude}&dropoff[nickname]=${encodeURIComponent(
-    company.title
-  )}`;
-
-  const olaUrl = `https://book.olacabs.com/?lat=${company.latitude}&lng=${company.longitude}&name=${encodeURIComponent(
-    company.title
-  )}`;
 
   return (
     <div className="fixed inset-0 z-[1500] flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
@@ -273,17 +266,6 @@ export function CompanyDetailDrawer({
             <span>🏢 About & Tech Stack</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("transit")}
-            className={`py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
-              activeTab === "transit"
-                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400"
-                : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-            }`}
-          >
-            <span>🚖 1-Click Transit</span>
-          </button>
         </div>
 
         {/* Drawer Body Content */}
@@ -569,48 +551,7 @@ export function CompanyDetailDrawer({
             </div>
           )}
 
-          {/* TAB 3: 1-CLICK TRANSIT & RIDE */}
-          {activeTab === "transit" && (
-            <div className="space-y-5">
-              <p className="text-xs text-slate-600 dark:text-slate-400">
-                Book a direct ride to <strong>{company.title}</strong> preloaded with exact GPS coordinates:
-              </p>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <a
-                  href={uberUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-2xl bg-black p-4 text-white hover:opacity-90 transition-all shadow-md"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🚗</span>
-                    <div>
-                      <h5 className="text-xs font-bold">Uber</h5>
-                      <p className="text-[11px] text-zinc-400">Direct pickup to office gate</p>
-                    </div>
-                  </div>
-                  <span>↗</span>
-                </a>
-
-                <a
-                  href={olaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between rounded-2xl bg-amber-500 p-4 text-slate-950 hover:bg-amber-400 transition-all shadow-md font-bold"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🚕</span>
-                    <div>
-                      <h5 className="text-xs font-bold">Ola / Grab Cabs</h5>
-                      <p className="text-[11px] text-amber-950 font-normal">Preloaded GPS drop-off</p>
-                    </div>
-                  </div>
-                  <span>↗</span>
-                </a>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -1021,16 +1021,20 @@ export async function bulkInsertOnlinePlaces(
         .single();
 
       if (insertedListing && place.jobs && place.jobs.length > 0) {
-        const jobsToInsert = place.jobs.map((j) => ({
+        const jobsToInsert = place.jobs.map((j, index) => ({
           tenant_id: tenant.id,
           listing_id: insertedListing.id,
           title: j.title,
           department: j.dept || null,
+          location_name: `${place.locality || place.city || "Bengaluru"}, India`,
           workplace_type: j.type,
           salary_range: j.salary || null,
           apply_url: j.apply,
+          ats_job_id: `mock:${Date.now()}:${index}`,
+          posted_at: new Date().toISOString(),
+          is_active: true,
         }));
-        const { error: jobError } = await supabase.from("jobs").insert(jobsToInsert);
+        const { error: jobError } = await supabase.from("company_jobs").insert(jobsToInsert);
         if (jobError) console.error("Failed to insert jobs for:", place.title, jobError);
       }
 
