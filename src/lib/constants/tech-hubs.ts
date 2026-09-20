@@ -47,14 +47,12 @@ export const GLOBAL_TECH_HUBS: TechHub[] = [
 
 export const TECH_SECTORS = [
   { id: "all", name: "All Sectors", icon: "🌐" },
-  { id: "ai_ml", name: "AI & Machine Learning", icon: "🤖" },
   { id: "product_saas", name: "Product & SaaS", icon: "☁️" },
   { id: "tech_giant_mnc", name: "Tech Giants & GCC", icon: "🏛️" },
-  { id: "fintech", name: "FinTech & Payments", icon: "💳" },
-  { id: "deeptech", name: "DeepTech & Hardware", icon: "⚡" },
-  { id: "enterprise", name: "Enterprise Software", icon: "🏢" },
-  { id: "healthtech", name: "HealthTech & Bio", icon: "🧬" },
-  { id: "ecommerce", name: "E-Commerce & Retail", icon: "🛍️" },
+  { id: "it_services_consulting", name: "IT Services & Consulting", icon: "💻" },
+  { id: "deeptech_hardware", name: "DeepTech & Hardware", icon: "⚡" },
+  { id: "startup", name: "Startups", icon: "🚀" },
+  { id: "vc_accelerator", name: "VC & Accelerators", icon: "📈" },
 ];
 
 export const TECH_STAGES = [
