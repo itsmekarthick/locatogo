@@ -75,7 +75,7 @@ if (typeof window !== "undefined" && L && L.Layer) {
   }
 }
 
-export type MapStyleId = "street" | "satellite";
+export type MapStyleId = "street" | "dark" | "satellite";
 
 export const MAP_LAYERS: Record<
   MapStyleId,
@@ -93,12 +93,24 @@ export const MAP_LAYERS: Record<
 > = {
   street: {
     id: "street",
-    label: "Street View",
+    label: "Street Map",
     icon: "🗺️",
-    description: "Vector-grade street layout",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-    attribution: "&copy; Esri, DeLorme, NAVTEQ",
+    description: "Standard OpenStreetMap tiles",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    subdomains: "abc",
     maxZoom: 19,
+  },
+  dark: {
+    id: "dark",
+    label: "Dark Map",
+    icon: "🌙",
+    description: "Inverted dark theme",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    subdomains: "abc",
+    maxZoom: 19,
+    className: "leaflet-dark-tiles",
   },
   satellite: {
     id: "satellite",

@@ -58,6 +58,9 @@ const InnerMap = dynamic(
       lng: number;
       onSelect: (lat: number, lng: number) => void;
     }) {
+      const { getMapTileConfiguration } = require("@/lib/map/provider");
+      const tiles = getMapTileConfiguration();
+      
       return (
         <MapContainer
           center={[lat, lng]}
@@ -66,8 +69,8 @@ const InnerMap = dynamic(
           style={{ width: "100%", height: "100%" }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution={tiles.attribution}
+            url={tiles.urlTemplate}
           />
           <Marker position={[lat, lng]} icon={customPinIcon} />
           <MapClickHandler onSelect={onSelect} />
