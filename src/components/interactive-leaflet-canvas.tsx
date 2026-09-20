@@ -133,9 +133,9 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const clampedA = Math.max(0, Math.min(1, a));
   const c = 2 * Math.atan2(Math.sqrt(clampedA), Math.sqrt(Math.max(0, 1 - clampedA)));
   const dist = R * c;
@@ -386,13 +386,13 @@ function AutoInvalidateSize() {
   useEffect(() => {
     // 1. Staggered invalidations to handle initial flex layout paint
     const t1 = setTimeout(() => {
-      try { map.invalidateSize(); } catch {}
+      try { map.invalidateSize(); } catch { }
     }, 60);
     const t2 = setTimeout(() => {
-      try { map.invalidateSize(); } catch {}
+      try { map.invalidateSize(); } catch { }
     }, 250);
     const t3 = setTimeout(() => {
-      try { map.invalidateSize(); } catch {}
+      try { map.invalidateSize(); } catch { }
     }, 600);
 
     // 2. ResizeObserver to dynamically invalidate when sidebar collapses or flex changes
@@ -401,11 +401,11 @@ function AutoInvalidateSize() {
       const container = map.getContainer();
       if (typeof ResizeObserver !== "undefined" && container) {
         ro = new ResizeObserver(() => {
-          try { map.invalidateSize(); } catch {}
+          try { map.invalidateSize(); } catch { }
         });
         ro.observe(container);
       }
-    } catch {}
+    } catch { }
 
     return () => {
       clearTimeout(t1);
@@ -661,7 +661,7 @@ function ClusteredMarkersLayer({
         const b = map.getBounds();
         setBounds([b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]);
         setZoom(map.getZoom());
-      } catch {}
+      } catch { }
     });
   }, [map]);
 
@@ -795,7 +795,7 @@ function ClusteredMarkersLayer({
           let leaves: any[] = [];
           try {
             leaves = supercluster.getLeaves(cluster.id as number, 4);
-          } catch {}
+          } catch { }
 
           const hasHiring = leaves.some(
             (l) => l.properties?.is_featured || (l.properties as any)?.active_jobs_count > 0
@@ -1121,10 +1121,10 @@ export default function InteractiveLeafletCanvas({
   const initialCenter: [number, number] = hubCenter
     ? [hubCenter.lat, hubCenter.lng]
     : effectiveLocation
-    ? [effectiveLocation.lat, effectiveLocation.lng]
-    : locatedListings.length
-    ? [locatedListings[0].latitude, locatedListings[0].longitude]
-    : [20.0, 0.0];
+      ? [effectiveLocation.lat, effectiveLocation.lng]
+      : locatedListings.length
+        ? [locatedListings[0].latitude, locatedListings[0].longitude]
+        : [20.0, 0.0];
 
   const initialZoom = hubCenter?.zoom ?? (locatedListings.length ? 13 : 2);
 
@@ -1265,11 +1265,10 @@ export default function InteractiveLeafletCanvas({
             }
           }}
           title={`Weather Effects: ${activeWeatherFx || "Auto"} (Click to cycle Rain/Storm/Sun)`}
-          className={`flex items-center gap-1 px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${
-            activeWeatherFx === "rain" || activeWeatherFx === "thunderstorm"
+          className={`flex items-center gap-1 px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${activeWeatherFx === "rain" || activeWeatherFx === "thunderstorm"
               ? "bg-blue-600 text-white font-bold shadow-xs animate-pulse"
               : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
-          }`}
+            }`}
         >
           <span>{activeWeatherFx === "thunderstorm" ? "⚡" : activeWeatherFx === "rain" ? "🌧️" : "🌦️"}</span>
           <span className="hidden md:inline">
@@ -1303,11 +1302,10 @@ export default function InteractiveLeafletCanvas({
                       key={layer.id}
                       type="button"
                       onClick={() => handleSelectStyle(layer.id)}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${
-                        isSelected
+                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${isSelected
                           ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold"
                           : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-base">{layer.icon}</span>
