@@ -9,7 +9,6 @@ import type { ActionResult } from "@/lib/validation/directory";
 const credentialsSchema = z.object({ email: z.string().trim().email(), password: z.string().min(8) });
 const signupSchema = credentialsSchema.extend({
   displayName: z.string().trim().min(2, "Name must be at least 2 characters.").max(120),
-  role: z.enum(["user", "tech_user"]).default("user"),
 });
 const resetEmailSchema = z.object({ email: z.string().trim().email() });
 const updatePasswordSchema = z.object({
@@ -48,21 +47,12 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
     displayName: value(formData, "displayName"),
     email: value(formData, "email"),
     password: value(formData, "password"),
-    role: value(formData, "role") || "user",
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message || "Please check your name, email, and password." };
   }
 
   const displayName = parsed.data.displayName;
-  const baseSlug = displayName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "") || "workspace";
-  const randomSuffix = Math.random().toString(36).substring(2, 7);
-  const tenantSlug = `${baseSlug}-${randomSuffix}`;
-  const tenantName = `${displayName}'s Workspace`;
-  const isTechUser = parsed.data.role === "tech_user";
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
@@ -71,20 +61,14 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
     options: {
       data: {
         display_name: displayName,
-        tenant_name: isTechUser ? null : tenantName,
-        tenant_slug: isTechUser ? null : tenantSlug,
-        platform_role: isTechUser ? 'tech_user' : 'user',
+        platform_role: 'tech_user',
       },
     },
   });
   if (error || !data.user) return { error: error?.message || "Unable to create the account." };
   if (!data.session) return { success: "Account created! Confirm your email, then sign in to get started." };
   
-  if (isTechUser) {
-    redirect("/tech");
-  }
-  
-  redirect("/admin");
+  redirect("/tech");
 }
 
 export async function requestPasswordReset(_state: ActionResult | undefined, formData: FormData): Promise<ActionResult> {
