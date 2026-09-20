@@ -50,6 +50,24 @@ export async function archiveDomain(formData: FormData): Promise<void> {
   revalidatePath("/admin/domains");
 }
 
+export async function deleteDomain(formData: FormData): Promise<void> {
+  const { supabase, tenant } = await requireTenantContext();
+  const domainId = id(formData, "domainId");
+  const { error } = await supabase.from("domains").delete().eq("id", domainId).eq("tenant_id", tenant.id);
+  if (error) throw new Error("The directory could not be deleted.");
+  revalidatePath("/admin/domains");
+}
+
+export async function toggleDomainStatus(formData: FormData): Promise<void> {
+  const { supabase, tenant } = await requireTenantContext();
+  const domainId = id(formData, "domainId");
+  const currentStatus = text(formData, "currentStatus");
+  const newStatus = currentStatus === "live" ? "draft" : "live";
+  const { error } = await supabase.from("domains").update({ status: newStatus }).eq("id", domainId).eq("tenant_id", tenant.id);
+  if (error) throw new Error("The directory status could not be updated.");
+  revalidatePath("/admin/domains");
+}
+
 async function getDefaultDomainId(
   supabase: Awaited<ReturnType<typeof requireTenantContext>>["supabase"],
   tenantId: string,

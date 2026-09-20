@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { Pagination } from "@/components/ui/pagination";
-import { updateDomain } from "@/app/admin/actions";
+import { updateDomain, deleteDomain, toggleDomainStatus } from "@/app/admin/actions";
 
 type DomainItem = {
   id: string;
@@ -68,20 +68,49 @@ export function AdminDomainsList({ domains }: { domains: DomainItem[] }) {
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-5 flex items-center justify-between border-t border-[var(--line)] pt-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingDomain(domain)}
-                  className="rounded-full border border-[var(--line)] bg-[var(--background)] px-4 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--line)] transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>✏️</span>
-                  <span>Edit Atlas</span>
-                </button>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--line)] pt-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingDomain(domain)}
+                    className="rounded-full border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--line)] transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>✏️</span>
+                    <span className="hidden xl:inline">Edit</span>
+                  </button>
+
+                  <form action={toggleDomainStatus}>
+                    <input type="hidden" name="domainId" value={domain.id} />
+                    <input type="hidden" name="currentStatus" value={domain.status} />
+                    <button
+                      type="submit"
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                        domain.status === "live" 
+                          ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40" 
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+                      }`}
+                    >
+                      <span>{domain.status === "live" ? "⏸️" : "▶️"}</span>
+                      <span className="hidden xl:inline">{domain.status === "live" ? "Unpublish" : "Make Live"}</span>
+                    </button>
+                  </form>
+
+                  <form action={deleteDomain} onSubmit={(e) => { if(!confirm("Are you sure you want to completely delete this directory atlas?")) e.preventDefault(); }}>
+                    <input type="hidden" name="domainId" value={domain.id} />
+                    <button
+                      type="submit"
+                      className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition-colors cursor-pointer flex items-center gap-1.5"
+                      title="Delete Directory"
+                    >
+                      <span>🗑️</span>
+                    </button>
+                  </form>
+                </div>
 
                 <Link
                   href={`/${domain.slug}`}
                   target="_blank"
-                  className="rounded-full bg-[var(--foreground)] px-4 py-1.5 text-xs font-semibold text-[var(--paper)] hover:bg-[var(--foreground)]/85 transition-colors"
+                  className="rounded-full bg-[var(--foreground)] px-4 py-1.5 text-xs font-semibold text-[var(--paper)] hover:bg-[var(--foreground)]/85 transition-colors shrink-0"
                 >
                   View Live ↗
                 </Link>
