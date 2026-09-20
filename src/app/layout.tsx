@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <NavigationProgressBar />
         </Suspense>
         {children}
+        <Analytics />
       </body>
     </html>
   );

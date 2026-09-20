@@ -1,5 +1,7 @@
 "use client";
 
+import { BrandLogo } from "@/components/brand-logo";
+
 export function MapCanvasSkeleton({
   title = "Initializing Map Engine...",
   subtitle = "Calibrating geospatial coordinates...",
@@ -26,7 +28,7 @@ export function MapCanvasSkeleton({
         <div className="absolute h-20 w-20 rounded-full border-2 border-[#06b6d4]/40 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.8s' }} />
         
         <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--paper)] shadow-xl border border-[var(--line)]">
-          <span className="text-2xl animate-bounce">📍</span>
+          <BrandLogo size={28} className="animate-bounce" />
         </div>
       </div>
 

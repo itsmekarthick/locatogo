@@ -8,6 +8,9 @@ import { PlaceStreetViewButton } from "@/components/place-street-view-modal";
 import { PlaceDistanceBadge } from "@/components/place-distance-badge";
 import { PlaceGoogleReviews } from "@/components/place-google-reviews";
 import { DetailsAutocompleteSearch } from "@/components/details-autocomplete-search";
+import { BrandLogo } from "@/components/brand-logo";
+
+export const revalidate = 3600;
 import { getComprehensiveAboutText } from "@/lib/media/place-overview";
 import { fetchPlaceWeather } from "@/lib/services/weather";
 import {
@@ -224,8 +227,9 @@ export default async function ListingDetailPage({ params }: Props) {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
           {/* Logo & Badge */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <Link href="/" className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-              LocaToGo<span className="text-[#06b6d4]">.</span>
+            <Link href="/" className="flex items-center gap-2 font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900 group">
+              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+              <span>LocaToGo<span className="text-[#06b6d4]">.</span></span>
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>

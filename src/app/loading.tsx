@@ -1,5 +1,5 @@
 import { TechAtlasSkeleton } from "@/components/tech-atlas-skeleton";
 
-export default function RootLoading() {
+export default function Loading() {
   return <TechAtlasSkeleton />;
 }

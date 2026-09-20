@@ -8,6 +8,7 @@ import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overla
 import { getComprehensiveAboutText } from "@/lib/media/place-overview";
 import { PlaceMiniMap } from "@/components/place-mini-map";
 import { DetailsAutocompleteSearch } from "@/components/details-autocomplete-search";
+import { BrandLogo } from "@/components/brand-logo";
 import { fetchPlaceWeather } from "@/lib/services/weather";
 import { PlaceWeatherBadge } from "@/components/place-weather-badge";
 import { PlaceStreetViewButton } from "@/components/place-street-view-modal";
@@ -155,8 +156,9 @@ export default async function DomainListingDetailPage({ params }: Props) {
       <header className="border-b border-gray-100 bg-white sticky top-0 z-50 shadow-2xs">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <Link href="/" className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-              LocaToGo<span className="text-[#06b6d4]">.</span>
+            <Link href="/" className="flex items-center gap-2 font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900 group">
+              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+              <span>LocaToGo<span className="text-[#06b6d4]">.</span></span>
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>

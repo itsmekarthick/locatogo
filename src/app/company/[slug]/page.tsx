@@ -9,6 +9,7 @@ import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 import { ShareButton } from "@/components/share-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanyJobsFilter } from "@/components/company-jobs-filter";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const revalidate = 3600;
 
@@ -223,9 +224,7 @@ export default async function CompanyProfilePage({ params }: Props) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 group">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-600 text-white font-black text-lg shadow-md group-hover:scale-105 transition-transform">
-                📍
-              </span>
+              <BrandLogo size={36} className="group-hover:scale-105 transition-transform" />
               <div className="flex flex-col">
                 <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white leading-none">
                   LocaToGo<span className="text-cyan-600">.</span>
