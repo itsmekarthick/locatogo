@@ -19,6 +19,17 @@ type FetchedPlace = {
   postalCode: string;
   rawCategory: string;
   displayName: string;
+  website?: string;
+  companyType?: string;
+  fundingStage?: string;
+  techStack?: string[];
+  jobs?: {
+    title: string;
+    dept?: string;
+    type: "on_site" | "hybrid" | "remote";
+    salary?: string;
+    apply: string;
+  }[];
 };
 
 export function AdminOnlinePlaceFetcher({
@@ -112,6 +123,11 @@ export function AdminOnlinePlaceFetcher({
         countryCode: p.countryCode,
         postalCode: p.postalCode,
         shortDescription: `Verified landmark in ${p.locality}, Bengaluru.`,
+        website: p.website,
+        companyType: p.companyType,
+        fundingStage: p.fundingStage,
+        techStack: p.techStack,
+        jobs: p.jobs,
       }));
 
     if (!placesToInsert.length) {

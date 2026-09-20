@@ -622,6 +622,102 @@ const BANGALORE_IT_COMPANIES = [
     jobs: [
       { title: "Spacecraft Flight Software Engineer", dept: "Satellite Avionics", type: "on_site", salary: "₹28L - ₹42L", apply: "https://www.pixxel.space/careers" }
     ]
+  },
+  {
+    title: "Amazon Development Centre",
+    slug: "amazon-wtc",
+    locality: "Malleswaram",
+    address: "World Trade Center, Brigade Gateway, Malleshwaram West",
+    lat: 13.0121,
+    lon: 77.5552,
+    website: "https://www.amazon.jobs",
+    careers_url: "https://www.amazon.jobs/en/locations/bangalore-india",
+    type: "tech_giant_mnc",
+    stage: "Public",
+    employees: "10,000+",
+    tech_stack: ["Java", "AWS", "DynamoDB", "Python", "React", "Machine Learning"],
+    year: 1994,
+    desc: "Amazon's massive engineering hub driving global e-commerce, AWS infrastructure, and logistics algorithms.",
+    jobs: [
+      { title: "Software Development Engineer III - AWS Core", dept: "AWS Compute", type: "hybrid", salary: "₹50L - ₹80L", apply: "https://www.amazon.jobs" },
+      { title: "Senior Applied Scientist - Search Ranking", dept: "Global Retail", type: "on_site", salary: "₹70L - ₹1.1Cr", apply: "https://www.amazon.jobs" }
+    ]
+  },
+  {
+    title: "NVIDIA Development Center",
+    slug: "nvidia-manyata",
+    locality: "Hebbal",
+    address: "Manyata Embassy Business Park, Nagavara",
+    lat: 13.0498,
+    lon: 77.6210,
+    website: "https://www.nvidia.com",
+    careers_url: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite",
+    type: "deeptech_hardware",
+    stage: "Public",
+    employees: "10,000+",
+    tech_stack: ["C++", "CUDA", "Python", "GPU Architecture", "TensorFlow", "Deep Learning"],
+    year: 1993,
+    desc: "NVIDIA's India engineering lab architecting next-generation GPUs, AI platforms, and self-driving car algorithms.",
+    jobs: [
+      { title: "Senior Deep Learning Software Engineer", dept: "Autonomous Vehicles", type: "hybrid", salary: "₹60L - ₹95L", apply: "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite" }
+    ]
+  },
+  {
+    title: "Razorpay Headquarters",
+    slug: "razorpay-hsr",
+    locality: "HSR Layout",
+    address: "SJR Cyber, 1st Floor, 22nd Cross Rd, Sector 7, HSR Layout",
+    lat: 12.9141,
+    lon: 77.6358,
+    website: "https://razorpay.com",
+    careers_url: "https://razorpay.com/jobs/",
+    type: "product_saas",
+    stage: "Unicorn",
+    employees: "1000+",
+    tech_stack: ["Golang", "PHP", "Kubernetes", "PostgreSQL", "React", "Kafka"],
+    year: 2014,
+    desc: "India's leading fintech unicorn building modern payments infrastructure, neo-banking, and payroll solutions.",
+    jobs: [
+      { title: "Lead Backend Engineer - Payment Gateway Core", dept: "Payments", type: "hybrid", salary: "₹45L - ₹65L", apply: "https://razorpay.com/jobs/" }
+    ]
+  },
+  {
+    title: "Atlassian India",
+    slug: "atlassian-rmz-ecoworld",
+    locality: "Bellandur (ORR)",
+    address: "RMZ Ecoworld, Outer Ring Rd, Devarabisanahalli",
+    lat: 12.9231,
+    lon: 77.6834,
+    website: "https://www.atlassian.com",
+    careers_url: "https://www.atlassian.com/company/careers",
+    type: "product_saas",
+    stage: "Public",
+    employees: "1000+",
+    tech_stack: ["Java", "Kotlin", "React", "AWS", "GraphQL", "Microservices"],
+    year: 2002,
+    desc: "Atlassian's rapidly growing Indian engineering center building Jira, Confluence, and next-gen team collaboration tools.",
+    jobs: [
+      { title: "Principal Software Engineer - Jira Core Performance", dept: "Jira Software", type: "hybrid", salary: "₹65L - ₹90L", apply: "https://www.atlassian.com/company/careers" }
+    ]
+  },
+  {
+    title: "Airbnb India Tech Hub",
+    slug: "airbnb-bellandur",
+    locality: "Bellandur (ORR)",
+    address: "RMZ Ecoworld, Building 4, Outer Ring Rd",
+    lat: 12.9238,
+    lon: 77.6823,
+    website: "https://www.airbnb.com",
+    careers_url: "https://careers.airbnb.com",
+    type: "product_saas",
+    stage: "Public",
+    employees: "500+",
+    tech_stack: ["Java", "Ruby on Rails", "React", "Next.js", "GraphQL", "AWS"],
+    year: 2008,
+    desc: "Airbnb's tech hub in Bengaluru building core trust, safety, and payment scaling systems for global travelers.",
+    jobs: [
+      { title: "Staff Software Engineer - Trust & Safety", dept: "Trust Platform", type: "hybrid", salary: "₹70L - ₹1.0Cr", apply: "https://careers.airbnb.com" }
+    ]
   }
 ];
 

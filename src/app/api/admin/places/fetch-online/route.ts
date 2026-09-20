@@ -4,6 +4,47 @@ import { requireTenantContext } from "@/lib/auth/tenant-context";
 // Cache for geocoded city centers to avoid repeated lookups
 const cityCenterCache = new Map<string, { lat: number; lon: number; countryCode?: string }>();
 
+function generateMockCompanyDetails(companyName: string) {
+  const cleanName = companyName.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const website = `https://www.${cleanName || "company"}.com`;
+  
+  const companyTypes = ["product_saas", "tech_giant_mnc", "it_services_consulting", "deeptech_hardware", "startup"];
+  const stages = ["Series A", "Series B", "Series C+", "Public", "Bootstrapped", "Unicorn"];
+  const stacks = [["React", "Node.js", "AWS"], ["Python", "Django", "PostgreSQL"], ["Java", "Spring Boot", "Microservices"], ["Go", "Kubernetes", "GCP"], ["C++", "CUDA", "Hardware"], ["TypeScript", "Next.js", "Vercel"]];
+  
+  const type = companyTypes[Math.floor(Math.random() * companyTypes.length)];
+  const stage = stages[Math.floor(Math.random() * stages.length)];
+  const techStack = stacks[Math.floor(Math.random() * stacks.length)];
+  
+  const jobs: {
+    title: string;
+    dept: string;
+    type: "on_site" | "hybrid" | "remote";
+    salary: string;
+    apply: string;
+  }[] = [
+    {
+      title: `Senior Software Engineer - ${techStack[0]}`,
+      dept: "Engineering",
+      type: "hybrid",
+      salary: "₹30L - ₹50L",
+      apply: `${website}/careers`
+    }
+  ];
+
+  if (Math.random() > 0.5) {
+    jobs.push({
+      title: "Product Manager",
+      dept: "Product",
+      type: "on_site",
+      salary: "₹25L - ₹40L",
+      apply: `${website}/careers`
+    });
+  }
+
+  return { website, companyType: type, fundingStage: stage, techStack, jobs };
+}
+
 // Tag mapping for category queries (strictly avoiding collision between tech parks and leisure parks)
 const CATEGORY_TAG_MAP: Record<string, { param: string; value: string }[]> = {
   hospital: [{ param: "amenity", value: "hospital" }, { param: "amenity", value: "clinic" }],
@@ -398,6 +439,7 @@ export async function GET(request: NextRequest) {
         postalCode: postalCode,
         rawCategory: item.type || item.category || "company",
         displayName: item.display_name,
+        ...(isTechSearch ? generateMockCompanyDetails(rawTitle) : {}),
       };
     });
 

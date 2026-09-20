@@ -896,6 +896,17 @@ export type OnlinePlaceToInsert = {
   countryCode?: string;
   postalCode?: string;
   shortDescription?: string;
+  website?: string;
+  companyType?: string;
+  fundingStage?: string;
+  techStack?: string[];
+  jobs?: {
+    title: string;
+    dept?: string;
+    type: "on_site" | "hybrid" | "remote";
+    salary?: string;
+    apply: string;
+  }[];
 };
 
 export async function bulkInsertOnlinePlaces(
@@ -991,12 +1002,38 @@ export async function bulkInsertOnlinePlaces(
       verification_status: "verified",
       is_featured: false,
       published_at: new Date().toISOString(),
+      website: place.website || null,
+      company_type: place.companyType || null,
+      funding_stage: place.fundingStage || null,
+      tech_stack: place.techStack || null,
     });
 
     if (error) {
       console.error("Failed to insert online place:", place.title, error);
       errorCount++;
     } else {
+      // Find the inserted listing to get its ID for jobs
+      const { data: insertedListing } = await supabase
+        .from("listings")
+        .select("id")
+        .eq("tenant_id", tenant.id)
+        .eq("slug", uniqueSlug)
+        .single();
+
+      if (insertedListing && place.jobs && place.jobs.length > 0) {
+        const jobsToInsert = place.jobs.map((j) => ({
+          tenant_id: tenant.id,
+          listing_id: insertedListing.id,
+          title: j.title,
+          department: j.dept || null,
+          workplace_type: j.type,
+          salary_range: j.salary || null,
+          apply_url: j.apply,
+        }));
+        const { error: jobError } = await supabase.from("jobs").insert(jobsToInsert);
+        if (jobError) console.error("Failed to insert jobs for:", place.title, jobError);
+      }
+
       successCount++;
       existingTitleSet.add(titleKey);
       existingSlugSet.add(uniqueSlug);
