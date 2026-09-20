@@ -340,7 +340,7 @@ export function AirbnbSearchBar({
                 ✕
               </button>
             )}
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white shadow-xs hover:scale-105 transition-transform">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] text-white shadow-xs hover:scale-105 transition-transform">
               <span className="text-xs">🔍</span>
             </div>
           </div>
@@ -401,7 +401,7 @@ export function AirbnbSearchBar({
                       ? "Search companies, tech stacks (React, Python, Go), roles..."
                       : "Type name, company, hospital, cafe, locality..."
                   }
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#06b6d4] focus:ring-1 focus:ring-[#06b6d4]"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#0ea5e9] focus:ring-1 focus:ring-[#0ea5e9]"
                 />
                 {searchQuery && (
                   <button
@@ -466,7 +466,7 @@ export function AirbnbSearchBar({
                       onLocateMe();
                       setIsOpen(false);
                     }}
-                    className="flex items-center gap-1.5 text-xs font-bold text-[#06b6d4] hover:underline cursor-pointer"
+                    className="flex items-center gap-1.5 text-xs font-bold text-[#0ea5e9] hover:underline cursor-pointer"
                   >
                     <span>{isLocating ? "⏳" : "🎯"}</span>
                     <span>{isLocating ? "Detecting GPS..." : "Near Me (GPS)"}</span>

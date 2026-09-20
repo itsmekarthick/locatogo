@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --color-cyan-400: #38bdf8;
+  --color-cyan-500: #0ea5e9;
+  --color-cyan-600: #0284c7;
+  --color-cyan-700: #0369a1;
+}
 @custom-variant dark (&:is(.dark, .dark *));
 
 :root {
@@ -14,8 +20,8 @@
   --ink-faint: #9ca3af;
   --leaf: #e8f5e9;
   --leaf-dark: #1b5e20;
-  --coral: #06b6d4;
-  --coral-dark: #0891b2;
+  --coral: #0ea5e9;
+  --coral-dark: #0284c7;
   --coral-soft: #eef2ff;
   --sun: #fef3c7;
   --sun-dark: #b45309;
@@ -39,7 +45,7 @@ html.dark,
   --leaf: #064e3b;
   --leaf-dark: #34d399;
   --coral: #22d3ee;
-  --coral-dark: #06b6d4;
+  --coral-dark: #0ea5e9;
   --coral-soft: #1e1b4b;
   --sun: #78350f;
   --sun-dark: #fbbf24;
@@ -50,9 +56,59 @@ html.dark,
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-body);
   --font-mono: var(--font-geist-mono);
-  --font-serif: var(--font-instrument-serif);
+  --font-serif: var(--font-display);
+  --font-display: var(--font-display);
+}
+
+@keyframes app-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-app-reveal {
+  animation: app-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+}
+
+@keyframes type-search {
+  0% {
+    max-width: 0;
+    opacity: 0;
+    filter: blur(2px);
+  }
+  1% {
+    opacity: 1;
+  }
+  100% {
+    max-width: 100%;
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { border-right-color: transparent; }
+  50% { border-right-color: var(--coral-dark); }
+}
+
+.animate-brand-reveal {
+  display: inline-flex;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid transparent;
+  padding-right: 2px;
+  animation: 
+    type-search 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+    cursor-blink 0.6s step-end 3 forwards;
 }
 
 body {
@@ -130,7 +186,7 @@ body {
 .locatogo-pill-pin:hover {
   transform: translateY(-3px) scale(1.06);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
-  border-color: var(--theme-color, var(--coral, #06b6d4));
+  border-color: var(--theme-color, var(--coral, #0ea5e9));
   z-index: 999 !important;
 }
 
@@ -149,7 +205,7 @@ body {
 }
 
 .dark .locatogo-pill-pin.is-active {
-  background: #0891b2 !important;
+  background: #0284c7 !important;
   border-color: #22d3ee !important;
   color: #ffffff !important;
 }
@@ -201,7 +257,7 @@ body {
 }
 
 .dark .locatogo-pill-pin.is-active .locatogo-pin-arrow {
-  border-top-color: #0891b2 !important;
+  border-top-color: #0284c7 !important;
 }
 
 /* 2. Compact Teardrop Pin for Zoomed Out Mode */
@@ -288,7 +344,7 @@ body {
   height: 24px;
   border-radius: 9999px;
   background: #ffffff;
-  border: 2px solid #0891b2;
+  border: 2px solid #0284c7;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
   display: flex;
   align-items: center;
@@ -344,7 +400,7 @@ body {
 
 .locatogo-cluster-pill:hover {
   transform: scale(1.14);
-  background: #0891b2 !important;
+  background: #0284c7 !important;
   border-color: #ffffff;
   box-shadow: 0 6px 22px rgba(79, 70, 229, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.35);
   z-index: 1000 !important;
@@ -450,7 +506,7 @@ body {
 }
 .locatogo-cluster-marker:hover {
   transform: scale(1.18);
-  background: #06b6d4 !important;
+  background: #0ea5e9 !important;
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6), 0 0 0 5px rgba(99, 102, 241, 0.35);
   z-index: 1000 !important;
 }
@@ -497,7 +553,7 @@ body {
 
 .locatogo-popup .btn-details,
 .leaflet-popup-content .btn-details {
-  background-color: var(--coral, #06b6d4) !important;
+  background-color: var(--coral, #0ea5e9) !important;
   color: #ffffff !important;
 }
 

@@ -248,7 +248,7 @@ export function UserProfileMenu({
                     <p className="font-bold leading-tight">Admin Console</p>
                     <p className="text-[10px] text-slate-400 font-normal">Directory management & KPIs</p>
                   </div>
-                  <span className="rounded bg-[#06b6d4]/15 px-1.5 py-0.2 text-[9px] font-extrabold text-[#06b6d4] uppercase">
+                  <span className="rounded bg-[#0ea5e9]/15 px-1.5 py-0.2 text-[9px] font-extrabold text-[#0ea5e9] uppercase">
                     Hub
                   </span>
                 </Link>

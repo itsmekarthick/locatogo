@@ -109,7 +109,7 @@ export function SponsorInquiryForm() {
 
       <button
         type="submit"
-        className="w-full rounded-full bg-[#06b6d4] hover:bg-[#0891b2] text-white font-bold py-3 text-xs shadow-md transition-all cursor-pointer"
+        className="w-full rounded-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold py-3 text-xs shadow-md transition-all cursor-pointer"
       >
         Submit Advertising Request 🚀
       </button>

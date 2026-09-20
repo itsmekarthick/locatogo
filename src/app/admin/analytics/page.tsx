@@ -20,7 +20,7 @@ export default async function TenantAnalyticsPage() {
       .eq("tenant_id", tenant.id)
       .gte("occurred_at", thirtyDaysAgo)
       .order("occurred_at", { ascending: false })
-      .limit(500),
+      .limit(5000),
     supabase
       .from("listings")
       .select("id, title, slug, locality, city")

@@ -565,8 +565,7 @@ export function GlobalTechExplorer({
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2 group" title="LocaToGo Tech Atlas">
               <BrandLogo size={30} className="group-hover:scale-105 transition-transform" />
-              <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-                LocaToGo<span className="text-[#06b6d4]">.</span>
+              <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
               </span>
             </Link>
 

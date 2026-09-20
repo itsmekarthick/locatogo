@@ -1,6 +1,6 @@
 "use client";
 
-type AnalyticsEvent =
+export type AnalyticsEvent =
   | "page_view"
   | "listing_view"
   | "search"

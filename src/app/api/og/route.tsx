@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
                   width: "48px",
                   height: "48px",
                   borderRadius: "14px",
-                  backgroundColor: "#0891b2",
+                  backgroundColor: "#0284c7",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
                 📍
               </div>
               <div style={{ color: "#ffffff", fontSize: "32px", fontWeight: "900", letterSpacing: "-0.5px" }}>
-                LocaToGo<span style={{ color: "#06b6d4" }}>.</span>
+                LocaToGo<span style={{ color: "#0ea5e9" }}>.</span>
               </div>
             </div>
 

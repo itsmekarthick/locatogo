@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/react";
-import { DM_Sans, Playfair_Display } from "next/font/google";
+import { DM_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 
 const bodyFont = DM_Sans({
@@ -9,7 +9,7 @@ const bodyFont = DM_Sans({
   subsets: ["latin"],
 });
 
-const displayFont = Playfair_Display({
+const displayFont = Outfit({
   variable: "--font-display",
   subsets: ["latin"],
 });
@@ -59,7 +59,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <Suspense fallback={null}>
           <NavigationProgressBar />
         </Suspense>
-        {children}
+        <main className="flex-1 w-full h-full animate-app-reveal flex flex-col">
+          {children}
+        </main>
         <Analytics />
       </body>
     </html>

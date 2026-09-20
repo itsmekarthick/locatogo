@@ -181,7 +181,7 @@ export default function ContactSupportPage() {
                   <span className="text-lg">📧</span>
                   <div>
                     <span className="font-bold text-gray-900 block">Support Email</span>
-                    <a href="mailto:support@locatogo.in" className="text-gray-600 hover:text-[#06b6d4] transition-colors">
+                    <a href="mailto:support@locatogo.in" className="text-gray-600 hover:text-[#0ea5e9] transition-colors">
                       support@locatogo.in
                     </a>
                   </div>
@@ -235,8 +235,7 @@ export default function ContactSupportPage() {
       {/* Footer */}
       <footer className="mt-auto border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
-          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            LocaToGo<span className="text-[#06b6d4]">.</span>
+          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">

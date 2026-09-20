@@ -17,7 +17,7 @@ export default function AdvertisePage() {
       {/* Hero Showcase */}
       <main className="flex-1 mx-auto w-full max-w-[1200px] px-4 sm:px-6 py-12 sm:py-16 space-y-16">
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <span className="rounded-full bg-orange-50 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800 px-4 py-1 text-xs font-bold text-[#06b6d4] uppercase tracking-wider">
+          <span className="rounded-full bg-orange-50 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800 px-4 py-1 text-xs font-bold text-[#0ea5e9] uppercase tracking-wider">
             📢 High-Intent Sponsored Placements
           </span>
           <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
@@ -29,7 +29,7 @@ export default function AdvertisePage() {
           <div className="pt-2 flex items-center justify-center gap-3">
             <a
               href="#inquire-form"
-              className="rounded-full bg-[#06b6d4] hover:bg-[#0891b2] text-white font-bold px-6 py-3 text-xs shadow-md transition-all"
+              className="rounded-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold px-6 py-3 text-xs shadow-md transition-all"
             >
               Book an Advertising Slot →
             </a>
@@ -57,7 +57,7 @@ export default function AdvertisePage() {
             <p className="mt-1 text-xs font-bold text-slate-600 dark:text-slate-400">Verified Direct GPS & Contact Data</p>
           </div>
           <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-6 text-center">
-            <p className="font-display text-3xl sm:text-4xl font-bold text-[#06b6d4]">2.8x</p>
+            <p className="font-display text-3xl sm:text-4xl font-bold text-[#0ea5e9]">2.8x</p>
             <p className="mt-1 text-xs font-bold text-slate-600 dark:text-slate-400">Higher Engagement vs Social Ads</p>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function AdvertisePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Tier 1 */}
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#06b6d4] transition-all">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#0ea5e9] transition-all">
               <div>
                 <span className="rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                   Maximum Visibility
@@ -142,7 +142,7 @@ export default function AdvertisePage() {
             </div>
 
             {/* Tier 3 */}
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#06b6d4] transition-all">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#0ea5e9] transition-all">
               <div>
                 <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                   Partner Spotlight

@@ -64,7 +64,7 @@ export default async function AdminPage() {
       .select("created_at")
       .eq("tenant_id", tenant.id)
       .order("created_at", { ascending: false })
-      .limit(90),
+      .limit(5000),
   ]);
 
   const total = counts.reduce((sum, [, count]) => sum + count, 0);

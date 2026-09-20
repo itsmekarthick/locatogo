@@ -109,8 +109,7 @@ export default function SignupPage() {
         <div className="lg:hidden flex items-center justify-between mb-8">
           <Link href="/" className="flex items-center gap-2.5">
             <BrandLogo size={32} />
-            <span className="font-serif text-xl font-bold tracking-tight text-slate-950 dark:text-slate-100">
-              LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span>
+            <span className="font-serif text-xl font-bold tracking-tight text-slate-950 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span></span>
             </span>
           </Link>
           <Link

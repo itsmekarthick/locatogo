@@ -158,7 +158,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900 group">
               <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
-              <span>LocaToGo<span className="text-[#06b6d4]">.</span></span>
+              <span><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span></span>
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
               <span className="text-xs">📍</span>
@@ -235,7 +235,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
               )}
 
               {listing.is_featured && (
-                <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#06b6d4] uppercase flex items-center gap-1">
+                <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#0ea5e9] uppercase flex items-center gap-1">
                   <span>☆</span>
                   <span>FEATURED</span>
                 </span>
@@ -267,7 +267,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
 
             <Link
               href={`/${directory.slug}/listing/${listing.slug}/claim`}
-              className="text-xs font-bold text-[#06b6d4] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-[#0ea5e9] hover:underline flex items-center gap-1"
             >
               <span>🏷️ Claim</span>
             </Link>
@@ -279,7 +279,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
             </h1>
             <div className="mt-1.5 sm:mt-2 flex items-center gap-3 flex-wrap">
               <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5 font-medium">
-                <span className="text-[#06b6d4] shrink-0">📍</span>
+                <span className="text-[#0ea5e9] shrink-0">📍</span>
                 <span>{placeDetails.formattedAddress || address || "Bangalore, Karnataka, India"}</span>
               </p>
               <a
@@ -299,8 +299,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
           {/* Action Button Bar */}
           <div className="mt-5 sm:mt-6 flex items-center gap-2 sm:gap-2.5 border-t border-gray-100 pt-4 sm:pt-5 text-xs overflow-x-auto pb-1.5 sm:pb-0 sm:flex-wrap no-scrollbar">
             {whatsappUrl && (
-              <a
-                href={whatsappUrl}
+              <a data-analytics-event="whatsapp_click" href={whatsappUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 sm:px-4 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors shadow-2xs shrink-0"
@@ -602,8 +601,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-8">
         <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
-          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900">
-            LocaToGo<span className="text-[#06b6d4]">.</span>
+          <Link href="/" className="font-serif text-xl font-bold tracking-tight text-gray-900"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
           </Link>
 
           <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">

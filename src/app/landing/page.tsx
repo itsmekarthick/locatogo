@@ -342,8 +342,7 @@ export default async function LandingPage() {
             <div>
               <div className="flex items-center gap-2">
                 <BrandLogo size={28} />
-                <span className="font-serif text-xl font-bold text-slate-900 dark:text-slate-100">
-                  LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span>
+                <span className="font-serif text-xl font-bold text-slate-900 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span></span>
                 </span>
               </div>
               <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">

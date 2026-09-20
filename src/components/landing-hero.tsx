@@ -91,7 +91,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
             {/* Round Coral Action Button */}
             <button
               type="submit"
-              className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gradient-to-r from-[#06b6d4] to-[#0891b2] text-white shadow-md hover:scale-105 transition-all shrink-0 cursor-pointer"
+              className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] text-white shadow-md hover:scale-105 transition-all shrink-0 cursor-pointer"
               title="Search Atlas"
             >
               <span className="text-sm">🔍</span>
@@ -165,7 +165,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
             <div
               className="absolute inset-0 opacity-40 dark:opacity-20"
               style={{
-                backgroundImage: "radial-gradient(#06b6d4 1px, transparent 1px)",
+                backgroundImage: "radial-gradient(#0ea5e9 1px, transparent 1px)",
                 backgroundSize: "24px 24px",
               }}
             />
