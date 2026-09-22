@@ -1,7 +1,6 @@
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminOnlinePlaceFetcher } from "@/components/admin-online-place-fetcher";
 import { AdminClearListingsButton } from "@/components/admin-clear-listings-button";
-import { AdminTechAtlasSeederButton } from "@/components/admin-tech-atlas-seeder-button";
 import { AdminCsvUploadForm } from "@/components/admin-csv-upload-form";
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string }> }) {
@@ -36,9 +35,6 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
 
         <AdminClearListingsButton listingsCount={listingsCount ?? 0} />
       </div>
-
-      {/* 1. Verified Tech Atlas Instant Seeder Card */}
-      <AdminTechAtlasSeederButton />
 
       {/* 2. Live Online Place Discovery & Fetcher Tool */}
       <AdminOnlinePlaceFetcher
