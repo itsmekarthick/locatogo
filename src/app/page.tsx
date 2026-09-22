@@ -285,6 +285,7 @@ export default async function Home({ searchParams }: Props) {
         initialJobs={initialJobs}
         totalDatabaseCompanies={totalTechCount || 19095}
         knownHubCounts={KNOWN_HUB_COUNTS}
+        isRootPage={true}
       />
 
       {/* 2. Semantic Crawlable SSR Architecture for Search Engines & Robots */}

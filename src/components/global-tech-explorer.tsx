@@ -61,12 +61,14 @@ export function GlobalTechExplorer({
   totalDatabaseCompanies = 19095,
   currentHub = "bengaluru",
   knownHubCounts,
+  isRootPage = false,
 }: {
   initialCompanies: CompanyDetail[];
   initialJobs?: UnifiedJob[];
   totalDatabaseCompanies?: number;
   currentHub?: string;
   knownHubCounts?: Record<string, number>;
+  isRootPage?: boolean;
 }) {
   const [selectedHub, setSelectedHub] = useState<TechHub>(
     GLOBAL_TECH_HUBS.find((h) => h.id === currentHub) || GLOBAL_TECH_HUBS[0]
@@ -101,6 +103,45 @@ export function GlobalTechExplorer({
     setGridPage(1);
     setSidebarPage(1);
   }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedHub]);
+
+  // Initial location request for root page
+  useEffect(() => {
+    if (isRootPage && typeof window !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat1 = pos.coords.latitude;
+          const lon1 = pos.coords.longitude;
+          let closest = GLOBAL_TECH_HUBS[0];
+          let minDist = Infinity;
+          
+          for (const hub of GLOBAL_TECH_HUBS) {
+            const lat2 = hub.lat;
+            const lon2 = hub.lng;
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            if (dist < minDist) {
+              minDist = dist;
+              closest = hub;
+            }
+          }
+          
+          // Switch to the closest hub if we found one
+          if (closest && closest.id !== selectedHub.id) {
+            setSelectedHub(closest);
+          }
+        },
+        (err) => {
+          console.warn("User denied location or it failed:", err);
+        },
+        { timeout: 10000 }
+      );
+    }
+  }, [isRootPage]);
 
   // Reset job page when job filters change
   useEffect(() => {
