@@ -2,7 +2,7 @@
 ALTER TYPE public.platform_role ADD VALUE IF NOT EXISTS 'tech_user';
 
 -- Create tech_profiles table
-CREATE TABLE public.tech_profiles (
+CREATE TABLE IF NOT EXISTS public.tech_profiles (
   id uuid primary key references public.profiles(id) on delete cascade,
   github_url text check (github_url ~ '^https?://(www\.)?github\.com/.*$'),
   linkedin_url text check (linkedin_url ~ '^https?://(www\.)?linkedin\.com/.*$'),
@@ -18,12 +18,15 @@ CREATE TABLE public.tech_profiles (
 ALTER TABLE public.tech_profiles ENABLE ROW LEVEL SECURITY;
 
 -- Policies for tech_profiles
+DROP POLICY IF EXISTS tech_profiles_self_read ON public.tech_profiles;
 CREATE POLICY tech_profiles_self_read ON public.tech_profiles 
   FOR SELECT USING (id = auth.uid() OR public.is_platform_admin());
 
+DROP POLICY IF EXISTS tech_profiles_self_update ON public.tech_profiles;
 CREATE POLICY tech_profiles_self_update ON public.tech_profiles 
   FOR UPDATE USING (id = auth.uid()) WITH CHECK (id = auth.uid());
   
+DROP POLICY IF EXISTS tech_profiles_self_insert ON public.tech_profiles;
 CREATE POLICY tech_profiles_self_insert ON public.tech_profiles 
   FOR INSERT WITH CHECK (id = auth.uid());
 

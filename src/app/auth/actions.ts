@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { sendTemplatedEmail } from "@/lib/email/send";
 import type { ActionResult } from "@/lib/validation/directory";
 
 const credentialsSchema = z.object({ email: z.string().trim().email(), password: z.string().min(8) });
@@ -66,6 +67,17 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
     },
   });
   if (error || !data.user) return { error: error?.message || "Unable to create the account." };
+
+  // Dispatch branded welcome email
+  sendTemplatedEmail({
+    type: "welcome",
+    to: parsed.data.email,
+    variables: {
+      displayName,
+      email: parsed.data.email,
+    },
+  }).catch((err) => console.error("[auth] Failed to dispatch welcome email:", err));
+
   if (!data.session) return { success: "Account created! Confirm your email, then sign in to get started." };
   
   redirect("/tech");

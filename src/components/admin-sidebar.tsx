@@ -49,6 +49,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Activity Trail", href: "/admin/activity", icon: "📜" },
       { label: "Team", href: "/admin/team", icon: "👥" },
+      { label: "Email Templates", href: "/admin/settings/emails", icon: "✉️" },
       { label: "Settings", href: "/admin/settings", icon: "🔧" },
       { label: "Platform Console", href: "/platform-admin", icon: "⚡" },
     ],

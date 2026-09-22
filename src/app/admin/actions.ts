@@ -7,6 +7,7 @@ import { parseImportCsv } from "@/lib/import/csv";
 import { categoryInputSchema, customFieldInputSchema, domainInputSchema, listingInputSchema, socialLinkInputSchema } from "@/lib/validation/directory";
 import { syncCompanyAtsJobs } from "@/lib/careers/ats-sync";
 import { resolvePincodeCoordinates } from "@/lib/import/registry-transformer";
+import { sendTemplatedEmail } from "@/lib/email/send";
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -325,8 +326,30 @@ export async function updateListing(formData: FormData): Promise<void> {
 export async function publishListing(formData: FormData): Promise<void> {
   const { supabase, tenant } = await requireTenantContext();
   const listingId = id(formData, "listingId");
-  const { error } = await supabase.from("listings").update({ status: "published", published_at: new Date().toISOString() }).eq("id", listingId).eq("tenant_id", tenant.id).in("status", ["draft", "approved"]);
+  const { data: updatedListing, error } = await supabase
+    .from("listings")
+    .update({ status: "published", published_at: new Date().toISOString() })
+    .eq("id", listingId)
+    .eq("tenant_id", tenant.id)
+    .in("status", ["draft", "approved"])
+    .select("title, email, slug")
+    .maybeSingle();
+
   if (error) throw new Error("The listing could not be published.");
+
+  if (updatedListing?.email) {
+    const origin = process.env.NEXT_PUBLIC_APP_URL || "https://locatogo.com";
+    sendTemplatedEmail({
+      type: "listing_published",
+      to: updatedListing.email,
+      tenantId: tenant.id,
+      variables: {
+        listingTitle: updatedListing.title,
+        listingUrl: `${origin}/tech`,
+      },
+    }).catch((err) => console.error("[email] Failed to send listing_published email:", err));
+  }
+
   revalidatePath("/admin/listings");
 }
 
