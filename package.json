@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "sync:jobs": "npx tsx scripts/maintenance/sync-all-jobs.ts",
     "sync:us-companies": "npx tsx --env-file=.env scripts/scrapers/sync-us-companies.ts"
   },
   "dependencies": {

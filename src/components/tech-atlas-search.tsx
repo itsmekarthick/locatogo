@@ -223,6 +223,21 @@ export function detectHubForCompany(c: CompanyDetail): TechHub {
   ) {
     return GLOBAL_TECH_HUBS.find((h) => h.id === "singapore") || GLOBAL_TECH_HUBS[0];
   }
+  if (city.includes("paris") || loc.includes("paris") || addr.includes("paris")) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "paris") || GLOBAL_TECH_HUBS[0];
+  }
+  if (city.includes("amsterdam") || loc.includes("amsterdam") || addr.includes("amsterdam")) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "amsterdam") || GLOBAL_TECH_HUBS[0];
+  }
+  if (city.includes("dublin") || loc.includes("dublin") || addr.includes("dublin")) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "dublin") || GLOBAL_TECH_HUBS[0];
+  }
+  if (city.includes("tokyo") || loc.includes("tokyo") || addr.includes("tokyo") || loc.includes("shibuya")) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "tokyo") || GLOBAL_TECH_HUBS[0];
+  }
+  if (city.includes("sydney") || loc.includes("sydney") || addr.includes("sydney") || loc.includes("surry hills")) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "sydney") || GLOBAL_TECH_HUBS[0];
+  }
   // Default fallback is Bengaluru
   return GLOBAL_TECH_HUBS.find((h) => h.id === "bengaluru") || GLOBAL_TECH_HUBS[0];
 }

@@ -91,6 +91,16 @@ export async function GET(request: Request) {
         query = query.ilike("city", "%berlin%");
       } else if (h === "singapore") {
         query = query.ilike("city", "%singapore%");
+      } else if (h === "paris") {
+        query = query.ilike("city", "%paris%");
+      } else if (h === "amsterdam") {
+        query = query.ilike("city", "%amsterdam%");
+      } else if (h === "dublin") {
+        query = query.ilike("city", "%dublin%");
+      } else if (h === "tokyo") {
+        query = query.ilike("city", "%tokyo%");
+      } else if (h === "sydney") {
+        query = query.ilike("city", "%sydney%");
       }
     }
 

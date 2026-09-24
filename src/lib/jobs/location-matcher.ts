@@ -29,7 +29,12 @@ export function normalizeCityKey(city: string): string {
   if (c.includes("toronto") || c.includes("ontario")) return "toronto";
   if (c.includes("berlin") || c.includes("germany")) return "berlin";
   if (c.includes("singapore") || c === "sg") return "singapore";
-  if (c.includes("dubai")) return "dubai";
+  if (c.includes("dubai") || c.includes("uae")) return "dubai";
+  if (c.includes("paris") || c.includes("france")) return "paris";
+  if (c.includes("amsterdam") || c.includes("netherlands") || c.includes("holland")) return "amsterdam";
+  if (c.includes("dublin") || c.includes("ireland")) return "dublin";
+  if (c.includes("tokyo") || c.includes("japan")) return "tokyo";
+  if (c.includes("sydney") || c.includes("australia") || c === "syd") return "sydney";
   return c;
 }
 
@@ -191,6 +196,11 @@ export function jobMatchesLocation(
   if (cityKey === "berlin") return loc.includes("berlin") || loc.includes("germany");
   if (cityKey === "singapore") return loc.includes("singapore");
   if (cityKey === "dubai") return loc.includes("dubai");
+  if (cityKey === "paris") return loc.includes("paris") || loc.includes("france");
+  if (cityKey === "amsterdam") return loc.includes("amsterdam") || loc.includes("netherlands");
+  if (cityKey === "dublin") return loc.includes("dublin") || loc.includes("ireland");
+  if (cityKey === "tokyo") return loc.includes("tokyo") || loc.includes("japan");
+  if (cityKey === "sydney") return loc.includes("sydney") || loc.includes("australia") || loc.includes("nsw");
 
   const raw = targetCity.toLowerCase().trim();
   return loc.includes(raw);

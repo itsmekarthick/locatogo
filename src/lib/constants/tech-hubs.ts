@@ -24,7 +24,12 @@ export const GLOBAL_COUNTRIES: CountryInfo[] = [
   { name: "Canada", code: "CA", flag: "🇨🇦", defaultHubId: "toronto" },
   { name: "Singapore", code: "SG", flag: "🇸🇬", defaultHubId: "singapore" },
   { name: "Germany", code: "DE", flag: "🇩🇪", defaultHubId: "berlin" },
+  { name: "France", code: "FR", flag: "🇫🇷", defaultHubId: "paris" },
+  { name: "Netherlands", code: "NL", flag: "🇳🇱", defaultHubId: "amsterdam" },
+  { name: "Ireland", code: "IE", flag: "🇮🇪", defaultHubId: "dublin" },
   { name: "UAE", code: "AE", flag: "🇦🇪", defaultHubId: "dubai" },
+  { name: "Japan", code: "JP", flag: "🇯🇵", defaultHubId: "tokyo" },
+  { name: "Australia", code: "AU", flag: "🇦🇺", defaultHubId: "sydney" },
 ];
 
 export type UnifiedJob = {
@@ -72,6 +77,11 @@ export const GLOBAL_TECH_HUBS: TechHub[] = [
   { id: "berlin", name: "Berlin", country: "Germany", countryCode: "DE", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
   { id: "singapore", name: "Singapore", country: "Singapore", countryCode: "SG", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
   { id: "dubai", name: "Dubai", country: "United Arab Emirates", countryCode: "AE", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
+  { id: "paris", name: "Paris", country: "France", countryCode: "FR", flag: "🇫🇷", lat: 48.8566, lng: 2.3522, zoom: 12 },
+  { id: "amsterdam", name: "Amsterdam", country: "Netherlands", countryCode: "NL", flag: "🇳🇱", lat: 52.3676, lng: 4.9041, zoom: 12 },
+  { id: "dublin", name: "Dublin", country: "Ireland", countryCode: "IE", flag: "🇮🇪", lat: 53.3498, lng: -6.2603, zoom: 12 },
+  { id: "tokyo", name: "Tokyo", country: "Japan", countryCode: "JP", flag: "🇯🇵", lat: 35.6762, lng: 139.6503, zoom: 12 },
+  { id: "sydney", name: "Sydney", country: "Australia", countryCode: "AU", flag: "🇦🇺", lat: -33.8688, lng: 151.2093, zoom: 12 },
 ];
 
 export const TECH_SECTORS = [
@@ -219,6 +229,35 @@ export const KNOWN_HUB_LOCALITIES: Record<string, { slug: string; name: string }
     { slug: "one-north", name: "One-North" },
     { slug: "tanjong-pagar", name: "Tanjong Pagar" },
   ],
+  "paris": [
+    { slug: "station-f", name: "Station F / 13th Arr." },
+    { slug: "sentier", name: "Silicon Sentier" },
+    { slug: "la-defense", name: "La Défense" },
+  ],
+  "amsterdam": [
+    { slug: "zuidas", name: "Zuidas Financial Dist." },
+    { slug: "centrum", name: "Centrum" },
+    { slug: "amsterdam-noord", name: "Amsterdam-Noord" },
+  ],
+  "dublin": [
+    { slug: "silicon-docks", name: "Silicon Docks / Grand Canal" },
+    { slug: "docklands", name: "North Wall Docklands" },
+  ],
+  "dubai": [
+    { slug: "difc", name: "DIFC" },
+    { slug: "internet-city", name: "Dubai Internet City" },
+    { slug: "downtown-dubai", name: "Downtown Dubai" },
+  ],
+  "tokyo": [
+    { slug: "shibuya", name: "Shibuya Bit Valley" },
+    { slug: "roppongi", name: "Roppongi Hills" },
+    { slug: "marunouchi", name: "Marunouchi" },
+  ],
+  "sydney": [
+    { slug: "tech-central", name: "Tech Central / Surry Hills" },
+    { slug: "barangaroo", name: "Barangaroo" },
+    { slug: "cbd", name: "Sydney CBD" },
+  ],
 };
 
 export const KNOWN_HUB_COUNTS: Record<string, number> = {
@@ -244,6 +283,12 @@ export const KNOWN_HUB_COUNTS: Record<string, number> = {
   "toronto": 0,
   "berlin": 0,
   "singapore": 0,
+  "dubai": 0,
+  "paris": 0,
+  "amsterdam": 0,
+  "dublin": 0,
+  "tokyo": 0,
+  "sydney": 0,
 };
 
 export function matchesHub(
@@ -440,6 +485,11 @@ export function matchesHub(
   if (hub.id === "berlin") return city.includes("berlin") || loc.includes("berlin") || addr.includes("berlin");
   if (hub.id === "singapore") return city.includes("singapore") || loc.includes("singapore") || addr.includes("singapore");
   if (hub.id === "dubai") return city.includes("dubai") || loc.includes("dubai");
+  if (hub.id === "paris") return city.includes("paris") || loc.includes("paris") || addr.includes("paris");
+  if (hub.id === "amsterdam") return city.includes("amsterdam") || loc.includes("amsterdam") || addr.includes("amsterdam");
+  if (hub.id === "dublin") return city.includes("dublin") || loc.includes("dublin") || addr.includes("dublin");
+  if (hub.id === "tokyo") return city.includes("tokyo") || loc.includes("tokyo") || addr.includes("tokyo") || loc.includes("shibuya");
+  if (hub.id === "sydney") return city.includes("sydney") || loc.includes("sydney") || addr.includes("sydney") || loc.includes("surry hills");
 
   return city.includes(hub.name.toLowerCase()) || loc.includes(hub.name.toLowerCase());
 }

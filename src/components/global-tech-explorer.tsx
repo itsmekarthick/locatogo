@@ -85,6 +85,8 @@ export function GlobalTechExplorer({
   const [hiringOnly, setHiringOnly] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedStage, setSelectedStage] = useState<string>("all");
+  const [selectedWorkplace, setSelectedWorkplace] = useState<string>("all");
+  const [selectedTechStack, setSelectedTechStack] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"map" | "grid" | "jobs">("map");
   const [gridPage, setGridPage] = useState<number>(1);
   const GRID_PAGE_SIZE = 24;
@@ -109,7 +111,7 @@ export function GlobalTechExplorer({
   useEffect(() => {
     setGridPage(1);
     setSidebarPage(1);
-  }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedHub]);
+  }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedWorkplace, selectedTechStack, selectedHub]);
 
   // Initial location request for root page
   useEffect(() => {
@@ -474,7 +476,24 @@ export function GlobalTechExplorer({
         return false;
       }
 
-      // 4. Keyword search
+      // 4. Workplace filter
+      if (selectedWorkplace !== "all") {
+        if (c.jobs && c.jobs.length > 0) {
+          const hasWorkplace = c.jobs.some((j) => j.workplace_type === selectedWorkplace);
+          if (!hasWorkplace) return false;
+        }
+      }
+
+      // 5. Tech stack tag filter
+      if (selectedTechStack !== "all") {
+        const tag = selectedTechStack.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const inStack = (c.tech_stack || []).some((t) => t.toLowerCase().replace(/[^a-z0-9]/g, "").includes(tag));
+        const inDesc = (c.short_description || "").toLowerCase().includes(selectedTechStack.toLowerCase());
+        const inTitle = (c.title || "").toLowerCase().includes(selectedTechStack.toLowerCase());
+        if (!inStack && !inDesc && !inTitle) return false;
+      }
+
+      // 6. Keyword search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchTitle = c.title.toLowerCase().includes(q);
@@ -1066,6 +1085,48 @@ export function GlobalTechExplorer({
                     >
                       <span>{s.icon}</span>
                       <span>{s.name}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Advanced Quick Filters: Workplace & Tech Stack Tags */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pt-1 border-t border-slate-100 dark:border-slate-800/60 no-scrollbar">
+                  {/* Workplace Pills */}
+                  {[
+                    { id: "all", label: "Any Workplace" },
+                    { id: "remote", label: "Remote" },
+                    { id: "hybrid", label: "Hybrid" },
+                    { id: "on_site", label: "On-site" },
+                  ].map((w) => (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => setSelectedWorkplace(w.id)}
+                      className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-semibold transition-all cursor-pointer ${
+                        selectedWorkplace === w.id
+                          ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                      }`}
+                    >
+                      {w.label}
+                    </button>
+                  ))}
+
+                  <span className="text-slate-300 dark:text-slate-700">|</span>
+
+                  {/* Tech Stack Tags */}
+                  {["all", "AI & ML", "TypeScript", "Python", "React", "Cloud"].map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setSelectedTechStack(tag)}
+                      className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-mono font-medium transition-all cursor-pointer ${
+                        selectedTechStack === tag
+                          ? "bg-emerald-600 text-white font-bold"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                      }`}
+                    >
+                      {tag === "all" ? "All Stacks" : tag}
                     </button>
                   ))}
                 </div>
