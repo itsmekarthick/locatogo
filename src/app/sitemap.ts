@@ -59,12 +59,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "daily", priority: 0.8 },
   ];
 
-  // 2. All 14 Global Tech Hubs (e.g. /bengaluru, /hyderabad, /delhi-ncr)
-  const hubRoutes: MetadataRoute.Sitemap = GLOBAL_TECH_HUBS.map((hub) => ({
-    url: `${baseUrl}/${hub.id}`,
+  // 2. All Global Tech Hub SEO Landing Pages (/hub/[country]/[city] and /[city])
+  const globalHubSeoRoutes: MetadataRoute.Sitemap = GLOBAL_TECH_HUBS.map((hub) => ({
+    url: `${baseUrl}/hub/${hub.countryCode.toLowerCase()}/${hub.id}`,
     lastModified: new Date(),
     changeFrequency: "daily",
     priority: 1.0,
+  }));
+
+  const directHubRoutes: MetadataRoute.Sitemap = GLOBAL_TECH_HUBS.map((hub) => ({
+    url: `${baseUrl}/${hub.id}`,
+    lastModified: new Date(),
+    changeFrequency: "daily",
+    priority: 0.95,
   }));
 
   // 3. Top Tech Locality Clusters (e.g. /bengaluru/whitefield, /bengaluru/koramangala)
@@ -115,7 +122,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticRoutes,
-    ...hubRoutes,
+    ...globalHubSeoRoutes,
+    ...directHubRoutes,
     ...localityRoutes,
     ...companyRoutes,
     ...legacyListingRoutes,
