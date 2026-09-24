@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { BrandLogo } from "@/components/brand-logo";
@@ -78,6 +78,8 @@ export function GlobalTechExplorer({
     GLOBAL_TECH_HUBS.find((h) => h.id === currentHub) || GLOBAL_TECH_HUBS[0]
   );
   const [selectedCountry, setSelectedCountry] = useState<string>("ALL");
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState<boolean>(false);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
   const [companies, setCompanies] = useState<CompanyDetail[]>(initialCompanies);
   const [searchQuery, setSearchQuery] = useState("");
   const [hiringOnly, setHiringOnly] = useState<boolean>(false);
@@ -341,15 +343,11 @@ export function GlobalTechExplorer({
   const countryCompanyCounts = useMemo(() => {
     const counts: Record<string, number> = { ALL: companies.length };
     for (const c of companies) {
-      const cc = (
-        c.country_code ||
-        (c.city &&
-        ["san francisco", "new york", "seattle", "austin", "boston", "los angeles"].some((us) =>
-          c.city!.toLowerCase().includes(us)
-        )
-          ? "US"
-          : "IN")
-      ).toUpperCase();
+      let cc = (c.country_code || "").toUpperCase();
+      if (!cc) {
+        const matched = GLOBAL_TECH_HUBS.find((h) => matchesHub(c, h));
+        cc = matched?.countryCode || "IN";
+      }
       counts[cc] = (counts[cc] || 0) + 1;
     }
     return counts;
@@ -360,6 +358,10 @@ export function GlobalTechExplorer({
     return GLOBAL_COUNTRIES.filter((c) => c.code === "ALL" || (countryCompanyCounts[c.code] || 0) > 0);
   }, [countryCompanyCounts]);
 
+  const currentCountryInfo = useMemo(() => {
+    return GLOBAL_COUNTRIES.find((c) => c.code === selectedCountry) || GLOBAL_COUNTRIES[0];
+  }, [selectedCountry]);
+
   // Filter hubs based on selected country
   const displayedHubs = useMemo(() => {
     if (selectedCountry === "ALL") {
@@ -368,8 +370,24 @@ export function GlobalTechExplorer({
     return GLOBAL_TECH_HUBS.filter((h) => h.countryCode === selectedCountry);
   }, [selectedCountry]);
 
+  // Close country dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
+        setIsCountryDropdownOpen(false);
+      }
+    }
+    if (isCountryDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isCountryDropdownOpen]);
+
   const handleSelectCountry = (countryCode: string) => {
     setSelectedCountry(countryCode);
+    setIsCountryDropdownOpen(false);
     if (countryCode !== "ALL" && selectedHub.countryCode !== countryCode) {
       const countryInfo = GLOBAL_COUNTRIES.find((c) => c.code === countryCode);
       const defaultHub =
@@ -838,47 +856,111 @@ export function GlobalTechExplorer({
           </button>
         </div>
 
-        {/* Hierarchical Country -> City Tech Hubs Filter Bar */}
-        <div className="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/90 dark:bg-[#080d17]/95 px-3 sm:px-6 py-2 flex items-center gap-3 overflow-x-auto no-scrollbar">
-          {/* 1. Country Selection Segment */}
-          <div className="flex items-center gap-1.5 shrink-0 border-r border-slate-200 dark:border-slate-800 pr-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0 flex items-center gap-1">
-              <span>Country:</span>
-            </span>
-            {availableCountries.map((country) => {
-              const isSelected = selectedCountry === country.code;
-              const count = countryCompanyCounts[country.code] || 0;
-              return (
-                <button
-                  key={country.code}
-                  type="button"
-                  onClick={() => handleSelectCountry(country.code)}
-                  className={`shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isSelected
-                      ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs font-bold ring-1 ring-slate-700 dark:ring-slate-300"
-                      : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  <span>{country.flag}</span>
-                  <span>{country.name}</span>
-                  {count > 0 && (
-                    <span
-                      className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
-                        isSelected
-                          ? "bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-900"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium"
-                      }`}
-                    >
-                      {count.toLocaleString()}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+        {/* Hierarchical Country Dropdown -> City Tech Hubs Filter Bar */}
+        <div className="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/90 dark:bg-[#080d17]/95 px-3 sm:px-6 py-2 flex items-center gap-2.5 sm:gap-3 relative z-30">
+          {/* 1. Country Selection Dropdown */}
+          <div className="relative shrink-0" ref={countryDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsCountryDropdownOpen((prev) => !prev)}
+              className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer focus:outline-hidden ${
+                isCountryDropdownOpen
+                  ? "border-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/40 text-cyan-900 dark:text-cyan-200 ring-2 ring-cyan-500/20"
+                  : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/70"
+              }`}
+              aria-expanded={isCountryDropdownOpen}
+              aria-haspopup="listbox"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 hidden sm:inline">
+                Country:
+              </span>
+              <span className="text-sm leading-none">{currentCountryInfo.flag}</span>
+              <span className="font-bold text-slate-900 dark:text-white max-w-[120px] sm:max-w-none truncate">
+                {currentCountryInfo.name}
+              </span>
+              <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 text-[10px] font-mono text-slate-600 dark:text-slate-400 font-semibold">
+                {(countryCompanyCounts[currentCountryInfo.code] || 0).toLocaleString()}
+              </span>
+              <svg
+                className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${
+                  isCountryDropdownOpen ? "rotate-180 text-cyan-500" : ""
+                }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu Popover */}
+            {isCountryDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1.5 w-60 sm:w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0c1322]/95 backdrop-blur-md p-1.5 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150 ring-1 ring-black/5 dark:ring-white/5">
+                <div className="px-2.5 py-1.5 border-b border-slate-100 dark:border-slate-800/80 mb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    Select Country
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    {availableCountries.length} available
+                  </span>
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-0.5 no-scrollbar">
+                  {availableCountries.map((country) => {
+                    const isSelected = selectedCountry === country.code;
+                    const count = countryCompanyCounts[country.code] || 0;
+                    return (
+                      <button
+                        key={country.code}
+                        type="button"
+                        onClick={() => handleSelectCountry(country.code)}
+                        className={`w-full flex items-center justify-between rounded-xl px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 font-bold border border-cyan-200 dark:border-cyan-800/80"
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base leading-none">{country.flag}</span>
+                          <span>{country.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {count > 0 && (
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-mono ${
+                                isSelected
+                                  ? "bg-cyan-200/80 dark:bg-cyan-900/80 text-cyan-800 dark:text-cyan-200 font-bold"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                              }`}
+                            >
+                              {count.toLocaleString()}
+                            </span>
+                          )}
+                          {isSelected && (
+                            <svg
+                              className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={3}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Divider between Country Dropdown and City Pills */}
+          <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 shrink-0" />
+
           {/* 2. City Hubs in Selected Country */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0 flex items-center gap-1">
               <span>City:</span>
             </span>

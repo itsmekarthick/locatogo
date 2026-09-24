@@ -161,6 +161,68 @@ export function detectHubForCompany(c: CompanyDetail): TechHub {
   ) {
     return GLOBAL_TECH_HUBS.find((h) => h.id === "los-angeles") || GLOBAL_TECH_HUBS[0];
   }
+  if (
+    city.includes("chicago") ||
+    loc.includes("chicago") ||
+    addr.includes("chicago") ||
+    loc.includes("fulton market")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "chicago") || GLOBAL_TECH_HUBS[0];
+  }
+  if (
+    city.includes("denver") ||
+    city.includes("boulder") ||
+    loc.includes("denver") ||
+    loc.includes("boulder") ||
+    addr.includes("denver")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "denver") || GLOBAL_TECH_HUBS[0];
+  }
+  if (
+    city.includes("atlanta") ||
+    loc.includes("atlanta") ||
+    addr.includes("atlanta") ||
+    loc.includes("midtown")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "atlanta") || GLOBAL_TECH_HUBS[0];
+  }
+  if (
+    city.includes("san diego") ||
+    city.includes("la jolla") ||
+    loc.includes("san diego") ||
+    addr.includes("san diego")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "san-diego") || GLOBAL_TECH_HUBS[0];
+  }
+  if (
+    city.includes("london") ||
+    loc.includes("london") ||
+    addr.includes("london") ||
+    loc.includes("shoreditch")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "london") || GLOBAL_TECH_HUBS[0];
+  }
+  if (
+    city.includes("toronto") ||
+    loc.includes("toronto") ||
+    addr.includes("toronto")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "toronto") || GLOBAL_TECH_HUBS[0];
+  }
+  if (
+    city.includes("berlin") ||
+    loc.includes("berlin") ||
+    addr.includes("berlin")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "berlin") || GLOBAL_TECH_HUBS[0];
+  }
+  if (
+    city.includes("singapore") ||
+    loc.includes("singapore") ||
+    addr.includes("singapore")
+  ) {
+    return GLOBAL_TECH_HUBS.find((h) => h.id === "singapore") || GLOBAL_TECH_HUBS[0];
+  }
   // Default fallback is Bengaluru
   return GLOBAL_TECH_HUBS.find((h) => h.id === "bengaluru") || GLOBAL_TECH_HUBS[0];
 }

@@ -75,6 +75,22 @@ export async function GET(request: Request) {
         query = query.or("city.ilike.%boston%,city.ilike.%cambridge%,city.ilike.%somerville%");
       } else if (h === "los-angeles") {
         query = query.or("city.ilike.%los angeles%,city.ilike.%santa monica%,city.ilike.%culver city%,city.ilike.%glendale%");
+      } else if (h === "chicago") {
+        query = query.ilike("city", "%chicago%");
+      } else if (h === "denver") {
+        query = query.or("city.ilike.%denver%,city.ilike.%boulder%");
+      } else if (h === "atlanta") {
+        query = query.ilike("city", "%atlanta%");
+      } else if (h === "san-diego") {
+        query = query.or("city.ilike.%san diego%,city.ilike.%la jolla%,city.ilike.%san marcos%");
+      } else if (h === "london") {
+        query = query.ilike("city", "%london%");
+      } else if (h === "toronto") {
+        query = query.ilike("city", "%toronto%");
+      } else if (h === "berlin") {
+        query = query.ilike("city", "%berlin%");
+      } else if (h === "singapore") {
+        query = query.ilike("city", "%singapore%");
       }
     }
 

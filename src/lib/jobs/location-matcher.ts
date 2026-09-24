@@ -21,9 +21,14 @@ export function normalizeCityKey(city: string): string {
   if (c.includes("austin")) return "austin";
   if (c.includes("boston") || c.includes("cambridge") || c.includes("somerville")) return "boston";
   if (c.includes("los angeles") || c.includes("santa monica") || c.includes("culver")) return "los-angeles";
-  if (c.includes("london")) return "london";
-  if (c.includes("singapore")) return "singapore";
-  if (c.includes("berlin")) return "berlin";
+  if (c.includes("chicago") || c.includes("illinois") || c === "chi") return "chicago";
+  if (c.includes("denver") || c.includes("boulder") || c.includes("colorado")) return "denver";
+  if (c.includes("atlanta") || c.includes("georgia") || c === "atl") return "atlanta";
+  if (c.includes("san diego") || c.includes("la jolla")) return "san-diego";
+  if (c.includes("london") || c.includes("uk") || c.includes("united kingdom")) return "london";
+  if (c.includes("toronto") || c.includes("ontario")) return "toronto";
+  if (c.includes("berlin") || c.includes("germany")) return "berlin";
+  if (c.includes("singapore") || c === "sg") return "singapore";
   if (c.includes("dubai")) return "dubai";
   return c;
 }
@@ -177,9 +182,14 @@ export function jobMatchesLocation(
   if (cityKey === "austin") return loc.includes("austin") || loc.includes("tx") || loc.includes("texas");
   if (cityKey === "boston") return loc.includes("boston") || loc.includes("cambridge") || loc.includes("ma") || loc.includes("massachusetts");
   if (cityKey === "los-angeles") return loc.includes("los angeles") || loc.includes("santa monica") || loc.includes("culver") || loc.includes("ca") || loc.includes("california");
-  if (cityKey === "london") return loc.includes("london");
+  if (cityKey === "chicago") return loc.includes("chicago") || loc.includes("il") || loc.includes("illinois");
+  if (cityKey === "denver") return loc.includes("denver") || loc.includes("boulder") || loc.includes("co") || loc.includes("colorado");
+  if (cityKey === "atlanta") return loc.includes("atlanta") || loc.includes("ga") || loc.includes("georgia");
+  if (cityKey === "san-diego") return loc.includes("san diego") || loc.includes("la jolla") || loc.includes("san marcos");
+  if (cityKey === "london") return loc.includes("london") || loc.includes("united kingdom") || loc.includes("uk");
+  if (cityKey === "toronto") return loc.includes("toronto") || loc.includes("on") || loc.includes("ontario") || loc.includes("canada");
+  if (cityKey === "berlin") return loc.includes("berlin") || loc.includes("germany");
   if (cityKey === "singapore") return loc.includes("singapore");
-  if (cityKey === "berlin") return loc.includes("berlin");
   if (cityKey === "dubai") return loc.includes("dubai");
 
   const raw = targetCity.toLowerCase().trim();

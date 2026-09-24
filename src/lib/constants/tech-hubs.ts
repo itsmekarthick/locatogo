@@ -21,6 +21,7 @@ export const GLOBAL_COUNTRIES: CountryInfo[] = [
   { name: "India", code: "IN", flag: "🇮🇳", defaultHubId: "bengaluru" },
   { name: "United States", code: "US", flag: "🇺🇸", defaultHubId: "silicon-valley" },
   { name: "United Kingdom", code: "GB", flag: "🇬🇧", defaultHubId: "london" },
+  { name: "Canada", code: "CA", flag: "🇨🇦", defaultHubId: "toronto" },
   { name: "Singapore", code: "SG", flag: "🇸🇬", defaultHubId: "singapore" },
   { name: "Germany", code: "DE", flag: "🇩🇪", defaultHubId: "berlin" },
   { name: "UAE", code: "AE", flag: "🇦🇪", defaultHubId: "dubai" },
@@ -62,9 +63,14 @@ export const GLOBAL_TECH_HUBS: TechHub[] = [
   { id: "austin", name: "Austin", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 30.2672, lng: -97.7431, zoom: 12 },
   { id: "boston", name: "Boston", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 42.3601, lng: -71.0589, zoom: 12 },
   { id: "los-angeles", name: "Los Angeles", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 34.0522, lng: -118.2437, zoom: 12 },
+  { id: "chicago", name: "Chicago", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 41.8781, lng: -87.6298, zoom: 12 },
+  { id: "denver", name: "Denver", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 39.7392, lng: -104.9903, zoom: 12 },
+  { id: "atlanta", name: "Atlanta", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 33.7490, lng: -84.3880, zoom: 12 },
+  { id: "san-diego", name: "San Diego", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 32.7157, lng: -117.1611, zoom: 12 },
   { id: "london", name: "London", country: "United Kingdom", countryCode: "GB", flag: "🇬🇧", lat: 51.5074, lng: -0.1278, zoom: 12 },
-  { id: "singapore", name: "Singapore", country: "Singapore", countryCode: "SG", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
+  { id: "toronto", name: "Toronto", country: "Canada", countryCode: "CA", flag: "🇨🇦", lat: 43.6532, lng: -79.3832, zoom: 12 },
   { id: "berlin", name: "Berlin", country: "Germany", countryCode: "DE", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
+  { id: "singapore", name: "Singapore", country: "Singapore", countryCode: "SG", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
   { id: "dubai", name: "Dubai", country: "United Arab Emirates", countryCode: "AE", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
 ];
 
@@ -173,6 +179,46 @@ export const KNOWN_HUB_LOCALITIES: Record<string, { slug: string; name: string }
     { slug: "culver-city", name: "Culver City" },
     { slug: "west-adams", name: "West Adams" },
   ],
+  "chicago": [
+    { slug: "fulton-market", name: "Fulton Market" },
+    { slug: "loop", name: "The Loop" },
+    { slug: "river-north", name: "River North" },
+  ],
+  "denver": [
+    { slug: "lodo", name: "LoDo" },
+    { slug: "rino", name: "RiNo" },
+    { slug: "boulder", name: "Boulder" },
+  ],
+  "atlanta": [
+    { slug: "midtown", name: "Midtown" },
+    { slug: "buckhead", name: "Buckhead" },
+    { slug: "tech-square", name: "Tech Square" },
+  ],
+  "san-diego": [
+    { slug: "utc-la-jolla", name: "UTC / La Jolla" },
+    { slug: "downtown-sd", name: "Downtown" },
+    { slug: "sorrento-valley", name: "Sorrento Valley" },
+  ],
+  "london": [
+    { slug: "shoreditch", name: "Silicon Roundabout / Shoreditch" },
+    { slug: "soho", name: "Soho & Fitzrovia" },
+    { slug: "city", name: "City of London" },
+  ],
+  "toronto": [
+    { slug: "downtown-to", name: "Downtown Toronto" },
+    { slug: "king-west", name: "King West" },
+    { slug: "financial-district", name: "Financial District" },
+  ],
+  "berlin": [
+    { slug: "mitte", name: "Mitte" },
+    { slug: "kreuzberg", name: "Kreuzberg" },
+    { slug: "prenzlauer-berg", name: "Prenzlauer Berg" },
+  ],
+  "singapore": [
+    { slug: "marina-bay", name: "Marina Bay" },
+    { slug: "one-north", name: "One-North" },
+    { slug: "tanjong-pagar", name: "Tanjong Pagar" },
+  ],
 };
 
 export const KNOWN_HUB_COUNTS: Record<string, number> = {
@@ -190,6 +236,14 @@ export const KNOWN_HUB_COUNTS: Record<string, number> = {
   "austin": 0,
   "boston": 0,
   "los-angeles": 0,
+  "chicago": 0,
+  "denver": 0,
+  "atlanta": 0,
+  "san-diego": 0,
+  "london": 0,
+  "toronto": 0,
+  "berlin": 0,
+  "singapore": 0,
 };
 
 export function matchesHub(
@@ -377,9 +431,14 @@ export function matchesHub(
   if (hub.id === "austin") return city.includes("austin") || loc.includes("austin") || addr.includes("austin");
   if (hub.id === "boston") return city.includes("boston") || city.includes("cambridge") || city.includes("somerville") || loc.includes("boston") || loc.includes("cambridge") || addr.includes("boston");
   if (hub.id === "los-angeles") return city.includes("los angeles") || city.includes("santa monica") || city.includes("culver city") || city.includes("glendale") || loc.includes("los angeles") || loc.includes("culver") || addr.includes("los angeles");
-  if (hub.id === "london") return city.includes("london") || loc.includes("london");
-  if (hub.id === "singapore") return city.includes("singapore") || loc.includes("singapore");
-  if (hub.id === "berlin") return city.includes("berlin") || loc.includes("berlin");
+  if (hub.id === "chicago") return city.includes("chicago") || loc.includes("chicago") || addr.includes("chicago") || loc.includes("fulton market") || loc.includes("loop");
+  if (hub.id === "denver") return city.includes("denver") || city.includes("boulder") || loc.includes("denver") || loc.includes("boulder") || addr.includes("denver");
+  if (hub.id === "atlanta") return city.includes("atlanta") || loc.includes("atlanta") || addr.includes("atlanta") || loc.includes("midtown");
+  if (hub.id === "san-diego") return city.includes("san diego") || city.includes("la jolla") || loc.includes("san diego") || addr.includes("san diego");
+  if (hub.id === "london") return city.includes("london") || loc.includes("london") || addr.includes("london") || loc.includes("shoreditch");
+  if (hub.id === "toronto") return city.includes("toronto") || loc.includes("toronto") || addr.includes("toronto");
+  if (hub.id === "berlin") return city.includes("berlin") || loc.includes("berlin") || addr.includes("berlin");
+  if (hub.id === "singapore") return city.includes("singapore") || loc.includes("singapore") || addr.includes("singapore");
   if (hub.id === "dubai") return city.includes("dubai") || loc.includes("dubai");
 
   return city.includes(hub.name.toLowerCase()) || loc.includes(hub.name.toLowerCase());
