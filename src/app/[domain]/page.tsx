@@ -263,13 +263,7 @@ export default async function HubDirectoryPage({ params }: Props) {
 
   const initialCompanies: CompanyDetail[] = (rawListings || []).map((l: any) => {
     const compJobs = jobsByListing.get(l.id) || [];
-    const localJobs = l.city
-      ? compJobs.filter((j) => jobMatchesLocation(j.location_name, l.city))
-      : compJobs;
-    const accurateJobCount =
-      compJobs.length > 0
-        ? localJobs.length
-        : (l.active_jobs_count || 0);
+    const accurateJobCount = compJobs.length > 0 ? compJobs.length : (l.active_jobs_count || 0);
 
     return {
       id: l.id,

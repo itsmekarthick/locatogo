@@ -16,11 +16,15 @@ export function normalizeCityKey(city: string): string {
   if (c.includes("kolkata") || c.includes("calcutta")) return "kolkata";
   if (c.includes("kochi") || c.includes("cochin")) return "kochi";
   if (c.includes("san francisco") || c.includes("silicon valley") || c.includes("bay area")) return "silicon-valley";
+  if (c.includes("new york") || c.includes("nyc") || c.includes("manhattan") || c.includes("brooklyn")) return "new-york";
+  if (c.includes("seattle") || c.includes("bellevue") || c.includes("redmond")) return "seattle";
+  if (c.includes("austin")) return "austin";
+  if (c.includes("boston") || c.includes("cambridge") || c.includes("somerville")) return "boston";
+  if (c.includes("los angeles") || c.includes("santa monica") || c.includes("culver")) return "los-angeles";
   if (c.includes("london")) return "london";
   if (c.includes("singapore")) return "singapore";
   if (c.includes("berlin")) return "berlin";
   if (c.includes("dubai")) return "dubai";
-  if (c.includes("new york") || c.includes("nyc")) return "new-york";
   return c;
 }
 
@@ -168,11 +172,15 @@ export function jobMatchesLocation(
     );
   }
 
+  if (cityKey === "new-york") return loc.includes("new york") || loc.includes("nyc") || loc.includes("manhattan") || loc.includes("brooklyn");
+  if (cityKey === "seattle") return loc.includes("seattle") || loc.includes("bellevue") || loc.includes("wa") || loc.includes("washington");
+  if (cityKey === "austin") return loc.includes("austin") || loc.includes("tx") || loc.includes("texas");
+  if (cityKey === "boston") return loc.includes("boston") || loc.includes("cambridge") || loc.includes("ma") || loc.includes("massachusetts");
+  if (cityKey === "los-angeles") return loc.includes("los angeles") || loc.includes("santa monica") || loc.includes("culver") || loc.includes("ca") || loc.includes("california");
   if (cityKey === "london") return loc.includes("london");
   if (cityKey === "singapore") return loc.includes("singapore");
   if (cityKey === "berlin") return loc.includes("berlin");
   if (cityKey === "dubai") return loc.includes("dubai");
-  if (cityKey === "new-york") return loc.includes("new york") || loc.includes("nyc") || loc.includes("manhattan");
 
   const raw = targetCity.toLowerCase().trim();
   return loc.includes(raw);

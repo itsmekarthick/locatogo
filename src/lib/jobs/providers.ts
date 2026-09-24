@@ -99,8 +99,9 @@ export function parseJobPostingJsonLd(html: string, pageUrl: string): ExternalJo
     for (const job of jobPostingNodes(block)) {
       const title = stringValue(job.title);
       if (!title) continue;
-      const applyUrl = stringValue(job.url) || pageUrl;
-      const providerJobId = applyUrl || `${title}:${stringValue(job.datePosted) || "unknown"}`;
+      const applyUrl = stringValue(job.url);
+      if (!applyUrl) continue;
+      const providerJobId = applyUrl;
       if (seen.has(providerJobId)) continue;
       seen.add(providerJobId);
       const location = locationText(job.jobLocation);

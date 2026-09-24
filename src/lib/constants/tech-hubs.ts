@@ -2,11 +2,29 @@ export type TechHub = {
   id: string;
   name: string;
   country: string;
+  countryCode: string;
   flag: string;
   lat: number;
   lng: number;
   zoom: number;
 };
+
+export type CountryInfo = {
+  name: string;
+  code: string;
+  flag: string;
+  defaultHubId: string;
+};
+
+export const GLOBAL_COUNTRIES: CountryInfo[] = [
+  { name: "All Countries", code: "ALL", flag: "🌐", defaultHubId: "bengaluru" },
+  { name: "India", code: "IN", flag: "🇮🇳", defaultHubId: "bengaluru" },
+  { name: "United States", code: "US", flag: "🇺🇸", defaultHubId: "silicon-valley" },
+  { name: "United Kingdom", code: "GB", flag: "🇬🇧", defaultHubId: "london" },
+  { name: "Singapore", code: "SG", flag: "🇸🇬", defaultHubId: "singapore" },
+  { name: "Germany", code: "DE", flag: "🇩🇪", defaultHubId: "berlin" },
+  { name: "UAE", code: "AE", flag: "🇦🇪", defaultHubId: "dubai" },
+];
 
 export type UnifiedJob = {
   id: string;
@@ -26,23 +44,28 @@ export type UnifiedJob = {
   funding_stage?: string | null;
   locality?: string | null;
   city?: string | null;
+  country_code?: string | null;
 };
 
 export const GLOBAL_TECH_HUBS: TechHub[] = [
-  { id: "bengaluru", name: "Bengaluru", country: "India", flag: "🇮🇳", lat: 12.9716, lng: 77.5946, zoom: 12 },
-  { id: "hyderabad", name: "Hyderabad", country: "India", flag: "🇮🇳", lat: 17.4399, lng: 78.375, zoom: 12 },
-  { id: "delhi-ncr", name: "Delhi NCR", country: "India", flag: "🇮🇳", lat: 28.4988, lng: 77.0898, zoom: 12 },
-  { id: "mumbai", name: "Mumbai", country: "India", flag: "🇮🇳", lat: 19.0689, lng: 72.8695, zoom: 12 },
-  { id: "chennai", name: "Chennai", country: "India", flag: "🇮🇳", lat: 12.9658, lng: 80.2458, zoom: 12 },
-  { id: "pune", name: "Pune", country: "India", flag: "🇮🇳", lat: 18.5912, lng: 73.7389, zoom: 12 },
-  { id: "kolkata", name: "Kolkata", country: "India", flag: "🇮🇳", lat: 22.5726, lng: 88.4339, zoom: 12 },
-  { id: "kochi", name: "Kochi", country: "India", flag: "🇮🇳", lat: 10.0159, lng: 76.3639, zoom: 13 },
-  { id: "silicon-valley", name: "Silicon Valley & SF", country: "United States", flag: "🇺🇸", lat: 37.7749, lng: -122.4194, zoom: 11 },
-  { id: "london", name: "London", country: "United Kingdom", flag: "🇬🇧", lat: 51.5074, lng: -0.1278, zoom: 12 },
-  { id: "singapore", name: "Singapore", country: "Singapore", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
-  { id: "new-york", name: "New York City", country: "United States", flag: "🇺🇸", lat: 40.7128, lng: -74.006, zoom: 12 },
-  { id: "berlin", name: "Berlin", country: "Germany", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
-  { id: "dubai", name: "Dubai", country: "United Arab Emirates", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
+  { id: "bengaluru", name: "Bengaluru", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 12.9716, lng: 77.5946, zoom: 12 },
+  { id: "hyderabad", name: "Hyderabad", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 17.4399, lng: 78.375, zoom: 12 },
+  { id: "delhi-ncr", name: "Delhi NCR", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 28.4988, lng: 77.0898, zoom: 12 },
+  { id: "mumbai", name: "Mumbai", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 19.0689, lng: 72.8695, zoom: 12 },
+  { id: "chennai", name: "Chennai", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 12.9658, lng: 80.2458, zoom: 12 },
+  { id: "pune", name: "Pune", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 18.5912, lng: 73.7389, zoom: 12 },
+  { id: "kolkata", name: "Kolkata", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 22.5726, lng: 88.4339, zoom: 12 },
+  { id: "kochi", name: "Kochi", country: "India", countryCode: "IN", flag: "🇮🇳", lat: 10.0159, lng: 76.3639, zoom: 13 },
+  { id: "silicon-valley", name: "Silicon Valley & SF", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 37.7749, lng: -122.4194, zoom: 11 },
+  { id: "new-york", name: "New York City", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 40.7128, lng: -74.006, zoom: 12 },
+  { id: "seattle", name: "Seattle", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 47.6062, lng: -122.3321, zoom: 12 },
+  { id: "austin", name: "Austin", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 30.2672, lng: -97.7431, zoom: 12 },
+  { id: "boston", name: "Boston", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 42.3601, lng: -71.0589, zoom: 12 },
+  { id: "los-angeles", name: "Los Angeles", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 34.0522, lng: -118.2437, zoom: 12 },
+  { id: "london", name: "London", country: "United Kingdom", countryCode: "GB", flag: "🇬🇧", lat: 51.5074, lng: -0.1278, zoom: 12 },
+  { id: "singapore", name: "Singapore", country: "Singapore", countryCode: "SG", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
+  { id: "berlin", name: "Berlin", country: "Germany", countryCode: "DE", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
+  { id: "dubai", name: "Dubai", country: "United Arab Emirates", countryCode: "AE", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
 ];
 
 export const TECH_SECTORS = [
@@ -119,6 +142,37 @@ export const KNOWN_HUB_LOCALITIES: Record<string, { slug: string; name: string }
     { slug: "infopark", name: "Infopark Kochi" },
     { slug: "kakkanad", name: "Kakkanad SmartCity" },
   ],
+  "silicon-valley": [
+    { slug: "soma", name: "SoMa" },
+    { slug: "mission", name: "Mission District" },
+    { slug: "financial-district", name: "Financial District" },
+    { slug: "south-sf", name: "South San Francisco" },
+  ],
+  "new-york": [
+    { slug: "midtown", name: "Midtown" },
+    { slug: "flatiron", name: "Flatiron" },
+    { slug: "hudson-yards", name: "Hudson Yards" },
+    { slug: "chelsea", name: "Chelsea" },
+  ],
+  "seattle": [
+    { slug: "downtown", name: "Downtown" },
+    { slug: "bellevue", name: "Bellevue" },
+    { slug: "pioneer-square", name: "Pioneer Square" },
+  ],
+  "austin": [
+    { slug: "downtown", name: "Downtown" },
+    { slug: "barton-hills", name: "Barton Hills" },
+  ],
+  "boston": [
+    { slug: "fenway", name: "Fenway-Kenmore" },
+    { slug: "cambridge", name: "Cambridge" },
+    { slug: "somerville", name: "Somerville" },
+  ],
+  "los-angeles": [
+    { slug: "west-la", name: "West LA" },
+    { slug: "culver-city", name: "Culver City" },
+    { slug: "west-adams", name: "West Adams" },
+  ],
 };
 
 export const KNOWN_HUB_COUNTS: Record<string, number> = {
@@ -130,12 +184,23 @@ export const KNOWN_HUB_COUNTS: Record<string, number> = {
   "hyderabad": 0,
   "kolkata": 0,
   "kochi": 0,
+  "silicon-valley": 0,
+  "new-york": 0,
+  "seattle": 0,
+  "austin": 0,
+  "boston": 0,
+  "los-angeles": 0,
 };
 
 export function matchesHub(
-  c: { city?: string | null; locality?: string | null; address_line_1?: string | null },
+  c: { city?: string | null; locality?: string | null; address_line_1?: string | null; country_code?: string | null },
   hub: TechHub
 ): boolean {
+  const cc = (c.country_code || "").trim().toUpperCase();
+  if (cc && hub.countryCode && cc !== hub.countryCode) {
+    return false;
+  }
+
   const city = (c.city || "").toLowerCase().trim();
   const loc = (c.locality || "").toLowerCase().trim();
   const addr = (c.address_line_1 || "").toLowerCase().trim();
@@ -307,9 +372,13 @@ export function matchesHub(
     );
   }
 
+  if (hub.id === "new-york") return city.includes("new york") || city.includes("nyc") || loc.includes("manhattan") || loc.includes("brooklyn") || loc.includes("flatiron") || loc.includes("chelsea");
+  if (hub.id === "seattle") return city.includes("seattle") || city.includes("bellevue") || city.includes("redmond") || loc.includes("seattle") || loc.includes("bellevue") || addr.includes("seattle");
+  if (hub.id === "austin") return city.includes("austin") || loc.includes("austin") || addr.includes("austin");
+  if (hub.id === "boston") return city.includes("boston") || city.includes("cambridge") || city.includes("somerville") || loc.includes("boston") || loc.includes("cambridge") || addr.includes("boston");
+  if (hub.id === "los-angeles") return city.includes("los angeles") || city.includes("santa monica") || city.includes("culver city") || city.includes("glendale") || loc.includes("los angeles") || loc.includes("culver") || addr.includes("los angeles");
   if (hub.id === "london") return city.includes("london") || loc.includes("london");
   if (hub.id === "singapore") return city.includes("singapore") || loc.includes("singapore");
-  if (hub.id === "new-york") return city.includes("new york") || city.includes("nyc") || loc.includes("manhattan");
   if (hub.id === "berlin") return city.includes("berlin") || loc.includes("berlin");
   if (hub.id === "dubai") return city.includes("dubai") || loc.includes("dubai");
 

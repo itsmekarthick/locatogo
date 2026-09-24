@@ -36,6 +36,7 @@ export type CompanyDetail = {
   tech_stack?: string[] | null;
   founded_year?: number | null;
   active_jobs_count?: number;
+  country_code?: string | null;
   jobs?: CompanyJob[];
 };
 
@@ -120,8 +121,8 @@ export function CompanyDetailDrawer({
   const localJobs = rawPool.filter((j) => jobMatchesLocation(j.location_name, companyCity));
   const hasLocalJobs = localJobs.length > 0;
 
-  // Active pool defaults to local jobs matching place selection
-  const jobs = locationScope === "place" && hasLocalJobs ? localJobs : rawPool;
+  // Show overall open jobs for the company regardless of selected location scope
+  const jobs = rawPool;
   const departments = Array.from(new Set(jobs.map((j) => j.department).filter(Boolean))) as string[];
 
   const filteredJobs = jobs.filter((j) => {
@@ -246,8 +247,6 @@ export function CompanyDetailDrawer({
             <span className="rounded-full bg-cyan-100 dark:bg-cyan-900/60 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300">
               {isLoadingJobs && jobs.length === 0
                 ? "..."
-                : hasLocalJobs && locationScope === "place"
-                ? localJobs.length
                 : jobs.length > 0
                 ? jobs.length
                 : (company.active_jobs_count || 0)}
@@ -470,14 +469,20 @@ export function CompanyDetailDrawer({
                         )}
 
                         <div className="flex items-center gap-2">
-                          <a
-                            href={job.apply_url || company.careers_url || company.website || undefined}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-1"
-                          >
-                            <span>Apply on Portal ↗</span>
-                          </a>
+                          {job.apply_url ? (
+                            <a
+                              href={job.apply_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-1"
+                            >
+                              <span>Apply on Portal ↗</span>
+                            </a>
+                          ) : (
+                            <span className="text-[11px] font-semibold text-slate-400">
+                              Application link unavailable
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

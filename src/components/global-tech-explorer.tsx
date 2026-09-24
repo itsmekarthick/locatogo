@@ -28,6 +28,8 @@ const InteractiveLeafletCanvas = dynamic(
 export {
   type TechHub,
   type UnifiedJob,
+  type CountryInfo,
+  GLOBAL_COUNTRIES,
   GLOBAL_TECH_HUBS,
   TECH_SECTORS,
   TECH_STAGES,
@@ -37,6 +39,8 @@ export {
 import {
   type TechHub,
   type UnifiedJob,
+  type CountryInfo,
+  GLOBAL_COUNTRIES,
   GLOBAL_TECH_HUBS,
   TECH_SECTORS,
   TECH_STAGES,
@@ -73,6 +77,7 @@ export function GlobalTechExplorer({
   const [selectedHub, setSelectedHub] = useState<TechHub>(
     GLOBAL_TECH_HUBS.find((h) => h.id === currentHub) || GLOBAL_TECH_HUBS[0]
   );
+  const [selectedCountry, setSelectedCountry] = useState<string>("ALL");
   const [companies, setCompanies] = useState<CompanyDetail[]>(initialCompanies);
   const [searchQuery, setSearchQuery] = useState("");
   const [hiringOnly, setHiringOnly] = useState<boolean>(false);
@@ -332,6 +337,50 @@ export function GlobalTechExplorer({
     return counts;
   }, [companies, knownHubCounts]);
 
+  // Aggregate company counts per country
+  const countryCompanyCounts = useMemo(() => {
+    const counts: Record<string, number> = { ALL: companies.length };
+    for (const c of companies) {
+      const cc = (
+        c.country_code ||
+        (c.city &&
+        ["san francisco", "new york", "seattle", "austin", "boston", "los angeles"].some((us) =>
+          c.city!.toLowerCase().includes(us)
+        )
+          ? "US"
+          : "IN")
+      ).toUpperCase();
+      counts[cc] = (counts[cc] || 0) + 1;
+    }
+    return counts;
+  }, [companies]);
+
+  // Available countries (only showing those with >0 companies or ALL)
+  const availableCountries = useMemo(() => {
+    return GLOBAL_COUNTRIES.filter((c) => c.code === "ALL" || (countryCompanyCounts[c.code] || 0) > 0);
+  }, [countryCompanyCounts]);
+
+  // Filter hubs based on selected country
+  const displayedHubs = useMemo(() => {
+    if (selectedCountry === "ALL") {
+      return GLOBAL_TECH_HUBS;
+    }
+    return GLOBAL_TECH_HUBS.filter((h) => h.countryCode === selectedCountry);
+  }, [selectedCountry]);
+
+  const handleSelectCountry = (countryCode: string) => {
+    setSelectedCountry(countryCode);
+    if (countryCode !== "ALL" && selectedHub.countryCode !== countryCode) {
+      const countryInfo = GLOBAL_COUNTRIES.find((c) => c.code === countryCode);
+      const defaultHub =
+        GLOBAL_TECH_HUBS.find((h) => h.id === countryInfo?.defaultHubId) ||
+        GLOBAL_TECH_HUBS.find((h) => h.countryCode === countryCode);
+      if (defaultHub) {
+        handleSelectHub(defaultHub);
+      }
+    }
+  };
+
   const totalJobPages = Math.ceil(filteredJobs.length / JOB_PAGE_SIZE) || 1;
   const paginatedJobs = useMemo(() => {
     const start = (jobPage - 1) * JOB_PAGE_SIZE;
@@ -541,6 +590,9 @@ export function GlobalTechExplorer({
   const handleSelectHub = (hubOption: any) => {
     const hub = GLOBAL_TECH_HUBS.find((h) => h.id === hubOption.id) || hubOption;
     setSelectedHub(hub);
+    if (hub.countryCode && selectedCountry !== "ALL" && selectedCountry !== hub.countryCode) {
+      setSelectedCountry(hub.countryCode);
+    }
     setSelectedCompany(null);
     setHoveredCompanyId(null);
     setSearchQuery("");
@@ -786,41 +838,81 @@ export function GlobalTechExplorer({
           </button>
         </div>
 
-        {/* Horizontal Metro Tech Hubs Quick Bar */}
-        <div className="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-[#080d17]/90 px-3 sm:px-6 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0 flex items-center gap-1">
-            <span>Tech Hubs:</span>
-          </span>
-          {GLOBAL_TECH_HUBS.map((hub) => {
-            const isSelected = selectedHub.id === hub.id;
-            const count = hubCompanyCounts[hub.id] || 0;
-            return (
-              <button
-                key={hub.id}
-                type="button"
-                onClick={() => handleSelectHub(hub)}
-                className={`shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  isSelected
-                    ? "bg-cyan-600 text-white shadow-xs font-bold ring-1 ring-cyan-400"
-                    : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                }`}
-              >
-                <span>{hub.flag}</span>
-                <span>{hub.name}</span>
-                {count > 0 && (
-                  <span
-                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
-                      isSelected
-                        ? "bg-cyan-700/80 text-white"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium"
-                    }`}
-                  >
-                    {count.toLocaleString()}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        {/* Hierarchical Country -> City Tech Hubs Filter Bar */}
+        <div className="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/90 dark:bg-[#080d17]/95 px-3 sm:px-6 py-2 flex items-center gap-3 overflow-x-auto no-scrollbar">
+          {/* 1. Country Selection Segment */}
+          <div className="flex items-center gap-1.5 shrink-0 border-r border-slate-200 dark:border-slate-800 pr-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0 flex items-center gap-1">
+              <span>Country:</span>
+            </span>
+            {availableCountries.map((country) => {
+              const isSelected = selectedCountry === country.code;
+              const count = countryCompanyCounts[country.code] || 0;
+              return (
+                <button
+                  key={country.code}
+                  type="button"
+                  onClick={() => handleSelectCountry(country.code)}
+                  className={`shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isSelected
+                      ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs font-bold ring-1 ring-slate-700 dark:ring-slate-300"
+                      : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <span>{country.flag}</span>
+                  <span>{country.name}</span>
+                  {count > 0 && (
+                    <span
+                      className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
+                        isSelected
+                          ? "bg-slate-700 dark:bg-slate-200 text-white dark:text-slate-900"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium"
+                      }`}
+                    >
+                      {count.toLocaleString()}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 2. City Hubs in Selected Country */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0 flex items-center gap-1">
+              <span>City:</span>
+            </span>
+            {displayedHubs.map((hub) => {
+              const isSelected = selectedHub.id === hub.id;
+              const count = hubCompanyCounts[hub.id] || 0;
+              return (
+                <button
+                  key={hub.id}
+                  type="button"
+                  onClick={() => handleSelectHub(hub)}
+                  className={`shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isSelected
+                      ? "bg-cyan-600 text-white shadow-xs font-bold ring-1 ring-cyan-400"
+                      : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <span>{hub.flag}</span>
+                  <span>{hub.name}</span>
+                  {count > 0 && (
+                    <span
+                      className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
+                        isSelected
+                          ? "bg-cyan-700/80 text-white"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium"
+                      }`}
+                    >
+                      {count.toLocaleString()}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </header>
 
@@ -1469,15 +1561,21 @@ export function GlobalTechExplorer({
                                 <span>↗</span>
                               </a>
                             )}
-                            <a
-                              href={job.apply_url || job.company_careers_url || "#"}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
-                            >
-                              <span>Apply Now</span>
-                              <span>↗</span>
-                            </a>
+                            {job.apply_url ? (
+                              <a
+                                href={job.apply_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>Apply Now</span>
+                                <span>↗</span>
+                              </a>
+                            ) : (
+                              <span className="text-xs font-semibold text-slate-400">
+                                Application link unavailable
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

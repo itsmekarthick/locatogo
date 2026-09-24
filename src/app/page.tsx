@@ -46,6 +46,12 @@ const KNOWN_HUB_COUNTS: Record<string, number> = {
   "hyderabad": 0,
   "kolkata": 0,
   "kochi": 0,
+  "silicon-valley": 0,
+  "new-york": 0,
+  "seattle": 0,
+  "austin": 0,
+  "boston": 0,
+  "los-angeles": 0,
 };
 
 type Props = {
@@ -124,7 +130,8 @@ export default async function Home({ searchParams }: Props) {
         employee_range,
         tech_stack,
         founded_year,
-        active_jobs_count
+        active_jobs_count,
+        country_code
       `)
       .eq("status", "published")
       .not("company_type", "is", null)
@@ -152,7 +159,8 @@ export default async function Home({ searchParams }: Props) {
         employee_range,
         tech_stack,
         founded_year,
-        active_jobs_count
+        active_jobs_count,
+        country_code
       `)
       .eq("status", "published")
       .not("company_type", "is", null)
@@ -180,7 +188,8 @@ export default async function Home({ searchParams }: Props) {
         employee_range,
         tech_stack,
         founded_year,
-        active_jobs_count
+        active_jobs_count,
+        country_code
       `)
       .eq("status", "published")
       .not("company_type", "is", null)
@@ -216,15 +225,8 @@ export default async function Home({ searchParams }: Props) {
 
   const initialCompanies: CompanyDetail[] = (rawListings || []).map((l: any) => {
     const compJobs = jobsByListing.get(l.id) || [];
-    const localJobs = l.city
-      ? compJobs.filter((j) => jobMatchesLocation(j.location_name, l.city))
-      : compJobs;
-    // When verified jobs exist in company_jobs, strictly use local jobs count.
-    // If no jobs match local city, it is 0. Only fallback to l.active_jobs_count if zero jobs exist in company_jobs table.
-    const accurateJobCount =
-      compJobs.length > 0
-        ? localJobs.length
-        : (l.active_jobs_count || 0);
+    // Use overall open jobs only (no city filtering reduction)
+    const accurateJobCount = compJobs.length > 0 ? compJobs.length : (l.active_jobs_count || 0);
 
     return {
       id: l.id,
@@ -244,6 +246,7 @@ export default async function Home({ searchParams }: Props) {
       tech_stack: l.tech_stack || [],
       founded_year: l.founded_year,
       active_jobs_count: accurateJobCount,
+      country_code: l.country_code || "IN",
       jobs: compJobs,
     };
   });
@@ -274,6 +277,7 @@ export default async function Home({ searchParams }: Props) {
       funding_stage: comp?.funding_stage || "Product",
       locality: comp?.locality || "Bengaluru",
       city: comp?.city || "Bengaluru",
+      country_code: comp?.country_code || "IN",
     };
   });
 
@@ -310,6 +314,11 @@ export default async function Home({ searchParams }: Props) {
             <li><a href="/kolkata">Kolkata Tech Companies &amp; Salt Lake Sector V</a></li>
             <li><a href="/kochi">Kochi Tech Companies &amp; Infopark Startups</a></li>
             <li><a href="/silicon-valley">Silicon Valley &amp; San Francisco Tech Companies</a></li>
+            <li><a href="/new-york">New York City Tech Companies &amp; FinTech Hubs</a></li>
+            <li><a href="/seattle">Seattle Tech Companies &amp; Cloud Giants</a></li>
+            <li><a href="/austin">Austin Tech Companies &amp; Silicon Hills Startups</a></li>
+            <li><a href="/boston">Boston Tech Companies &amp; Innovation Cluster</a></li>
+            <li><a href="/los-angeles">Los Angeles Tech Companies &amp; Silicon Beach</a></li>
             <li><a href="/london">London Tech Companies &amp; FinTech Ventures</a></li>
           </ul>
         </nav>

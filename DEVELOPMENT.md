@@ -23,4 +23,17 @@ Use the Stitch plugin configuration already present in `.agents/plugins/stitch`.
 
 CSV imports currently process bounded uploads within an authenticated server action. The geocoding provider is intentionally unconfigured; add a queue/worker and compliant provider before enabling large imports in production.
 
+## Automated US company sync
+
+Use `sync:us-companies` to import a JSON or CSV company feed and immediately sync each company's supported ATS jobs. The feed is external to the repository, so new companies can be added without a code change or migration.
+
+By default the script fetches the current public Remote In Tech company directory, keeps records with known US office locations, and imports them. Set `US_COMPANIES_SOURCE` only when using another HTTPS URL or local file path. `US_COMPANIES_LIMIT` can cap a run while testing. Each custom row must include `name` and `city`, plus `website` or `careers_url`; optional fields include `slug`, `state`, `address_line_1`, `locality`, `latitude`, `longitude`, `company_type`, `funding_stage`, and `short_description`.
+
+```powershell
+$env:US_COMPANIES_LIMIT = "50"
+npm run sync:us-companies
+```
+
+The importer validates input, upserts listings by domain and slug, and fetches jobs from Greenhouse, Lever, Ashby, SmartRecruiters, or supported career-page JSON-LD sources. Keep `SUPABASE_SERVICE_ROLE_KEY` server-side and use a trusted HTTPS feed in scheduled automation.
+
 Public SEO routes are generated at `/sitemap.xml` and `/robots.txt`. Set `NEXT_PUBLIC_APP_URL` to the canonical deployment URL so metadata and sitemap links are correct.

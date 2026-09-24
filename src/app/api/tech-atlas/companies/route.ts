@@ -32,12 +32,18 @@ export async function GET(request: Request) {
         employee_range,
         tech_stack,
         founded_year,
-        active_jobs_count
+        active_jobs_count,
+        country_code
       `)
       .eq("status", "published")
       .not("company_type", "is", null)
       .not("latitude", "is", null)
       .not("longitude", "is", null);
+
+    const country = searchParams.get("country") || "";
+    if (country && country !== "all" && country !== "ALL") {
+      query = query.eq("country_code", country.toUpperCase());
+    }
 
     if (hub) {
       const h = hub.toLowerCase();
@@ -57,6 +63,18 @@ export async function GET(request: Request) {
         query = query.ilike("city", "%kolkata%");
       } else if (h === "kochi") {
         query = query.ilike("city", "%kochi%");
+      } else if (h === "silicon-valley" || h === "siliconvalley") {
+        query = query.or("city.ilike.%san francisco%,city.ilike.%palo alto%,city.ilike.%mountain view%,city.ilike.%sunnyvale%,city.ilike.%san jose%,city.ilike.%menlo park%");
+      } else if (h === "new-york") {
+        query = query.or("city.ilike.%new york%,city.ilike.%brooklyn%,city.ilike.%manhattan%");
+      } else if (h === "seattle") {
+        query = query.or("city.ilike.%seattle%,city.ilike.%bellevue%,city.ilike.%redmond%");
+      } else if (h === "austin") {
+        query = query.ilike("city", "%austin%");
+      } else if (h === "boston") {
+        query = query.or("city.ilike.%boston%,city.ilike.%cambridge%,city.ilike.%somerville%");
+      } else if (h === "los-angeles") {
+        query = query.or("city.ilike.%los angeles%,city.ilike.%santa monica%,city.ilike.%culver city%,city.ilike.%glendale%");
       }
     }
 

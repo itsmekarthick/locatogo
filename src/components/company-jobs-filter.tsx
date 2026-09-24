@@ -293,17 +293,21 @@ export function CompanyJobsFilter({
                         {job.salary_range}
                       </span>
                     )}
-                    <a
-                      href={
-                        job.apply_url || careersUrl || websiteUrl || "#"
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800 px-3.5 py-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all cursor-pointer"
-                    >
-                      <span>Apply on Portal</span>
-                      <span>↗</span>
-                    </a>
+                    {job.apply_url ? (
+                      <a
+                        href={job.apply_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/80 dark:border-cyan-800 px-3.5 py-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-300 hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-all cursor-pointer"
+                      >
+                        <span>Apply on Portal</span>
+                        <span>↗</span>
+                      </a>
+                    ) : (
+                      <span className="text-xs font-semibold text-slate-400">
+                        Application link unavailable
+                      </span>
+                    )}
                   </div>
                 </article>
               ))}
