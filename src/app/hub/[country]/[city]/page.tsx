@@ -33,6 +33,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    keywords: [
+      `${cityName} tech companies`,
+      `${cityName} startups`,
+      `${cityName} technology jobs`,
+      `${countryName} tech companies`,
+      `${cityName} tech hub`,
+    ],
     alternates: {
       canonical: `/hub/${country.toLowerCase()}/${city.toLowerCase()}`,
     },

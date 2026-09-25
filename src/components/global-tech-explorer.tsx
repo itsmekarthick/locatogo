@@ -65,6 +65,7 @@ export function GlobalTechExplorer({
   totalDatabaseCompanies = 19095,
   currentHub = "bengaluru",
   initialType = "all",
+  initialSearchQuery = "",
   knownHubCounts,
   isRootPage = false,
 }: {
@@ -73,6 +74,7 @@ export function GlobalTechExplorer({
   totalDatabaseCompanies?: number;
   currentHub?: string;
   initialType?: string;
+  initialSearchQuery?: string;
   knownHubCounts?: Record<string, number>;
   isRootPage?: boolean;
 }) {
@@ -83,7 +85,7 @@ export function GlobalTechExplorer({
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState<boolean>(false);
   const countryDropdownRef = useRef<HTMLDivElement>(null);
   const [companies, setCompanies] = useState<CompanyDetail[]>(initialCompanies);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [hiringOnly, setHiringOnly] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<string>(initialType);
   const [selectedStage, setSelectedStage] = useState<string>("all");

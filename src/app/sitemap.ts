@@ -5,6 +5,26 @@ import { GLOBAL_TECH_HUBS, KNOWN_HUB_LOCALITIES } from "@/lib/constants/tech-hub
 
 export const revalidate = 86400; // Cache sitemap for 24 hours
 
+async function fetchAllPublishedListings(supabase: any) {
+  const pageSize = 1000;
+  const listings: any[] = [];
+
+  for (let offset = 0; offset < 100000; offset += pageSize) {
+    const { data } = await supabase
+      .from("listings")
+      .select("slug, company_type, active_jobs_count, updated_at")
+      .eq("status", "published")
+      .order("id", { ascending: true })
+      .range(offset, offset + pageSize - 1);
+
+    const page = data || [];
+    listings.push(...page);
+    if (page.length < pageSize) break;
+  }
+
+  return listings;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://locatogo.com";
   let supabase: any;
@@ -14,42 +34,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabase = await createSupabaseServerClient();
   }
 
-  // Fetch tech listings with pagination up to 3000
-  const [
-    listingsPage1,
-    listingsPage2,
-    listingsPage3,
-    { data: blogs },
-  ] = await Promise.all([
-    supabase
-      .from("listings")
-      .select("slug, company_type, active_jobs_count, updated_at")
-      .eq("status", "published")
-      .order("id", { ascending: true })
-      .range(0, 999),
-    supabase
-      .from("listings")
-      .select("slug, company_type, active_jobs_count, updated_at")
-      .eq("status", "published")
-      .order("id", { ascending: true })
-      .range(1000, 1999),
-    supabase
-      .from("listings")
-      .select("slug, company_type, active_jobs_count, updated_at")
-      .eq("status", "published")
-      .order("id", { ascending: true })
-      .range(2000, 2999),
-    supabase
-      .from("blogs")
-      .select("slug, updated_at")
-      .eq("status", "published"),
+  const [{ data: blogs }, rawListings] = await Promise.all([
+    supabase.from("blogs").select("slug, updated_at").eq("status", "published"),
+    fetchAllPublishedListings(supabase),
   ]);
-
-  const rawListings = [
-    ...(listingsPage1.data || []),
-    ...(listingsPage2.data || []),
-    ...(listingsPage3.data || []),
-  ];
 
   // 1. Core static pages
   const staticRoutes: MetadataRoute.Sitemap = [

@@ -6,8 +6,11 @@ import { GoogleSignInButton } from "@/app/auth/google-sign-in-button";
 import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = {
-  title: "Create Free Account | LocaToGo",
-  description: "Join LocaToGo for free. Explore verified places, save favorites, write reviews, add businesses, and discover your city.",
+  title: "Create Your Tech Atlas Account | LocaToGo",
+  description: "Create a free LocaToGo account to explore technology companies, global hubs, and live job opportunities.",
+  keywords: ["create Tech Atlas account", "LocaToGo signup", "technology jobs", "startup ecosystem"],
+  alternates: { canonical: "/auth/signup" },
+  robots: { index: false, follow: true },
 };
 
 export default function SignupPage() {
@@ -54,10 +57,10 @@ export default function SignupPage() {
               <span>100% Free · No Credit Card</span>
             </span>
             <h1 className="mt-4 font-serif text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              Your city, mapped with places that matter.
+              Your next opportunity starts with the right tech hub.
             </h1>
             <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-              Join residents, business owners, and explorers who save, review, and discover real places in their community.
+              Join professionals, founders, and company teams exploring the global technology ecosystem.
             </p>
           </div>
 
@@ -65,13 +68,13 @@ export default function SignupPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-slate-800/80 bg-slate-900/50 p-4 backdrop-blur-sm shadow-2xs">
               <p className="text-2xl font-extrabold font-serif text-cyan-400">67,000+</p>
-              <p className="text-xs text-slate-300 font-semibold mt-0.5">Verified Places</p>
-              <p className="text-[11px] text-slate-400 mt-1">Schools, hospitals, cafes, tech companies & more.</p>
+              <p className="text-xs text-slate-300 font-semibold mt-0.5">Tech Companies</p>
+              <p className="text-[11px] text-slate-400 mt-1">Startups, global teams, and technology hubs.</p>
             </div>
             <div className="rounded-2xl border border-slate-800/80 bg-slate-900/50 p-4 backdrop-blur-sm shadow-2xs">
               <p className="text-2xl font-extrabold font-serif text-emerald-400">Free</p>
-              <p className="text-xs text-slate-300 font-semibold mt-0.5">Forever</p>
-              <p className="text-[11px] text-slate-400 mt-1">Save, review, and explore at no cost.</p>
+              <p className="text-xs text-slate-300 font-semibold mt-0.5">Free to Explore</p>
+              <p className="text-[11px] text-slate-400 mt-1">Discover companies and live roles at no cost.</p>
             </div>
           </div>
 
@@ -79,15 +82,15 @@ export default function SignupPage() {
           <div className="space-y-2.5 text-xs text-slate-300 font-medium">
             <div className="flex items-center gap-2.5">
               <span className="text-emerald-400 font-bold">✓</span>
-              <span>Explore an interactive GPS-verified map with real places</span>
+              <span>Explore technology companies by country, city, and hub</span>
             </div>
             <div className="flex items-center gap-2.5">
               <span className="text-emerald-400 font-bold">✓</span>
-              <span>Save favorites, write reviews & claim your business</span>
+              <span>Review company profiles, stacks, stages, and live roles</span>
             </div>
             <div className="flex items-center gap-2.5">
               <span className="text-emerald-400 font-bold">✓</span>
-              <span>Add places the community needs but can&apos;t find</span>
+              <span>Add your company to the public Tech Atlas</span>
             </div>
           </div>
         </div>
@@ -132,7 +135,7 @@ export default function SignupPage() {
               Create your account
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Join the community. Explore places, save favorites, and add businesses.
+              Explore companies, follow live opportunities, and add your company.
             </p>
           </div>
 

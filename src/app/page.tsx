@@ -306,6 +306,7 @@ export default async function Home({ searchParams }: Props) {
         knownHubCounts={KNOWN_HUB_COUNTS}
         currentHub={params.hub || "bengaluru"}
         initialType={params.type || "all"}
+        initialSearchQuery={params.q || ""}
         isRootPage={true}
       />
 

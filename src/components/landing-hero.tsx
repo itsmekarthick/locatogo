@@ -1,12 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+type CompanySuggestion = {
+  id: string;
+  title: string;
+  slug: string;
+  city?: string | null;
+  locality?: string | null;
+  company_type?: string | null;
+};
 
 export function LandingHero({ totalListings = 50, totalCategories = 12 }: { totalListings?: number; totalCategories?: number }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<CompanySuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 3) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await fetch(`/api/tech-atlas/companies?q=${encodeURIComponent(query)}&limit=20`, {
+          signal: controller.signal,
+        });
+        const data = response.ok ? await response.json() : { companies: [] };
+        setSuggestions(Array.isArray(data.companies) ? data.companies : []);
+      } catch (error) {
+        if ((error as { name?: string }).name !== "AbortError") {
+          setSuggestions([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -17,8 +60,14 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
     }
   }
 
+  function handleSuggestionSelect(company: CompanySuggestion) {
+    setSearchQuery(company.title);
+    setSuggestions([]);
+    router.push(`/?q=${encodeURIComponent(company.title)}`);
+  }
+
   return (
-    <section className="relative overflow-hidden pt-16 pb-20 sm:pt-24 sm:pb-32">
+    <section className="relative overflow-x-clip pt-16 pb-20 sm:pt-24 sm:pb-32">
       {/* Ambient background glows with Indigo & Cyan gradient (Zero orange) */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[650px] w-[950px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-cyan-500/20 via-sky-400/15 to-violet-500/20 blur-3xl opacity-70 dark:opacity-35" />
       <div className="pointer-events-none absolute top-1/2 right-0 -z-10 h-[400px] w-[500px] rounded-full bg-emerald-500/10 blur-3xl opacity-50" />
@@ -48,7 +97,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
         </p>
 
         {/* Search Bar - Unified Pill Style */}
-        <form onSubmit={handleSearch} className="mx-auto mt-10 max-w-2xl">
+        <form onSubmit={handleSearch} className="relative z-50 mx-auto mt-10 max-w-2xl">
           <div className="group relative flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-2 shadow-xl backdrop-blur-md transition-all focus-within:border-slate-400 dark:focus-within:border-slate-600 focus-within:ring-4 focus-within:ring-slate-100 dark:focus-within:ring-slate-800/60">
             {/* Segment 1: Where */}
             <Link
@@ -64,7 +113,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
             </Link>
 
             {/* Segment 2: Keyword input */}
-            <div className="flex flex-1 items-center px-4 gap-3 min-w-0">
+            <div className="relative flex flex-1 items-center px-4 gap-3 min-w-0">
               <div className="flex-1 min-w-0 text-left">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                   Search
@@ -87,6 +136,31 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
                 </button>
               )}
             </div>
+
+            {searchQuery.trim().length >= 3 && (suggestions.length > 0 || isSearching) && (
+              <div className="absolute left-2 right-2 top-full z-[100] mt-3 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 text-left shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+                {isSearching && suggestions.length === 0 ? (
+                  <p className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400">Searching companies...</p>
+                ) : (
+                  suggestions.map((company) => (
+                    <button
+                      key={company.id}
+                      type="button"
+                      onClick={() => handleSuggestionSelect(company)}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-bold text-slate-900 dark:text-slate-100">{company.title}</span>
+                        <span className="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">
+                          {[company.locality, company.city].filter(Boolean).join(", ") || "Global tech company"}
+                        </span>
+                      </span>
+                      <span className="ml-3 shrink-0 text-xs text-cyan-600 dark:text-cyan-400">Open Atlas →</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
 
             {/* Round Coral Action Button */}
             <button
@@ -136,95 +210,6 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
           </Link>
         </div>
 
-        {/* Interactive Interactive Preview Card Mockup */}
-        <div className="mt-16 sm:mt-20 relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl">
-          {/* Mockup Browser Top Header */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-5 py-3">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-red-400/80" />
-                <span className="h-3 w-3 rounded-full bg-amber-400/80" />
-                <span className="h-3 w-3 rounded-full bg-emerald-400/80" />
-              </div>
-              <span className="ml-2 rounded-md bg-white dark:bg-slate-900 px-3 py-1 font-mono text-[11px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
-                https://locatogo.com/
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Tech Atlas
-              </span>
-            </div>
-          </div>
-
-          {/* Mockup Preview Visual Content */}
-          <div className="relative h-[260px] sm:h-[340px] w-full bg-gradient-to-br from-slate-100 to-cyan-50/40 dark:from-slate-950 dark:to-cyan-950/20 p-6 flex items-center justify-center overflow-hidden">
-            {/* Grid Pattern overlay */}
-            <div
-              className="absolute inset-0 opacity-40 dark:opacity-20"
-              style={{
-                backgroundImage: "radial-gradient(#0ea5e9 1px, transparent 1px)",
-                backgroundSize: "24px 24px",
-              }}
-            />
-
-            {/* Floating Simulated Map Pins & Popups */}
-            <div className="relative z-10 grid gap-4 sm:grid-cols-3 max-w-3xl w-full">
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-4 shadow-lg backdrop-blur-md transition-transform hover:-translate-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-cyan-100 dark:bg-cyan-950 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 uppercase">
-                    Healthcare
-                  </span>
-                  <span className="text-[11px] text-slate-400">★ 4.9</span>
-                </div>
-                <h4 className="mt-2 font-bold text-sm text-slate-900 dark:text-slate-100">Apollo Multi-Specialty</h4>
-                <p className="mt-1 text-xs text-slate-500">📍 Bannerghatta Road</p>
-                <div className="mt-3 flex gap-2">
-                  <span className="rounded-lg bg-cyan-50 dark:bg-cyan-950 px-2 py-0.5 text-[10px] font-bold text-cyan-600 dark:text-cyan-400">
-                    Open 24/7
-                  </span>
-                  <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">
-                    🚕 Uber Ready
-                  </span>
-                </div>
-              </div>
-
-              <div className="hidden sm:block rounded-2xl border border-cyan-300 dark:border-cyan-700 bg-white/95 dark:bg-slate-900/95 p-4 shadow-xl backdrop-blur-md ring-2 ring-cyan-500/20 transform sm:-translate-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-cyan-100 dark:bg-cyan-950 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 uppercase">
-                    ⭐ Featured Tech
-                  </span>
-                  <span className="text-[11px] text-amber-500 font-bold">★ 5.0</span>
-                </div>
-                <h4 className="mt-2 font-bold text-sm text-slate-900 dark:text-slate-100">Infosys Global Campus</h4>
-                <p className="mt-1 text-xs text-slate-500">📍 Electronics City Phase 1</p>
-                <div className="mt-3 flex gap-2">
-                  <span className="rounded-lg bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                    ✓ Verified Hub
-                  </span>
-                </div>
-              </div>
-
-              <div className="hidden sm:block rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-4 shadow-lg backdrop-blur-md transition-transform hover:-translate-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase">
-                    Education
-                  </span>
-                  <span className="text-[11px] text-slate-400">★ 4.8</span>
-                </div>
-                <h4 className="mt-2 font-bold text-sm text-slate-900 dark:text-slate-100">Alliance University</h4>
-                <p className="mt-1 text-xs text-slate-500">📍 Anekal Main Road</p>
-                <div className="mt-3 flex gap-2">
-                  <span className="rounded-lg bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">
-                    💬 WhatsApp Inquiry
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   );

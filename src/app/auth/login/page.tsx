@@ -6,8 +6,11 @@ import { GoogleSignInButton } from "@/app/auth/google-sign-in-button";
 import { BrandLogo } from "@/components/brand-logo";
 
 export const metadata: Metadata = {
-  title: "Sign In | LocaToGo",
-  description: "Sign in to your LocaToGo account to explore places, save favorites, add listings, and manage your directory.",
+  title: "Sign In to the Global Tech Atlas | LocaToGo",
+  description: "Sign in to LocaToGo to explore technology companies, tech hubs, live jobs, and your saved Atlas activity.",
+  keywords: ["LocaToGo login", "Tech Atlas login", "technology companies", "live tech jobs"],
+  alternates: { canonical: "/auth/login" },
+  robots: { index: false, follow: true },
 };
 
 export default function LoginPage() {
@@ -51,13 +54,13 @@ export default function LoginPage() {
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-950/80 border border-cyan-700/60 px-3 py-1 text-[11px] font-bold text-cyan-300 uppercase tracking-wider shadow-xs">
               <span>✨</span>
-              <span>Next-Gen Directory & Place Engine</span>
+              <span>Global Tech Atlas</span>
             </span>
             <h1 className="mt-4 font-serif text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-tight">
-              Discover, save & share real places people love.
+              Discover the companies shaping the next tech economy.
             </h1>
             <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-              Explore verified local businesses, hospitals, schools, cafes, and tech companies. Save your favorites, write reviews, and contribute places to the community atlas.
+              Explore global tech hubs, company profiles, technology stacks, and active roles from one searchable map.
             </p>
           </div>
 
@@ -92,9 +95,9 @@ export default function LoginPage() {
                 ⭐
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-200">Save, Review & Claim</p>
+                <p className="text-xs font-bold text-slate-200">Track Your Discovery</p>
                 <p className="text-[11px] text-slate-400 leading-snug mt-0.5">
-                  Bookmark your favorite spots, write verified reviews, and claim your business listing.
+                  Return to company profiles, live roles, and the hubs that matter to your search.
                 </p>
               </div>
             </div>
@@ -141,7 +144,7 @@ export default function LoginPage() {
               Welcome back
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Sign in to explore places, manage your listings, and connect with your community.
+              Sign in to continue exploring companies, tech hubs, and live opportunities.
             </p>
           </div>
 

@@ -46,9 +46,10 @@ async function getCompanyBySlug(rawSlug: string) {
     tech_stack,
     founded_year,
     active_jobs_count,
+    country_code,
     created_at,
     updated_at
-  `);
+  `).eq("status", "published").not("company_type", "is", null);
 
   if (isUuid) {
     query = query.or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug},id.eq.${cleanSlug}`);
@@ -110,6 +111,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
+    keywords: [
+      company.title,
+      `${company.title} careers`,
+      `${typeDisplay} companies`,
+      `${company.city || "global"} tech companies`,
+      "live tech jobs",
+    ],
     alternates: {
       canonical: `/company/${company.slug}`,
     },
@@ -149,6 +157,7 @@ export default async function CompanyProfilePage({ params }: Props) {
 
   const { company, jobs, related } = result;
   const companyCity = company.city || "Bangalore";
+  const companyCountryCode = company.country_code || "IN";
   const matchingCityHub = GLOBAL_TECH_HUBS.find(
     (h) =>
       companyCity.toLowerCase().includes(h.id) ||
@@ -173,7 +182,7 @@ export default async function CompanyProfilePage({ params }: Props) {
       "streetAddress": company.address_line_1,
       "addressLocality": company.locality || company.city,
       "addressRegion": company.city,
-      "addressCountry": "India",
+      "addressCountry": companyCountryCode,
     },
     ...(company.latitude && company.longitude
       ? {
@@ -206,13 +215,13 @@ export default async function CompanyProfilePage({ params }: Props) {
       "address": {
         "@type": "PostalAddress",
         "addressLocality": j.location_name || companyCity,
-        "addressCountry": "India",
+        "addressCountry": companyCountryCode,
       },
     },
     ...(j.workplace_type === "remote" ? { "jobLocationType": "TELECOMMUTE" } : {}),
     "applicantLocationRequirements": {
       "@type": "Country",
-      "name": "India",
+      "name": companyCountryCode,
     },
     "directApply": true,
   }));

@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "LocaToGo – Local Places Atlas",
+    name: "LocaToGo – Global Tech Atlas",
     short_name: "LocaToGo",
-    description: "Discover verified schools, hospitals, cafes, landmarks and more on the live interactive map.",
+    description: "Discover technology companies, global tech hubs, startups, and live jobs on an interactive map.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
@@ -24,7 +24,7 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
-    categories: ["maps", "travel", "navigation"],
+    categories: ["business", "education", "productivity"],
     lang: "en",
   };
 }
