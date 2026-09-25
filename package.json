@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "sync:jobs": "npx tsx scripts/maintenance/sync-all-jobs.ts",
-    "sync:us-companies": "npx tsx --env-file=.env scripts/scrapers/sync-us-companies.ts"
+    "sync:us-companies": "npx tsx --env-file=.env scripts/scrapers/sync-us-companies.ts",
+    "ingest:country": ".\\.venv-overture\\Scripts\\python.exe scripts/ingest_country_tech.py"
   },
   "dependencies": {
     "@react-email/render": "^2.1.0",
