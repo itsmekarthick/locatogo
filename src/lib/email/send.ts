@@ -1,4 +1,4 @@
-import { resend } from "@/lib/email/resend";
+import { getResendClient } from "@/lib/email/resend";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   type EmailType,
@@ -105,6 +105,11 @@ export async function sendTemplatedEmail({
 
   // 4. Send via Resend
   try {
+    const resend = getResendClient();
+    if (!resend) {
+      return { success: false, error: "RESEND_API_KEY not configured" };
+    }
+
     const { data, error } = await resend.emails.send({
       from: FROM,
       to,
@@ -144,6 +149,11 @@ export async function sendRawEmail({
   }
 
   try {
+    const resend = getResendClient();
+    if (!resend) {
+      return { success: false, error: "RESEND_API_KEY not configured" };
+    }
+
     const { data, error } = await resend.emails.send({
       from: FROM,
       to,

@@ -18,11 +18,44 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "LocaToGo | Global Tech Atlas & Startup Ecosystem Map",
   description: "Explore 67,000+ tech companies, startups, hubs, and active hiring opportunities across the globe on an interactive map.",
+  keywords: [
+    "global tech atlas",
+    "technology companies map",
+    "startup directory",
+    "tech company directory",
+    "tech hubs",
+    "live tech jobs",
+    "AI startups",
+    "SaaS companies",
+    "MNC GCC directory",
+  ],
+  authors: [{ name: "LocaToGo" }],
+  creator: "LocaToGo",
+  publisher: "LocaToGo",
+  category: "technology",
   alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
     title: "LocaToGo | Global Tech Atlas & Startup Ecosystem Map",
     description: "Explore 67,000+ tech companies, startups, hubs, and active hiring opportunities across the globe on an interactive map.",
-    type: "website"
+    type: "website",
+    locale: "en_US",
+    siteName: "LocaToGo",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LocaToGo | Global Tech Atlas & Startup Ecosystem Map",
+    description: "Explore tech companies, hubs, startups, and live hiring opportunities across the globe.",
   },
 };
 

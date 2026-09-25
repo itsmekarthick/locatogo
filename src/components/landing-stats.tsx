@@ -9,10 +9,10 @@ type StatsProps = {
 
 export function LandingStats({ totalPlaces, totalCategories, totalLocalities, totalDomains }: StatsProps) {
   const stats = [
-    { label: "Curated Places", value: `${totalPlaces}+`, icon: "📍", desc: "Verified businesses & public assets", accent: "text-cyan-600 dark:text-cyan-400" },
-    { label: "Taxonomy Sectors", value: `${totalCategories}+`, icon: "🏷️", desc: "Healthcare, Tech, Dining, Schools", accent: "text-violet-600 dark:text-violet-400" },
-    { label: "Localities Covered", value: `${totalLocalities}+`, icon: "🏙️", desc: "Neighborhoods & metropolitan hubs", accent: "text-sky-600 dark:text-sky-400" },
-    { label: "Active Atlases", value: `${totalDomains}`, icon: "🌐", desc: "Specialized multi-domain portals", accent: "text-emerald-600 dark:text-emerald-400" },
+    { label: "Tech Companies", value: `${totalPlaces}+`, icon: "🏢", desc: "Startups, scaleups, and global teams", accent: "text-cyan-600 dark:text-cyan-400" },
+    { label: "Tech Sectors", value: `${totalCategories}+`, icon: "◈", desc: "AI, SaaS, fintech, cloud, and more", accent: "text-violet-600 dark:text-violet-400" },
+    { label: "Hubs & Localities", value: `${totalLocalities}+`, icon: "⌖", desc: "Technology clusters around the world", accent: "text-sky-600 dark:text-sky-400" },
+    { label: "Live Job Signals", value: `${totalDomains}+`, icon: "↗", desc: "Roles linked to company career pages", accent: "text-emerald-600 dark:text-emerald-400" },
   ];
 
   return (
@@ -43,38 +43,38 @@ export function LandingStats({ totalPlaces, totalCategories, totalLocalities, to
 export function LandingFeatures() {
   const features = [
     {
-      title: "Interactive Leaflet & 3D Satellite Maps",
-      desc: "Superclustered coordinate pins with instant popups, street-view 360 modals, and custom interactive map filters.",
+      title: "Explore Tech Hubs on a Live Map",
+      desc: "Move from country to city to company with geographic context for every technology cluster.",
       icon: "🗺️",
       color: "from-cyan-500/20 to-cyan-500/20 text-cyan-600 dark:text-cyan-400",
     },
     {
-      title: "Real-Time Weather Atmosphere",
-      desc: "Live temperature, atmospheric condition badges, and interactive simulation overlays matching any city's climate.",
+      title: "Filter the Ecosystem",
+      desc: "Narrow companies by sector, funding stage, workplace model, technology stack, and hiring activity.",
       icon: "⛅",
       color: "from-sky-500/20 to-cyan-500/20 text-sky-600 dark:text-sky-400",
     },
     {
-      title: "1-Click Transit & Ride Booking",
-      desc: "Instant Uber & Ola direct booking deep-links preloaded with exact destination GPS coordinates.",
+      title: "Find Live Opportunities",
+      desc: "Browse active openings by role, experience, department, location, and workplace type.",
       icon: "🚕",
       color: "from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400",
     },
     {
-      title: "Verified Community Reviews",
-      desc: "Authentic star ratings, user testimonials, verified badges, and Google Place details sync.",
+      title: "Understand Each Company",
+      desc: "Open a detailed profile for company type, stage, location, stack, team scale, and available roles.",
       icon: "⭐",
       color: "from-violet-500/20 to-purple-500/20 text-violet-600 dark:text-violet-400",
     },
     {
-      title: "Strict Multi-Tenant RLS Security",
-      desc: "Complete tenant data isolation, granular staff permissions, audited mutations, and Supabase RLS policies.",
+      title: "Direct Paths to Apply",
+      desc: "Follow current career links from the source company instead of relying on stale job-board copies.",
       icon: "🛡️",
       color: "from-cyan-500/20 to-cyan-500/20 text-cyan-600 dark:text-cyan-400",
     },
     {
-      title: "Turnkey Monetization Engine",
-      desc: "Featured listing upgrades, scheduled advertising slot inventory, and Stripe & Razorpay integration.",
+      title: "Built for the Ecosystem",
+      desc: "Companies can submit and maintain their presence while operators keep the atlas structured and useful.",
       icon: "💳",
       color: "from-teal-500/20 to-emerald-500/20 text-teal-600 dark:text-teal-400",
     },
@@ -85,13 +85,13 @@ export function LandingFeatures() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
-            Platform Capabilities
+            Why Tech Atlas
           </p>
           <h2 className="mt-2 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
-            Everything needed to run high-impact directories.
+            A clearer way to understand where technology is being built.
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
-            Engineered with modern web standards, ultra-low latency server rendering, and intuitive map ergonomics.
+            LocaToGo brings geographic context, company intelligence, and live hiring signals into one searchable atlas.
           </p>
         </div>
 

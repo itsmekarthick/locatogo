@@ -64,6 +64,7 @@ export function GlobalTechExplorer({
   initialJobs = [],
   totalDatabaseCompanies = 19095,
   currentHub = "bengaluru",
+  initialType = "all",
   knownHubCounts,
   isRootPage = false,
 }: {
@@ -71,6 +72,7 @@ export function GlobalTechExplorer({
   initialJobs?: UnifiedJob[];
   totalDatabaseCompanies?: number;
   currentHub?: string;
+  initialType?: string;
   knownHubCounts?: Record<string, number>;
   isRootPage?: boolean;
 }) {
@@ -83,7 +85,7 @@ export function GlobalTechExplorer({
   const [companies, setCompanies] = useState<CompanyDetail[]>(initialCompanies);
   const [searchQuery, setSearchQuery] = useState("");
   const [hiringOnly, setHiringOnly] = useState<boolean>(false);
-  const [selectedType, setSelectedType] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>(initialType);
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [selectedWorkplace, setSelectedWorkplace] = useState<string>("all");
   const [selectedTechStack, setSelectedTechStack] = useState<string>("all");

@@ -8,7 +8,7 @@ import {
   DEFAULT_EMAIL_TEMPLATES,
 } from "@/lib/email/defaults";
 import { sendTemplatedEmail, replaceVariables } from "@/lib/email/send";
-import { resend } from "@/lib/email/resend";
+import { getResendClient } from "@/lib/email/resend";
 
 const updateTemplateSchema = z.object({
   type: z.enum(["welcome", "email_verified", "password_reset_sent", "listing_published"]),
@@ -149,6 +149,11 @@ export async function sendTestEmailAction({
       return {
         error: "RESEND_API_KEY is not configured in environment variables. Please add it to .env to deliver real emails.",
       };
+    }
+
+    const resend = getResendClient();
+    if (!resend) {
+      return { error: "RESEND_API_KEY is not configured in environment variables. Please add it to .env to deliver real emails." };
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://locatogo.com";

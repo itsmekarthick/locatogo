@@ -1,10 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicHeader } from "@/components/public-header";
+import { TECH_SECTORS } from "@/lib/constants/tech-hubs";
 
 export const metadata: Metadata = {
-  title: "About Us | LocaToGo - Global Place & Directory Atlas",
-  description: "Learn more about LocaToGo, the real-time global directory atlas for verified schools, hospitals, tech hubs, dining destinations, and civic infrastructure.",
+  title: "About LocaToGo | Global Tech Atlas",
+  description: "Learn how LocaToGo maps technology companies, global tech hubs, and live job opportunities for the modern tech ecosystem.",
+  keywords: ["about LocaToGo", "global tech atlas", "technology company map", "startup ecosystem directory"],
+  authors: [{ name: "LocaToGo" }],
+  creator: "LocaToGo",
+  publisher: "LocaToGo",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About LocaToGo | Global Tech Atlas",
+    description: "Learn how LocaToGo maps technology companies, global tech hubs, and live job opportunities.",
+    url: "/about",
+    type: "website",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function AboutPage() {
@@ -30,10 +43,10 @@ export default function AboutPage() {
             Our Mission & Platform
           </span>
           <h1 className="mt-4 font-serif text-3xl sm:text-5xl font-bold tracking-tight text-gray-950 leading-tight">
-            Mapping the world with precision, community intelligence, and speed.
+            Mapping the companies shaping the next tech economy.
           </h1>
           <p className="mt-4 text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl">
-            LocaToGo is a next-generation local directory and infrastructure atlas. We help residents, newcomers, and travelers discover verified healthcare centers, schools, tech hubs, dining spots, and public amenities worldwide with real-time accuracy.
+            LocaToGo is a global Tech Atlas for discovering companies, startups, MNC GCCs, technology hubs, and live opportunities. We connect geographic context with company intelligence so people can understand where technology is being built and where teams are hiring.
           </p>
         </div>
 
@@ -42,101 +55,83 @@ export default function AboutPage() {
           <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-xs">
             <span className="text-2xl">🎯</span>
             <h3 className="font-serif text-lg font-bold text-gray-900 mt-3">
-              Exact GPS Precision
+              Explore Global Tech Hubs
             </h3>
             <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Every listing on LocaToGo is anchored to verified latitude and longitude coordinates. No approximate pins or guessing where the main gate or emergency casualty entrance is located.
+              Browse technology ecosystems by country, city, and locality, from Bengaluru and New York to London, Singapore, and beyond. Every company is placed in geographic context.
             </p>
           </div>
 
           <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-xs">
             <span className="text-2xl">⏰</span>
             <h3 className="font-serif text-lg font-bold text-gray-900 mt-3">
-              Live Operating Intelligence
+              Company Intelligence
             </h3>
             <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Real-time &ldquo;Open Now&rdquo; and &ldquo;Closed&rdquo; status indicators alongside verified weekly schedules ensure you never drive to a closed clinic, bank, or school counter.
+              Compare company type, funding stage, team scale, technology stack, location, website, and careers information in one searchable profile.
             </p>
           </div>
 
           <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-xs">
             <span className="text-2xl">🚕</span>
             <h3 className="font-serif text-lg font-bold text-gray-900 mt-3">
-              1-Click Transit Integrations
+              Live Hiring Signals
             </h3>
             <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Instantly book Uber or Ola rides with pre-filled destination coordinates, initiate direct WhatsApp inquiries with verified business owners, or start Google Navigation in one tap.
+              Find active roles by department, experience level, workplace model, and location, then follow the direct career link to the source company.
             </p>
           </div>
 
           <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-xs">
             <span className="text-2xl">👁️</span>
             <h3 className="font-serif text-lg font-bold text-gray-900 mt-3">
-              360° Street View & Photos
+              Curated and Community-Improved
             </h3>
             <p className="mt-2 text-xs sm:text-sm text-gray-600 leading-relaxed">
-              Look around any venue before visiting with high-definition Google Street View 360° embeds and authentic photo mosaics of facades, interiors, and campus grounds.
+              Company submissions are reviewed before publication, while operators and company teams can keep profiles structured, current, and useful to the ecosystem.
             </p>
           </div>
         </div>
 
-        {/* Directory Categories Section */}
+        {/* Tech Atlas coverage */}
         <div className="rounded-2xl border border-gray-200/80 bg-white p-6 sm:p-8 shadow-xs mb-12">
           <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
-            What We Map Across Bangalore
+            What the Tech Atlas Covers
           </h2>
           <p className="mt-2 text-xs sm:text-sm text-gray-500">
-            From central business districts to rapidly developing corridors across East, South, and North Bangalore:
+            Explore the company types and technology ecosystems represented across our global hub directory:
           </p>
 
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-semibold text-gray-800">
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <span>➕</span>
-              <span>Hospitals & Clinics</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <span>🎓</span>
-              <span>Schools & Colleges</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <span>🍽️</span>
-              <span>Cafes & Restaurants</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <span>💻</span>
-              <span>Tech Parks & Coworking</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <span>🏬</span>
-              <span>Retail & Supermarkets</span>
-            </div>
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
-              <span>⛽</span>
-              <span>Fuel & EV Stations</span>
-            </div>
+            {TECH_SECTORS.filter((sector) => sector.id !== "all").map((sector) => (
+              <div key={sector.id} className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                <span>{sector.icon}</span>
+                <span>{sector.name}</span>
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Bottom Call to Action */}
         <div className="rounded-3xl bg-gray-950 p-8 sm:p-10 text-white text-center shadow-lg">
           <h3 className="font-serif text-2xl sm:text-3xl font-bold">
-            Own a business or manage a venue?
+            Is your company part of the ecosystem?
           </h3>
           <p className="mt-2 text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
-            Get your place verified, add opening schedules, photos, contact numbers, and help thousands of visitors discover you.
+            Add your company to the Tech Atlas with its sector, location, website, careers page, and a clear description of what you build.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/submit"
               className="rounded-xl bg-[#0ea5e9] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#0284c7] transition-colors shadow-xs"
             >
-              + Submit Listing
+              + Add Your Company
             </Link>
             <Link
               href="/"
               className="rounded-xl border border-gray-700 bg-gray-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-gray-800 transition-colors"
             >
-              Explore Map →
+              Explore Tech Atlas →
             </Link>
           </div>
         </div>

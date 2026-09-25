@@ -6,16 +6,31 @@ import { CompanyDetailDrawer, type CompanyDetail, type CompanyJob } from "@/comp
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 export const metadata: Metadata = {
-  title: "LocaToGo | Global Tech Atlas & Startup Map",
+  title: "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo",
   description:
-    "Interactive directory and live map of 19,000+ verified IT companies, startups, AI ventures, and MNC GCCs across India's top metro hubs with real-time job openings.",
+    "Search a live map of technology companies, startups, AI ventures, MNC GCCs, and active jobs across global tech hubs.",
+  keywords: [
+    "technology companies by city",
+    "startup map",
+    "global tech companies",
+    "AI companies",
+    "SaaS startups",
+    "GCC companies",
+    "tech jobs by location",
+    "Bengaluru tech companies",
+    "New York tech companies",
+  ],
+  authors: [{ name: "LocaToGo" }],
+  creator: "LocaToGo",
+  publisher: "LocaToGo",
+  robots: { index: true, follow: true },
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "LocaToGo | Global Tech Atlas & Startup Map",
+    title: "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo",
     description:
-      "Explore 19,000+ verified tech companies, MNC GCCs, AI labs, and live job openings across Bengaluru, Hyderabad, Delhi NCR, Mumbai, and global hubs.",
+      "Explore tech companies, MNC GCCs, AI labs, startups, and live job openings across Bengaluru, Hyderabad, Delhi NCR, Mumbai, and global hubs.",
     url: "https://locatogo.com",
     siteName: "LocaToGo",
     images: [
@@ -30,9 +45,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LocaToGo | Global Tech Atlas & Startup Map",
+    title: "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo",
     description:
-      "Interactive directory of 19,000+ verified tech companies and live openings across Bengaluru, Hyderabad, Delhi NCR, and global hubs.",
+      "Interactive directory of tech companies and live openings across Bengaluru, Hyderabad, Delhi NCR, and global hubs.",
     images: ["/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies"],
   },
 };
@@ -290,6 +305,7 @@ export default async function Home({ searchParams }: Props) {
         totalDatabaseCompanies={totalTechCount || 19095}
         knownHubCounts={KNOWN_HUB_COUNTS}
         currentHub={params.hub || "bengaluru"}
+        initialType={params.type || "all"}
         isRootPage={true}
       />
 

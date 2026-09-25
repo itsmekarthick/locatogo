@@ -4,8 +4,20 @@ import { PublicHeader } from "@/components/public-header";
 import { SponsorInquiryForm } from "@/components/sponsor-inquiry-form";
 
 export const metadata: Metadata = {
-  title: "Advertise & Partner with Mapora / LocaToGo | Targeted Local & Tech Discovery",
-  description: "Promote your business, coworking space, healthcare center, or tech startup to hundreds of thousands of active local explorers and tech professionals.",
+  title: "Advertise to Tech Companies & Hubs | LocaToGo",
+  description: "Promote your startup, SaaS product, hiring campaign, or technology service to people exploring global tech companies and hubs.",
+  keywords: ["advertise to tech companies", "startup sponsorship", "tech hub advertising", "B2B technology advertising", "sponsored tech listings"],
+  authors: [{ name: "LocaToGo" }],
+  creator: "LocaToGo",
+  publisher: "LocaToGo",
+  alternates: { canonical: "/advertise" },
+  openGraph: {
+    title: "Advertise to Tech Companies & Hubs | LocaToGo",
+    description: "Sponsor company profiles, tech hubs, and hiring discovery experiences across the Global Tech Atlas.",
+    url: "/advertise",
+    type: "website",
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function AdvertisePage() {

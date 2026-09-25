@@ -27,7 +27,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
         {/* Release Pill Badge */}
         <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-200/60 bg-cyan-50/70 dark:border-cyan-900/60 dark:bg-cyan-950/50 px-4 py-1.5 text-xs font-semibold text-cyan-900 dark:text-cyan-200 shadow-2xs backdrop-blur-md transition-all hover:scale-105">
           <span className="flex h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-          <span>Next-Gen Multi-Domain Atlas</span>
+          <span>Global Tech Atlas</span>
           <span className="rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
             v4.0 Live
           </span>
@@ -35,16 +35,16 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
 
         {/* Main Headline */}
         <h1 className="mt-8 font-serif text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-7xl leading-[1.1]">
-          Explore the world with an{" "}
+          Find the companies shaping{" "}
           <span className="bg-gradient-to-r from-cyan-600 via-violet-600 to-sky-500 bg-clip-text text-transparent">
-            intelligent interactive atlas
+            the next tech economy
           </span>
           .
         </h1>
 
         {/* Subtitle */}
         <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
-          Search thousands of verified businesses, healthcare centers, tech parks, cafes, and community assets with live map clustering, real-time weather, and 1-click transit.
+          Explore technology companies, startups, AI labs, MNC GCCs, and active roles across the world&apos;s most important innovation hubs.
         </p>
 
         {/* Search Bar - Unified Pill Style */}
@@ -59,7 +59,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
                 Where
               </span>
               <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                All 8 Metros
+                Global hubs
               </span>
             </Link>
 
@@ -73,7 +73,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search place, company, tech park, hospital..."
+                  placeholder="Search companies, roles, sectors, or hubs..."
                   className="w-full bg-transparent text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
                 />
               </div>
@@ -101,7 +101,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
           {/* Quick Popular Tags */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span className="font-semibold text-slate-700 dark:text-slate-300">Trending:</span>
-            {["Hospitals", "Tech Hubs", "Cafes", "Colleges", "Metro Stations", "Hotels"].map((tag) => (
+            {["AI startups", "SaaS companies", "GCCs", "Fintech", "Remote jobs", "Bengaluru"].map((tag) => (
               <Link
                 key={tag}
                 href={`/?q=${encodeURIComponent(tag)}`}
@@ -119,20 +119,20 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
             href="/"
             className="rounded-full bg-slate-900 dark:bg-cyan-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-2"
           >
-            <span>Launch Live Atlas</span>
-            <span>🗺️</span>
+            <span>Explore Tech Atlas</span>
+            <span>→</span>
           </Link>
           <Link
             href="/submit"
             className="rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-8 py-3.5 text-sm font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-xs"
           >
-            + Add Your Business
+            Add a Company
           </Link>
           <Link
             href="/admin"
             className="rounded-full border border-cyan-200 dark:border-cyan-800/80 bg-cyan-50/50 dark:bg-cyan-950/40 px-8 py-3.5 text-sm font-bold text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100/70 transition-all"
           >
-            Admin Workspace ⚙️
+            For Atlas Operators
           </Link>
         </div>
 
@@ -147,14 +147,14 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
                 <span className="h-3 w-3 rounded-full bg-emerald-400/80" />
               </div>
               <span className="ml-2 rounded-md bg-white dark:bg-slate-900 px-3 py-1 font-mono text-[11px] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
-                https://locatogo.com/atlas/live
+                https://locatogo.com/
               </span>
             </div>
 
             <div className="flex items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300">
               <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950 px-2.5 py-0.5 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Map Online
+                Live Tech Atlas
               </span>
             </div>
           </div>

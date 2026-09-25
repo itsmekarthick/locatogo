@@ -1,7 +1,16 @@
 ﻿import { Resend } from "resend";
 
-if (!process.env.RESEND_API_KEY) {
-  console.warn("[email] RESEND_API_KEY is not set. Emails will not be sent.");
-}
+let resendClient: Resend | null = null;
 
-export const resend = new Resend(process.env.RESEND_API_KEY ?? "re_placeholder");
+export function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    return null;
+  }
+
+  if (!resendClient) {
+    resendClient = new Resend(apiKey);
+  }
+
+  return resendClient;
+}
