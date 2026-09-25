@@ -530,6 +530,7 @@ function MapUpdater({
   activePlace,
   userLocation,
   hubCenter,
+  hubNavTrigger = 0,
   flyToUserTrigger,
   searchQuery,
   isTechAtlas,
@@ -538,6 +539,7 @@ function MapUpdater({
   activePlace: (PlaceListing & { latitude: number; longitude: number }) | null;
   userLocation: { lat: number; lng: number } | null;
   hubCenter?: { lat: number; lng: number; zoom?: number } | null;
+  hubNavTrigger?: number;
   flyToUserTrigger: number;
   searchQuery?: string;
   isTechAtlas?: boolean;
@@ -548,21 +550,29 @@ function MapUpdater({
   const prevSearchRef = useRef<string>("");
   const prevSigRef = useRef<string>("");
   const prevHubRef = useRef<string | null>(null);
+  const prevHubNavTriggerRef = useRef<number>(0);
+  const prevFlyTriggerRef = useRef<number>(0);
 
-  // 0. Tech Hub change -> smooth flyTo new hub center
+  // 0. Tech Hub change or explicit city/country navigation -> smooth flyTo new hub center
   useEffect(() => {
     if (hubCenter) {
       const hubKey = `${hubCenter.lat.toFixed(4)},${hubCenter.lng.toFixed(4)}`;
-      if (prevHubRef.current !== hubKey) {
+      const hasNavTriggered = hubNavTrigger > 0 && hubNavTrigger !== prevHubNavTriggerRef.current;
+      if (hasNavTriggered) {
+        prevHubNavTriggerRef.current = hubNavTrigger;
+      }
+      if (prevHubRef.current !== hubKey || hasNavTriggered) {
         prevHubRef.current = hubKey;
         map.flyTo([hubCenter.lat, hubCenter.lng], hubCenter.zoom ?? 12, { duration: 1.2 });
       }
     }
-  }, [hubCenter, map]);
+  }, [hubCenter, hubNavTrigger, map]);
 
-  // 1. Explicit locate me button click trigger -> fly to user at 5km radius view (zoom 14)
+  // 1. User location / locate me trigger -> ONLY fires when flyToUserTrigger explicitly increments
   useEffect(() => {
-    if (flyToUserTrigger > 0 && userLocation) {
+    if (flyToUserTrigger > prevFlyTriggerRef.current && userLocation) {
+      prevFlyTriggerRef.current = flyToUserTrigger;
+      prevHubRef.current = null;
       map.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1.2 });
     }
   }, [flyToUserTrigger, userLocation, map]);
@@ -1015,6 +1025,7 @@ export default function InteractiveLeafletCanvas({
   activePlaceId,
   setActivePlaceId,
   hubCenter = null,
+  hubNavTrigger = 0,
   isTechAtlas = false,
   userLocation,
   setUserLocation,
@@ -1035,6 +1046,7 @@ export default function InteractiveLeafletCanvas({
   activePlaceId: string | null;
   setActivePlaceId: (id: string | null) => void;
   hubCenter?: { lat: number; lng: number; zoom?: number } | null;
+  hubNavTrigger?: number;
   isTechAtlas?: boolean;
   userLocation?: { lat: number; lng: number } | null;
   setUserLocation?: (loc: { lat: number; lng: number }) => void;
@@ -1181,6 +1193,7 @@ export default function InteractiveLeafletCanvas({
           activePlace={activePlace}
           userLocation={effectiveLocation}
           hubCenter={hubCenter}
+          hubNavTrigger={hubNavTrigger}
           flyToUserTrigger={flyToUserTrigger}
           searchQuery={searchQuery}
           isTechAtlas={isTechAtlas}

@@ -289,6 +289,7 @@ export default async function Home({ searchParams }: Props) {
         initialJobs={initialJobs}
         totalDatabaseCompanies={totalTechCount || 19095}
         knownHubCounts={KNOWN_HUB_COUNTS}
+        currentHub={params.hub || "bengaluru"}
         isRootPage={true}
       />
 

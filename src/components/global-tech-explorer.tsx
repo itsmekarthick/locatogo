@@ -99,6 +99,26 @@ export function GlobalTechExplorer({
   const [sidebarPage, setSidebarPage] = useState<number>(1);
   const SIDEBAR_PAGE_SIZE = 40;
 
+  // User GPS & Geolocation States
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [flyToUserTrigger, setFlyToUserTrigger] = useState<number>(0);
+  const [hubNavTrigger, setHubNavTrigger] = useState<number>(0);
+  const [gpsStatus, setGpsStatus] = useState<"idle" | "requesting" | "located" | "denied">("idle");
+  const [locationBanner, setLocationBanner] = useState<{
+    text: string;
+    type: "info" | "success" | "warning";
+  } | null>(null);
+
+  // Guard flags to ensure GPS only auto-navigates at initial load and respects user country/city switches
+  const hasUserManuallyNavigatedRef = useRef<boolean>(false);
+  const nearestHubRef = useRef<TechHub | null>(null);
+  const initialGpsPromptAttemptedRef = useRef<boolean>(false);
+
+  // Check if current view is actually on the user's nearest hub
+  const isUserAtNearestHub = Boolean(
+    userLocation && nearestHubRef.current && selectedHub.id === nearestHubRef.current.id
+  );
+
   // Job Board Search & Filters
   const [jobSearch, setJobSearch] = useState("");
   const [jobWorkplace, setJobWorkplace] = useState<string>("all");
@@ -113,44 +133,146 @@ export function GlobalTechExplorer({
     setSidebarPage(1);
   }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedWorkplace, selectedTechStack, selectedHub]);
 
-  // Initial location request for root page
-  useEffect(() => {
-    if (isRootPage && typeof window !== "undefined" && "geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat1 = pos.coords.latitude;
-          const lon1 = pos.coords.longitude;
-          let closest = GLOBAL_TECH_HUBS[0];
-          let minDist = Infinity;
-          
-          for (const hub of GLOBAL_TECH_HUBS) {
-            const lat2 = hub.lat;
-            const lon2 = hub.lng;
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon/2) * Math.sin(dLon/2);
-            const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            if (dist < minDist) {
-              minDist = dist;
-              closest = hub;
-            }
-          }
-          
-          // Switch to the closest hub if we found one
-          if (closest && closest.id !== selectedHub.id) {
-            setSelectedHub(closest);
-          }
-        },
-        (err) => {
-          console.warn("User denied location or it failed:", err);
-        },
-        { timeout: 10000 }
-      );
+  // Request GPS permission and center map on user's nearest tech hub & coordinates
+  const requestUserLocation = useCallback((isUserInitiated = false) => {
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      if (isUserInitiated) {
+        setLocationBanner({
+          text: "GPS geolocation is not supported by your current browser.",
+          type: "warning",
+        });
+        setTimeout(() => setLocationBanner(null), 5000);
+      }
+      return;
     }
-  }, [isRootPage]);
+
+    setGpsStatus("requesting");
+    if (isUserInitiated) {
+      // User explicitly requested GPS centering -> reset manual navigation lock
+      hasUserManuallyNavigatedRef.current = false;
+      setLocationBanner({
+        text: "📍 Detecting your GPS location...",
+        type: "info",
+      });
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat1 = pos.coords.latitude;
+        const lon1 = pos.coords.longitude;
+        const userLoc = { lat: lat1, lng: lon1 };
+        setUserLocation(userLoc);
+        setGpsStatus("located");
+
+        // Calculate closest tech hub using spherical law of haversines
+        let closest = GLOBAL_TECH_HUBS[0];
+        let minDist = Infinity;
+        for (const hub of GLOBAL_TECH_HUBS) {
+          const lat2 = hub.lat;
+          const lon2 = hub.lng;
+          const R = 6371; // Earth's radius in km
+          const dLat = ((lat2 - lat1) * Math.PI) / 180;
+          const dLon = ((lon2 - lon1) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos((lat1 * Math.PI) / 180) *
+              Math.cos((lat2 * Math.PI) / 180) *
+              Math.sin(dLon / 2) *
+              Math.sin(dLon / 2);
+          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          if (dist < minDist) {
+            minDist = dist;
+            closest = hub;
+          }
+        }
+
+        nearestHubRef.current = closest;
+
+        // If the user has already manually changed country or city before GPS finished,
+        // do NOT override their manual choice unless they clicked "Near Me" explicitly!
+        if (hasUserManuallyNavigatedRef.current && !isUserInitiated) {
+          return;
+        }
+
+        if (closest) {
+          setSelectedHub(closest);
+          if (closest.countryCode) {
+            setSelectedCountry(closest.countryCode);
+          }
+          const distLabel = minDist < 50 ? `${Math.round(minDist)} km away` : `${Math.round(minDist)} km from ${closest.name}`;
+          setLocationBanner({
+            text: `📍 Centered on your location — showing nearest tech hub: ${closest.name}, ${closest.country} (${distLabel})`,
+            type: "success",
+          });
+
+          // Fetch hub companies on-demand if needed
+          fetch(`/api/tech-atlas/companies?hub=${closest.id}&limit=2500`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.companies && data.companies.length > 0) {
+                const hubResults: CompanyDetail[] = data.companies.map((l: any) => ({
+                  id: l.id,
+                  title: l.title,
+                  slug: l.slug,
+                  short_description: l.short_description,
+                  address_line_1: l.address_line_1,
+                  locality: l.locality,
+                  city: l.city,
+                  latitude: l.latitude,
+                  longitude: l.longitude,
+                  website: l.website,
+                  careers_url: l.careers_url,
+                  company_type: l.company_type || "product_saas",
+                  funding_stage: l.funding_stage || "Product",
+                  employee_range: l.employee_range,
+                  tech_stack: l.tech_stack || [],
+                  founded_year: l.founded_year,
+                  active_jobs_count: l.active_jobs_count || 0,
+                  jobs: [],
+                }));
+
+                setCompanies((prev) => {
+                  const existingIds = new Set(prev.map((c) => c.id));
+                  const uniqueNew = hubResults.filter((c) => !existingIds.has(c.id));
+                  return [...uniqueNew, ...prev];
+                });
+              }
+            })
+            .catch(() => {});
+        }
+
+        // Trigger map animation to fly to user coordinates
+        setFlyToUserTrigger((prev) => prev + 1);
+
+        // Auto dismiss banner after 7 seconds
+        setTimeout(() => {
+          setLocationBanner((curr) => (curr?.type === "success" ? null : curr));
+        }, 7000);
+      },
+      (err) => {
+        console.warn("GPS location permission denied or error:", err);
+        setGpsStatus("denied");
+        if (isUserInitiated) {
+          setLocationBanner({
+            text: "📍 Location permission was denied or unavailable. You can browse hubs manually.",
+            type: "warning",
+          });
+          setTimeout(() => setLocationBanner(null), 5000);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);
+
+  // Request GPS permission ONLY at the time of initial load
+  useEffect(() => {
+    if (initialGpsPromptAttemptedRef.current) return;
+    initialGpsPromptAttemptedRef.current = true;
+
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      requestUserLocation(false);
+    }
+  }, [requestUserLocation]);
 
   // Reset job page when job filters change
   useEffect(() => {
@@ -388,16 +510,27 @@ export function GlobalTechExplorer({
   }, [isCountryDropdownOpen]);
 
   const handleSelectCountry = (countryCode: string) => {
+    hasUserManuallyNavigatedRef.current = true;
     setSelectedCountry(countryCode);
     setIsCountryDropdownOpen(false);
-    if (countryCode !== "ALL" && selectedHub.countryCode !== countryCode) {
-      const countryInfo = GLOBAL_COUNTRIES.find((c) => c.code === countryCode);
-      const defaultHub =
-        GLOBAL_TECH_HUBS.find((h) => h.id === countryInfo?.defaultHubId) ||
-        GLOBAL_TECH_HUBS.find((h) => h.countryCode === countryCode);
-      if (defaultHub) {
-        handleSelectHub(defaultHub);
+    setLocationBanner(null);
+
+    if (countryCode === "ALL") {
+      setHubNavTrigger((prev) => prev + 1);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("country", "ALL");
+        window.history.replaceState({}, "", url.toString());
       }
+      return;
+    }
+
+    const countryInfo = GLOBAL_COUNTRIES.find((c) => c.code === countryCode);
+    const targetHub =
+      GLOBAL_TECH_HUBS.find((h) => h.id === countryInfo?.defaultHubId) ||
+      GLOBAL_TECH_HUBS.find((h) => h.countryCode === countryCode);
+    if (targetHub) {
+      handleSelectHub(targetHub);
     }
   };
 
@@ -625,17 +758,30 @@ export function GlobalTechExplorer({
   };
 
   const handleSelectHub = (hubOption: any) => {
+    hasUserManuallyNavigatedRef.current = true;
     const hub = GLOBAL_TECH_HUBS.find((h) => h.id === hubOption.id) || hubOption;
     setSelectedHub(hub);
     if (hub.countryCode && selectedCountry !== "ALL" && selectedCountry !== hub.countryCode) {
       setSelectedCountry(hub.countryCode);
     }
+    setHubNavTrigger((prev) => prev + 1);
     setSelectedCompany(null);
     setHoveredCompanyId(null);
     setSearchQuery("");
     setGridPage(1);
     setSidebarPage(1);
     setJobPage(1);
+    setLocationBanner(null);
+
+    // Update URL query parameters without full reload
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("hub", hub.id);
+      if (hub.countryCode) {
+        url.searchParams.set("country", hub.countryCode);
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
 
     // Dynamic on-demand hydration for selected hub if not yet fully in memory
     const loadedForHub = companies.filter((c) => matchesHub(c, hub)).length;
@@ -980,7 +1126,33 @@ export function GlobalTechExplorer({
 
           {/* 2. City Hubs in Selected Country */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0 flex items-center gap-1">
+            {/* GPS Locate Me Button */}
+            <button
+              type="button"
+              onClick={() => requestUserLocation(true)}
+              title={isUserAtNearestHub ? "Map is centered on your GPS location" : "Use GPS location to auto-detect nearest tech hub"}
+              className={`shrink-0 rounded-full px-2.5 sm:px-3 py-1 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                isUserAtNearestHub
+                  ? "bg-emerald-600 text-white shadow-emerald-500/20 ring-1 ring-emerald-400"
+                  : gpsStatus === "requesting"
+                  ? "bg-cyan-600 text-white animate-pulse"
+                  : "border border-cyan-400/80 dark:border-cyan-700/80 bg-cyan-50/90 dark:bg-cyan-950/60 text-cyan-800 dark:text-cyan-200 hover:bg-cyan-100 dark:hover:bg-cyan-900/60"
+              }`}
+            >
+              <span className="relative flex h-2 w-2">
+                {isUserAtNearestHub ? (
+                  <>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-200"></span>
+                  </>
+                ) : (
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${gpsStatus === "requesting" ? "bg-white animate-ping" : "bg-cyan-500"}`}></span>
+                )}
+              </span>
+              <span>{gpsStatus === "requesting" ? "Locating..." : isUserAtNearestHub ? "📍 Near Me (Active)" : "📍 Near Me"}</span>
+            </button>
+
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mx-1 shrink-0 flex items-center gap-1">
               <span>City:</span>
             </span>
             {displayedHubs.map((hub) => {
@@ -1279,6 +1451,24 @@ export function GlobalTechExplorer({
 
             {/* 2. RIGHT MAP CANVAS */}
             <div className={`flex-1 h-full relative overflow-hidden ${mobileTab === "map" ? "block" : "hidden lg:block"}`}>
+              {/* Floating Location Notification Banner */}
+              {locationBanner && (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[450] max-w-md w-[92%] sm:w-auto px-4 py-2 rounded-full shadow-2xl backdrop-blur-md text-xs font-semibold flex items-center justify-between gap-3 border border-cyan-500/40 bg-slate-950/90 text-white animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-center gap-2 truncate">
+                    <span>{locationBanner.type === "success" ? "🎯" : locationBanner.type === "warning" ? "⚠️" : "📍"}</span>
+                    <span className="truncate">{locationBanner.text}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLocationBanner(null)}
+                    className="text-slate-400 hover:text-white cursor-pointer shrink-0 text-sm leading-none pl-1"
+                    aria-label="Dismiss location banner"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
               <MapErrorBoundary fallbackText="The tech atlas map canvas encountered an issue. Click below to reload.">
                 <InteractiveLeafletCanvas
                   locatedListings={locatedListings}
@@ -1288,7 +1478,12 @@ export function GlobalTechExplorer({
                     if (comp) setSelectedCompany(comp);
                   }}
                   hubCenter={{ lat: selectedHub.lat, lng: selectedHub.lng, zoom: selectedHub.zoom }}
+                  hubNavTrigger={hubNavTrigger}
                   isTechAtlas={true}
+                  userLocation={userLocation}
+                  setUserLocation={setUserLocation}
+                  onLocateMe={() => requestUserLocation(true)}
+                  flyToUserTrigger={flyToUserTrigger}
                   searchQuery={searchQuery}
                   initialPerspective="street"
                 />
