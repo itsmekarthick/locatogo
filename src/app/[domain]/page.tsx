@@ -15,6 +15,24 @@ import {
 import { type CompanyDetail, type CompanyJob } from "@/components/company-detail-drawer";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
+export async function generateStaticParams() {
+  const params: { domain: string }[] = [];
+  
+  // Pre-generate routes for all main global tech hubs
+  GLOBAL_TECH_HUBS.forEach((hub) => {
+    params.push({ domain: hub.id });
+  });
+
+  // Pre-generate routes for known hub localities (e.g., /whitefield, /hitec-city)
+  Object.values(KNOWN_HUB_LOCALITIES).forEach((localities) => {
+    localities.forEach((loc) => {
+      params.push({ domain: loc.slug });
+    });
+  });
+
+  return params;
+}
+
 export const revalidate = 3600; // Cache and revalidate every hour for high performance
 
 

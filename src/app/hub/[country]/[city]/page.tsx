@@ -8,6 +8,13 @@ import { GLOBAL_TECH_HUBS, GLOBAL_COUNTRIES, matchesHub } from "@/lib/constants/
 import { type CompanyDetail } from "@/components/company-detail-drawer";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
+export async function generateStaticParams() {
+  return GLOBAL_TECH_HUBS.map((hub) => ({
+    country: hub.countryCode.toLowerCase(),
+    city: hub.id,
+  }));
+}
+
 type Props = {
   params: Promise<{ country: string; city: string }>;
   searchParams: Promise<{ q?: string; type?: string; stage?: string }>;

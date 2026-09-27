@@ -5,52 +5,73 @@ import { GlobalTechExplorer, type UnifiedJob } from "@/components/global-tech-ex
 import { CompanyDetailDrawer, type CompanyDetail, type CompanyJob } from "@/components/company-detail-drawer";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
-export const metadata: Metadata = {
-  title: "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo",
-  description:
-    "Search a live map of technology companies, startups, AI ventures, MNC GCCs, and active jobs across global tech hubs.",
-  keywords: [
-    "technology companies by city",
-    "startup map",
-    "global tech companies",
-    "AI companies",
-    "SaaS startups",
-    "GCC companies",
-    "tech jobs by location",
-    "Bengaluru tech companies",
-    "New York tech companies",
-  ],
-  authors: [{ name: "LocaToGo" }],
-  creator: "LocaToGo",
-  publisher: "LocaToGo",
-  robots: { index: true, follow: true },
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    title: "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo",
-    description:
-      "Explore tech companies, MNC GCCs, AI labs, startups, and live job openings across Bengaluru, Hyderabad, Delhi NCR, Mumbai, and global hubs.",
-    url: "https://locatogo.com",
-    siteName: "LocaToGo",
-    images: [
-      {
-        url: "/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies",
-        width: 1200,
-        height: 630,
-        alt: "LocaToGo Tech Atlas",
-      },
-    ],
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo",
-    description:
-      "Interactive directory of tech companies and live openings across Bengaluru, Hyderabad, Delhi NCR, and global hubs.",
-    images: ["/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies"],
-  },
-};
+import { GLOBAL_TECH_HUBS } from "@/lib/constants/tech-hubs";
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const hubSlug = params.hub?.toLowerCase();
+  const hub = hubSlug ? GLOBAL_TECH_HUBS.find((h) => h.id === hubSlug) : null;
+
+  const title = hub 
+    ? `${hub.name} Tech Companies, Startups & Live Jobs | LocaToGo`
+    : "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo";
+
+  const description = hub
+    ? `Explore tech companies, MNC GCCs, AI labs, startups, and live job openings across ${hub.name} and the ${hub.country} region on an interactive map.`
+    : "Search a live map of technology companies, startups, AI ventures, MNC GCCs, and active jobs across global tech hubs.";
+
+  return {
+    title,
+    description,
+    keywords: [
+      "technology companies by city",
+      "startup map",
+      "global tech companies",
+      "AI companies",
+      "SaaS startups",
+      "GCC companies",
+      "tech jobs by location",
+      "Bengaluru tech companies",
+      "New York tech companies",
+      hub ? `${hub.name} tech companies` : "",
+      hub ? `${hub.name} startups` : "",
+    ].filter(Boolean),
+    authors: [{ name: "LocaToGo" }],
+    creator: "LocaToGo",
+    publisher: "LocaToGo",
+    robots: { index: true, follow: true },
+    alternates: {
+      canonical: hub ? `/${hub.id}` : "/",
+    },
+    openGraph: {
+      title,
+      description,
+      url: hub ? `https://locatogo.com/${hub.id}` : "https://locatogo.com",
+      siteName: "LocaToGo",
+      images: [
+        {
+          url: hub 
+            ? `/api/og?title=${encodeURIComponent(hub.name)}%20Tech%20Atlas&category=Tech%20Hub&locality=${encodeURIComponent(hub.country)}`
+            : "/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies",
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [
+        hub 
+          ? `/api/og?title=${encodeURIComponent(hub.name)}%20Tech%20Atlas&category=Tech%20Hub&locality=${encodeURIComponent(hub.country)}`
+          : "/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies",
+      ],
+    },
+  };
+}
 
 const KNOWN_HUB_COUNTS: Record<string, number> = {
   "bengaluru": 0,
