@@ -102,7 +102,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { company, jobs } = result;
   const locationStr = [company.locality, company.city || "India"].filter(Boolean).join(", ");
-  const activeCount = jobs.length > 0 ? jobs.length : (company.active_jobs_count || 0);
+  const activeCount = company.active_jobs_count || jobs.length || 0;
   const typeDisplay = (company.company_type || "Technology Company").replace(/_/g, " ");
 
   const title = `${company.title} Careers, Tech Stack & Office | LocaToGo`;
@@ -165,7 +165,7 @@ export default async function CompanyProfilePage({ params }: Props) {
   ) || GLOBAL_TECH_HUBS[0];
 
   const localJobs = jobs.filter((j: any) => jobMatchesLocation(j.location_name, companyCity));
-  const activeJobsCount = jobs.length > 0 ? (localJobs.length > 0 ? localJobs.length : jobs.length) : (company.active_jobs_count || 0);
+  const activeJobsCount = company.active_jobs_count || jobs.length || 0;
   const typeDisplay = (company.company_type || "Product SaaS").replace(/_/g, " ");
   const companyUrl = company.website || company.careers_url;
 
@@ -444,7 +444,7 @@ export default async function CompanyProfilePage({ params }: Props) {
           careersUrl={company.careers_url}
           websiteUrl={company.website}
           localJobCount={localJobs.length}
-          totalJobCount={jobs.length}
+          totalJobCount={activeJobsCount}
         />
 
         {/* 5. Office Location & Map Details */}

@@ -582,7 +582,8 @@ export function GlobalTechExplorer({
 
       // 3. Fallback to active_jobs_count only if the company itself belongs to this hub
       if (matchesHub(comp, selectedHub)) {
-        return comp.active_jobs_count || 0;
+        // Prioritize the DB active_jobs_count.
+        return comp.active_jobs_count || (comp.jobs?.length || 0);
       }
 
       return 0;
@@ -684,14 +685,12 @@ export function GlobalTechExplorer({
   }, [sidebarSortedCompanies, sidebarPage, SIDEBAR_PAGE_SIZE]);
 
   const totalOpenings = useMemo(() => {
-    if (filteredJobs.length > 0) {
-      return filteredJobs.length;
-    }
+    // Return the accurate DB sum from our companies
     return filteredCompanies.reduce(
       (acc, c) => acc + getCompanyJobCount(c),
       0
     );
-  }, [filteredCompanies, filteredJobs.length, getCompanyJobCount]);
+  }, [filteredCompanies, getCompanyJobCount]);
 
   // Convert to PlaceListing format for InteractiveLeafletCanvas component
   const locatedListings: (PlaceListing & { latitude: number; longitude: number })[] = useMemo(() => {
@@ -1698,7 +1697,7 @@ export function GlobalTechExplorer({
                     </span>
                   </div>
                   <h2 className="mt-2 font-display text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100">
-                    {filteredJobs.length} Active Positions
+                    {totalOpenings} Active Positions
                   </h2>
                   <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                     Real-time openings synced directly from Greenhouse, Lever, Ashby, and top tech companies in {selectedHub.name}.
@@ -1942,7 +1941,7 @@ export function GlobalTechExplorer({
                   <Pagination
                     currentPage={jobPage}
                     totalPages={totalJobPages}
-                    totalItems={filteredJobs.length}
+                    totalItems={totalOpenings}
                     pageSize={JOB_PAGE_SIZE}
                     onPageChange={(p) => {
                       setJobPage(p);
