@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ResumeOnboarding } from "@/components/resume-onboarding";
 
 export const metadata = {
   title: "My Dashboard | LocaToGo",
@@ -39,6 +40,34 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
+  // Fetch User Profile (Skills & Preferences)
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("skills, preferred_location")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // If user has skills, fetch matching jobs
+  let recommendedJobs: any[] = [];
+  if (profile?.skills && profile.skills.length > 0) {
+    let jobQuery = supabase
+      .from("company_jobs")
+      .select("id, title, department, location_name, apply_url, created_at, listing_id, listings(title, city, slug)")
+      .eq("is_active", true)
+      .limit(10);
+    
+    // Add OR condition for skills
+    const orConditions = profile.skills.map((skill: string) => `title.ilike.%${skill}%,department.ilike.%${skill}%`).join(",");
+    jobQuery = jobQuery.or(orConditions);
+    
+    if (profile.preferred_location && profile.preferred_location !== "Remote") {
+      jobQuery = jobQuery.or(`location_name.ilike.%${profile.preferred_location}%,workplace_type.ilike.%Remote%`);
+    }
+
+    const { data: jobs } = await jobQuery;
+    recommendedJobs = jobs || [];
+  }
+
   const displayName =
     user.user_metadata?.full_name ??
     user.user_metadata?.name ??
@@ -76,6 +105,56 @@ export default async function DashboardPage() {
             + Add a Place
           </Link>
         </div>
+
+        {/* AI Resume Matcher / Recommended Jobs */}
+        <section>
+          {profile?.skills && profile.skills.length > 0 ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    ✨ Recommended for You
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Based on your top skills: <span className="font-medium text-cyan-600">{profile.skills.slice(0, 5).join(", ")}</span>
+                  </p>
+                </div>
+              </div>
+
+              {recommendedJobs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {recommendedJobs.map(job => (
+                    <div key={job.id} className="border border-slate-200 rounded-2xl p-5 hover:border-cyan-400 transition-colors bg-white shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="text-xs font-bold text-cyan-600 mb-2 uppercase tracking-wide">
+                          {job.listings?.title || "Tech Company"}
+                        </div>
+                        <h3 className="font-bold text-slate-900 text-lg leading-tight mb-1">{job.title}</h3>
+                        <p className="text-sm text-slate-500 mb-4 flex items-center gap-2">
+                          <span>📍 {job.location_name || job.listings?.city}</span>
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-100">
+                        <Link href={`/listing/${job.listings?.slug}`} className="text-sm font-semibold text-slate-500 hover:text-slate-900">
+                          View Company
+                        </Link>
+                        <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+                          Apply Now ↗
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center">
+                  <p className="text-slate-500">No new matching roles found today for your specific stack in {profile.preferred_location}. Check back soon!</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <ResumeOnboarding />
+          )}
+        </section>
 
         {/* Submitted Places */}
         <section>
