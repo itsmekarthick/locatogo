@@ -152,6 +152,9 @@ export default async function HubDirectoryPage({ params }: Props) {
     listingsPage1,
     listingsPage2,
     listingsPage3,
+    listingsPage4,
+    listingsPage5,
+    listingsPage6,
   ] = await Promise.all([
     supabase
       .from("listings")
@@ -164,48 +167,128 @@ export default async function HubDirectoryPage({ params }: Props) {
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
-      .range(0, 999),
+      .range(0, 2999),
     supabase
       .from("company_jobs")
       .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(3000, 5999),
+    supabase
+      .from("company_jobs")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .eq("is_active", true)
+      .order("posted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(6000, 8999),
+    supabase
+      .from("company_jobs")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .eq("is_active", true)
+      .order("posted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(9000, 11999),
+    supabase
+      .from("listings")
+      .select(`
+        id,
+        title,
+        slug,
+        short_description,
+        address_line_1,
+        locality,
+        city,
+        latitude,
+        longitude,
+        website,
+        careers_url,
+        company_type,
+        funding_stage,
+        employee_range,
+        tech_stack,
+        founded_year,
+        active_jobs_count
+      `)
+      .eq("status", "published")
+      .not("company_type", "is", null)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("active_jobs_count", { ascending: false })
+      .order("id", { ascending: true })
+      .range(0, 999),
+    supabase
+      .from("listings")
+      .select(`
+        id,
+        title,
+        slug,
+        short_description,
+        address_line_1,
+        locality,
+        city,
+        latitude,
+        longitude,
+        website,
+        careers_url,
+        company_type,
+        funding_stage,
+        employee_range,
+        tech_stack,
+        founded_year,
+        active_jobs_count
+      `)
+      .eq("status", "published")
+      .not("company_type", "is", null)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("active_jobs_count", { ascending: false })
       .order("id", { ascending: true })
       .range(1000, 1999),
     supabase
-      .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
-      .eq("is_active", true)
-      .order("posted_at", { ascending: false })
+      .from("listings")
+      .select(`
+        id,
+        title,
+        slug,
+        short_description,
+        address_line_1,
+        locality,
+        city,
+        latitude,
+        longitude,
+        website,
+        careers_url,
+        company_type,
+        funding_stage,
+        employee_range,
+        tech_stack,
+        founded_year,
+        active_jobs_count
+      `)
+      .eq("status", "published")
+      .not("company_type", "is", null)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("active_jobs_count", { ascending: false })
       .order("id", { ascending: true })
       .range(2000, 2999),
     supabase
-      .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
-      .eq("is_active", true)
-      .order("posted_at", { ascending: false })
+      .from("listings")
+      .select(`
+        id, title, slug, short_description, address_line_1, locality, city, latitude, longitude, website, careers_url, company_type, funding_stage, employee_range, tech_stack, founded_year, active_jobs_count
+      `)
+      .eq("status", "published")
+      .not("company_type", "is", null)
+      .not("latitude", "is", null)
+      .not("longitude", "is", null)
+      .order("active_jobs_count", { ascending: false })
       .order("id", { ascending: true })
       .range(3000, 3999),
     supabase
       .from("listings")
       .select(`
-        id,
-        title,
-        slug,
-        short_description,
-        address_line_1,
-        locality,
-        city,
-        latitude,
-        longitude,
-        website,
-        careers_url,
-        company_type,
-        funding_stage,
-        employee_range,
-        tech_stack,
-        founded_year,
-        active_jobs_count
+        id, title, slug, short_description, address_line_1, locality, city, latitude, longitude, website, careers_url, company_type, funding_stage, employee_range, tech_stack, founded_year, active_jobs_count
       `)
       .eq("status", "published")
       .not("company_type", "is", null)
@@ -213,27 +296,11 @@ export default async function HubDirectoryPage({ params }: Props) {
       .not("longitude", "is", null)
       .order("active_jobs_count", { ascending: false })
       .order("id", { ascending: true })
-      .range(0, 999),
+      .range(4000, 4999),
     supabase
       .from("listings")
       .select(`
-        id,
-        title,
-        slug,
-        short_description,
-        address_line_1,
-        locality,
-        city,
-        latitude,
-        longitude,
-        website,
-        careers_url,
-        company_type,
-        funding_stage,
-        employee_range,
-        tech_stack,
-        founded_year,
-        active_jobs_count
+        id, title, slug, short_description, address_line_1, locality, city, latitude, longitude, website, careers_url, company_type, funding_stage, employee_range, tech_stack, founded_year, active_jobs_count
       `)
       .eq("status", "published")
       .not("company_type", "is", null)
@@ -241,35 +308,7 @@ export default async function HubDirectoryPage({ params }: Props) {
       .not("longitude", "is", null)
       .order("active_jobs_count", { ascending: false })
       .order("id", { ascending: true })
-      .range(1000, 1999),
-    supabase
-      .from("listings")
-      .select(`
-        id,
-        title,
-        slug,
-        short_description,
-        address_line_1,
-        locality,
-        city,
-        latitude,
-        longitude,
-        website,
-        careers_url,
-        company_type,
-        funding_stage,
-        employee_range,
-        tech_stack,
-        founded_year,
-        active_jobs_count
-      `)
-      .eq("status", "published")
-      .not("company_type", "is", null)
-      .not("latitude", "is", null)
-      .not("longitude", "is", null)
-      .order("active_jobs_count", { ascending: false })
-      .order("id", { ascending: true })
-      .range(2000, 2999),
+      .range(5000, 5999),
   ]);
 
   const rawJobs = [
@@ -283,6 +322,9 @@ export default async function HubDirectoryPage({ params }: Props) {
     ...(listingsPage1.data || []),
     ...(listingsPage2.data || []),
     ...(listingsPage3.data || []),
+    ...(listingsPage4.data || []),
+    ...(listingsPage5.data || []),
+    ...(listingsPage6.data || []),
   ];
 
   // Group jobs by listing_id
@@ -297,7 +339,7 @@ export default async function HubDirectoryPage({ params }: Props) {
 
   const initialCompanies: CompanyDetail[] = (rawListings || []).map((l: any) => {
     const compJobs = jobsByListing.get(l.id) || [];
-    const accurateJobCount = compJobs.length > 0 ? compJobs.length : (l.active_jobs_count || 0);
+    const accurateJobCount = l.active_jobs_count || compJobs.length || 0;
 
     return {
       id: l.id,

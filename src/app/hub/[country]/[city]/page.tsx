@@ -140,7 +140,7 @@ export default async function HubPage({ params, searchParams }: Props) {
       .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
-      .limit(1000),
+      .limit(10000),
   ]);
 
   // Group jobs by listing_id
