@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
-import { GLOBAL_TECH_HUBS, type TechHub } from "@/lib/constants/tech-hubs";
+import { GLOBAL_TECH_HUBS, type TechHub, matchesHub } from "@/lib/constants/tech-hubs";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 import { ShareButton } from "@/components/share-button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -160,9 +160,7 @@ export default async function CompanyProfilePage({ params }: Props) {
   const companyCity = company.city || "Bangalore";
   const companyCountryCode = company.country_code || "IN";
   const matchingCityHub = GLOBAL_TECH_HUBS.find(
-    (h) =>
-      companyCity.toLowerCase().includes(h.id) ||
-      companyCity.toLowerCase().includes(h.name.toLowerCase())
+    (h) => matchesHub(company, h)
   ) || GLOBAL_TECH_HUBS[0];
 
   const localJobs = jobs.filter((j: any) => jobMatchesLocation(j.location_name, companyCity));

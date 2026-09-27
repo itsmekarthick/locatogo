@@ -145,19 +145,33 @@ async function main() {
   let totalActiveJobs = 0;
   let totalDeactivatedJobs = 0;
 
-  for (let i = 0; i < atsCompanies.length; i++) {
-    const comp = atsCompanies[i];
-    process.stdout.write(`[${i + 1}/${atsCompanies.length}] ${comp.title} (${comp.city || "Global"})... `);
+  const CHUNK_SIZE = 15;
+  for (let i = 0; i < atsCompanies.length; i += CHUNK_SIZE) {
+    const chunk = atsCompanies.slice(i, i + CHUNK_SIZE);
+    process.stdout.write(`\n[${i + 1}-${Math.min(i + CHUNK_SIZE, atsCompanies.length)}/${atsCompanies.length}] Processing batch of ${chunk.length}... `);
 
-    const res = await syncCompany(comp);
-    if (res.synced) {
-      totalSynced++;
-      totalActiveJobs += res.activeJobs;
-      totalDeactivatedJobs += res.deactivatedJobs;
-      console.log(`✅ ${res.activeJobs} active (${res.deactivatedJobs} pruned)`);
-    } else {
-      console.log(`⚠️ skipped/failed`);
+    const results = await Promise.all(chunk.map(comp => syncCompany(comp).catch(err => {
+      console.warn(`\n   ⚠️ Error syncing ${comp.title}: ${err.message}`);
+      return { synced: false, activeJobs: 0, deactivatedJobs: 0 };
+    })));
+
+    let chunkSynced = 0;
+    let chunkActive = 0;
+    let chunkPruned = 0;
+
+    for (const res of results) {
+      if (res.synced) {
+        chunkSynced++;
+        chunkActive += res.activeJobs;
+        chunkPruned += res.deactivatedJobs;
+      }
     }
+
+    totalSynced += chunkSynced;
+    totalActiveJobs += chunkActive;
+    totalDeactivatedJobs += chunkPruned;
+    
+    console.log(`✅ ${chunkActive} active (${chunkPruned} pruned) from ${chunkSynced} successful syncs`);
   }
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

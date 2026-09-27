@@ -13,6 +13,7 @@
     "ingest:country": ".\\.venv-overture\\Scripts\\python.exe scripts/ingest_country_tech.py"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@react-email/render": "^2.1.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",

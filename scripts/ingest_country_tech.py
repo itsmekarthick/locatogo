@@ -234,6 +234,69 @@ COUNTRY_PRESETS: dict[str, dict[str, Any]] = {
             },
         },
     },
+    "IN": {
+        "name": "India",
+        "currency": "INR",
+        "timezone": "Asia/Kolkata",
+        "hubs": {
+            "bangalore": {
+                "name": "Bengaluru",
+                "city": "Bengaluru",
+                "state": "Karnataka",
+                "bbox": (77.30, 12.65, 77.95, 13.25),
+                "postcode": "560001",
+            },
+            "hyderabad": {
+                "name": "Hyderabad",
+                "city": "Hyderabad",
+                "state": "Telangana",
+                "bbox": (78.10, 17.20, 78.80, 17.70),
+                "postcode": "500001",
+            },
+            "chennai": {
+                "name": "Chennai",
+                "city": "Chennai",
+                "state": "Tamil Nadu",
+                "bbox": (79.90, 12.70, 80.40, 13.30),
+                "postcode": "600001",
+            },
+            "delhi": {
+                "name": "Delhi NCR",
+                "city": "New Delhi",
+                "state": "Delhi",
+                "bbox": (76.8, 28.3, 77.5, 28.9),
+                "postcode": "110001",
+            },
+            "mumbai": {
+                "name": "Mumbai",
+                "city": "Mumbai",
+                "state": "Maharashtra",
+                "bbox": (72.7, 18.9, 73.1, 19.3),
+                "postcode": "400001",
+            },
+            "pune": {
+                "name": "Pune",
+                "city": "Pune",
+                "state": "Maharashtra",
+                "bbox": (73.7, 18.4, 74.1, 18.7),
+                "postcode": "411001",
+            },
+            "kolkata": {
+                "name": "Kolkata",
+                "city": "Kolkata",
+                "state": "West Bengal",
+                "bbox": (88.2, 22.4, 88.5, 22.7),
+                "postcode": "700001",
+            },
+            "kochi": {
+                "name": "Kochi",
+                "city": "Kochi",
+                "state": "Kerala",
+                "bbox": (76.2, 9.9, 76.4, 10.1),
+                "postcode": "682001",
+            },
+        },
+    },
     "NL": {
         "name": "Netherlands",
         "currency": "EUR",
@@ -313,6 +376,13 @@ STRICT_IT_CATEGORIES = {
     "data_processing_services",
     "web_design_services",
     "computer_systems_design",
+    "corporate_office",
+    "internet_company",
+    "technology",
+    "electronics_company",
+    "marketing_agency",
+    "engineering_consultant",
+    "telecommunications",
 }
 
 # Strict Blacklist Keywords

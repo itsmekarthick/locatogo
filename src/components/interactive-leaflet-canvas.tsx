@@ -909,6 +909,7 @@ function ClusteredMarkersLayer({
             key={`place-${place.id}`}
             position={[place.latitude, place.longitude]}
             icon={icon}
+            zIndexOffset={isSelected ? 1000 : 0}
             eventHandlers={{
               click: () => setActivePlaceId(place.id),
             }}
