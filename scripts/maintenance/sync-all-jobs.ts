@@ -2,22 +2,24 @@ import { createClient } from "@supabase/supabase-js";
 import * as fs from "fs";
 import { detectBoard, fetchJobs, ExternalJob } from "../../src/lib/jobs/providers";
 
-const env: Record<string, string> = {};
-const envFile = fs.existsSync(".env.local") ? ".env.local" : ".env";
-fs.readFileSync(envFile, "utf8")
-  .split(/\r?\n/)
-  .forEach((line) => {
-    const m = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
-    if (m) {
-      let v = m[2].trim();
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
-        v = v.slice(1, -1);
+const env: Record<string, string> = { ...process.env } as Record<string, string>;
+const envFile = fs.existsSync(".env.local") ? ".env.local" : (fs.existsSync(".env") ? ".env" : null);
+if (envFile) {
+  fs.readFileSync(envFile, "utf8")
+    .split(/\r?\n/)
+    .forEach((line) => {
+      const m = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
+      if (m) {
+        let v = m[2].trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+          v = v.slice(1, -1);
+        }
+        env[m[1]] = v;
       }
-      env[m[1]] = v;
-    }
-  });
+    });
+}
 
-const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL || "", env.SUPABASE_SERVICE_ROLE_KEY || "", {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 

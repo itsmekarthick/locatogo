@@ -4,18 +4,21 @@ import * as fs from "fs";
 import https from "https";
 import http from "http";
 
-const env: Record<string, string> = {};
-const envFile = fs.existsSync(".env.local") ? ".env.local" : ".env";
-fs.readFileSync(envFile, "utf8").split(/\r?\n/).forEach((line) => {
-  const m = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
-  if (m) {
-    let v = m[2].trim();
-    if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
-    env[m[1]] = v;
-  }
-});
+const env: Record<string, string> = { ...process.env } as Record<string, string>;
+const envFile = fs.existsSync(".env.local") ? ".env.local" : (fs.existsSync(".env") ? ".env" : null);
 
-const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+if (envFile) {
+  fs.readFileSync(envFile, "utf8").split(/\r?\n/).forEach((line) => {
+    const m = line.match(/^\s*([\w_]+)\s*=\s*(.*)\s*$/);
+    if (m) {
+      let v = m[2].trim();
+      if (v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1);
+      env[m[1]] = v;
+    }
+  });
+}
+
+const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL || "", env.SUPABASE_SERVICE_ROLE_KEY || "");
 
 // Use the user's GEMINI_API_KEY
 if (!env.GEMINI_API_KEY) {
