@@ -65,6 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `https://locatogo.com/hub/${country.toLowerCase()}/${city.toLowerCase()}`,
       siteName: "LocaToGo",
       type: "website",
+      locale: "en_US",
     },
     twitter: {
       card: "summary_large_image",
