@@ -33,6 +33,7 @@ async function getCompanyBySlug(rawSlug: string) {
     title,
     slug,
     short_description,
+    description,
     address_line_1,
     locality,
     city,
@@ -401,6 +402,19 @@ export default async function CompanyProfilePage({ params }: Props) {
             </div>
           </div>
         </div>
+
+        {/* 2.5 About the Company (Long Description) */}
+        {company.description && (
+          <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800/80 bg-white dark:bg-[#0d1424] p-6 sm:p-7 shadow-xs space-y-3">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span>📖</span>
+              <span>About {company.title}</span>
+            </h2>
+            <div className="pt-1 prose prose-sm sm:prose-base dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
+              <p className="whitespace-pre-wrap">{company.description}</p>
+            </div>
+          </section>
+        )}
 
         {/* 3. Tech Stack Tags */}
         {company.tech_stack && company.tech_stack.length > 0 && (

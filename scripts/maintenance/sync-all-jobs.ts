@@ -126,20 +126,31 @@ async function main() {
 
   const startTime = Date.now();
 
-  const { data: companies, error } = await supabase
-    .from("listings")
-    .select("id, tenant_id, title, city, country_code, careers_url, website")
-    .eq("status", "published")
-    .not("careers_url", "is", null)
-    .order("title");
+  const allCompanies: any[] = [];
+  let offset = 0;
+  const PAGE_SIZE = 1000;
+  
+  while (true) {
+    const { data, error } = await supabase
+      .from("listings")
+      .select("id, tenant_id, title, city, country_code, careers_url, website")
+      .eq("status", "published")
+      .not("careers_url", "is", null)
+      .order("title")
+      .range(offset, offset + PAGE_SIZE - 1);
 
-  if (error || !companies) {
-    console.error("Failed to load companies:", error);
-    process.exit(1);
+    if (error || !data) {
+      console.error("Failed to load companies:", error);
+      break;
+    }
+    
+    allCompanies.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
   }
 
-  const atsCompanies = companies.filter((c) => detectBoard(c.careers_url));
-  console.log(`Found ${companies.length} published companies (${atsCompanies.length} with verified ATS boards)\n`);
+  const atsCompanies = allCompanies.filter((c) => detectBoard(c.careers_url));
+  console.log(`Found ${allCompanies.length} published companies with URLs (${atsCompanies.length} with verified ATS boards)\n`);
 
   let totalSynced = 0;
   let totalActiveJobs = 0;
