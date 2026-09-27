@@ -1368,7 +1368,7 @@ export default function InteractiveLeafletCanvas({
         )}
       </div>
 
-      {/* Floating Action Controls on Map (Bottom-Right) */}
+      {/* Floating Action Controls on Map (Bottom-Right) - Hidden to prevent overlapping with AI Copilot
       <div className="absolute bottom-5 right-5 z-[400] flex items-center gap-2 pointer-events-auto">
         <button
           onClick={handleTriggerLocate}
@@ -1379,6 +1379,7 @@ export default function InteractiveLeafletCanvas({
           <span className="hidden sm:inline">My Location</span>
         </button>
       </div>
+      */}
     </div>
   );
 }

@@ -61,6 +61,7 @@ export const metadata: Metadata = {
 
 import { Suspense } from "react";
 import { NavigationProgressBar } from "@/components/navigation-progress-bar";
+import { AiCopilot } from "@/components/ai-copilot";
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
@@ -95,6 +96,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <main className="flex-1 w-full h-full animate-app-reveal flex flex-col">
           {children}
         </main>
+        <AiCopilot />
         <Analytics />
       </body>
     </html>
