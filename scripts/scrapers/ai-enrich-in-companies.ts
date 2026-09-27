@@ -170,7 +170,9 @@ async function enrichCompany(company: any) {
     const textContent = stripHtml(html);
     
     if (textContent.length < 200) {
-      throw new Error("Website blocked or too little content");
+      // If website is dead, empty, or parked, delete the company listing
+      await supabase.from("listings").delete().eq("id", company.id);
+      throw new Error("DELETED: Website inactive or dead");
     }
     
     // 2. Ask Gemini to extract data
@@ -196,21 +198,24 @@ async function enrichCompany(company: any) {
     
     const cleanNull = (val: any) => (val === "null" || val === "" || !val) ? null : val;
     
+    const updatePayload: any = {
+      short_description: parsed.short_description,
+      description: parsed.description,
+      tech_stack: parsed.tech_stack,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (cleanNull(parsed.careers_url)) updatePayload.careers_url = parsed.careers_url;
+    if (cleanNull(parsed.contact_email)) updatePayload.email = parsed.contact_email;
+    if (cleanNull(parsed.contact_number)) updatePayload.phone = parsed.contact_number;
+    if (cleanNull(parsed.address)) updatePayload.address_line_1 = parsed.address;
+    if (cleanNull(parsed.whatsapp)) updatePayload.whatsapp = parsed.whatsapp;
+    if (cleanNull(parsed.founded_year)) updatePayload.founded_year = parsed.founded_year;
+
     // 4. Update Supabase
     const { error: updateError } = await supabase
       .from("listings")
-      .update({
-        short_description: parsed.short_description,
-        description: parsed.description,
-        tech_stack: parsed.tech_stack,
-        careers_url: cleanNull(parsed.careers_url),
-        email: cleanNull(parsed.contact_email),
-        phone: cleanNull(parsed.contact_number),
-        address_line_1: cleanNull(parsed.address),
-        whatsapp: cleanNull(parsed.whatsapp),
-        founded_year: cleanNull(parsed.founded_year),
-        updated_at: new Date().toISOString()
-      })
+      .update(updatePayload)
       .eq("id", company.id);
       
     if (updateError) {
