@@ -56,6 +56,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title,
       description,
+      keywords: [
+        `${hub.name} tech companies`,
+        `${hub.name} startups`,
+        `${hub.name} tech hub`,
+        `open jobs in ${hub.name}`,
+        `hiring in ${hub.name}`,
+        `${hub.name} software jobs`,
+        `software engineering jobs in ${hub.name}`,
+        `${hub.name} startup jobs`,
+        `remote jobs in ${hub.name}`,
+        `latest tech jobs in ${hub.name}`,
+        `${hub.name} tech careers`,
+        `${hub.name} IT companies`,
+        `${hub.country} tech directory`,
+      ],
       alternates: {
         canonical: `/${hub.id}`,
       },
