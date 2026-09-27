@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-const pdfParse = require("pdf-parse");
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function POST(req: NextRequest) {
@@ -45,6 +43,7 @@ export async function POST(req: NextRequest) {
     // 2. Parse the PDF text
     let parsedText = "";
     try {
+      const pdfParse = require("pdf-parse");
       const pdfData = await pdfParse(fileBuffer);
       parsedText = pdfData.text;
     } catch (e) {
