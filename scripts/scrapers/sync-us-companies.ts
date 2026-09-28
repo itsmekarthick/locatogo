@@ -85,7 +85,7 @@ async function readSource(source: string, limit?: number): Promise<unknown> {
   if (source === DEFAULT_SOURCE) return readRemoteDirectory(limit);
   if (/^https?:\/\//i.test(source)) {
     const response = await fetch(source, {
-      headers: { Accept: "application/json,text/csv", "User-Agent": "Mapora-US-Company-Sync/1.0" },
+      headers: { Accept: "application/json,text/csv", "User-Agent": "LocaToGo-US-Company-Sync/1.0" },
       signal: AbortSignal.timeout(30_000),
     });
     if (!response.ok) throw new Error(`Company source returned ${response.status}`);
@@ -96,7 +96,7 @@ async function readSource(source: string, limit?: number): Promise<unknown> {
 
 async function readRemoteDirectory(limit?: number): Promise<CompanyInput[]> {
   const response = await fetch(DEFAULT_SOURCE, {
-    headers: { Accept: "application/vnd.github+json", "User-Agent": "Mapora-US-Company-Sync/1.0" },
+    headers: { Accept: "application/vnd.github+json", "User-Agent": "LocaToGo-US-Company-Sync/1.0" },
     signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) throw new Error(`Remote company directory returned ${response.status}`);
@@ -108,7 +108,7 @@ async function readRemoteDirectory(limit?: number): Promise<CompanyInput[]> {
     if (!file.download_url || !file.name.endsWith(".md")) continue;
     try {
       const markdown = await (await fetch(file.download_url, {
-        headers: { "User-Agent": "Mapora-US-Company-Sync/1.0" },
+        headers: { "User-Agent": "LocaToGo-US-Company-Sync/1.0" },
         signal: AbortSignal.timeout(15_000),
       })).text();
       const frontmatter = markdown.match(/^---\s*\n([\s\S]*?)\n---/);

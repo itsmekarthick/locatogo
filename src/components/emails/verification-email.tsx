@@ -24,10 +24,10 @@ export const VerificationEmail = ({
   return (
     <Html>
       <Head />
-      <Preview>Verify your email to access Mapora</Preview>
+      <Preview>Verify your email to access LocaToGo</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>Welcome to Mapora!</Heading>
+          <Heading style={h1}>Welcome to LocaToGo!</Heading>
           <Text style={text}>
             Hello {userEmail},
           </Text>

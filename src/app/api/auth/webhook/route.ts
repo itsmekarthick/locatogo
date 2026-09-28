@@ -37,9 +37,9 @@ export async function POST(req: Request) {
 
     // Send the email via Resend
     const { data, error } = await resend.emails.send({
-      from: "Mapora <hello@mapora.co>", // Change this to your verified Resend domain!
+      from: "LocaToGo <support@locatogo.com>", // Updated to LocaToGo support email
       to: [user.email],
-      subject: "Welcome to Mapora! Please verify your email.",
+      subject: "Welcome to LocaToGo! Please verify your email.",
       html: emailHtml,
     });
 

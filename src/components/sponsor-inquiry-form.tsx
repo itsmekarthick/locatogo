@@ -25,7 +25,7 @@ export function SponsorInquiryForm() {
           Advertising Inquiry Received!
         </h4>
         <p className="text-emerald-800 dark:text-emerald-300">
-          Thank you for partnering with Mapora. Our sponsorship director will review your campaign details and reach out to <span className="font-semibold">{formData.email}</span> within 2 business hours.
+          Thank you for partnering with LocaToGo. Our sponsorship director will review your campaign details and reach out to <span className="font-semibold">{formData.email}</span> within 2 business hours.
         </p>
         <button
           onClick={() => setIsSubmitted(false)}

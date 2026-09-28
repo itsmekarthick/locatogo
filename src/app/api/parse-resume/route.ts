@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Extract skills using Gemini 1.5 Flash
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `
       You are an expert technical recruiter and resume parser.
       Read the following resume text and extract the top 10 to 15 most prominent technical skills, tools, and programming languages.

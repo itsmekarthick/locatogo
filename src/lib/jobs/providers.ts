@@ -122,7 +122,7 @@ export function parseJobPostingJsonLd(html: string, pageUrl: string): ExternalJo
 
 async function getJson(url: string): Promise<any> {
   const response = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": "Mapora-Tech-Atlas/1.0" },
+    headers: { Accept: "application/json", "User-Agent": "LocaToGo-Tech-Atlas/1.0" },
     signal: AbortSignal.timeout(20_000),
     next: { revalidate: 0 },
   });
@@ -132,7 +132,7 @@ async function getJson(url: string): Promise<any> {
 
 async function getHtml(url: string): Promise<string> {
   const response = await fetch(url, {
-    headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "Mapora-Tech-Atlas/1.0" },
+    headers: { Accept: "text/html,application/xhtml+xml", "User-Agent": "LocaToGo-Tech-Atlas/1.0" },
     signal: AbortSignal.timeout(5_000),
     next: { revalidate: 0 },
   });

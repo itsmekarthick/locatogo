@@ -16,8 +16,8 @@ import type { WeatherType } from "@/lib/services/weather";
 // causing "Cannot set properties of null (setting '_source')" when marker is clicked or focused.
 if (typeof window !== "undefined" && L && L.Layer) {
   const LayerProto = L.Layer.prototype as any;
-  if (LayerProto && !LayerProto.__mapora_source_safeguard) {
-    LayerProto.__mapora_source_safeguard = true;
+  if (LayerProto && !LayerProto.__locatogo_source_safeguard) {
+    LayerProto.__locatogo_source_safeguard = true;
 
     // 1. Guard _addFocusListenersOnLayer against null this._tooltip
     LayerProto._addFocusListenersOnLayer = function (layer: any) {

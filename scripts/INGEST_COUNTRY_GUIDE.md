@@ -1,6 +1,6 @@
 # Universal Country IT Company Ingestion Guide
 
-The script [scripts/ingest_country_tech.py](file:///d:/Projects/Mapora/scripts/ingest_country_tech.py) is a command-line tool that allows you to stream, filter, and ingest **strictly verified IT & Software companies** with valid websites and exact GPS coordinates for **any country or tech hub in the world** into LocaToGo.
+The script [scripts/ingest_country_tech.py](file:///d:/Projects/LocaToGo/scripts/ingest_country_tech.py) is a command-line tool that allows you to stream, filter, and ingest **strictly verified IT & Software companies** with valid websites and exact GPS coordinates for **any country or tech hub in the world** into LocaToGo.
 
 ---
 

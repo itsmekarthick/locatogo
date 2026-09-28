@@ -27,7 +27,7 @@ ATS_HOSTS = {
 def request_text(url: str, timeout: int = 15) -> str:
     request = Request(url, headers={
         "Accept": "text/html,application/xhtml+xml",
-        "User-Agent": "Mapora-Tech-Atlas/1.0 career-url-enrichment",
+        "User-Agent": "LocaToGo-Tech-Atlas/1.0 career-url-enrichment",
     })
     with urlopen(request, timeout=timeout) as response:
         return response.read().decode("utf-8", errors="replace")
@@ -36,7 +36,7 @@ def request_text(url: str, timeout: int = 15) -> str:
 def request_json(url: str, timeout: int = 15) -> object:
     request = Request(url, headers={
         "Accept": "application/json",
-        "User-Agent": "Mapora-Tech-Atlas/1.0 career-url-enrichment",
+        "User-Agent": "LocaToGo-Tech-Atlas/1.0 career-url-enrichment",
     })
     with urlopen(request, timeout=timeout) as response:
         return json.loads(response.read().decode("utf-8"))
