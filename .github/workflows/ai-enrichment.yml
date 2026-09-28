@@ -2,8 +2,8 @@ name: AI Company Enrichment
 
 on:
   schedule:
-    # Runs at minute 15 of every hour
-    - cron: '15 * * * *'
+    # Runs once a day at midnight UTC to process up to 1,500 companies
+    - cron: '0 0 * * *'
   workflow_dispatch: # Allows manual triggering from the GitHub UI
 
 jobs:

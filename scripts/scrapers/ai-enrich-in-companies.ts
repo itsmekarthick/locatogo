@@ -230,49 +230,51 @@ async function enrichCompany(company: any) {
 
 async function main() {
   console.log("==========================================================");
-  console.log(`🤖 AI ENRICHMENT PIPELINE (Powered by Gemini 1.5 Flash)`);
+  console.log(`🤖 AI ENRICHMENT PIPELINE (Continuous Mode)`);
   console.log("==========================================================\n");
 
-  const companies = await fetchCompaniesToEnrich();
-  if (companies.length === 0) {
-    console.log("🎉 All companies are already enriched!");
-    return;
-  }
+  let totalSuccess = 0;
+  let totalFailed = 0;
   
-  console.log(`\n📊 Queueing ${companies.length} companies for enrichment in this batch.\n`);
-
-  const stats = { success: 0, failed: 0, done: 0, total: companies.length };
-  const start = Date.now();
-  let index = 0;
-
-  async function worker() {
-    while (index < companies.length) {
-      const company = companies[index++];
+  while (true) {
+    const companies = await fetchCompaniesToEnrich();
+    if (companies.length === 0) {
+      console.log("🎉 All companies are already enriched!");
+      break;
+    }
+    
+    console.log(`\n📊 Fetched next batch of ${companies.length} companies...`);
+    let batchSuccess = 0;
+    
+    for (const company of companies) {
       await delay(DELAY_MS); // Help prevent rate limits
 
       const result = await enrichCompany(company);
-      stats.done++;
 
       if (result.success) {
-        stats.success++;
-        console.log(`✨ [${stats.done}/${stats.total}] ${company.title} -> ${result.data?.category_name}`);
+        batchSuccess++;
+        totalSuccess++;
+        console.log(`✨ ${company.title} -> Enriched successfully!`);
       } else {
-        stats.failed++;
-        console.log(`❌ [${stats.done}/${stats.total}] ${company.title} -> FAILED: ${result.error}`);
+        totalFailed++;
+        console.log(`❌ ${company.title} -> ${result.error}`);
+        
+        // If Gemini API daily quota exhausted, stop the entire script gracefully
+        if (result.error && result.error.includes("429")) {
+          console.log("\n⚠️ Gemini API Rate Limit / Daily Quota hit! Pausing until tomorrow.");
+          console.log(`✅ Total successfully enriched today: ${totalSuccess}`);
+          process.exit(0); 
+        }
       }
     }
+    
+    console.log(`\n✅ Finished batch. Continuing to next batch...\n`);
   }
 
-  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
-
-  const elapsed = ((Date.now() - start) / 1000 / 60).toFixed(1);
   console.log("\n==========================================================");
-  console.log("  BATCH ENRICHMENT COMPLETE");
+  console.log("  PIPELINE COMPLETE");
   console.log("==========================================================");
-  console.log(`✅ Successfully enriched: ${stats.success}`);
-  console.log(`❌ Failed (No website/blocked): ${stats.failed}`);
-  console.log(`⏱️  Time: ${elapsed} minutes\n`);
-  console.log("💡 Tip: You can set up a CRON job to run this script hourly to process your entire database for free!");
+  console.log(`✅ Total Successfully enriched: ${totalSuccess}`);
+  console.log(`❌ Total Failed/Deleted: ${totalFailed}`);
 }
-
 main().catch(console.error);
