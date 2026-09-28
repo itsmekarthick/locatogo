@@ -60,6 +60,7 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
       data: {
         display_name: displayName,
         platform_role: 'tech_user',
