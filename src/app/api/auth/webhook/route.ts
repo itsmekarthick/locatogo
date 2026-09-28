@@ -18,7 +18,9 @@ export async function POST(req: Request) {
 
     if (providedSecret !== process.env.SUPABASE_WEBHOOK_SECRET) {
       console.error("[Auth Webhook] Unauthorized. Secret mismatch.");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      // We return 500 instead of 401, because a 401 makes Supabase instantly crash the user's signup attempt 
+      // with the "Hook requires authorization token" error instead of falling back to default email safely!
+      return NextResponse.json({ error: "Unauthorized" }, { status: 500 });
     }
 
     const payload = await req.json();
