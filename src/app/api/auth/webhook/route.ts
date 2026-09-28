@@ -8,12 +8,15 @@ const resend = new Resend(process.env.RESEND_API_KEY || "re_fallback");
 
 export async function POST(req: Request) {
   try {
-    const authHeader = req.headers.get("authorization");
+    // We switched to a URL query parameter for security since the Headers UI is missing in Supabase!
+    // Your webhook URL in Supabase should now look like: 
+    // https://yourdomain.com/api/auth/webhook?secret=your_password
+    const { searchParams } = new URL(req.url);
+    const providedSecret = searchParams.get("secret");
     
-    // Log for debugging
-    console.log("[Auth Webhook] Received request. Auth Header:", authHeader ? "Present" : "Missing");
+    console.log("[Auth Webhook] Received request. Secret provided:", providedSecret ? "Yes" : "No");
 
-    if (authHeader !== `Bearer ${process.env.SUPABASE_WEBHOOK_SECRET}`) {
+    if (providedSecret !== process.env.SUPABASE_WEBHOOK_SECRET) {
       console.error("[Auth Webhook] Unauthorized. Secret mismatch.");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
