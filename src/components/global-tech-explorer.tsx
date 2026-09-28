@@ -1778,7 +1778,28 @@ export function GlobalTechExplorer({
 
             {/* Tech Partner Spotlight Ad Placement */}
             <div className="mt-5">
-              <AdBannerSlot placementLocation="tech_spotlight" variant="tech_spotlight" />
+              <Link href="/dashboard" className="block">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900 to-cyan-900 p-6 shadow-md hover:shadow-lg transition-all group">
+                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl group-hover:bg-cyan-400/30 transition-all"></div>
+                  <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-purple-400/30 transition-all"></div>
+                  <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-2xl shadow-inner group-hover:scale-110 transition-transform">
+                        ✨
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white tracking-tight">AI Resume Matching</h3>
+                        <p className="text-sm text-cyan-100/80">Upload your resume and let Gemini find your perfect roles instantly.</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <span className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-bold text-indigo-900 shadow-xs group-hover:bg-cyan-50 transition-colors">
+                        Upload Resume →
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             </div>
 
             {/* Jobs Grid */}
