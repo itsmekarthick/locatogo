@@ -434,10 +434,13 @@ export function GlobalTechExplorer({
   // Filter Jobs by Hub and criteria
   const filteredJobs = useMemo(() => {
     return allJobs.filter((job) => {
-      // 0. Hub filter for jobs: verify actual job location matches the selected hub
+      // 0. Hub filter for jobs: verify actual job location or the company's base location matches the selected hub
       const locMatch =
+        selectedHub.id === "all" ||
         jobMatchesLocation(job.location_name, selectedHub.id) ||
-        jobMatchesLocation(job.location_name, selectedHub.name);
+        jobMatchesLocation(job.location_name, selectedHub.name) ||
+        jobMatchesLocation(job.locality, selectedHub.id) ||
+        jobMatchesLocation(job.city, selectedHub.id);
 
       if (!locMatch) {
         return false;

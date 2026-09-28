@@ -45,7 +45,7 @@ export function jobMatchesLocation(
   jobLocation: string | null | undefined,
   targetCity: string | null | undefined
 ): boolean {
-  if (!targetCity) return true;
+  if (!targetCity || targetCity.toLowerCase() === "all") return true;
   if (!jobLocation) return false;
 
   const loc = jobLocation.toLowerCase();

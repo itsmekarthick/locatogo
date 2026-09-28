@@ -8,19 +8,24 @@ const resend = new Resend(process.env.RESEND_API_KEY || "re_fallback");
 
 export async function POST(req: Request) {
   try {
-    // Basic Auth Check (To ensure only Supabase can hit this hook)
-    // You set this secret in the Supabase Dashboard when you add the webhook URL
     const authHeader = req.headers.get("authorization");
+    
+    // Log for debugging
+    console.log("[Auth Webhook] Received request. Auth Header:", authHeader ? "Present" : "Missing");
+
     if (authHeader !== `Bearer ${process.env.SUPABASE_WEBHOOK_SECRET}`) {
+      console.error("[Auth Webhook] Unauthorized. Secret mismatch.");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const payload = await req.json();
+    console.log("[Auth Webhook] Payload received:", JSON.stringify(payload, null, 2));
+    
     const { user, email_data } = payload;
     const { email_action_type, token_hash, redirect_to } = email_data;
 
-    // We only care about signups (you can easily add password resets later!)
     if (email_action_type !== "signup") {
+      console.log(`[Auth Webhook] Ignoring action type: ${email_action_type}`);
       return NextResponse.json({ message: "Action ignored" });
     }
 
