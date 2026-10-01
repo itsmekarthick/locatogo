@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LandingHero } from "@/components/landing-hero";
 import { LandingStats, LandingFeatures } from "@/components/landing-stats";
 import { PublicHeader } from "@/components/public-header";
-import { BrandLogo } from "@/components/brand-logo";
+import { SiteFooter } from "@/components/site-footer";
 import { GLOBAL_COUNTRIES, GLOBAL_TECH_HUBS, TECH_SECTORS } from "@/lib/constants/tech-hubs";
 
 export const metadata: Metadata = {
@@ -418,55 +418,7 @@ export default async function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16] py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 pb-10 border-b border-slate-100 dark:border-slate-800">
-            <div>
-              <div className="flex items-center gap-2">
-                <BrandLogo size={28} />
-                <span className="font-serif text-xl font-bold text-slate-900 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span></span>
-                </span>
-              </div>
-              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                A global Tech Atlas for companies, hubs, and live opportunities.
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Directory</p>
-              <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <li><Link href="/" className="hover:text-cyan-600 dark:hover:text-cyan-400">Live Atlas</Link></li>
-                <li><Link href="/blog" className="hover:text-cyan-600 dark:hover:text-cyan-400 font-semibold text-cyan-600 dark:text-cyan-400">City Guides & Stories</Link></li>
-                <li><Link href="/about" className="hover:text-cyan-600 dark:hover:text-cyan-400">About LocaToGo</Link></li>
-                <li><Link href="/submit" className="hover:text-cyan-600 dark:hover:text-cyan-400">Add Company</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Administration</p>
-              <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <li><Link href="/admin" className="hover:text-cyan-600 dark:hover:text-cyan-400">Admin Dashboard</Link></li>
-                <li><Link href="/admin/analytics" className="hover:text-cyan-600 dark:hover:text-cyan-400">Visitor Analytics</Link></li>
-                <li><Link href="/admin/team" className="hover:text-cyan-600 dark:hover:text-cyan-400">Team & Permissions</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Legal & Trust</p>
-              <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-                <li><Link href="/privacy" className="hover:text-cyan-600 dark:hover:text-cyan-400">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-cyan-600 dark:hover:text-cyan-400">Terms of Service</Link></li>
-                <li><Link href="/contact" className="hover:text-cyan-600 dark:hover:text-cyan-400">Contact Support</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col items-center justify-between gap-4 sm:flex-row text-xs text-slate-400 dark:text-slate-500">
-            <p>© {new Date().getFullYear()} LocaToGo SaaS. All rights reserved.</p>
-            <p>Crafted for modern map-first discovery.</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
