@@ -52,7 +52,7 @@ export function PublicHeader({
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5">
         {/* Left: Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-          <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+          <BrandLogo size={38} className="group-hover:scale-105 transition-transform" />
           <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span></span>
           </span>
         </Link>

@@ -57,6 +57,11 @@ export const metadata: Metadata = {
     title: "LocaToGo | Global Tech Atlas & Startup Ecosystem Map",
     description: "Explore tech companies, hubs, startups, and live hiring opportunities across the globe.",
   },
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 import { Suspense } from "react";

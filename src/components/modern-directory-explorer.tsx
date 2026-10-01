@@ -813,7 +813,7 @@ export function ModernDirectoryExplorer({
           {/* Logo & Dual Atlas Switcher */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-4 shrink-0">
             <Link href="/" className="flex items-center gap-2.5 group" title="LocaToGo">
-              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+              <BrandLogo size={38} className="group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
               </span>
             </Link>
