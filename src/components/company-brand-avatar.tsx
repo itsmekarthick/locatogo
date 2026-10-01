@@ -152,7 +152,7 @@ export function getCompanyDomain(website?: string | null, title?: string): strin
 export function getCompanyLogoUrl(website?: string | null, title?: string): string {
   const domain = getCompanyDomain(website, title);
   if (!domain) return "";
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+  return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`;
 }
 
 export function getCompanyInitials(title: string): string {
@@ -196,10 +196,9 @@ export function CompanyBrandAvatar({
   const hash = title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const gradient = BRAND_GRADIENTS[hash % BRAND_GRADIENTS.length];
 
-  // Cascading logo sources
+  // Cascading logo sources (DuckDuckGo avoids 404 console errors by returning a default icon)
   const logoSources = domain
     ? [
-        `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`,
         `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`,
       ]
     : [];

@@ -17,9 +17,33 @@ export function UserProfileMenu({
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<string>("user");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
+  }, []);
+
+  function toggleTheme() {
+    const isCurrentlyDark = document.documentElement.classList.contains("dark");
+    const next = isCurrentlyDark ? "light" : "dark";
+
+    setTheme(next);
+    localStorage.setItem("locatogo_theme", next);
+
+    if (next === "dark") {
+      document.documentElement.classList.add("dark");
+      document.documentElement.setAttribute("data-theme", "dark");
+      document.documentElement.style.colorScheme = "dark";
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.setAttribute("data-theme", "light");
+      document.documentElement.style.colorScheme = "light";
+    }
+  }
 
   // Load real user session from Supabase
   useEffect(() => {
@@ -110,28 +134,16 @@ export function UserProfileMenu({
     );
   }
 
-  // If user is NOT logged in, show clean Sign In button
-  if (!user) {
-    return (
-      <Link
-        href="/auth/login"
-        className={`inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all shadow-2xs cursor-pointer select-none ${className}`}
-      >
-        <span>👤</span>
-        <span>Sign In</span>
-      </Link>
-    );
-  }
+  // Define attributes whether user is logged in or not
+  const displayName = user
+    ? (user.user_metadata?.display_name as string) ||
+      (user.user_metadata?.full_name as string) ||
+      user.email?.split("@")[0] ||
+      "Member"
+    : "Guest";
 
-  // User is logged in: compute dynamic metadata
-  const displayName =
-    (user.user_metadata?.display_name as string) ||
-    (user.user_metadata?.full_name as string) ||
-    user.email?.split("@")[0] ||
-    "Member";
-
-  const initials = displayName.slice(0, 2).toUpperCase();
-  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+  const initials = user ? displayName.slice(0, 2).toUpperCase() : "👤";
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
   const isTechUser = role === "tech_user";
 
   return (
@@ -155,10 +167,10 @@ export function UserProfileMenu({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
           ) : (
-            <span>{initials}</span>
+            <span className={user ? "text-xs" : "text-sm leading-none"}>{initials}</span>
           )}
           {/* Active Status Indicator */}
-          <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-900" />
+          {user && <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-1.5 ring-white dark:ring-slate-900" />}
         </div>
 
         {/* Subtle Dropdown Chevron */}
@@ -174,148 +186,176 @@ export function UserProfileMenu({
       {/* Floating Dropdown Popover */}
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-64 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d131f] p-2 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 z-[2000] animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Header Profile Tag with real user data */}
-          <div className="px-3.5 py-3 border-b border-slate-100 dark:border-slate-800/80 mb-1">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-700 text-white font-bold text-sm shadow-xs overflow-hidden shrink-0">
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
-                ) : (
-                  <span>{initials}</span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
-                  {displayName}
-                </p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                  {user.email}
-                </p>
-              </div>
-            </div>
-            <div className="mt-2.5 flex items-center justify-between">
-              <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/70 dark:border-cyan-800/60 px-2 py-0.5 text-[9px] font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider">
-                ⚡ Active Session
-              </span>
-              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                Authenticated
-              </span>
-            </div>
-          </div>
-
-          {/* Navigation Items */}
-          <div className="space-y-0.5 py-1">
-            {isTechUser ? (
-              <>
-                {onProfileClick ? (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsOpen(false);
-                      onProfileClick();
-                    }}
-                    className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                  >
-                    <span className="text-sm">👨‍💻</span>
-                    <div className="flex-1">
-                      <p className="font-bold leading-tight">Tech Dashboard</p>
-                      <p className="text-[10px] text-slate-400 font-normal">Manage your profile & skills</p>
-                    </div>
-                  </button>
-                ) : (
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                  >
-                    <span className="text-sm">👨‍💻</span>
-                    <div className="flex-1">
-                      <p className="font-bold leading-tight">Tech Dashboard</p>
-                      <p className="text-[10px] text-slate-400 font-normal">Manage your profile & skills</p>
-                    </div>
-                  </Link>
-                )}
-                <Link
-                  href="/tech/jobs"
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <span className="text-sm">💼</span>
-                  <div className="flex-1">
-                    <p className="font-bold leading-tight">Jobs & Applications</p>
-                    <p className="text-[10px] text-slate-400 font-normal">Track your opportunities</p>
+          
+          {user ? (
+            <>
+              {/* Header Profile Tag with real user data */}
+              <div className="px-3.5 py-3 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-700 text-white font-bold text-sm shadow-xs overflow-hidden shrink-0">
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={avatarUrl} alt={displayName} className="h-full w-full object-cover" />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
                   </div>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <span className="text-sm">📊</span>
-                  <div className="flex-1">
-                    <p className="font-bold leading-tight">Dashboard</p>
-                    <p className="text-[10px] text-slate-400 font-normal">My submissions, saves & stats</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                      {displayName}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                      {user.email}
+                    </p>
                   </div>
-                </Link>
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <span className="text-sm">⚡</span>
-                  <div className="flex-1">
-                    <p className="font-bold leading-tight">Admin Console</p>
-                    <p className="text-[10px] text-slate-400 font-normal">Directory management & KPIs</p>
-                  </div>
-                  <span className="rounded bg-[#0ea5e9]/15 px-1.5 py-0.2 text-[9px] font-extrabold text-[#0ea5e9] uppercase">
-                    Hub
+                </div>
+                <div className="mt-2.5 flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/70 dark:border-cyan-800/60 px-2 py-0.5 text-[9px] font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider">
+                    ⚡ Active Session
                   </span>
-                </Link>
-                <Link
-                  href="/admin/listings"
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <span className="text-sm">📍</span>
-                  <span className="flex-1 font-medium">All Listings</span>
-                </Link>
-                <Link
-                  href="/submit"
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <span className="text-sm">➕</span>
-                  <span className="flex-1 font-medium">Add New Place</span>
-                </Link>
-                <Link
-                  href="/admin/settings"
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
-                >
-                  <span className="text-sm">⚙️</span>
-                  <span className="flex-1 font-medium">Account Settings</span>
-                </Link>
-              </>
-            )}
+                  <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+                    Authenticated
+                  </span>
+                </div>
+              </div>
+
+              {/* Navigation Items */}
+              <div className="space-y-0.5 py-1">
+                {isTechUser ? (
+                  <>
+                    {onProfileClick ? (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsOpen(false);
+                          onProfileClick();
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer"
+                      >
+                        <span className="text-sm">👨‍💻</span>
+                        <div className="flex-1">
+                          <p className="font-bold leading-tight">Tech Dashboard</p>
+                          <p className="text-[10px] text-slate-400 font-normal">Manage your profile & skills</p>
+                        </div>
+                      </button>
+                    ) : (
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                      >
+                        <span className="text-sm">👨‍💻</span>
+                        <div className="flex-1">
+                          <p className="font-bold leading-tight">Tech Dashboard</p>
+                          <p className="text-[10px] text-slate-400 font-normal">Manage your profile & skills</p>
+                        </div>
+                      </Link>
+                    )}
+                    <Link
+                      href="/tech/jobs"
+                      className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    >
+                      <span className="text-sm">💼</span>
+                      <div className="flex-1">
+                        <p className="font-bold leading-tight">Jobs & Applications</p>
+                        <p className="text-[10px] text-slate-400 font-normal">Track your opportunities</p>
+                      </div>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    >
+                      <span className="text-sm">📊</span>
+                      <div className="flex-1">
+                        <p className="font-bold leading-tight">Dashboard</p>
+                        <p className="text-[10px] text-slate-400 font-normal">My submissions, saves & stats</p>
+                      </div>
+                    </Link>
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    >
+                      <span className="text-sm">⚡</span>
+                      <div className="flex-1">
+                        <p className="font-bold leading-tight">Admin Console</p>
+                        <p className="text-[10px] text-slate-400 font-normal">Directory management & KPIs</p>
+                      </div>
+                      <span className="rounded bg-[#0ea5e9]/15 px-1.5 py-0.2 text-[9px] font-extrabold text-[#0ea5e9] uppercase">
+                        Hub
+                      </span>
+                    </Link>
+                    <Link
+                      href="/admin/listings"
+                      className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    >
+                      <span className="text-sm">📍</span>
+                      <span className="flex-1 font-medium">All Listings</span>
+                    </Link>
+                    <Link
+                      href="/submit"
+                      className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    >
+                      <span className="text-sm">➕</span>
+                      <span className="flex-1 font-medium">Add New Place</span>
+                    </Link>
+                    <Link
+                      href="/admin/settings"
+                      className="flex items-center gap-2.5 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+                    >
+                      <span className="text-sm">⚙️</span>
+                      <span className="flex-1 font-medium">Account Settings</span>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="space-y-0.5 py-1">
+              <Link
+                href="/auth/login"
+                className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-xs font-semibold text-slate-900 dark:text-slate-100 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 transition-colors"
+              >
+                <span className="text-sm">👤</span>
+                <span className="flex-1 font-bold">Sign In / Register</span>
+              </Link>
+            </div>
+          )}
+
+          {/* Theme Toggle Button */}
+          <div className={`pt-1 ${user ? 'mt-1 border-t border-slate-100 dark:border-slate-800/80' : ''}`}>
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer"
+            >
+              <span className="text-sm">{theme === "light" ? "🌙" : "☀️"}</span>
+              <span className="flex-1 font-medium">{theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}</span>
+            </button>
           </div>
 
           {/* Footer Shortcuts & Sign Out */}
-          <div className="mt-1 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-0.5">
-            <Link
-              href="/"
-              className="flex items-center justify-between rounded-xl px-3 py-1.5 text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 transition-colors"
-            >
-              <span>💼 Global Tech Atlas</span>
-              <span>↗</span>
-            </Link>
-
-            <form onSubmit={handleSignOut} className="w-full">
-              <button
-                type="submit"
-                className="w-full flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer"
+          {user && (
+            <div className="mt-1 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-0.5">
+              <Link
+                href="/"
+                className="flex items-center justify-between rounded-xl px-3 py-1.5 text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/40 transition-colors"
               >
-                <span>🚪</span>
-                <span>Sign Out</span>
-              </button>
-            </form>
-          </div>
+                <span>💼 Global Tech Atlas</span>
+                <span>↗</span>
+              </Link>
+
+              <form onSubmit={handleSignOut} className="w-full">
+                <button
+                  type="submit"
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors text-left cursor-pointer"
+                >
+                  <span>🚪</span>
+                  <span>Sign Out</span>
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       )}
     </div>

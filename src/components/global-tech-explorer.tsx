@@ -965,13 +965,11 @@ export function GlobalTechExplorer({
               </button>
             </div>
 
-            <ThemeToggle />
             <UserProfileMenu onProfileClick={() => setViewMode("profile")} />
           </div>
 
           {/* Mobile Right Group: Theme & Profile Only (< md) */}
           <div className="md:hidden flex items-center gap-1.5 shrink-0">
-            <ThemeToggle />
             <UserProfileMenu onProfileClick={() => setViewMode("profile")} />
           </div>
         </div>
