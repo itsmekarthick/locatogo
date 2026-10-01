@@ -74,38 +74,7 @@ export function TechAtlasSkeleton() {
             
             {/* Custom LocaToGo Brand Logo */}
             <div className="relative z-10 flex h-16 w-16 items-center justify-center">
-              <svg 
-                viewBox="0 0 100 100" 
-                className="h-16 w-16 drop-shadow-[0_0_20px_rgba(14,165,233,0.7)]"
-              >
-                <defs>
-                  {/* Mask to cut out the center circle of the map pin */}
-                  <mask id="pin-hole">
-                    <rect width="100" height="100" fill="white" />
-                    <circle cx="50" cy="42" r="20" fill="black" />
-                  </mask>
-                  {/* Premium Brand Gradient */}
-                  <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#22d3ee" />
-                    <stop offset="50%" stopColor="#0ea5e9" />
-                    <stop offset="100%" stopColor="#0284c7" />
-                  </linearGradient>
-                </defs>
-                
-                {/* 1. The Map Pin (Loca) */}
-                <path
-                  mask="url(#pin-hole)"
-                  d="M 50 4 C 22 4 10 26 10 46 C 10 75 50 96 50 96 C 50 96 90 75 90 46 C 90 26 78 4 50 4 Z"
-                  fill="url(#brand-grad)"
-                />
-                
-                {/* 2. The Business/Tech Skyline Inside */}
-                <path
-                  d="M 38 54 L 38 38 L 45 38 L 45 28 L 55 28 L 55 38 L 62 38 L 62 54 Z"
-                  fill="url(#brand-grad)"
-                  className="animate-pulse origin-center"
-                />
-              </svg>
+              <BrandLogo size={48} className="drop-shadow-[0_0_20px_rgba(14,165,233,0.7)] animate-pulse" />
             </div>
           </div>
           

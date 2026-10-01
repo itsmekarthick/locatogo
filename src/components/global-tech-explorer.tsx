@@ -885,17 +885,10 @@ export function GlobalTechExplorer({
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
               </span>
             </Link>
-
-            {/* Live Tech Atlas Status Badge */}
-            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 px-3 py-1 shadow-2xs">
-              <span>💼</span>
-              <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400">Tech Atlas</span>
-              <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-600 animate-pulse"></span>
-            </div>
           </div>
 
           {/* Desktop Center: Direct Command-K Interactive Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-2 justify-center">
+          <div className="hidden md:flex flex-1 max-w-4xl mx-2 justify-center">
             <TechAtlasSearch
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
