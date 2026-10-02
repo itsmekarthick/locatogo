@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const APP_URL = process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.locatogo.com";
+
 type CompanySuggestion = {
   id: string;
   title: string;
@@ -54,9 +56,9 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/?q=${encodeURIComponent(searchQuery.trim())}`);
+      window.location.href = `${APP_URL}/?q=${encodeURIComponent(searchQuery.trim())}`;
     } else {
-      router.push("/");
+      window.location.href = APP_URL;
     }
   }
 
@@ -100,8 +102,8 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
         <form onSubmit={handleSearch} className="relative z-50 mx-auto mt-10 max-w-2xl">
           <div className="group relative flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 p-2 shadow-xl backdrop-blur-md transition-all focus-within:border-slate-400 dark:focus-within:border-slate-600 focus-within:ring-4 focus-within:ring-slate-100 dark:focus-within:ring-slate-800/60">
             {/* Segment 1: Where */}
-            <Link
-              href="/"
+            <a
+              href={APP_URL}
               className="hidden sm:flex flex-col px-4 py-1 text-left border-r border-slate-200 dark:border-slate-800 shrink-0 hover:opacity-80 transition-opacity"
             >
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -110,7 +112,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
               <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
                 Global hubs
               </span>
-            </Link>
+            </a>
 
             {/* Segment 2: Keyword input */}
             <div className="relative flex flex-1 items-center px-4 gap-3 min-w-0">
@@ -176,26 +178,26 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span className="font-semibold text-slate-700 dark:text-slate-300">Trending:</span>
             {["AI startups", "SaaS companies", "GCCs", "Fintech", "Remote jobs", "Bengaluru"].map((tag) => (
-              <Link
+              <a
                 key={tag}
-                href={`/?q=${encodeURIComponent(tag)}`}
+                href={`${APP_URL}/?q=${encodeURIComponent(tag)}`}
                 className="rounded-full border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 px-3 py-1 font-medium text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors shadow-2xs"
               >
                 {tag}
-              </Link>
+              </a>
             ))}
           </div>
         </form>
 
         {/* CTA Button Row */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/"
+          <a
+            href={APP_URL}
             className="rounded-full bg-slate-900 dark:bg-cyan-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-2"
           >
             <span>Explore Tech Atlas</span>
             <span>→</span>
-          </Link>
+          </a>
           <Link
             href="/submit"
             className="rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-8 py-3.5 text-sm font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-xs"

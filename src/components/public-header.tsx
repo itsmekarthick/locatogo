@@ -7,8 +7,10 @@ import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProfileMenu } from "@/components/user-profile-menu";
 
+const APP_URL = process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.locatogo.com";
+
 const NAV_LINKS = [
-  { href: "/", label: "Tech Atlas", icon: "💼", badge: "Live" },
+  { href: APP_URL, label: "Tech Atlas", icon: "💼", badge: "Live" },
   { href: "/blog", label: "Stories & Guides", icon: "📖" },
   { href: "/about", label: "About", icon: "ℹ️" },
   { href: "/submit", label: "Add Company", icon: "➕" },
@@ -92,13 +94,13 @@ export function PublicHeader({
           <UserProfileMenu />
 
           {/* Primary CTA (Desktop) */}
-          <Link
-            href="/"
+          <a
+            href={APP_URL}
             className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-slate-950 dark:bg-cyan-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 dark:hover:bg-cyan-500 hover:scale-[1.02] transition-all shrink-0"
           >
             <span>Live Atlas</span>
             <span>🗺️</span>
-          </Link>
+          </a>
 
           {/* Mobile Hamburger Button */}
           <button
@@ -149,13 +151,13 @@ export function PublicHeader({
           </div>
 
           <div className="mt-6 pt-5 border-t border-slate-200/70 dark:border-slate-800/70">
-            <Link
-              href="/"
+            <a
+              href={APP_URL}
               className="w-full flex items-center justify-center gap-2 rounded-full bg-slate-950 dark:bg-cyan-600 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition-all"
             >
               <span>Explore Live Tech Atlas</span>
               <span>💼</span>
-            </Link>
+            </a>
           </div>
         </div>
       )}

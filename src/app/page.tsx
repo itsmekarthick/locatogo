@@ -1,430 +1,424 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { GlobalTechExplorer, type UnifiedJob } from "@/components/global-tech-explorer";
-import { CompanyDetailDrawer, type CompanyDetail, type CompanyJob } from "@/components/company-detail-drawer";
-import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
+import { LandingHero } from "@/components/landing-hero";
+import { LandingStats, LandingFeatures } from "@/components/landing-stats";
+import { PublicHeader } from "@/components/public-header";
+import { SiteFooter } from "@/components/site-footer";
+import { GLOBAL_COUNTRIES, GLOBAL_TECH_HUBS, TECH_SECTORS } from "@/lib/constants/tech-hubs";
 
-import { GLOBAL_TECH_HUBS } from "@/lib/constants/tech-hubs";
-
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const params = await searchParams;
-  const hubSlug = params.hub?.toLowerCase();
-  const hub = hubSlug ? GLOBAL_TECH_HUBS.find((h) => h.id === hubSlug) : null;
-
-  const title = hub 
-    ? `${hub.name} Tech Companies, Startups & Live Jobs | LocaToGo`
-    : "Global Tech Atlas: Tech Companies, Startups & Live Jobs | LocaToGo";
-
-  const description = hub
-    ? `Explore tech companies, MNC GCCs, AI labs, startups, and live job openings across ${hub.name} and the ${hub.country} region on an interactive map.`
-    : "Search a live map of technology companies, startups, AI ventures, MNC GCCs, and active jobs across global tech hubs.";
-
-  return {
-    title,
-    description,
-    keywords: [
-      "technology companies by city",
-      "startup map",
-      "global tech companies",
-      "AI companies",
-      "SaaS startups",
-      "GCC companies",
-      "tech jobs by location",
-      "Bengaluru tech companies",
-      "New York tech companies",
-      "open tech jobs",
-      hub ? `${hub.name} tech companies` : "",
-      hub ? `${hub.name} startups` : "",
-      hub ? `open jobs in ${hub.name}` : "",
-      hub ? `hiring in ${hub.name}` : "",
-      hub ? `${hub.name} software jobs` : "",
-      hub ? `software engineering jobs in ${hub.name}` : "",
-      hub ? `${hub.name} startup jobs` : "",
-      hub ? `remote jobs in ${hub.name}` : "",
-      hub ? `latest tech jobs in ${hub.name}` : "",
-      hub ? `${hub.name} tech careers` : "",
-    ].filter(Boolean),
-    authors: [{ name: "LocaToGo" }],
-    creator: "LocaToGo",
-    publisher: "LocaToGo",
-    robots: { index: true, follow: true },
-    alternates: {
-      canonical: hub ? `/${hub.id}` : "/",
-    },
-    openGraph: {
-      title,
-      description,
-      url: hub ? `https://locatogo.com/${hub.id}` : "https://locatogo.com",
-      siteName: "LocaToGo",
-      images: [
-        {
-          url: hub 
-            ? `/api/og?title=${encodeURIComponent(hub.name)}%20Tech%20Atlas&category=Tech%20Hub&locality=${encodeURIComponent(hub.country)}`
-            : "/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies",
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-      type: "website",
-      locale: "en_US",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [
-        hub 
-          ? `/api/og?title=${encodeURIComponent(hub.name)}%20Tech%20Atlas&category=Tech%20Hub&locality=${encodeURIComponent(hub.country)}`
-          : "/api/og?title=LocaToGo%20Tech%20Atlas&category=Global%20Directory&locality=19,000%2B%20Companies",
-      ],
-    },
-  };
-}
-
-const KNOWN_HUB_COUNTS: Record<string, number> = {
-  "bengaluru": 0,
-  "delhi-ncr": 0,
-  "mumbai": 0,
-  "pune": 0,
-  "chennai": 0,
-  "hyderabad": 0,
-  "kolkata": 0,
-  "kochi": 0,
-  "silicon-valley": 0,
-  "new-york": 0,
-  "seattle": 0,
-  "austin": 0,
-  "boston": 0,
-  "los-angeles": 0,
+export const metadata: Metadata = {
+  title: "Global Tech Atlas: Companies, Startups & Live Jobs | LocaToGo",
+  description:
+    "Explore technology companies, startups, AI labs, MNC GCCs, tech hubs, and live job openings on LocaToGo's global Tech Atlas.",
+  keywords: [
+    "global tech atlas",
+    "technology company directory",
+    "startup ecosystem map",
+    "tech companies by country",
+    "tech companies by city",
+    "live technology jobs",
+    "AI labs and startups",
+  ],
+  authors: [{ name: "LocaToGo" }],
+  creator: "LocaToGo",
+  publisher: "LocaToGo",
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/landing" },
+  openGraph: {
+    title: "Global Tech Atlas: Companies, Startups & Live Jobs | LocaToGo",
+    description:
+      "Find tech companies and active roles by city, sector, funding stage, workplace, and technology stack.",
+    url: "/landing",
+    siteName: "LocaToGo",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Global Tech Atlas: Companies, Startups & Live Jobs | LocaToGo",
+    description:
+      "Explore global tech hubs, company profiles, and current openings with direct application links.",
+  },
 };
 
-type Props = {
-  searchParams: Promise<{ q?: string; type?: string; stage?: string; hub?: string }>;
-};
+export default async function LandingPage() {
+  const supabase = await createSupabaseServerClient();
 
-export default async function Home({ searchParams }: Props) {
-  const params = await searchParams;
-  let supabase: any;
-  try {
-    supabase = createSupabaseAdminClient();
-  } catch {
-    supabase = await createSupabaseServerClient();
-  }
-
-  // 1. Get exact total count, all active jobs (bypassing PostgREST 1000-row cap via parallel ranges), and listings in parallel
   const [
-    { count: totalTechCount },
-    jobsPage1,
-    jobsPage2,
-    jobsPage3,
-    jobsPage4,
-    listingsPage1,
-    listingsPage2,
-    listingsPage3,
+    { count: totalPlaces },
+    { count: totalJobs },
+    { data: featuredPlaces },
+    { data: blogs },
   ] = await Promise.all([
+    supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "published").not("company_type", "is", null),
+    supabase.from("company_jobs").select("id", { count: "exact", head: true }).eq("is_active", true),
     supabase
       .from("listings")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "published")
-      .not("company_type", "is", null),
-    supabase
-      .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
-      .eq("is_active", true)
-      .order("posted_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(0, 999),
-    supabase
-      .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
-      .eq("is_active", true)
-      .order("posted_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(1000, 1999),
-    supabase
-      .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
-      .eq("is_active", true)
-      .order("posted_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(2000, 2999),
-    supabase
-      .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
-      .eq("is_active", true)
-      .order("posted_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(3000, 3999),
-    supabase
-      .from("listings")
-      .select(`
-        id,
-        title,
-        slug,
-        short_description,
-        address_line_1,
-        locality,
-        city,
-        latitude,
-        longitude,
-        website,
-        careers_url,
-        company_type,
-        funding_stage,
-        employee_range,
-        tech_stack,
-        founded_year,
-        active_jobs_count,
-        country_code
-      `)
+      .select("id, title, slug, short_description, locality, city, latitude, longitude, is_featured, verification_status")
       .eq("status", "published")
       .not("company_type", "is", null)
-      .not("latitude", "is", null)
-      .not("longitude", "is", null)
-      .order("active_jobs_count", { ascending: false })
-      .order("id", { ascending: true })
-      .range(0, 999),
+      .order("is_featured", { ascending: false })
+      .limit(6),
     supabase
-      .from("listings")
-      .select(`
-        id,
-        title,
-        slug,
-        short_description,
-        address_line_1,
-        locality,
-        city,
-        latitude,
-        longitude,
-        website,
-        careers_url,
-        company_type,
-        funding_stage,
-        employee_range,
-        tech_stack,
-        founded_year,
-        active_jobs_count,
-        country_code
-      `)
+      .from("blogs")
+      .select("id, title, slug, excerpt, cover_image_url, category, author_name, reading_time_minutes, published_at")
       .eq("status", "published")
-      .not("company_type", "is", null)
-      .not("latitude", "is", null)
-      .not("longitude", "is", null)
-      .order("active_jobs_count", { ascending: false })
-      .order("id", { ascending: true })
-      .range(1000, 1999),
-    supabase
-      .from("listings")
-      .select(`
-        id,
-        title,
-        slug,
-        short_description,
-        address_line_1,
-        locality,
-        city,
-        latitude,
-        longitude,
-        website,
-        careers_url,
-        company_type,
-        funding_stage,
-        employee_range,
-        tech_stack,
-        founded_year,
-        active_jobs_count,
-        country_code
-      `)
-      .eq("status", "published")
-      .not("company_type", "is", null)
-      .not("latitude", "is", null)
-      .not("longitude", "is", null)
-      .order("active_jobs_count", { ascending: false })
-      .order("id", { ascending: true })
-      .range(2000, 2999),
+      .order("published_at", { ascending: false })
+      .limit(3),
   ]);
 
-  const rawJobs = [
-    ...(jobsPage1.data || []),
-    ...(jobsPage2.data || []),
-    ...(jobsPage3.data || []),
-    ...(jobsPage4.data || []),
-  ];
-
-  const rawListings = [
-    ...(listingsPage1.data || []),
-    ...(listingsPage2.data || []),
-    ...(listingsPage3.data || []),
-  ];
-
-  // Group jobs by listing_id
-  const jobsByListing = new Map<string, CompanyJob[]>();
-  (rawJobs || []).forEach((job: any) => {
-    if (job.listing_id) {
-      const existing = jobsByListing.get(job.listing_id) || [];
-      existing.push(job);
-      jobsByListing.set(job.listing_id, existing);
-    }
-  });
-
-  const initialCompanies: CompanyDetail[] = (rawListings || []).map((l: any) => {
-    const compJobs = jobsByListing.get(l.id) || [];
-    // Use overall open jobs only (no city filtering reduction)
-    const accurateJobCount = compJobs.length > 0 ? compJobs.length : (l.active_jobs_count || 0);
-
-    return {
-      id: l.id,
-      title: l.title,
-      slug: l.slug,
-      short_description: l.short_description,
-      address_line_1: l.address_line_1,
-      locality: l.locality,
-      city: l.city,
-      latitude: l.latitude,
-      longitude: l.longitude,
-      website: l.website,
-      careers_url: l.careers_url,
-      company_type: l.company_type || "product_saas",
-      funding_stage: l.funding_stage || "Product",
-      employee_range: l.employee_range,
-      tech_stack: l.tech_stack || [],
-      founded_year: l.founded_year,
-      active_jobs_count: accurateJobCount,
-      country_code: l.country_code || "IN",
-      jobs: compJobs,
-    };
-  });
-
-  // 3. Build unified job listings for the Live Jobs Board
-  const companyInfoMap = new Map<string, any>();
-  (rawListings || []).forEach((l: any) => {
-    companyInfoMap.set(l.id, l);
-  });
-
-  const initialJobs: UnifiedJob[] = (rawJobs || []).map((j: any) => {
-    const comp = companyInfoMap.get(j.listing_id);
-    return {
-      id: j.id,
-      title: j.title,
-      department: j.department || "Engineering",
-      location_name: j.location_name || "Remote",
-      workplace_type: (j.workplace_type || "hybrid") as "on_site" | "hybrid" | "remote",
-      experience_level: j.experience_level || "mid",
-      salary_range: j.salary_range,
-      apply_url: j.apply_url,
-      company_careers_url: comp?.careers_url || comp?.website || null,
-      posted_at: j.posted_at,
-      listing_id: j.listing_id,
-      company_title: comp?.title || "Technology Company",
-      company_slug: comp?.slug || "",
-      company_type: comp?.company_type || "product_saas",
-      funding_stage: comp?.funding_stage || "Product",
-      locality: comp?.locality || "Bengaluru",
-      city: comp?.city || "Bengaluru",
-      country_code: comp?.country_code || "IN",
-    };
-  });
-
   return (
-    <>
-      {/* 1. Fast Interactive Client Atlas Application */}
-      <GlobalTechExplorer
-        initialCompanies={initialCompanies}
-        initialJobs={initialJobs}
-        totalDatabaseCompanies={totalTechCount || 19095}
-        knownHubCounts={KNOWN_HUB_COUNTS}
-        currentHub={params.hub || "bengaluru"}
-        initialType={params.type || "all"}
-        initialSearchQuery={params.q || ""}
-        isRootPage={true}
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 selection:bg-cyan-500 selection:text-white font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://locatogo.com/#organization",
+                name: "LocaToGo",
+                url: "https://locatogo.com",
+                description: "A global Tech Atlas for discovering companies, technology hubs, and live jobs.",
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://locatogo.com/landing#website",
+                url: "https://locatogo.com/landing",
+                name: "LocaToGo Global Tech Atlas",
+                publisher: { "@id": "https://locatogo.com/#organization" },
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: "https://locatogo.com/?q={search_term_string}",
+                  "query-input": "required name=search_term_string",
+                },
+              },
+              {
+                "@type": "ItemList",
+                name: "Global technology hubs on LocaToGo",
+                itemListElement: [
+                  "Bengaluru",
+                  "Hyderabad",
+                  "Delhi NCR",
+                  "Mumbai",
+                  "Pune",
+                  "London",
+                  "Silicon Valley",
+                  "New York",
+                  "Seattle",
+                ].map((name, index) => ({
+                  "@type": "ListItem",
+                  position: index + 1,
+                  name: `${name} tech companies and startups`,
+                })),
+              },
+            ],
+          }),
+        }}
+      />
+      {/* Unified Public Navigation Header */}
+      <PublicHeader />
+
+      {/* Hero Section with Interactive Preview Mockup */}
+      <LandingHero totalListings={totalPlaces ?? 50} totalCategories={TECH_SECTORS.length - 1} />
+
+      {/* Live Statistics Counters Strip */}
+      <LandingStats
+        totalPlaces={totalPlaces ?? 50}
+        totalCategories={TECH_SECTORS.length - 1}
+        totalLocalities={18}
+        totalDomains={totalJobs ?? 0}
       />
 
-      {/* 2. Semantic Crawlable SSR Architecture for Search Engines & Robots */}
-      <section className="sr-only" aria-label="Global Tech Atlas Directory Index">
-        <h1>LocaToGo — Global Tech Atlas &amp; Startup Directory</h1>
-        <p>
-          Interactive directory and live ecosystem map of over 19,000+ verified technology companies,
-          MNC Global Capability Centers (GCCs), artificial intelligence labs, SaaS enterprises, and funded startups
-          with real-time verified hiring positions.
-        </p>
+      {/* One representative tech hub for every supported country */}
+      <section className="border-t border-slate-200/80 bg-slate-50/70 py-20 dark:border-slate-800 dark:bg-slate-950/40 sm:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                Global Company Directory
+              </p>
+              <h2 className="mt-1 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
+                Explore Tech Companies by Country
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
+                Start with a leading technology hub in each country, then browse companies, startups, and live roles on the map.
+              </p>
+            </div>
+            <Link
+              href="/"
+              className="text-xs font-bold text-cyan-600 hover:underline dark:text-cyan-400"
+            >
+              Open global atlas →
+            </Link>
+          </div>
 
-        {/* Index of Top Metro Tech Hubs */}
-        <h2>Explore Top Metro Tech Hubs</h2>
-        <nav aria-label="Metro Tech Hubs">
-          <ul>
-            <li><a href="/bengaluru">Bengaluru Tech Companies &amp; Startup Directory</a></li>
-            <li><a href="/hyderabad">Hyderabad Tech Companies &amp; HITEC City GCCs</a></li>
-            <li><a href="/delhi-ncr">Delhi NCR, Gurugram &amp; Noida Tech Companies</a></li>
-            <li><a href="/mumbai">Mumbai &amp; BKC Tech Companies &amp; FinTech Hubs</a></li>
-            <li><a href="/pune">Pune Tech Companies &amp; Hinjewadi IT Park</a></li>
-            <li><a href="/chennai">Chennai Tech Companies &amp; OMR IT Corridor</a></li>
-            <li><a href="/kolkata">Kolkata Tech Companies &amp; Salt Lake Sector V</a></li>
-            <li><a href="/kochi">Kochi Tech Companies &amp; Infopark Startups</a></li>
-            <li><a href="/silicon-valley">Silicon Valley &amp; San Francisco Tech Companies</a></li>
-            <li><a href="/new-york">New York City Tech Companies &amp; FinTech Hubs</a></li>
-            <li><a href="/seattle">Seattle Tech Companies &amp; Cloud Giants</a></li>
-            <li><a href="/austin">Austin Tech Companies &amp; Silicon Hills Startups</a></li>
-            <li><a href="/boston">Boston Tech Companies &amp; Innovation Cluster</a></li>
-            <li><a href="/los-angeles">Los Angeles Tech Companies &amp; Silicon Beach</a></li>
-            <li><a href="/london">London Tech Companies &amp; FinTech Ventures</a></li>
-          </ul>
-        </nav>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {GLOBAL_COUNTRIES.filter((country) => country.code !== "ALL").map((country) => {
+              const hub = GLOBAL_TECH_HUBS.find((candidate) => candidate.id === country.defaultHubId);
+              if (!hub) return null;
 
-        {/* Index of Top Verified Tech Companies with links to /company/[slug] */}
-        <h2>Featured Tech Companies &amp; Open Positions</h2>
-        <ul>
-          {initialCompanies.slice(0, 40).map((c) => (
-            <li key={c.id}>
-              <article>
-                <h3><a href={`/company/${c.slug}`}>{c.title}</a></h3>
-                <p>{c.short_description}</p>
-                <p>Location: {c.locality ? `${c.locality}, ` : ""}{c.city || "Bengaluru"}</p>
-                <p>Type: {(c.company_type || "Tech").replace(/_/g, " ")} | Stage: {c.funding_stage || "Established"}</p>
-                {(c.active_jobs_count ?? 0) > 0 && <p>Openings: {c.active_jobs_count} verified jobs</p>}
-              </article>
-            </li>
-          ))}
-        </ul>
-
-        {/* Structured Data JSON-LD */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@graph": [
-                {
-                  "@type": "WebSite",
-                  "@id": "https://locatogo.com/#website",
-                  "url": "https://locatogo.com",
-                  "name": "LocaToGo",
-                  "description": "Global Tech Atlas & Startup Directory",
-                  "potentialAction": {
-                    "@type": "SearchAction",
-                    "target": "https://locatogo.com/?q={search_term_string}",
-                    "query-input": "required name=search_term_string",
-                  },
-                },
-                {
-                  "@type": "ItemList",
-                  "itemListElement": initialCompanies.slice(0, 30).map((c, index) => ({
-                    "@type": "ListItem",
-                    "position": index + 1,
-                    "item": {
-                      "@type": "Organization",
-                      "name": c.title,
-                      "url": `https://locatogo.com/company/${c.slug}`,
-                      "description": c.short_description,
-                    },
-                  })),
-                },
-              ],
-            }),
-          }}
-        />
+              return (
+                <Link
+                  key={country.code}
+                  href={`/hub/${country.code.toLowerCase()}/${hub.id}`}
+                  className="group flex items-center justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-2xs transition-all hover:-translate-y-0.5 hover:border-cyan-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl" aria-hidden="true">{country.flag}</span>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-cyan-600 dark:text-slate-100 dark:group-hover:text-cyan-400">
+                        {hub.name} Tech Companies
+                      </h3>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        {country.name} · Startups &amp; live jobs
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-slate-400 transition-transform group-hover:translate-x-1">→</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </section>
-    </>
+
+      {/* Featured Places Showcase */}
+      {featuredPlaces && featuredPlaces.length > 0 && (
+        <section className="py-20 sm:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                Company Profiles
+              </p>
+              <h2 className="mt-1 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
+                Companies Worth Knowing
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-xs text-slate-500 dark:text-slate-400">
+                Explore technology companies, startups, and global teams with useful context before you apply, partner, or visit.
+              </p>
+            </div>
+
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredPlaces.map((place) => (
+                <Link
+                  key={place.id}
+                  href={`/company/${place.slug}`}
+                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs transition-all duration-300 hover:shadow-xl hover:border-cyan-300 dark:hover:border-cyan-800 hover:-translate-y-1"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800 px-2.5 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300 uppercase tracking-wider">
+                          ★ Featured
+                        </span>
+                        {place.verification_status === "verified" && (
+                          <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                            ✓ Verified
+                          </span>
+                        )}
+                      </div>
+
+                      {place.locality && (
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                          📍 {place.locality}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="mt-4 font-display text-xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                      {place.title}
+                    </h3>
+
+                    {place.short_description && (
+                      <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400 line-clamp-2">
+                        {place.short_description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4 text-xs font-bold text-cyan-600 dark:text-cyan-400">
+                    <span>View Company Profile</span>
+                    <span className="transition-transform group-hover:translate-x-1">→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* How It Works 3-Step Flow */}
+      <section className="py-20 bg-white dark:bg-slate-900/60 border-t border-slate-200/80 dark:border-slate-800">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+              The Tech Atlas Workflow
+            </p>
+            <h2 className="mt-1 font-serif text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-4xl">
+              From Hub to Opportunity
+            </h2>
+          </div>
+
+          <div className="mt-14 grid gap-8 md:grid-cols-3">
+            {[
+              {
+                step: "01",
+                title: "Choose a Tech Hub",
+                desc: "Start with a global country or city hub and see the companies shaping that local ecosystem.",
+                icon: "⌖",
+              },
+              {
+                step: "02",
+                title: "Filter Companies",
+                desc: "Compare sectors, stages, tech stacks, workplace models, and companies that are actively hiring.",
+                icon: "⌕",
+              },
+              {
+                step: "03",
+                title: "Open Roles & Apply",
+                desc: "Inspect the company profile, review current roles, and follow the direct career link to apply.",
+                icon: "↗",
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="relative rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 p-8 shadow-2xs"
+              >
+                <span className="font-mono text-3xl font-black text-cyan-300 dark:text-cyan-800/80">
+                  {item.step}
+                </span>
+                <span className="mt-4 block text-2xl">{item.icon}</span>
+                <h3 className="mt-3 font-display text-lg font-bold text-slate-900 dark:text-slate-100">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Platform Features Grid */}
+      <LandingFeatures />
+
+      {/* Editorial Stories & Local Guides Section */}
+      {blogs && blogs.length > 0 && (
+        <section className="py-20 sm:py-28 bg-white dark:bg-slate-900/60 border-t border-slate-200/80 dark:border-slate-800">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">
+                  Tech Ecosystem Guides
+                </p>
+                <h2 className="mt-1 font-serif text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                  Stories from the Tech Ecosystem
+                </h2>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl">
+                  Guides and perspectives on technology hubs, company ecosystems, and the people building what comes next.
+                </p>
+              </div>
+
+              <Link
+                href="/blog"
+                className="rounded-full border border-cyan-200 dark:border-cyan-800 bg-slate-50 dark:bg-slate-900 px-5 py-2 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 transition-all shadow-2xs flex items-center gap-1.5 shrink-0"
+              >
+                <span>Read All Stories</span>
+                <span>→</span>
+              </Link>
+            </div>
+
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {blogs.map((article: any) => (
+                <Link
+                  key={article.id}
+                  href={`/blog/${article.slug}`}
+                  className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/90 p-5 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300 dark:hover:border-cyan-800"
+                >
+                  <div>
+                    {article.cover_image_url && (
+                      <div className="h-48 w-full rounded-2xl overflow-hidden mb-4 relative bg-slate-100 dark:bg-slate-800">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={article.cover_image_url}
+                          alt={article.title}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <span className="absolute top-2.5 left-2.5 rounded-full bg-black/60 backdrop-blur-md text-white px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                          {article.category}
+                        </span>
+                        <span className="absolute bottom-2.5 right-2.5 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-900 dark:text-slate-100 px-2 py-0.5 text-[10px] font-semibold shadow-xs">
+                          ⏱️ {article.reading_time_minutes} min read
+                        </span>
+                      </div>
+                    )}
+
+                    <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug">
+                      {article.title}
+                    </h3>
+
+                    {article.excerpt && (
+                      <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                        {article.excerpt}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-cyan-600 dark:text-cyan-400">
+                    <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      By {article.author_name}
+                    </span>
+                    <span className="group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                      <span>Read Guide</span>
+                      <span>→</span>
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Bottom CTA Banner — Deep Midnight Indigo Gradient (No orange) */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-cyan-950 via-slate-900 to-slate-950 py-24 text-white">
+        {/* Glow orb */}
+        <div className="pointer-events-none absolute -top-24 left-1/2 -z-0 h-[400px] w-[600px] -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl" />
+
+        <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6">
+          <span className="rounded-full bg-cyan-500/20 border border-cyan-400/30 px-4 py-1.5 text-xs font-semibold text-cyan-300">
+            Launch in Minutes
+          </span>
+          <h2 className="mt-6 font-serif text-3xl font-extrabold tracking-tight sm:text-5xl leading-tight">
+            Ready to explore the global tech ecosystem?
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+            Start with a city, sector, or company and follow the signal from discovery to a live opportunity.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/"
+              className="rounded-full bg-white px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-950 shadow-xl hover:bg-slate-100 transition-all flex items-center gap-2"
+            >
+              <span>Explore Tech Atlas</span>
+              <span>→</span>
+            </Link>
+            <Link
+              href="/auth/signup"
+              className="rounded-full border border-cyan-400/50 bg-cyan-900/40 px-8 py-3.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-cyan-900/70 transition-all backdrop-blur-md"
+            >
+              Add a Company
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <SiteFooter />
+    </div>
   );
 }

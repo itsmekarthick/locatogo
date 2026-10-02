@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 
+const APP_URL = process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.locatogo.com";
+
 export function SiteFooter() {
   return (
     <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16] py-14">
@@ -20,7 +22,7 @@ export function SiteFooter() {
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">Directory</p>
             <ul className="mt-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
-              <li><Link href="/" className="hover:text-cyan-600 dark:hover:text-cyan-400">Live Atlas</Link></li>
+              <li><a href={APP_URL} className="hover:text-cyan-600 dark:hover:text-cyan-400">Live Atlas</a></li>
               <li><Link href="/blog" className="hover:text-cyan-600 dark:hover:text-cyan-400 font-semibold text-cyan-600 dark:text-cyan-400">City Guides & Stories</Link></li>
               <li><Link href="/about" className="hover:text-cyan-600 dark:hover:text-cyan-400">About LocaToGo</Link></li>
               <li><Link href="/submit" className="hover:text-cyan-600 dark:hover:text-cyan-400">Add Company</Link></li>
