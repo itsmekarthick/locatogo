@@ -676,7 +676,13 @@ export function GlobalTechExplorer({
         const matchLoc = (c.locality || "").toLowerCase().includes(q);
         const matchTech = (c.tech_stack || []).some((t) => t.toLowerCase().includes(q));
         const matchJobs = (c.jobs || []).some((j) => j.title.toLowerCase().includes(q));
-        if (!matchTitle && !matchLoc && !matchTech && !matchJobs) return false;
+        const matchDesc = (c.short_description || "").toLowerCase().includes(q);
+        const matchType = (c.company_type || "").toLowerCase().replace(/_/g, " ").includes(q);
+        
+        // Also check if the query is "saas" and type is "product_saas"
+        const isSaasQuery = q.includes("saas") && (c.company_type || "").includes("saas");
+        
+        if (!matchTitle && !matchLoc && !matchTech && !matchJobs && !matchDesc && !matchType && !isSaasQuery) return false;
       }
 
       return true;
@@ -761,7 +767,9 @@ export function GlobalTechExplorer({
           (c.locality && c.locality.toLowerCase().includes(q)) ||
           (c.city && c.city.toLowerCase().includes(q)) ||
           (c.tech_stack && c.tech_stack.some((t) => t.toLowerCase().includes(q))) ||
-          (c.short_description && c.short_description.toLowerCase().includes(q))
+          (c.short_description && c.short_description.toLowerCase().includes(q)) ||
+          (c.company_type && c.company_type.toLowerCase().replace(/_/g, " ").includes(q)) ||
+          (q.includes("saas") && (c.company_type || "").includes("saas"))
         );
       })
       .slice(0, 8)

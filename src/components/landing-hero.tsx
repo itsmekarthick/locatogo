@@ -65,7 +65,7 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
   function handleSuggestionSelect(company: CompanySuggestion) {
     setSearchQuery(company.title);
     setSuggestions([]);
-    router.push(`/?q=${encodeURIComponent(company.title)}`);
+    window.location.href = `${APP_URL}/?q=${encodeURIComponent(company.title)}`;
   }
 
   return (
@@ -140,26 +140,53 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
             </div>
 
             {searchQuery.trim().length >= 3 && (suggestions.length > 0 || isSearching) && (
-              <div className="absolute left-2 right-2 top-full z-[100] mt-3 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 text-left shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+              <div className="absolute left-2 right-2 top-full z-[100] mt-3 max-h-[320px] overflow-y-auto rounded-2xl border border-white/20 bg-white/95 p-2 text-left shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
                 {isSearching && suggestions.length === 0 ? (
-                  <p className="px-3 py-3 text-xs text-slate-500 dark:text-slate-400">Searching companies...</p>
+                  <div className="flex items-center justify-center gap-3 px-3 py-6 text-sm text-slate-500 dark:text-slate-400">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-cyan-600 dark:border-slate-600 dark:border-t-cyan-400" />
+                    Searching the atlas...
+                  </div>
                 ) : (
-                  suggestions.map((company) => (
-                    <button
-                      key={company.id}
-                      type="button"
-                      onClick={() => handleSuggestionSelect(company)}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-bold text-slate-900 dark:text-slate-100">{company.title}</span>
-                        <span className="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">
-                          {[company.locality, company.city].filter(Boolean).join(", ") || "Global tech company"}
-                        </span>
-                      </span>
-                      <span className="ml-3 shrink-0 text-xs text-cyan-600 dark:text-cyan-400">Open Atlas →</span>
-                    </button>
-                  ))
+                  <div className="flex flex-col gap-1">
+                    {suggestions.map((company) => (
+                      <button
+                        key={company.id}
+                        type="button"
+                        onClick={() => handleSuggestionSelect(company)}
+                        className="group flex w-full items-center justify-between rounded-xl p-3 text-left transition-all hover:bg-slate-100/80 hover:shadow-sm dark:hover:bg-slate-800/80"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          {/* Company Avatar Initial */}
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-100 to-sky-100 text-sm font-black text-cyan-800 shadow-inner dark:from-cyan-900/40 dark:to-sky-900/40 dark:text-cyan-300">
+                            {company.title.charAt(0).toUpperCase()}
+                          </div>
+                          
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="truncate text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
+                                {company.title}
+                              </span>
+                              {company.company_type && (
+                                <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                  {company.company_type.replace(/_/g, " ")}
+                                </span>
+                              )}
+                            </div>
+                            <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                              <span>📍</span>
+                              {[company.locality, company.city].filter(Boolean).join(", ") || "Global"}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="ml-3 shrink-0 flex items-center justify-center h-8 w-8 rounded-full bg-slate-50 group-hover:bg-cyan-50 dark:bg-slate-800 dark:group-hover:bg-cyan-900/30 transition-colors">
+                          <span className="text-xs text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-transform">
+                            →
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
