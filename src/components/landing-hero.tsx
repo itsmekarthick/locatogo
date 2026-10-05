@@ -75,15 +75,6 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
       <div className="pointer-events-none absolute top-1/2 right-0 -z-10 h-[400px] w-[500px] rounded-full bg-emerald-500/10 blur-3xl opacity-50" />
 
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center">
-        {/* Release Pill Badge */}
-        <div className="inline-flex items-center gap-2.5 rounded-full border border-cyan-200/60 bg-cyan-50/70 dark:border-cyan-900/60 dark:bg-cyan-950/50 px-4 py-1.5 text-xs font-semibold text-cyan-900 dark:text-cyan-200 shadow-2xs backdrop-blur-md transition-all hover:scale-105">
-          <span className="flex h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
-          <span>Global Tech Atlas</span>
-          <span className="rounded-full bg-cyan-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
-            v4.0 Live
-          </span>
-        </div>
-
         {/* Main Headline */}
         <h1 className="mt-8 font-serif text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl lg:text-7xl leading-[1.1]">
           Find the companies shaping{" "}
@@ -97,6 +88,17 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
         <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
           Explore technology companies, startups, AI labs, MNC GCCs, and active roles across the world&apos;s most important innovation hubs.
         </p>
+
+        {/* Primary CTA Button */}
+        <div className="mt-8 flex justify-center">
+          <a
+            href={APP_URL}
+            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-2"
+          >
+            <span>Explore Tech Atlas</span>
+            <span>→</span>
+          </a>
+        </div>
 
         {/* Search Bar - Unified Pill Style */}
         <form onSubmit={handleSearch} className="relative z-50 mx-auto mt-10 max-w-2xl">
@@ -218,13 +220,6 @@ export function LandingHero({ totalListings = 50, totalCategories = 12 }: { tota
 
         {/* CTA Button Row */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <a
-            href={APP_URL}
-            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-2"
-          >
-            <span>Explore Tech Atlas</span>
-            <span>→</span>
-          </a>
           <Link
             href="/submit"
             className="rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-8 py-3.5 text-sm font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-xs"
