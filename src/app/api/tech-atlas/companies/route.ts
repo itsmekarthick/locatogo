@@ -101,6 +101,55 @@ export async function GET(request: Request) {
         query = query.ilike("city", "%tokyo%");
       } else if (h === "sydney") {
         query = query.ilike("city", "%sydney%");
+      } else if (h === "dubai") {
+        query = query.ilike("city", "%dubai%");
+      } else if (h === "abu-dhabi" || h === "abudhabi") {
+        query = query.or("city.ilike.%abu dhabi%,city.ilike.%abudhabi%");
+      } else if (h === "sharjah") {
+        query = query.ilike("city", "%sharjah%");
+      } else if (h === "ras-al-khaimah") {
+        query = query.or("city.ilike.%ras al khaimah%,city.ilike.%rak%");
+      } else if (h === "melbourne") {
+        query = query.ilike("city", "%melbourne%");
+      } else if (h === "brisbane") {
+        query = query.ilike("city", "%brisbane%");
+      } else if (h === "vancouver") {
+        query = query.or("city.ilike.%vancouver%,city.ilike.%burnaby%,city.ilike.%richmond%");
+      } else if (h === "montreal") {
+        query = query.ilike("city", "%montreal%");
+      } else if (h === "waterloo") {
+        query = query.or("city.ilike.%waterloo%,city.ilike.%kitchener%");
+      } else if (h === "ottawa") {
+        query = query.ilike("city", "%ottawa%");
+      } else if (h === "calgary") {
+        query = query.ilike("city", "%calgary%");
+      } else if (h === "munich") {
+        query = query.ilike("city", "%munich%");
+      } else if (h === "frankfurt") {
+        query = query.ilike("city", "%frankfurt%");
+      } else if (h === "hamburg") {
+        query = query.ilike("city", "%hamburg%");
+      } else if (h === "rotterdam") {
+        query = query.ilike("city", "%rotterdam%");
+      } else if (h === "eindhoven") {
+        query = query.ilike("city", "%eindhoven%");
+      } else if (h === "cork") {
+        query = query.ilike("city", "%cork%");
+      } else if (h === "osaka") {
+        query = query.ilike("city", "%osaka%");
+      } else if (h === "lyon") {
+        query = query.ilike("city", "%lyon%");
+      } else if (h === "toulouse") {
+        query = query.ilike("city", "%toulouse%");
+      } else if (h === "bordeaux") {
+        query = query.ilike("city", "%bordeaux%");
+      } else if (h === "marseille") {
+        query = query.ilike("city", "%marseille%");
+      } else if (h === "nantes") {
+        query = query.ilike("city", "%nantes%");
+      } else {
+        const cleanHub = h.replace(/-/g, " ");
+        query = query.ilike("city", `%${cleanHub}%`);
       }
     }
 

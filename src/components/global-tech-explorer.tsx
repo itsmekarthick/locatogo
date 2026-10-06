@@ -2103,8 +2103,8 @@ export function GlobalTechExplorer({
               c.id === companyId
                 ? {
                     ...c,
-                    active_jobs_count: count,
-                    jobs: jobs,
+                    active_jobs_count: count > 0 ? count : (c.active_jobs_count || 0),
+                    jobs: jobs && jobs.length > 0 ? jobs : c.jobs,
                   }
                 : c
             )

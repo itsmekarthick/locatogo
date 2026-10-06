@@ -66,7 +66,6 @@ export function CompanyDetailDrawer({
       return;
     }
 
-    setLocationScope("place");
     setDeptFilter("all");
     setRoleSearch("");
 
@@ -74,9 +73,14 @@ export function CompanyDetailDrawer({
     if (company.jobs && company.jobs.length > 0) {
       setDynamicJobs(company.jobs);
       setAllAvailableJobs(company.jobs);
+      const hasLocalPreloaded = company.jobs.some((j) =>
+        jobMatchesLocation(j.location_name, company.city || "Bangalore")
+      );
+      setLocationScope(hasLocalPreloaded ? "place" : "all");
     } else {
       setDynamicJobs(null);
       setAllAvailableJobs(null);
+      setLocationScope("all");
     }
 
     const companyId = company.id;
@@ -95,8 +99,16 @@ export function CompanyDetailDrawer({
             }
             if (data.jobs && Array.isArray(data.jobs)) {
               setDynamicJobs(data.jobs);
-              const accurateCount = data.localCount ?? data.jobs.length;
-              onJobsLoaded?.(companyId, accurateCount, data.jobs);
+              const accurateCount = (data.jobs.length > 0)
+                ? (data.total ?? data.allJobs?.length ?? data.jobs.length)
+                : 0;
+              if (accurateCount > 0) {
+                onJobsLoaded?.(companyId, accurateCount, data.jobs);
+              }
+              const hasMatchingLocal = data.jobs.some((j: any) =>
+                jobMatchesLocation(j.location_name, companyCity)
+              );
+              setLocationScope(hasMatchingLocal ? "place" : "all");
             }
           }
         }
@@ -121,8 +133,8 @@ export function CompanyDetailDrawer({
   const localJobs = rawPool.filter((j) => jobMatchesLocation(j.location_name, companyCity));
   const hasLocalJobs = localJobs.length > 0;
 
-  // Show overall open jobs for the company regardless of selected location scope
-  const jobs = rawPool;
+  // Use local jobs if user chose "place" and local jobs exist, otherwise show all jobs
+  const jobs = locationScope === "place" && hasLocalJobs ? localJobs : rawPool;
   const departments = Array.from(new Set(jobs.map((j) => j.department).filter(Boolean))) as string[];
 
   const filteredJobs = jobs.filter((j) => {
@@ -245,10 +257,10 @@ export function CompanyDetailDrawer({
           >
             <span>💼 Live Openings</span>
             <span className="rounded-full bg-cyan-100 dark:bg-cyan-900/60 px-2 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300">
-              {isLoadingJobs && jobs.length === 0
+              {isLoadingJobs && rawPool.length === 0
                 ? "..."
-                : jobs.length > 0
-                ? jobs.length
+                : rawPool.length > 0
+                ? rawPool.length
                 : (company.active_jobs_count || 0)}
             </span>
           </button>
@@ -327,13 +339,13 @@ export function CompanyDetailDrawer({
                     </div>
                   </div>
 
-                  {true && (
+                  {hasLocalJobs && localJobs.length !== rawPool.length && (
                     <div className="flex items-center gap-1 bg-slate-200/70 dark:bg-slate-800/80 p-0.5 rounded-xl self-start sm:self-auto shrink-0">
                       <button
                         type="button"
                         onClick={() => setLocationScope("place")}
                         className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
-                          locationScope === "place" && hasLocalJobs
+                          locationScope === "place"
                             ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs"
                             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
                         }`}
@@ -344,7 +356,7 @@ export function CompanyDetailDrawer({
                         type="button"
                         onClick={() => setLocationScope("all")}
                         className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
-                          locationScope === "all" || !hasLocalJobs
+                          locationScope === "all"
                             ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xs"
                             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
                         }`}

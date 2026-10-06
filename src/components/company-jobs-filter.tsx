@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
 type Job = {
   id: string;
@@ -24,27 +25,6 @@ type Props = {
   totalJobCount: number;
 };
 
-function jobMatchesLocationClient(
-  locationName: string | null | undefined,
-  city: string
-): boolean {
-  if (!locationName) return false;
-  const loc = locationName.toLowerCase();
-  const c = city.toLowerCase();
-  const aliases: Record<string, string[]> = {
-    bangalore: ["bengaluru", "bangalore", "blr"],
-    bengaluru: ["bengaluru", "bangalore", "blr"],
-    mumbai: ["mumbai", "bombay"],
-    delhi: ["delhi", "new delhi", "ncr", "gurgaon", "gurugram", "noida"],
-    chennai: ["chennai", "madras"],
-    hyderabad: ["hyderabad", "secunderabad"],
-    pune: ["pune", "puna"],
-    kolkata: ["kolkata", "calcutta"],
-  };
-  const terms = aliases[c] || [c];
-  return terms.some((t) => loc.includes(t));
-}
-
 export function CompanyJobsFilter({
   jobs,
   companyTitle,
@@ -54,20 +34,24 @@ export function CompanyJobsFilter({
   localJobCount,
   totalJobCount,
 }: Props) {
+  const localJobs = useMemo(() => {
+    return jobs.filter((j) => jobMatchesLocation(j.location_name, companyCity));
+  }, [jobs, companyCity]);
+
+  const hasLocal = localJobs.length > 0;
+
   const [locationScope, setLocationScope] = useState<"place" | "all">(
-    localJobCount > 0 ? "place" : "all"
+    hasLocal ? "place" : "all"
   );
   const [deptFilter, setDeptFilter] = useState("all");
   const [roleSearch, setRoleSearch] = useState("");
 
   const activePool = useMemo(() => {
-    if (locationScope === "place" && localJobCount > 0) {
-      return jobs.filter((j) =>
-        jobMatchesLocationClient(j.location_name, companyCity)
-      );
+    if (locationScope === "place" && hasLocal) {
+      return localJobs;
     }
     return jobs;
-  }, [jobs, locationScope, localJobCount, companyCity]);
+  }, [jobs, locationScope, hasLocal, localJobs]);
 
   const departments = useMemo(
     () =>
@@ -131,7 +115,7 @@ export function CompanyJobsFilter({
       {jobs.length > 0 ? (
         <div className="space-y-4">
           {/* Location Toggle */}
-          {localJobCount > 0 && localJobCount !== totalJobCount && (
+          {hasLocal && localJobs.length !== jobs.length && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 p-3.5">
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-base">📍</span>
@@ -153,7 +137,7 @@ export function CompanyJobsFilter({
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  📍 {companyCity} ({localJobCount})
+                  📍 {companyCity} ({localJobs.length})
                 </button>
                 <button
                   type="button"
@@ -164,7 +148,7 @@ export function CompanyJobsFilter({
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  🌐 All Locations ({totalJobCount})
+                  🌐 All Locations ({jobs.length})
                 </button>
               </div>
             </div>
@@ -249,7 +233,7 @@ export function CompanyJobsFilter({
                         📍{" "}
                         <span
                           className={
-                            jobMatchesLocationClient(
+                            jobMatchesLocation(
                               job.location_name,
                               companyCity
                             )

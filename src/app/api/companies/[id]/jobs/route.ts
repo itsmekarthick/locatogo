@@ -26,37 +26,54 @@ export async function GET(
     supabase = await createSupabaseServerClient();
   }
 
-  // Fetch listing details for context (city, careers URL)
+  // Fetch listing details for context (city, careers URL, slug, title)
   const { data: listing } = await supabase
     .from("listings")
-    .select("id, tenant_id, title, city, locality, careers_url")
+    .select("id, tenant_id, title, slug, city, locality, careers_url")
     .eq("id", id)
     .single();
 
   const targetCity = requestedCity?.trim() || listing?.city?.trim() || "Bangalore";
 
-  // 1. Fetch pre-ingested active jobs for this company
+  // Find all sibling listing IDs sharing the same slug or title (handles multi-office company records)
+  let listingIds = [id];
+  if (listing) {
+    let siblingQuery = supabase.from("listings").select("id");
+    if (listing.slug) {
+      siblingQuery = siblingQuery.or(`slug.eq.${listing.slug},title.ilike.${listing.title}`);
+    } else {
+      siblingQuery = siblingQuery.ilike("title", listing.title);
+    }
+    const { data: siblings } = await siblingQuery;
+    if (siblings && siblings.length > 0) {
+      listingIds = Array.from(new Set([id, ...siblings.map((s: any) => s.id)]));
+    }
+  }
+
+  // 1. Fetch pre-ingested active jobs for this company across all office listings
   const { data: storedJobs, error } = await supabase
     .from("company_jobs")
     .select(
       "id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active"
     )
-    .eq("listing_id", id)
+    .in("listing_id", listingIds)
     .eq("is_active", true)
     .order("posted_at", { ascending: false })
-    .limit(300);
+    .limit(500);
 
   if (error) {
     console.error("Error fetching company jobs:", error);
   }
 
   if (storedJobs && storedJobs.length > 0) {
-    // Return all stored jobs globally without reducing to local city
+    const localJobs = storedJobs.filter((j: any) =>
+      jobMatchesLocation(j.location_name, targetCity)
+    );
     return NextResponse.json({
       jobs: storedJobs,
       allJobs: storedJobs,
       targetCity,
-      localCount: storedJobs.length,
+      localCount: localJobs.length,
       total: storedJobs.length,
       source: "cache",
     });

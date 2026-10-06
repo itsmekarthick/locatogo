@@ -148,6 +148,7 @@ export default async function HubDirectoryPage({ params }: Props) {
     jobsPage1,
     jobsPage2,
     jobsPage3,
+    jobsPage4,
     listingsPage1,
     listingsPage2,
     listingsPage3,
@@ -166,21 +167,28 @@ export default async function HubDirectoryPage({ params }: Props) {
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
-      .range(0, 2999),
+      .range(0, 999),
     supabase
       .from("company_jobs")
       .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
-      .range(3000, 5999),
+      .range(1000, 1999),
     supabase
       .from("company_jobs")
       .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
-      .range(6000, 8999),
+      .range(2000, 2999),
+    supabase
+      .from("company_jobs")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .eq("is_active", true)
+      .order("posted_at", { ascending: false })
+      .order("id", { ascending: true })
+      .range(3000, 3999),
     supabase
       .from("listings")
       .select(`
@@ -307,11 +315,13 @@ export default async function HubDirectoryPage({ params }: Props) {
     ...(jobsPage1.data || []),
     ...(jobsPage2.data || []),
     ...(jobsPage3.data || []),
+    ...(jobsPage4.data || []),
   ];
 
   if (jobsPage1.error) console.error("jobsPage1 fetch error:", jobsPage1.error);
   if (jobsPage2.error) console.error("jobsPage2 fetch error:", jobsPage2.error);
   if (jobsPage3.error) console.error("jobsPage3 fetch error:", jobsPage3.error);
+  if (jobsPage4.error) console.error("jobsPage4 fetch error:", jobsPage4.error);
 
   const rawListings = [
     ...(listingsPage1.data || []),

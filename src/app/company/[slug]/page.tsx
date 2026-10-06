@@ -58,18 +58,41 @@ async function getCompanyBySlug(rawSlug: string) {
     query = query.or(`slug.eq.${cleanSlug},slug.ilike.${cleanSlug}`);
   }
 
+  // Prioritize listings that have active jobs and latest updates
+  query = query
+    .order("active_jobs_count", { ascending: false })
+    .order("updated_at", { ascending: false });
+
   const { data: company } = await query.limit(1).maybeSingle();
   if (!company) return null;
 
-  // Fetch active company jobs
+  // Resolve all sibling listing IDs sharing the same slug or title (handles multi-office company profiles)
+  let listingIds = [company.id];
+  let siblingQuery = supabase.from("listings").select("id");
+  if (company.slug) {
+    siblingQuery = siblingQuery.or(`slug.eq.${company.slug},title.ilike.${company.title}`);
+  } else {
+    siblingQuery = siblingQuery.ilike("title", company.title);
+  }
+  const { data: siblings } = await siblingQuery;
+  if (siblings && siblings.length > 0) {
+    listingIds = Array.from(new Set([company.id, ...siblings.map((s: any) => s.id)]));
+  }
+
+  // Fetch active company jobs across all office listings
   const { data: jobs } = await supabase
     .from("company_jobs")
     .select(
       "id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active"
     )
-    .eq("listing_id", company.id)
+    .in("listing_id", listingIds)
     .eq("is_active", true)
     .order("posted_at", { ascending: false });
+
+  const activeJobsList = jobs || [];
+  if (company.active_jobs_count === 0 && activeJobsList.length > 0) {
+    company.active_jobs_count = activeJobsList.length;
+  }
 
   // Fetch 4 related companies in the same city
   const { data: related } = await supabase
@@ -84,7 +107,7 @@ async function getCompanyBySlug(rawSlug: string) {
 
   return {
     company,
-    jobs: jobs || [],
+    jobs: activeJobsList,
     related: related || [],
   };
 }
