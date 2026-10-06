@@ -74,14 +74,36 @@ export const GLOBAL_TECH_HUBS: TechHub[] = [
   { id: "san-diego", name: "San Diego", country: "United States", countryCode: "US", flag: "🇺🇸", lat: 32.7157, lng: -117.1611, zoom: 12 },
   { id: "london", name: "London", country: "United Kingdom", countryCode: "GB", flag: "🇬🇧", lat: 51.5074, lng: -0.1278, zoom: 12 },
   { id: "toronto", name: "Toronto", country: "Canada", countryCode: "CA", flag: "🇨🇦", lat: 43.6532, lng: -79.3832, zoom: 12 },
+  { id: "vancouver", name: "Vancouver", country: "Canada", countryCode: "CA", flag: "🇨🇦", lat: 49.2827, lng: -123.1207, zoom: 12 },
+  { id: "montreal", name: "Montreal", country: "Canada", countryCode: "CA", flag: "🇨🇦", lat: 45.5017, lng: -73.5673, zoom: 12 },
+  { id: "waterloo", name: "Waterloo", country: "Canada", countryCode: "CA", flag: "🇨🇦", lat: 43.4643, lng: -80.5204, zoom: 12 },
+  { id: "ottawa", name: "Ottawa", country: "Canada", countryCode: "CA", flag: "🇨🇦", lat: 45.4215, lng: -75.6972, zoom: 12 },
+  { id: "calgary", name: "Calgary", country: "Canada", countryCode: "CA", flag: "🇨🇦", lat: 51.0447, lng: -114.0719, zoom: 12 },
   { id: "berlin", name: "Berlin", country: "Germany", countryCode: "DE", flag: "🇩🇪", lat: 52.52, lng: 13.405, zoom: 12 },
+  { id: "munich", name: "Munich", country: "Germany", countryCode: "DE", flag: "🇩🇪", lat: 48.1351, lng: 11.5820, zoom: 12 },
+  { id: "frankfurt", name: "Frankfurt", country: "Germany", countryCode: "DE", flag: "🇩🇪", lat: 50.1109, lng: 8.6821, zoom: 12 },
+  { id: "hamburg", name: "Hamburg", country: "Germany", countryCode: "DE", flag: "🇩🇪", lat: 53.5511, lng: 9.9937, zoom: 12 },
   { id: "singapore", name: "Singapore", country: "Singapore", countryCode: "SG", flag: "🇸🇬", lat: 1.3521, lng: 103.8198, zoom: 12 },
   { id: "dubai", name: "Dubai", country: "United Arab Emirates", countryCode: "AE", flag: "🇦🇪", lat: 25.2048, lng: 55.2708, zoom: 12 },
+  { id: "abu-dhabi", name: "Abu Dhabi", country: "United Arab Emirates", countryCode: "AE", flag: "🇦🇪", lat: 24.4539, lng: 54.3773, zoom: 12 },
+  { id: "sharjah", name: "Sharjah", country: "United Arab Emirates", countryCode: "AE", flag: "🇦🇪", lat: 25.3462, lng: 55.4209, zoom: 12 },
+  { id: "ras-al-khaimah", name: "Ras Al Khaimah", country: "United Arab Emirates", countryCode: "AE", flag: "🇦🇪", lat: 25.7895, lng: 55.9432, zoom: 12 },
   { id: "paris", name: "Paris", country: "France", countryCode: "FR", flag: "🇫🇷", lat: 48.8566, lng: 2.3522, zoom: 12 },
+  { id: "lyon", name: "Lyon", country: "France", countryCode: "FR", flag: "🇫🇷", lat: 45.7640, lng: 4.8357, zoom: 12 },
+  { id: "toulouse", name: "Toulouse", country: "France", countryCode: "FR", flag: "🇫🇷", lat: 43.6047, lng: 1.4442, zoom: 12 },
+  { id: "bordeaux", name: "Bordeaux", country: "France", countryCode: "FR", flag: "🇫🇷", lat: 44.8378, lng: -0.5792, zoom: 12 },
+  { id: "marseille", name: "Marseille", country: "France", countryCode: "FR", flag: "🇫🇷", lat: 43.2965, lng: 5.3698, zoom: 12 },
+  { id: "nantes", name: "Nantes", country: "France", countryCode: "FR", flag: "🇫🇷", lat: 47.2184, lng: -1.5536, zoom: 12 },
   { id: "amsterdam", name: "Amsterdam", country: "Netherlands", countryCode: "NL", flag: "🇳🇱", lat: 52.3676, lng: 4.9041, zoom: 12 },
+  { id: "rotterdam", name: "Rotterdam", country: "Netherlands", countryCode: "NL", flag: "🇳🇱", lat: 51.9225, lng: 4.47917, zoom: 12 },
+  { id: "eindhoven", name: "Eindhoven", country: "Netherlands", countryCode: "NL", flag: "🇳🇱", lat: 51.4416, lng: 5.4697, zoom: 12 },
   { id: "dublin", name: "Dublin", country: "Ireland", countryCode: "IE", flag: "🇮🇪", lat: 53.3498, lng: -6.2603, zoom: 12 },
+  { id: "cork", name: "Cork", country: "Ireland", countryCode: "IE", flag: "🇮🇪", lat: 51.8985, lng: -8.4756, zoom: 12 },
   { id: "tokyo", name: "Tokyo", country: "Japan", countryCode: "JP", flag: "🇯🇵", lat: 35.6762, lng: 139.6503, zoom: 12 },
+  { id: "osaka", name: "Osaka", country: "Japan", countryCode: "JP", flag: "🇯🇵", lat: 34.6937, lng: 135.5023, zoom: 12 },
   { id: "sydney", name: "Sydney", country: "Australia", countryCode: "AU", flag: "🇦🇺", lat: -33.8688, lng: 151.2093, zoom: 12 },
+  { id: "melbourne", name: "Melbourne", country: "Australia", countryCode: "AU", flag: "🇦🇺", lat: -37.8136, lng: 144.9631, zoom: 12 },
+  { id: "brisbane", name: "Brisbane", country: "Australia", countryCode: "AU", flag: "🇦🇺", lat: -27.4698, lng: 153.0251, zoom: 12 },
 ];
 
 export const TECH_SECTORS = [
@@ -219,44 +241,128 @@ export const KNOWN_HUB_LOCALITIES: Record<string, { slug: string; name: string }
     { slug: "king-west", name: "King West" },
     { slug: "financial-district", name: "Financial District" },
   ],
+  "vancouver": [
+    { slug: "downtown", name: "Downtown Vancouver" },
+    { slug: "yaletown", name: "Yaletown" },
+  ],
+  "montreal": [
+    { slug: "mile-end", name: "Mile End" },
+    { slug: "downtown", name: "Downtown Montreal" },
+  ],
+  "waterloo": [
+    { slug: "innovation-district", name: "Innovation District" },
+  ],
+  "ottawa": [
+    { slug: "kanata", name: "Kanata North" },
+    { slug: "downtown", name: "Downtown Ottawa" },
+  ],
+  "calgary": [
+    { slug: "downtown", name: "Downtown Calgary" },
+  ],
   "berlin": [
     { slug: "mitte", name: "Mitte" },
     { slug: "kreuzberg", name: "Kreuzberg" },
     { slug: "prenzlauer-berg", name: "Prenzlauer Berg" },
   ],
+  "munich": [
+    { slug: "schwabing", name: "Schwabing" },
+    { slug: "maxvorstadt", name: "Maxvorstadt" },
+  ],
+  "frankfurt": [
+    { slug: "innenstadt", name: "Innenstadt & Bankenviertel" },
+    { slug: "sachsenhausen", name: "Sachsenhausen" },
+  ],
+  "hamburg": [
+    { slug: "hafencity", name: "HafenCity" },
+    { slug: "altona", name: "Altona" },
+  ],
   "singapore": [
-    { slug: "marina-bay", name: "Marina Bay" },
-    { slug: "one-north", name: "One-North" },
+    { slug: "marina-bay", name: "Marina Bay & Downtown" },
+    { slug: "one-north", name: "One-North & Buona Vista" },
     { slug: "tanjong-pagar", name: "Tanjong Pagar" },
+    { slug: "raffles-place", name: "Raffles Place" },
+    { slug: "changi-business-park", name: "Changi Business Park" },
+    { slug: "jurong", name: "Jurong Innovation District" },
   ],
   "paris": [
     { slug: "station-f", name: "Station F / 13th Arr." },
     { slug: "sentier", name: "Silicon Sentier" },
     { slug: "la-defense", name: "La Défense" },
   ],
+  "lyon": [
+    { slug: "confluence", name: "La Confluence" },
+    { slug: "part-dieu", name: "Part-Dieu" },
+  ],
+  "toulouse": [
+    { slug: "centre-ville", name: "Centre Ville" },
+  ],
+  "bordeaux": [
+    { slug: "euratlantique", name: "Euratlantique" },
+  ],
+  "marseille": [
+    { slug: "euromediterranee", name: "Euroméditerranée" },
+  ],
+  "nantes": [
+    { slug: "ile-de-nantes", name: "Île de Nantes" },
+  ],
   "amsterdam": [
     { slug: "zuidas", name: "Zuidas Financial Dist." },
     { slug: "centrum", name: "Centrum" },
     { slug: "amsterdam-noord", name: "Amsterdam-Noord" },
   ],
+  "rotterdam": [
+    { slug: "kop-van-zuid", name: "Kop van Zuid" },
+    { slug: "centrum", name: "Centrum" },
+  ],
+  "eindhoven": [
+    { slug: "brainport", name: "High Tech Campus / Brainport" },
+    { slug: "strijp-s", name: "Strijp-S" },
+  ],
   "dublin": [
     { slug: "silicon-docks", name: "Silicon Docks / Grand Canal" },
     { slug: "docklands", name: "North Wall Docklands" },
+  ],
+  "cork": [
+    { slug: "city-centre", name: "City Centre" },
+    { slug: "mahon", name: "Mahon Tech Park" },
   ],
   "dubai": [
     { slug: "difc", name: "DIFC" },
     { slug: "internet-city", name: "Dubai Internet City" },
     { slug: "downtown-dubai", name: "Downtown Dubai" },
   ],
+  "abu-dhabi": [
+    { slug: "adgm", name: "Abu Dhabi Global Market (ADGM)" },
+    { slug: "masdar-city", name: "Masdar City" },
+    { slug: "hub71", name: "Hub71" },
+  ],
+  "sharjah": [
+    { slug: "srti-park", name: "SRTI Park" },
+  ],
+  "ras-al-khaimah": [
+    { slug: "rakez", name: "RAKEZ Free Zone" },
+  ],
   "tokyo": [
     { slug: "shibuya", name: "Shibuya Bit Valley" },
     { slug: "roppongi", name: "Roppongi Hills" },
     { slug: "marunouchi", name: "Marunouchi" },
   ],
+  "osaka": [
+    { slug: "umeda", name: "Umeda" },
+    { slug: "namba", name: "Namba" },
+  ],
   "sydney": [
     { slug: "tech-central", name: "Tech Central / Surry Hills" },
     { slug: "barangaroo", name: "Barangaroo" },
     { slug: "cbd", name: "Sydney CBD" },
+  ],
+  "melbourne": [
+    { slug: "cbd", name: "Melbourne CBD" },
+    { slug: "richmond", name: "Richmond & Cremorne" },
+  ],
+  "brisbane": [
+    { slug: "cbd", name: "Brisbane CBD" },
+    { slug: "fortitude-valley", name: "Fortitude Valley" },
   ],
 };
 
@@ -281,14 +387,36 @@ export const KNOWN_HUB_COUNTS: Record<string, number> = {
   "san-diego": 0,
   "london": 0,
   "toronto": 0,
+  "vancouver": 0,
+  "montreal": 0,
+  "waterloo": 0,
+  "ottawa": 0,
+  "calgary": 0,
   "berlin": 0,
+  "munich": 0,
+  "frankfurt": 0,
+  "hamburg": 0,
   "singapore": 0,
   "dubai": 0,
+  "abu-dhabi": 0,
+  "sharjah": 0,
+  "ras-al-khaimah": 0,
   "paris": 0,
+  "lyon": 0,
+  "toulouse": 0,
+  "bordeaux": 0,
+  "marseille": 0,
+  "nantes": 0,
   "amsterdam": 0,
+  "rotterdam": 0,
+  "eindhoven": 0,
   "dublin": 0,
+  "cork": 0,
   "tokyo": 0,
+  "osaka": 0,
   "sydney": 0,
+  "melbourne": 0,
+  "brisbane": 0,
 };
 
 export function matchesHub(
@@ -482,14 +610,36 @@ export function matchesHub(
   if (hub.id === "san-diego") return city.includes("san diego") || city.includes("la jolla") || loc.includes("san diego") || addr.includes("san diego");
   if (hub.id === "london") return city.includes("london") || loc.includes("london") || addr.includes("london") || loc.includes("shoreditch");
   if (hub.id === "toronto") return city.includes("toronto") || loc.includes("toronto") || addr.includes("toronto");
+  if (hub.id === "vancouver") return city.includes("vancouver") || loc.includes("vancouver") || addr.includes("vancouver");
+  if (hub.id === "montreal") return city.includes("montreal") || loc.includes("montreal") || addr.includes("montreal");
+  if (hub.id === "waterloo") return city.includes("waterloo") || city.includes("kitchener") || loc.includes("waterloo") || loc.includes("kitchener") || addr.includes("waterloo");
+  if (hub.id === "ottawa") return city.includes("ottawa") || city.includes("kanata") || loc.includes("ottawa") || addr.includes("ottawa");
+  if (hub.id === "calgary") return city.includes("calgary") || loc.includes("calgary") || addr.includes("calgary");
   if (hub.id === "berlin") return city.includes("berlin") || loc.includes("berlin") || addr.includes("berlin");
+  if (hub.id === "munich") return city.includes("munich") || city.includes("münchen") || loc.includes("munich") || addr.includes("munich");
+  if (hub.id === "frankfurt") return city.includes("frankfurt") || loc.includes("frankfurt") || addr.includes("frankfurt");
+  if (hub.id === "hamburg") return city.includes("hamburg") || loc.includes("hamburg") || addr.includes("hamburg");
   if (hub.id === "singapore") return city.includes("singapore") || loc.includes("singapore") || addr.includes("singapore");
   if (hub.id === "dubai") return city.includes("dubai") || loc.includes("dubai");
+  if (hub.id === "abu-dhabi") return city.includes("abu dhabi") || loc.includes("abu dhabi") || addr.includes("abu dhabi") || loc.includes("adgm") || loc.includes("hub71");
+  if (hub.id === "sharjah") return city.includes("sharjah") || loc.includes("sharjah") || addr.includes("sharjah");
+  if (hub.id === "ras-al-khaimah") return city.includes("ras al khaimah") || city.includes("rak") || loc.includes("ras al khaimah") || loc.includes("rakez");
   if (hub.id === "paris") return city.includes("paris") || loc.includes("paris") || addr.includes("paris");
+  if (hub.id === "lyon") return city.includes("lyon") || loc.includes("lyon") || addr.includes("lyon");
+  if (hub.id === "toulouse") return city.includes("toulouse") || loc.includes("toulouse") || addr.includes("toulouse");
+  if (hub.id === "bordeaux") return city.includes("bordeaux") || loc.includes("bordeaux") || addr.includes("bordeaux");
+  if (hub.id === "marseille") return city.includes("marseille") || loc.includes("marseille") || addr.includes("marseille");
+  if (hub.id === "nantes") return city.includes("nantes") || loc.includes("nantes") || addr.includes("nantes");
   if (hub.id === "amsterdam") return city.includes("amsterdam") || loc.includes("amsterdam") || addr.includes("amsterdam");
+  if (hub.id === "rotterdam") return city.includes("rotterdam") || loc.includes("rotterdam") || addr.includes("rotterdam");
+  if (hub.id === "eindhoven") return city.includes("eindhoven") || loc.includes("eindhoven") || addr.includes("eindhoven");
   if (hub.id === "dublin") return city.includes("dublin") || loc.includes("dublin") || addr.includes("dublin");
+  if (hub.id === "cork") return city.includes("cork") || loc.includes("cork") || addr.includes("cork");
   if (hub.id === "tokyo") return city.includes("tokyo") || loc.includes("tokyo") || addr.includes("tokyo") || loc.includes("shibuya");
+  if (hub.id === "osaka") return city.includes("osaka") || loc.includes("osaka") || addr.includes("osaka");
   if (hub.id === "sydney") return city.includes("sydney") || loc.includes("sydney") || addr.includes("sydney") || loc.includes("surry hills");
+  if (hub.id === "melbourne") return city.includes("melbourne") || loc.includes("melbourne") || addr.includes("melbourne");
+  if (hub.id === "brisbane") return city.includes("brisbane") || loc.includes("brisbane") || addr.includes("brisbane");
 
   return city.includes(hub.name.toLowerCase()) || loc.includes(hub.name.toLowerCase());
 }
