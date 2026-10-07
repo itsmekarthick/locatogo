@@ -69,14 +69,21 @@ export async function GET(
     const localJobs = storedJobs.filter((j: any) =>
       jobMatchesLocation(j.location_name, targetCity)
     );
-    return NextResponse.json({
-      jobs: storedJobs,
-      allJobs: storedJobs,
-      targetCity,
-      localCount: localJobs.length,
-      total: storedJobs.length,
-      source: "cache",
-    });
+    return NextResponse.json(
+      {
+        jobs: storedJobs,
+        allJobs: storedJobs,
+        targetCity,
+        localCount: localJobs.length,
+        total: storedJobs.length,
+        source: "cache",
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=600, stale-while-revalidate=86400",
+        },
+      }
+    );
   }
 
   // 2. If no jobs are in company_jobs yet, check if the listing has a careers_url to live-fetch

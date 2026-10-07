@@ -289,67 +289,45 @@ export function GlobalTechExplorer({
   const [selectedCompany, setSelectedCompany] = useState<CompanyDetail | null>(null);
   const [isSearchingServer, setIsSearchingServer] = useState(false);
 
-  // Progressive background streaming
+  // Fetch initial batch only if not preloaded via SSR
   useEffect(() => {
+    if (companies.length > 0) return;
     let isCancelled = false;
 
-    async function loadMoreInBatches() {
-      for (let page = 1; page < 15; page += 2) {
-        if (isCancelled) break;
-        try {
-          const [res1, res2] = await Promise.all([
-            fetch(`/api/tech-atlas/companies?page=${page}&limit=1500`),
-            fetch(`/api/tech-atlas/companies?page=${page + 1}&limit=1500`),
-          ]);
-
-          const data1 = res1.ok ? await res1.json() : { companies: [] };
-          const data2 = res2.ok ? await res2.json() : { companies: [] };
-          const combined = [...(data1.companies || []), ...(data2.companies || [])];
-          if (combined.length === 0) break;
-
-          const newBatch: CompanyDetail[] = combined.map((l: any) => ({
-            id: l.id,
-            title: l.title,
-            slug: l.slug,
-            short_description: l.short_description,
-            address_line_1: l.address_line_1,
-            locality: l.locality,
-            city: l.city,
-            latitude: l.latitude,
-            longitude: l.longitude,
-            website: l.website,
-            careers_url: l.careers_url,
-            company_type: l.company_type || "product_saas",
-            funding_stage: l.funding_stage || "Product",
-            employee_range: l.employee_range,
-            tech_stack: l.tech_stack || [],
-            founded_year: l.founded_year,
-            active_jobs_count: l.active_jobs_count || 0,
-            jobs: [],
-          }));
-
-          if (!isCancelled) {
-            setCompanies((prev) => {
-              const existingIds = new Set(prev.map((c) => c.id));
-              const uniqueNew = newBatch.filter((c) => !existingIds.has(c.id));
-              return [...prev, ...uniqueNew];
-            });
-          }
-        } catch {
-          break;
+    async function loadInitial() {
+      try {
+        const res = await fetch(`/api/tech-atlas/companies?page=0&limit=500`);
+        if (!res.ok || isCancelled) return;
+        const data = await res.json();
+        const newBatch: CompanyDetail[] = (data.companies || []).map((l: any) => ({
+          id: l.id,
+          title: l.title,
+          slug: l.slug,
+          locality: l.locality,
+          city: l.city,
+          latitude: l.latitude,
+          longitude: l.longitude,
+          website: l.website,
+          careers_url: l.careers_url,
+          company_type: l.company_type || "product_saas",
+          funding_stage: l.funding_stage || "Product",
+          active_jobs_count: l.active_jobs_count || 0,
+          jobs: [],
+        }));
+        if (!isCancelled) {
+          setCompanies(newBatch);
         }
+      } catch {
+        // graceful fallback
       }
     }
 
-    const timer = setTimeout(() => {
-      loadMoreInBatches();
-    }, 2000);
+    loadInitial();
 
     return () => {
       isCancelled = true;
-      clearTimeout(timer);
     };
-  }, []);
+  }, [companies.length]);
 
   // Server-side keyword search debounce
   useEffect(() => {

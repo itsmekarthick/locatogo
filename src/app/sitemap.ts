@@ -79,21 +79,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 4. All Published Company Profiles (/company/[slug])
   const companyRoutes: MetadataRoute.Sitemap = [];
   const legacyListingRoutes: MetadataRoute.Sitemap = [];
+  const seenUrls = new Set<string>();
 
   rawListings.forEach((listing: any) => {
     if (!listing.slug) return;
     const lastMod = listing.updated_at ? new Date(listing.updated_at) : new Date();
 
     if (listing.company_type) {
+      const url = `${baseUrl}/company/${listing.slug}`;
+      if (seenUrls.has(url)) return;
+      seenUrls.add(url);
+
       companyRoutes.push({
-        url: `${baseUrl}/company/${listing.slug}`,
+        url,
         lastModified: lastMod,
         changeFrequency: listing.active_jobs_count > 0 ? "daily" : "weekly",
         priority: listing.active_jobs_count > 0 ? 0.9 : 0.75,
       });
     } else {
+      const url = `${baseUrl}/listing/${listing.slug}`;
+      if (seenUrls.has(url)) return;
+      seenUrls.add(url);
+
       legacyListingRoutes.push({
-        url: `${baseUrl}/listing/${listing.slug}`,
+        url,
         lastModified: lastMod,
         changeFrequency: "weekly",
         priority: 0.7,

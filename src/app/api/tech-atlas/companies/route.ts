@@ -5,7 +5,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "0", 10);
-    const limit = parseInt(searchParams.get("limit") || "5000", 10);
+    const rawLimit = parseInt(searchParams.get("limit") || "500", 10);
+    const limit = Math.min(rawLimit, 1000); // Protect against runaway payload queries
     const search = searchParams.get("q") || "";
     const stage = searchParams.get("stage") || "";
     const hub = searchParams.get("hub") || "";
@@ -19,8 +20,6 @@ export async function GET(request: Request) {
         id,
         title,
         slug,
-        short_description,
-        address_line_1,
         locality,
         city,
         latitude,
@@ -29,9 +28,6 @@ export async function GET(request: Request) {
         careers_url,
         company_type,
         funding_stage,
-        employee_range,
-        tech_stack,
-        founded_year,
         active_jobs_count,
         country_code
       `)
@@ -177,12 +173,19 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({
-      companies: companies || [],
-      page,
-      limit,
-      total: count,
-    });
+    return NextResponse.json(
+      {
+        companies: companies || [],
+        page,
+        limit,
+        total: count,
+      },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        },
+      }
+    );
   } catch (err) {
     console.error("[Tech Atlas Companies API Error]:", err);
     return NextResponse.json(
