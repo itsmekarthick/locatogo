@@ -41,6 +41,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const revalidate = 3600; // Cache and revalidate homepage every hour
+
 export default async function LandingPage() {
   const supabase = await createSupabaseServerClient();
 

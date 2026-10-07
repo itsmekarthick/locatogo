@@ -104,6 +104,8 @@ type Props = {
   searchParams: Promise<{ q?: string; type?: string; stage?: string; hub?: string }>;
 };
 
+export const revalidate = 3600; // Cache and revalidate map page every hour
+
 export default async function Home({ searchParams }: Props) {
   const params = await searchParams;
   let supabase: any;
