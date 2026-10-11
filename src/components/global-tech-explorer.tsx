@@ -863,7 +863,7 @@ export function GlobalTechExplorer({
   return (
     <div className="flex h-[100dvh] max-h-[100dvh] w-full flex-col bg-white dark:bg-[#070b13] font-sans antialiased text-slate-900 dark:text-slate-100 overflow-hidden">
       {/* Top Navbar */}
-      <header className="shrink-0 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-30 shadow-2xs">
+      <header className="shrink-0 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-[500] shadow-2xs">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-2 sm:gap-4">
           {/* Logo & Tech Atlas Badge */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
