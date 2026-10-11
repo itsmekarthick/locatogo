@@ -24,12 +24,12 @@ export const metadata: Metadata = {
   creator: "LocaToGo",
   publisher: "LocaToGo",
   robots: { index: true, follow: true },
-  alternates: { canonical: "/landing" },
+  alternates: { canonical: "/" },
   openGraph: {
     title: "Global Tech Atlas: Companies, Startups & Live Jobs | LocaToGo",
     description:
       "Find tech companies and active roles by city, sector, funding stage, workplace, and technology stack.",
-    url: "/landing",
+    url: "/",
     siteName: "LocaToGo",
     type: "website",
   },
@@ -86,8 +86,8 @@ export default async function LandingPage() {
               },
               {
                 "@type": "WebSite",
-                "@id": "https://locatogo.com/landing#website",
-                url: "https://locatogo.com/landing",
+                "@id": "https://locatogo.com/#website",
+                url: "https://locatogo.com",
                 name: "LocaToGo Global Tech Atlas",
                 publisher: { "@id": "https://locatogo.com/#organization" },
                 potentialAction: {

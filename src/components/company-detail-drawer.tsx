@@ -151,50 +151,58 @@ export function CompanyDetailDrawer({
 
 
   return (
-    <div className="fixed inset-0 z-[1500] flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-xl h-full bg-white dark:bg-[#0c121e] text-slate-900 dark:text-slate-100 shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-250">
+    <div className="fixed inset-0 z-[1500] flex justify-end items-end sm:items-stretch bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+      {/* Backdrop tap to close */}
+      <div className="absolute inset-0 -z-10" onClick={onClose} aria-hidden="true" />
+
+      <div className="w-full max-w-xl h-[92dvh] sm:h-full rounded-t-3xl sm:rounded-none bg-white dark:bg-[#0c121e] text-slate-900 dark:text-slate-100 shadow-2xl flex flex-col border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-bottom sm:slide-in-from-right duration-250 overflow-hidden">
+        {/* Mobile Swipe / Drag Handle Indicator */}
+        <div className="sm:hidden flex justify-center pt-2.5 pb-1 bg-slate-50/80 dark:bg-slate-900/80 shrink-0">
+          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+        </div>
+
         {/* Header Strip */}
-        <div className="p-6 border-b border-slate-200/80 dark:border-slate-800/80 flex items-start justify-between bg-slate-50/70 dark:bg-slate-900/70">
-          <div className="flex items-start gap-4">
-            <CompanyBrandAvatar title={company.title} website={company.website} size={56} className="shadow-md" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <div className="p-4 sm:p-6 border-b border-slate-200/80 dark:border-slate-800/80 flex items-start justify-between gap-3 bg-slate-50/70 dark:bg-slate-900/70 shrink-0">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+            <CompanyBrandAvatar title={company.title} website={company.website} size={46} className="shadow-md shrink-0 rounded-xl" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h2 className="font-display text-lg sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 truncate">
                   {company.title}
                 </h2>
                 {company.funding_stage && (
-                  <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800 px-2.5 py-0.5 text-[10px] font-bold text-cyan-700 dark:text-cyan-300">
+                  <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200 dark:border-cyan-800 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-cyan-700 dark:text-cyan-300 shrink-0">
                     {company.funding_stage}
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                <span>📍 {company.locality || company.city}</span>
+              <p className="mt-0.5 sm:mt-1 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                <span className="truncate">📍 {company.locality || company.city}</span>
                 {company.employee_range && (
                   <>
                     <span>•</span>
-                    <span>👥 {company.employee_range} team</span>
+                    <span className="shrink-0">👥 {company.employee_range} team</span>
                   </>
                 )}
                 {company.founded_year && (
                   <>
                     <span>•</span>
-                    <span>Est. {company.founded_year}</span>
+                    <span className="shrink-0">Est. {company.founded_year}</span>
                   </>
                 )}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <Link
               href={`/company/${company.slug}`}
               target="_blank"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-cyan-200 dark:border-cyan-800/80 bg-cyan-50 dark:bg-cyan-950/60 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300 text-xs font-bold transition-all shadow-2xs group cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full border border-cyan-200 dark:border-cyan-800/80 bg-cyan-50 dark:bg-cyan-950/60 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300 text-xs font-bold transition-all shadow-2xs group cursor-pointer"
               title={`Open full dedicated profile for ${company.title} in a new tab`}
             >
               <span>Full Page</span>
-              <span className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform text-[11px]">↗</span>
+              <span className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform text-[10px]">↗</span>
             </Link>
             <button
               type="button"
@@ -208,50 +216,48 @@ export function CompanyDetailDrawer({
         </div>
 
         {/* Action / Links Strip */}
-        <div className="px-6 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-semibold bg-white dark:bg-slate-900">
-          <div className="flex items-center gap-4 flex-wrap">
-            <Link
-              href={`/company/${company.slug}`}
+        <div className="px-4 sm:px-6 py-2 sm:py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3 sm:gap-4 overflow-x-auto no-scrollbar text-xs font-semibold bg-white dark:bg-slate-900 shrink-0">
+          <Link
+            href={`/company/${company.slug}`}
+            target="_blank"
+            className="text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-bold shrink-0"
+            title={`Open ${company.title} page`}
+          >
+            <span>🏢 Company Profile</span>
+            <span className="text-[10px]">↗</span>
+          </Link>
+          {company.website && (
+            <a
+              href={company.website}
               target="_blank"
-              className="text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1 font-bold"
-              title={`Open ${company.title} page`}
+              rel="noopener noreferrer"
+              className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:underline flex items-center gap-1 shrink-0"
             >
-              <span>🏢 Company Profile</span>
+              <span>Website</span>
               <span className="text-[10px]">↗</span>
-            </Link>
-            {company.website && (
-              <a
-                href={company.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-slate-600 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:underline flex items-center gap-1"
-              >
-                <span>Website</span>
-                <span className="text-[10px]">↗</span>
-              </a>
-            )}
-            {company.careers_url && (
-              <a
-                href={company.careers_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-              >
-                <span>Careers Portal</span>
-                <span className="text-[10px]">↗</span>
-              </a>
-            )}
-          </div>
+            </a>
+          )}
+          {company.careers_url && (
+            <a
+              href={company.careers_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0"
+            >
+              <span>Careers Portal</span>
+              <span className="text-[10px]">↗</span>
+            </a>
+          )}
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800 px-6 bg-slate-50/50 dark:bg-slate-900/50 text-xs font-bold">
+        <div className="flex border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 bg-slate-50/50 dark:bg-slate-900/50 text-xs font-bold shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("jobs")}
-            className={`py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-2.5 sm:px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
               activeTab === "jobs"
-                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400"
+                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400 font-extrabold"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
@@ -268,19 +274,18 @@ export function CompanyDetailDrawer({
           <button
             type="button"
             onClick={() => setActiveTab("about")}
-            className={`py-3 px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
+            className={`py-2.5 sm:py-3 px-2.5 sm:px-3 border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
               activeTab === "about"
-                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400"
+                ? "border-cyan-600 text-cyan-600 dark:text-cyan-400 font-extrabold"
                 : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
             <span>🏢 About & Tech Stack</span>
           </button>
-
         </div>
 
         {/* Drawer Body Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
           {/* TAB 1: LIVE CAREER OPENINGS */}
           {activeTab === "jobs" && (
             <div className="space-y-4">
@@ -471,7 +476,7 @@ export function CompanyDetailDrawer({
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-2.5 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-slate-100 dark:border-slate-800/80 pt-2.5 text-xs">
                         {job.salary_range ? (
                           <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                             💰 {job.salary_range}
@@ -480,15 +485,16 @@ export function CompanyDetailDrawer({
                           <span className="text-[11px] text-slate-400">Competitive salary & equity</span>
                         )}
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                           {job.apply_url ? (
                             <a
                               href={job.apply_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-1"
+                              className="w-full sm:w-auto justify-center rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                             >
-                              <span>Apply on Portal ↗</span>
+                              <span>Apply on Portal</span>
+                              <span className="text-[10px]">↗</span>
                             </a>
                           ) : (
                             <span className="text-[11px] font-semibold text-slate-400">

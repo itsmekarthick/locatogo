@@ -287,6 +287,7 @@ export function GlobalTechExplorer({
   }, [jobSearch, jobWorkplace, jobExperience, jobDepartment]);
 
   const [selectedCompany, setSelectedCompany] = useState<CompanyDetail | null>(null);
+  const [mobilePeekCompany, setMobilePeekCompany] = useState<CompanyDetail | null>(null);
   const [isSearchingServer, setIsSearchingServer] = useState(false);
 
   // Fetch initial batch only if not preloaded via SSR
@@ -860,9 +861,9 @@ export function GlobalTechExplorer({
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-white dark:bg-[#070b13] font-sans antialiased text-slate-900 dark:text-slate-100">
+    <div className="flex h-[100dvh] max-h-[100dvh] w-full flex-col bg-white dark:bg-[#070b13] font-sans antialiased text-slate-900 dark:text-slate-100 overflow-hidden">
       {/* Top Navbar */}
-      <header className="border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-[1000] shadow-2xs">
+      <header className="shrink-0 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md sticky top-0 z-30 shadow-2xs">
         <div className="mx-auto flex max-w-[1440px] items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 gap-2 sm:gap-4">
           {/* Logo & Tech Atlas Badge */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -954,8 +955,29 @@ export function GlobalTechExplorer({
             <UserProfileMenu onProfileClick={() => setViewMode("profile")} />
           </div>
 
-          {/* Mobile Right Group: Theme & Profile Only (< md) */}
-          <div className="md:hidden flex items-center gap-1.5 shrink-0">
+          {/* Mobile Right Group: Hiring Pill & Profile (< md) */}
+          <div className="md:hidden flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (viewMode === "jobs") {
+                  setViewMode("map");
+                } else {
+                  setHiringOnly(!hiringOnly);
+                }
+              }}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer ${
+                hiringOnly && viewMode !== "jobs"
+                  ? "bg-emerald-600 text-white shadow-emerald-500/20 shadow-md ring-1 ring-emerald-400"
+                  : "border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+              }`}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Hiring ({totalOpenings})</span>
+            </button>
             <UserProfileMenu onProfileClick={() => setViewMode("profile")} />
           </div>
         </div>
@@ -971,72 +993,6 @@ export function GlobalTechExplorer({
             onSelectHub={handleSelectHub}
             totalDatabaseCompanies={totalDatabaseCompanies}
           />
-        </div>
-
-        {/* Dedicated Mobile Sub-Bar: View Switcher & Hiring Toggle */}
-        <div className="md:hidden border-t border-slate-100 dark:border-slate-800/60 px-3 py-1.5 bg-slate-50/80 dark:bg-slate-900/80 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-          {/* View Switcher: Map vs Grid vs Jobs */}
-          <div className="flex rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0.5 text-xs font-bold shrink-0">
-            <button
-              type="button"
-              onClick={() => setViewMode("map")}
-              className={`rounded-full px-2.5 py-1 transition-all cursor-pointer ${
-                viewMode === "map"
-                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-            >
-              🗺️ Map
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("grid")}
-              className={`rounded-full px-2.5 py-1 transition-all cursor-pointer ${
-                viewMode === "grid"
-                  ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-            >
-              ▦ Grid
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("jobs")}
-              className={`rounded-full px-2.5 py-1 transition-all cursor-pointer flex items-center gap-1 ${
-                viewMode === "jobs"
-                  ? "bg-cyan-600 text-white shadow-xs"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-            >
-              <span>💼 Jobs</span>
-              <span className="rounded-full bg-emerald-400 text-emerald-950 px-1 py-0.2 text-[9px] font-extrabold">
-                {totalOpenings}
-              </span>
-            </button>
-          </div>
-
-          {/* Pulsing "Hiring Now" Toggle */}
-          <button
-            type="button"
-            onClick={() => {
-              if (viewMode === "jobs") {
-                setViewMode("map");
-              } else {
-                setHiringOnly(!hiringOnly);
-              }
-            }}
-            className={`rounded-full px-2.5 py-1 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer shrink-0 ${
-              hiringOnly && viewMode !== "jobs"
-                ? "bg-emerald-600 text-white shadow-emerald-500/20 shadow-md ring-1 ring-emerald-400"
-                : "border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
-            }`}
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>Hiring ({totalOpenings})</span>
-          </button>
         </div>
 
         {/* Hierarchical Country Dropdown -> City Tech Hubs Filter Bar */}
@@ -1170,7 +1126,7 @@ export function GlobalTechExplorer({
               <span>{gpsStatus === "requesting" ? "Locating..." : isUserAtNearestHub ? "📍 Near Me (Active)" : "📍 Near Me"}</span>
             </button>
 
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mx-1 shrink-0 flex items-center gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mx-1 shrink-0 hidden sm:inline-flex items-center gap-1">
               <span>City:</span>
             </span>
             {displayedHubs.map((hub) => {
@@ -1208,10 +1164,10 @@ export function GlobalTechExplorer({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full relative">
+      <main className="flex-1 min-h-0 w-full relative overflow-hidden flex flex-col">
         {/* VIEW MODE 1: INTERACTIVE MAP WITH SPLIT WORKBENCH */}
         {viewMode === "map" && (
-          <div className="relative w-full h-[calc(100vh-104px)] flex overflow-hidden bg-slate-100 dark:bg-slate-900">
+          <div className="relative w-full h-full flex overflow-hidden bg-slate-100 dark:bg-slate-900">
             {/* 1. COLLAPSIBLE LEFT DIRECTORY SIDEBAR */}
             <aside
               className={`
@@ -1323,7 +1279,7 @@ export function GlobalTechExplorer({
               </div>
 
               {/* Scrollable Company Cards Feed */}
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 scroll-smooth">
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 scroll-smooth pb-24 lg:pb-0">
                 {sidebarVisibleCompanies.length === 0 ? (
                   <div className="p-8 text-center space-y-3">
                     <span className="text-3xl">🌐</span>
@@ -1490,10 +1446,19 @@ export function GlobalTechExplorer({
               <MapErrorBoundary fallbackText="The tech atlas map canvas encountered an issue. Click below to reload.">
                 <InteractiveLeafletCanvas
                   locatedListings={locatedListings}
-                  activePlaceId={hoveredCompanyId || selectedCompany?.id || null}
+                  activePlaceId={hoveredCompanyId || selectedCompany?.id || mobilePeekCompany?.id || null}
                   setActivePlaceId={(id) => {
                     const comp = companies.find((c) => c.id === id);
-                    if (comp) setSelectedCompany(comp);
+                    if (comp) {
+                      if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                        setMobilePeekCompany(comp);
+                      } else {
+                        setSelectedCompany(comp);
+                      }
+                    }
+                  }}
+                  onMapClick={() => {
+                    setMobilePeekCompany(null);
                   }}
                   hubCenter={{ lat: selectedHub.lat, lng: selectedHub.lng, zoom: selectedHub.zoom }}
                   hubNavTrigger={hubNavTrigger}
@@ -1519,43 +1484,87 @@ export function GlobalTechExplorer({
                   <span className="text-cyan-600 dark:text-cyan-400">▶</span>
                 </button>
               )}
-            </div>
 
-            {/* 3. MOBILE FLOATING SEGMENTED TOGGLE (MAP VS LIST) */}
-            <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] shadow-2xl">
-              <div className="flex items-center rounded-full bg-slate-950/90 text-white p-1 border border-slate-800 backdrop-blur-md">
-                <button
-                  type="button"
-                  onClick={() => setMobileTab("map")}
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    mobileTab === "map"
-                      ? "bg-cyan-600 text-white shadow-xs"
-                      : "text-slate-300 hover:text-white"
-                  }`}
+              {/* Mobile Map Bottom Peek Card (Airbnb / Google Maps style) */}
+              {mobilePeekCompany && viewMode === "map" && mobileTab === "map" && (
+                <aside
+                  aria-label="Selected Company Quick View"
+                  className="lg:hidden fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-[440] bg-white/95 dark:bg-[#0d1424]/95 backdrop-blur-md rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl p-3.5 animate-in slide-in-from-bottom-4 duration-200 ring-1 ring-black/5 dark:ring-white/5"
                 >
-                  <span>🗺️</span>
-                  <span>Map</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMobileTab("list")}
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    mobileTab === "list"
-                      ? "bg-cyan-600 text-white shadow-xs"
-                      : "text-slate-300 hover:text-white"
-                  }`}
-                >
-                  <span>📋</span>
-                  <span>List ({filteredCompanies.length})</span>
-                </button>
-              </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <CompanyBrandAvatar
+                        title={mobilePeekCompany.title}
+                        website={mobilePeekCompany.website}
+                        size={42}
+                        className="rounded-xl shadow-xs shrink-0 border border-slate-100 dark:border-slate-800"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
+                            {mobilePeekCompany.title}
+                          </h3>
+                          {mobilePeekCompany.funding_stage && (
+                            <span className="rounded bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 px-1.5 py-0.2 text-[9px] font-bold">
+                              {mobilePeekCompany.funding_stage}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                          📍 {[mobilePeekCompany.locality, mobilePeekCompany.city || selectedHub.name].filter(Boolean).join(", ")}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMobilePeekCompany(null)}
+                      className="rounded-full p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 cursor-pointer"
+                      aria-label="Close peek card"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {mobilePeekCompany.short_description && (
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 mt-2 leading-snug">
+                      {mobilePeekCompany.short_description}
+                    </p>
+                  )}
+
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-[11px]">
+                      {(mobilePeekCompany.active_jobs_count ?? 0) > 0 ? (
+                        <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          {mobilePeekCompany.active_jobs_count} open jobs
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-medium">Verified tech entity</span>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCompany(mobilePeekCompany);
+                        setMobilePeekCompany(null);
+                      }}
+                      className="rounded-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-3.5 py-1.5 shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>View Details & Roles</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+                </aside>
+              )}
             </div>
           </div>
         )}
 
         {/* VIEW MODE 2: DIRECTORY GRID */}
         {viewMode === "grid" && (
-          <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-8">
+          <div className="flex-1 w-full overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+            <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-5">
               <div>
                 <h2 className="font-display text-2xl sm:text-3xl font-bold text-slate-950 dark:text-slate-100">
@@ -1693,12 +1702,14 @@ export function GlobalTechExplorer({
                 />
               </div>
             )}
+            </div>
           </div>
         )}
 
         {/* VIEW MODE 3: LIVE TECH JOBS BOARD */}
         {viewMode === "jobs" && (
-          <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-8">
+          <div className="flex-1 w-full overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+            <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 py-6 sm:py-8">
             {/* Jobs Header & Filters Card */}
             <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-7 shadow-xs">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
@@ -1987,12 +1998,13 @@ export function GlobalTechExplorer({
                 </div>
               )}
             </div>
+            </div>
           </div>
         )}
 
         {/* VIEW MODE 4: USER PROFILE / RESUME ONBOARDING */}
         {viewMode === "profile" && (
-          <div className="p-4 sm:p-6 lg:p-10 mx-auto max-w-4xl w-full h-full overflow-y-auto">
+          <div className="p-4 sm:p-6 lg:p-10 mx-auto max-w-4xl w-full h-full overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
             <div className="mb-6 flex items-center gap-4">
               <button
                 onClick={() => setViewMode("map")}
@@ -2069,6 +2081,63 @@ export function GlobalTechExplorer({
             </div>
           </div>
         )}
+
+        {/* Mobile Floating Bottom Dock */}
+        <nav
+          aria-label="Mobile Navigation"
+          className="lg:hidden fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[430] pointer-events-auto shadow-2xl transition-all"
+        >
+          <div className="flex items-center gap-1 rounded-full bg-slate-950/92 dark:bg-[#0c121e]/95 text-white p-1 border border-slate-800/80 backdrop-blur-md ring-1 ring-white/10 shadow-2xl">
+            <button
+              id="mobile-nav-map"
+              type="button"
+              onClick={() => setViewMode("map")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                viewMode === "map"
+                  ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <span>🗺️</span>
+              <span>Map</span>
+            </button>
+
+            <button
+              id="mobile-nav-directory"
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                viewMode === "grid"
+                  ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <span>📋</span>
+              <span>Directory</span>
+            </button>
+
+            <button
+              id="mobile-nav-jobs"
+              type="button"
+              onClick={() => setViewMode("jobs")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                viewMode === "jobs"
+                  ? "bg-cyan-500 text-white shadow-md shadow-cyan-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <span>💼</span>
+              <span>Jobs</span>
+              {totalOpenings > 0 && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  viewMode === "jobs" ? "bg-white/20 text-white" : "bg-emerald-500/20 text-emerald-300"
+                }`}>
+                  {totalOpenings > 999 ? `${(totalOpenings/1000).toFixed(1)}k` : totalOpenings}
+                </span>
+              )}
+            </button>
+          </div>
+        </nav>
       </main>
 
       {/* Slide-over Company Detail & Jobs Drawer */}

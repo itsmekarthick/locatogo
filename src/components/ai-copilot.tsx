@@ -92,11 +92,21 @@ export function AiCopilot() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
+    <>
+      {/* Mobile backdrop when chat is open */}
       {isOpen && (
-        <div className="mb-3 sm:mb-4 w-[calc(100vw-32px)] sm:w-96 h-[60vh] min-h-[400px] max-h-[500px] flex flex-col bg-white/80 dark:bg-[#0d1424]/80 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl overflow-hidden transition-all duration-300 ease-in-out origin-bottom-right">
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 bg-slate-900 dark:bg-[#151b2b] border-b border-slate-800 text-white shadow-sm">
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[550] sm:hidden animate-in fade-in duration-200"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <div className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-3 sm:bottom-6 sm:right-6 ${isOpen ? "z-[600]" : "z-[420]"} flex flex-col items-end`}>
+        {isOpen && (
+          <div className="mb-3 sm:mb-4 fixed sm:static inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] sm:inset-auto sm:bottom-auto w-auto sm:w-96 h-[65dvh] max-h-[520px] flex flex-col bg-white/95 dark:bg-[#0d1424]/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 ease-in-out origin-bottom-right">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-900 dark:bg-[#151b2b] border-b border-slate-800 text-white shadow-sm shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-800/80 border border-slate-700/50 shadow-inner">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-slate-300">
@@ -170,7 +180,8 @@ export function AiCopilot() {
       {/* Floating Action Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`group flex items-center justify-center w-14 h-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 ${
+        aria-label="Toggle AI Career Assistant"
+        className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
           isOpen 
             ? "bg-slate-800 dark:bg-[#151b2b] border border-slate-700 text-white rotate-90" 
             : "bg-slate-900 dark:bg-slate-800 border border-slate-800 dark:border-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
@@ -182,11 +193,12 @@ export function AiCopilot() {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6">
             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
           </svg>
         )}
       </button>
-    </div>
+      </div>
+    </>
   );
 }
