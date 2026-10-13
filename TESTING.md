@@ -12,3 +12,5 @@ Each phase adds focused tests for the code it introduces. A phase is not complet
 The Phase 1/2 pgTAP suite is at `supabase/tests/rls_phase1_phase2.sql`. It exercises table presence plus tenant A read/update/delete isolation. Run it with `supabase test db` after starting the local Supabase stack. In this environment the command is currently blocked because the local Postgres service is not running.
 
 Phase 3 verification should additionally cover child-record isolation, private storage paths, audit insert behavior, upload rejection for unsupported MIME/size, duplicate candidates, and CSV escaping.
+
+## Dummy
