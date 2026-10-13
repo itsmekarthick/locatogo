@@ -155,7 +155,7 @@ export function EmailTemplatesManager({
       year: new Date().getFullYear().toString(),
       resetLink: `${window?.location?.origin || "https://locatogo.com"}/auth/reset-password?token=sample-test-token`,
       listingTitle: "Acme AI Systems",
-      listingUrl: `${window?.location?.origin || "https://locatogo.com"}/tech`,
+      listingUrl: `${window?.location?.origin || "https://locatogo.com"}/dashboard`,
     };
 
     let preview = currentTemplate.html_content;

@@ -345,7 +345,7 @@ export async function publishListing(formData: FormData): Promise<void> {
       tenantId: tenant.id,
       variables: {
         listingTitle: updatedListing.title,
-        listingUrl: `${origin}/tech`,
+        listingUrl: `${origin}/dashboard`,
       },
     }).catch((err) => console.error("[email] Failed to send listing_published email:", err));
   }

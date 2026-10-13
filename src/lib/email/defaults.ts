@@ -39,7 +39,7 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailType, DefaultEmailTemplate> = 
         Discover hiring companies near you, explore tech corridors, and connect directly with official careers portals.
       </p>
       <div style="text-align: center; margin: 32px 0;">
-        <a href="{{appUrl}}/tech" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
+        <a href="{{appUrl}}/dashboard" style="display: inline-block; background-color: #0284c7; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);">
           🚀 Explore the Tech Atlas
         </a>
       </div>
@@ -90,7 +90,7 @@ export const DEFAULT_EMAIL_TEMPLATES: Record<EmailType, DefaultEmailTemplate> = 
         Thank you for verifying your email address. Your account is now fully unlocked with full access to the tech directory, job feeds, and saved listings.
       </p>
       <div style="text-align: center; margin: 32px 0;">
-        <a href="{{appUrl}}/tech" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);">
+        <a href="{{appUrl}}/dashboard" style="display: inline-block; background-color: #059669; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px; padding: 14px 32px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);">
           Start Exploring
         </a>
       </div>

@@ -42,7 +42,7 @@ export async function GET(request: Request) {
 
         const { data: profile } = await supabase.from("profiles").select("platform_role").eq("id", user.id).single();
         if (profile?.platform_role === "tech_user") {
-          return NextResponse.redirect(`${origin}/tech`);
+          return NextResponse.redirect(`${origin}/dashboard`);
         }
       }
 

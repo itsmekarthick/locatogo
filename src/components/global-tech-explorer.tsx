@@ -15,7 +15,6 @@ import { AdBannerSlot } from "@/components/ad-banner-slot";
 import { TechAtlasSearch } from "@/components/tech-atlas-search";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 import { MapCanvasSkeleton } from "@/components/tech-atlas-skeleton";
-import { ResumeOnboarding } from "@/components/resume-onboarding";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -69,7 +68,6 @@ export function GlobalTechExplorer({
   initialSearchQuery = "",
   knownHubCounts,
   isRootPage = false,
-  userProfile = null,
 }: {
   initialCompanies: CompanyDetail[];
   initialJobs?: UnifiedJob[];
@@ -79,7 +77,6 @@ export function GlobalTechExplorer({
   initialSearchQuery?: string;
   knownHubCounts?: Record<string, number>;
   isRootPage?: boolean;
-  userProfile?: { skills?: string[]; preferred_location?: string } | null;
 }) {
   const [selectedHub, setSelectedHub] = useState<TechHub>(
     GLOBAL_TECH_HUBS.find((h) => h.id === currentHub) || GLOBAL_TECH_HUBS[0]
@@ -94,7 +91,7 @@ export function GlobalTechExplorer({
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [selectedWorkplace, setSelectedWorkplace] = useState<string>("all");
   const [selectedTechStack, setSelectedTechStack] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"map" | "grid" | "jobs" | "profile">("map");
+  const [viewMode, setViewMode] = useState<"map" | "grid" | "jobs">("map");
   const [gridPage, setGridPage] = useState<number>(1);
   const GRID_PAGE_SIZE = 24;
 
@@ -412,38 +409,6 @@ export function GlobalTechExplorer({
     });
     return list;
   }, [initialJobs, companies]);
-
-  // Compute AI Recommended Jobs
-  const recommendedJobs = useMemo(() => {
-    if (!userProfile?.skills?.length || allJobs.length === 0) return [];
-    
-    // Sort allJobs by how many skills match
-    const scoredJobs = allJobs.map(job => {
-      let score = 0;
-      const jobText = `${job.title} ${job.department || ""} ${job.company_title || ""}`.toLowerCase();
-      
-      userProfile.skills!.forEach(skill => {
-        if (jobText.includes(skill.toLowerCase())) {
-          score += 1;
-        }
-      });
-      
-      if (userProfile.preferred_location && userProfile.preferred_location !== "Remote") {
-        const loc = (job.location_name || job.locality || "").toLowerCase();
-        if (loc.includes(userProfile.preferred_location.toLowerCase())) {
-          score += 2;
-        }
-      }
-      
-      return { job, score };
-    });
-    
-    return scoredJobs
-      .filter(sj => sj.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map(sj => sj.job);
-  }, [allJobs, userProfile]);
 
   // Filter Jobs by Hub and criteria
   const filteredJobs = useMemo(() => {
@@ -952,7 +917,7 @@ export function GlobalTechExplorer({
               </button>
             </div>
 
-            <UserProfileMenu onProfileClick={() => setViewMode("profile")} />
+            <UserProfileMenu />
           </div>
 
           {/* Mobile Right Group: Hiring Pill & Profile (< md) */}
@@ -978,7 +943,7 @@ export function GlobalTechExplorer({
               </span>
               <span>Hiring ({totalOpenings})</span>
             </button>
-            <UserProfileMenu onProfileClick={() => setViewMode("profile")} />
+            <UserProfileMenu />
           </div>
         </div>
 
@@ -1801,7 +1766,7 @@ export function GlobalTechExplorer({
 
             {/* Tech Partner Spotlight Ad Placement */}
             <div className="mt-5">
-              <button onClick={() => setViewMode("profile")} className="block w-full text-left">
+              <Link href="/dashboard" className="block w-full text-left">
                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900 to-cyan-900 p-6 shadow-md hover:shadow-lg transition-all group">
                   <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl group-hover:bg-cyan-400/30 transition-all"></div>
                   <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl group-hover:bg-purple-400/30 transition-all"></div>
@@ -1822,7 +1787,7 @@ export function GlobalTechExplorer({
                     </div>
                   </div>
                 </div>
-              </button>
+              </Link>
             </div>
 
             {/* Jobs Grid */}
@@ -1998,86 +1963,6 @@ export function GlobalTechExplorer({
                 </div>
               )}
             </div>
-            </div>
-          </div>
-        )}
-
-        {/* VIEW MODE 4: USER PROFILE / RESUME ONBOARDING */}
-        {viewMode === "profile" && (
-          <div className="p-4 sm:p-6 lg:p-10 mx-auto max-w-4xl w-full h-full overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
-            <div className="mb-6 flex items-center gap-4">
-              <button
-                onClick={() => setViewMode("map")}
-                className="rounded-full bg-slate-100 dark:bg-slate-800 p-2.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                title="Back to Map"
-              >
-                ←
-              </button>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                My Tech Profile
-              </h1>
-            </div>
-            
-            <ResumeOnboarding />
-            
-            {userProfile?.skills && userProfile.skills.length > 0 && (
-              <div className="mt-12 mb-8">
-                <div className="mb-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                    ✨ AI Recommended Jobs
-                  </h2>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                    Based on your {userProfile.skills.length} skills
-                  </span>
-                </div>
-                
-                {recommendedJobs.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {recommendedJobs.map((job) => {
-                      const company = companies.find((c) => c.id === job.listing_id || c.title.toLowerCase() === (job.company_title || "").toLowerCase());
-                      return (
-                        <div
-                          key={`rec-${job.id}`}
-                          className="group rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md hover:border-cyan-400 transition-all flex flex-col justify-between"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3">
-                                <CompanyBrandAvatar title={job.company_title || "Company"} website={company?.website || undefined} size={36} className="rounded-xl shadow-2xs" />
-                                <div>
-                                  <button type="button" onClick={() => company && setSelectedCompany(company)} className="text-left font-bold text-xs text-slate-900 dark:text-slate-100 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors cursor-pointer">
-                                    {job.company_title}
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <h3 className="mt-3 text-sm font-bold text-slate-950 dark:text-slate-100">{job.title}</h3>
-                            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
-                              {job.department && <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-600 dark:text-slate-300">{job.department}</span>}
-                              {job.workplace_type && <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-600 dark:text-slate-300 capitalize">{job.workplace_type}</span>}
-                            </div>
-                          </div>
-                          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
-                            {job.apply_url && (
-                              <a href={job.apply_url} target="_blank" rel="noreferrer" className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white px-3.5 py-1.5 text-xs font-bold shadow-xs transition-all flex items-center gap-1">
-                                <span>Apply Now</span><span>↗</span>
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 p-8 text-center">
-                    <p className="text-sm text-slate-500">No jobs match your extracted skills perfectly right now.</p>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <div className="mt-8 text-center text-sm text-slate-500">
-              <p>Your resume data is parsed securely and only used for personalized matching.</p>
             </div>
           </div>
         )}

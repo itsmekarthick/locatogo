@@ -1,117 +1,102 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+import { PDFParse } from "pdf-parse";
+import { z } from "zod";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export async function POST(req: NextRequest) {
+const MAX_RESUME_SIZE = 5 * 1024 * 1024;
+const resumeSchema = z.object({ location: z.string().trim().min(1).max(120) });
+
+function skillsFromResponse(response: string): string[] {
   try {
-    const supabase = await createSupabaseServerClient();
+    const parsed = JSON.parse(response.replace(/```json/g, "").replace(/```/g, "").trim());
+    if (Array.isArray(parsed)) return parsed.filter((skill): skill is string => typeof skill === "string");
+  } catch {
+    // Fall back to a comma-separated response when the model does not return JSON.
+  }
+  return response.replace(/[\[\]"]/g, "").split(",");
+}
+
+export async function POST(request: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  let uploadedPath: string | null = null;
+
+  try {
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const formData = await req.formData();
-    const file = formData.get("resume") as File | null;
-    const location = formData.get("location") as string | null;
-
-    if (!file || !location) {
+    const formData = await request.formData();
+    const file = formData.get("resume");
+    const parsedInput = resumeSchema.safeParse({ location: formData.get("location") });
+    if (!(file instanceof File) || !parsedInput.success) {
       return NextResponse.json({ error: "Resume file and location are required." }, { status: 400 });
     }
-
-    if (file.type !== "application/pdf") {
-      return NextResponse.json({ error: "Only PDF files are supported at this time." }, { status: 400 });
+    if (file.size > MAX_RESUME_SIZE) {
+      return NextResponse.json({ error: "Resume files must be 5MB or smaller." }, { status: 400 });
+    }
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      return NextResponse.json({ error: "Only PDF files are supported." }, { status: 400 });
     }
 
-    // 1. Upload the resume to Supabase Storage
     const fileBuffer = Buffer.from(await file.arrayBuffer());
-    const filePath = `${user.id}/${Date.now()}_${file.name}`;
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    if (fileBuffer.subarray(0, 4).toString("ascii") !== "%PDF") {
+      return NextResponse.json({ error: "The uploaded file is not a valid PDF." }, { status: 400 });
+    }
+
+    const filePath = `${user.id}/${crypto.randomUUID()}.pdf`;
+    const { data: upload, error: uploadError } = await supabase.storage
       .from("resumes")
-      .upload(filePath, fileBuffer, {
-        contentType: "application/pdf",
-        upsert: true,
-      });
-
+      .upload(filePath, fileBuffer, { contentType: "application/pdf", upsert: false });
     if (uploadError) {
-      console.error("Storage upload error:", uploadError);
-      return NextResponse.json({ error: "Failed to upload resume to secure storage." }, { status: 500 });
+      console.error("Resume upload error:", uploadError);
+      return NextResponse.json({ error: "Failed to upload the resume." }, { status: 500 });
     }
+    uploadedPath = upload.path;
 
-    // 2. Parse the PDF text
-    let parsedText = "";
+    let resumeText = "";
     try {
-      const pdfParse = require("pdf-parse");
-      const pdfData = await pdfParse(fileBuffer);
-      parsedText = pdfData.text;
-    } catch (e) {
-      console.error("PDF Parsing error:", e);
-      return NextResponse.json({ error: "Could not read the text inside this PDF. Please ensure it is not a scanned image." }, { status: 400 });
+      const parser = new PDFParse({ data: fileBuffer });
+      try {
+        const parsedPdf = await parser.getText();
+        resumeText = parsedPdf.text;
+      } finally {
+        await parser.destroy();
+      }
+    } catch (error) {
+      console.error("Resume parse error:", error);
+    }
+    if (resumeText.trim().length < 50) {
+      return NextResponse.json({ error: "Could not read text from this PDF. Upload a text-based resume instead of a scanned image." }, { status: 400 });
+    }
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: "Resume matching is temporarily unavailable." }, { status: 503 });
     }
 
-    if (parsedText.length < 50) {
-      return NextResponse.json({ error: "The uploaded PDF appears to be empty or unreadable." }, { status: 400 });
-    }
+    const model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-3.8-flash" });
+    const result = await model.generateContent(`Extract the 10 to 15 most prominent technical skills, tools, and programming languages from this resume. Return only a JSON array of strings. Resume:\n${resumeText.slice(0, 15000)}`);
+    const skills = Array.from(new Map(skillsFromResponse(result.response.text()).map((skill) => skill.trim()).filter(Boolean).slice(0, 15).map((skill) => [skill.toLocaleLowerCase(), skill] as const)).values());
 
-    // 3. Extract skills using Gemini 1.5 Flash
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `
-      You are an expert technical recruiter and resume parser.
-      Read the following resume text and extract the top 10 to 15 most prominent technical skills, tools, and programming languages.
-      Only return a raw JSON array of strings. Do not use markdown blocks, do not include explanation text. Just the JSON array.
-      Example: ["React", "TypeScript", "Node.js", "Python", "AWS"]
-
-      Resume Text:
-      ${parsedText.substring(0, 15000)}
-    `;
-
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    
-    let skills: string[] = [];
-    try {
-      // Clean up potential markdown formatting from Gemini
-      const cleanJson = responseText.replace(/```json/g, "").replace(/```/g, "").trim();
-      skills = JSON.parse(cleanJson);
-    } catch (e) {
-      console.error("Failed to parse Gemini output as JSON:", responseText);
-      // Fallback: split by comma if it failed to return valid JSON array
-      skills = responseText.replace(/[\[\]"]/g, "").split(",").map(s => s.trim()).filter(s => s.length > 0);
-    }
-
-    // Ensure we only have up to 15 skills to avoid huge payloads
-    skills = skills.slice(0, 15);
-
-    const { data: publicUrlData } = supabase.storage.from("resumes").getPublicUrl(filePath);
-
-    // 4. Update the user_profiles table
-    const { error: profileError } = await supabase
-      .from("user_profiles")
-      .upsert({
-        id: user.id,
-        email: user.email,
-        preferred_location: location,
-        resume_url: publicUrlData.publicUrl || filePath,
-        skills: skills,
-        updated_at: new Date().toISOString(),
-      });
-
-    if (profileError) {
-      console.error("Profile upsert error:", profileError);
-      return NextResponse.json({ error: "Failed to save profile data." }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
+    const { error: profileError } = await supabase.from("tech_profiles").upsert({
+      id: user.id,
+      preferred_location: parsedInput.data.location,
+      resume_storage_path: filePath,
       skills,
-      location,
-      message: "Resume parsed successfully!"
+      updated_at: new Date().toISOString(),
     });
+    if (profileError) {
+      console.error("Tech profile upsert error:", profileError);
+      return NextResponse.json({ error: "Failed to save resume details." }, { status: 500 });
+    }
 
-  } catch (error: any) {
-    console.error("Resume Parse Route Error:", error);
-    return NextResponse.json({ error: error.message || "An unexpected error occurred" }, { status: 500 });
+    uploadedPath = null;
+    return NextResponse.json({ success: true, skills, location: parsedInput.data.location, message: "Resume parsed successfully." });
+  } catch (error) {
+    console.error("Resume route error:", error);
+    return NextResponse.json({ error: "Unable to process the resume right now." }, { status: 500 });
+  } finally {
+    if (uploadedPath) {
+      const { error: cleanupError } = await supabase.storage.from("resumes").remove([uploadedPath]);
+      if (cleanupError) console.error("Resume cleanup error:", cleanupError);
+    }
   }
 }

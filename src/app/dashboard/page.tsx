@@ -1,309 +1,144 @@
-import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { ResumeOnboarding } from "@/components/resume-onboarding";
+import { UserProfileMenu } from "@/components/user-profile-menu";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ProfileEditor } from "./profile-editor";
 
 export const metadata = {
   title: "My Dashboard | LocaToGo",
-  description: "Manage your submitted places, claimed listings, and saved favorites.",
+  description: "Manage your professional profile, job matches, submissions, claims, and saved places.",
 };
+
+type Listing = { title?: string | null; slug?: string | null; city?: string | null; locality?: string | null };
+
+function listing(value: Listing | Listing[] | null) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function date(value: string) {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
+}
+
+function statusColor(status: string) {
+  if (status === "approved" || status === "published") return "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800";
+  if (status === "rejected") return "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-800";
+  return "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800";
+}
 
 export default async function DashboardPage() {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login?next=/dashboard");
 
-  // Fetch user's submitted listings
-  const { data: submissions } = await supabase
-    .from("listings")
-    .select("id, title, slug, status, city, locality, created_at")
-    .eq("submitted_by", user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  // Fetch user's claimed listings
-  const { data: claims } = await supabase
-    .from("listing_claims")
-    .select("id, status, created_at, listings(id, title, slug, city)")
-    .eq("claimant_user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  // Fetch user's favorites
-  const { data: favorites } = await supabase
-    .from("user_favorites")
-    .select("id, created_at, listings(id, title, slug, city, locality, category_id)")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  // Fetch User Profile (Skills & Preferences)
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("skills, preferred_location")
+  const { data: account } = await supabase
+    .from("profiles")
+    .select("display_name, platform_role")
     .eq("id", user.id)
     .maybeSingle();
+  const isTechUser = account?.platform_role === "tech_user";
 
-  // If user has skills, fetch matching jobs
-  let recommendedJobs: any[] = [];
-  if (profile?.skills && profile.skills.length > 0) {
-    let jobQuery = supabase
+  const [{ data: techProfile }, { data: submissions }, { data: claims }, { data: favorites }] = await Promise.all([
+    isTechUser
+      ? supabase.from("tech_profiles").select("bio, skills, preferred_location, github_url, linkedin_url, portfolio_url, resume_storage_path").eq("id", user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase.from("listing_submissions").select("id, status, payload_json, submitted_at").eq("submitted_by_user_id", user.id).order("submitted_at", { ascending: false }).limit(20),
+    supabase.from("listing_claims").select("id, status, submitted_at, listings(id, title, slug, city, locality)").eq("user_id", user.id).order("submitted_at", { ascending: false }).limit(20),
+    supabase.from("user_favorites").select("id, created_at, listings(id, title, slug, city, locality)").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+  ]);
+
+  const skills: string[] = Array.isArray(techProfile?.skills)
+    ? techProfile.skills.filter((skill): skill is string => typeof skill === "string")
+    : [];
+  let jobs: any[] = [];
+  if (isTechUser && skills.length) {
+    const filters = skills.slice(0, 12).map((skill) => `title.ilike.%${skill}%,department.ilike.%${skill}%`).join(",");
+    let query = supabase
       .from("company_jobs")
-      .select("id, title, department, location_name, apply_url, created_at, listing_id, listings(title, city, slug)")
+      .select("id, title, location_name, workplace_type, apply_url, listings(title, slug, city)")
       .eq("is_active", true)
-      .limit(10);
-    
-    // Add OR condition for skills
-    const orConditions = profile.skills.map((skill: string) => `title.ilike.%${skill}%,department.ilike.%${skill}%`).join(",");
-    jobQuery = jobQuery.or(orConditions);
-    
-    if (profile.preferred_location && profile.preferred_location !== "Remote") {
-      jobQuery = jobQuery.or(`location_name.ilike.%${profile.preferred_location}%,workplace_type.ilike.%Remote%`);
+      .or(filters)
+      .limit(8);
+    if (techProfile?.preferred_location && techProfile.preferred_location !== "Remote") {
+      query = query.or(`location_name.ilike.%${techProfile.preferred_location}%,workplace_type.eq.remote`);
     }
-
-    const { data: jobs } = await jobQuery;
-    recommendedJobs = jobs || [];
+    const { data } = await query;
+    jobs = data || [];
   }
 
-  const displayName =
-    user.user_metadata?.full_name ??
-    user.user_metadata?.name ??
-    user.email?.split("@")[0] ??
-    "User";
+  let resumeUrl: string | null = null;
+  if (techProfile?.resume_storage_path) {
+    const { data } = await supabase.storage.from("resumes").createSignedUrl(techProfile.resume_storage_path, 300);
+    resumeUrl = data?.signedUrl || null;
+  }
 
-  const statusColors: Record<string, string> = {
-    published: "bg-emerald-100 text-emerald-800",
-    pending_review: "bg-amber-100 text-amber-800",
-    draft: "bg-gray-100 text-gray-700",
-    rejected: "bg-red-100 text-red-700",
-  };
+  const displayName = account?.display_name || user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Member";
+  const firstName = String(displayName).split(" ")[0];
 
   return (
-    <main className="min-h-screen bg-[#fdfdfd] px-4 py-10 sm:px-8">
-      <div className="mx-auto max-w-4xl space-y-10">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <Link
-              href="/"
-              className="text-xs font-bold text-gray-400 hover:text-gray-700 transition-colors"
-            >
-              ← Back to Map
-            </Link>
-            <h1 className="mt-3 font-serif text-4xl font-bold tracking-tight text-gray-900">
-              Welcome, {displayName}
-            </h1>
-            <p className="mt-1 text-sm text-gray-500">{user.email}</p>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(6,182,212,0.12),_transparent_32%),var(--background)] px-4 py-5 sm:px-6 sm:py-8 lg:px-10">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
+          <div className="min-w-0">
+            <Link href="/map" className="text-xs font-bold text-[var(--ink-muted)] transition hover:text-cyan-600">&larr; Back to Tech Atlas</Link>
+            <h1 className="mt-3 font-display text-3xl font-bold text-[var(--foreground)] sm:text-4xl">Welcome back, {firstName}.</h1>
+            <p className="mt-1 text-sm text-[var(--ink-muted)]">Your profile, opportunities, and directory activity in one place.</p>
           </div>
-          <Link
-            href="/submit"
-            className="rounded-full bg-[#0ea5e9] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#0284c7] transition-colors"
-          >
-            + Add a Place
-          </Link>
-        </div>
+          <div className="flex items-center gap-3">
+            <Link href="/map" className="rounded-lg bg-slate-950 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 dark:bg-cyan-600 dark:hover:bg-cyan-500">Explore companies</Link>
+            <UserProfileMenu />
+          </div>
+        </header>
 
-        {/* AI Resume Matcher / Recommended Jobs */}
-        <section>
-          {profile?.skills && profile.skills.length > 0 ? (
+        {isTechUser && (
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.8fr)]">
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="font-serif text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    ✨ Recommended for You
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Based on your top skills: <span className="font-medium text-cyan-600">{profile.skills.slice(0, 5).join(", ")}</span>
-                  </p>
+              <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm sm:p-7">
+                <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+                  <div><p className="text-xs font-bold uppercase text-cyan-600">Professional profile</p><h2 className="mt-1 font-display text-xl font-bold text-[var(--foreground)]">Show employers the work you do best.</h2></div>
+                  <ProfileEditor displayName={String(displayName)} bio={techProfile?.bio || null} skills={skills} preferredLocation={techProfile?.preferred_location || null} githubUrl={techProfile?.github_url || null} linkedinUrl={techProfile?.linkedin_url || null} portfolioUrl={techProfile?.portfolio_url || null} />
                 </div>
-              </div>
-
-              {recommendedJobs.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {recommendedJobs.map(job => (
-                    <div key={job.id} className="border border-slate-200 rounded-2xl p-5 hover:border-cyan-400 transition-colors bg-white shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="text-xs font-bold text-cyan-600 mb-2 uppercase tracking-wide">
-                          {job.listings?.title || "Tech Company"}
-                        </div>
-                        <h3 className="font-bold text-slate-900 text-lg leading-tight mb-1">{job.title}</h3>
-                        <p className="text-sm text-slate-500 mb-4 flex items-center gap-2">
-                          <span>📍 {job.location_name || job.listings?.city}</span>
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between mt-2 pt-4 border-t border-slate-100">
-                        <Link href={`/listing/${job.listings?.slug}`} className="text-sm font-semibold text-slate-500 hover:text-slate-900">
-                          View Company
-                        </Link>
-                        <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors">
-                          Apply Now ↗
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div><p className="text-xs font-bold uppercase text-[var(--ink-muted)]">About</p><p className="mt-2 text-sm leading-6 text-[var(--foreground)]">{techProfile?.bio || "Add a concise bio so the right opportunities can find you."}</p></div>
+                  <div><p className="text-xs font-bold uppercase text-[var(--ink-muted)]">Top skills</p>{skills.length ? <div className="mt-2 flex flex-wrap gap-2">{skills.map((skill) => <span key={skill} className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700 ring-1 ring-cyan-100 dark:bg-cyan-950/40 dark:text-cyan-300 dark:ring-cyan-900">{skill}</span>)}</div> : <p className="mt-2 text-sm text-[var(--ink-muted)]">Add skills to improve your recommendations.</p>}</div>
                 </div>
-              ) : (
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-8 text-center">
-                  <p className="text-slate-500">No new matching roles found today for your specific stack in {profile.preferred_location}. Check back soon!</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <ResumeOnboarding />
-          )}
-        </section>
+              </section>
 
-        {/* Submitted Places */}
-        <section>
-          <h2 className="font-serif text-xl font-bold text-gray-900 mb-4">
-            My Submissions
-            <span className="ml-2 text-sm font-normal text-gray-400">
-              ({submissions?.length ?? 0})
-            </span>
-          </h2>
-          {!submissions || submissions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 p-8 text-center">
-              <p className="text-sm text-gray-400">
-                You haven&apos;t submitted any places yet.
-              </p>
-              <Link
-                href="/submit"
-                className="mt-3 inline-block text-xs font-bold text-[#0ea5e9] hover:underline"
-              >
-                Suggest a place →
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {submissions.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white px-5 py-3.5 shadow-xs"
-                >
-                  <div>
-                    <p className="font-semibold text-sm text-gray-900">{s.title}</p>
-                    <p className="text-xs text-gray-400">
-                      {[s.locality, s.city].filter(Boolean).join(", ")} ·{" "}
-                      {new Date(s.created_at).toLocaleDateString("en-IN", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${statusColors[s.status] ?? "bg-gray-100 text-gray-600"}`}
-                    >
-                      {s.status.replace("_", " ")}
-                    </span>
-                    {s.status === "published" && (
-                      <Link
-                        href={`/listing/${s.slug}`}
-                        className="text-xs text-[#0ea5e9] font-semibold hover:underline"
-                      >
-                        View →
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+              <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm sm:p-7">
+                <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase text-cyan-600">Your matches</p><h2 className="mt-1 font-display text-xl font-bold text-[var(--foreground)]">Roles aligned with your stack</h2><p className="mt-1 text-sm text-[var(--ink-muted)]">{skills.length ? `Matching ${skills.slice(0, 4).join(", ")}.` : "Upload a resume or add skills to receive matches."}</p></div><Link href="/map" className="text-xs font-bold text-cyan-600 hover:text-cyan-700">View all roles &rarr;</Link></div>
+                {jobs.length ? <div className="mt-6 grid gap-3 sm:grid-cols-2">{jobs.map((job) => { const company = listing(job.listings as Listing | Listing[] | null); return <article key={job.id} className="flex min-w-0 flex-col justify-between rounded-lg border border-[var(--line)] p-4 transition hover:border-cyan-300 hover:shadow-sm"><div><p className="text-xs font-bold text-cyan-600">{company?.title || "Tech company"}</p><h3 className="mt-1 text-sm font-bold text-[var(--foreground)]">{job.title}</h3><p className="mt-2 text-xs text-[var(--ink-muted)]">{job.location_name || company?.city || "Location not listed"}{job.workplace_type ? ` · ${job.workplace_type}` : ""}</p></div><div className="mt-4 flex items-center justify-between gap-3">{company?.slug ? <Link href={`/listing/${company.slug}`} className="text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--foreground)]">Company</Link> : <span />}{job.apply_url && <a href={job.apply_url} target="_blank" rel="noreferrer" className="rounded-md bg-cyan-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-cyan-700">Apply ↗</a>}</div></article>; })}</div> : <div className="mt-6 rounded-lg border border-dashed border-[var(--line)] px-5 py-8 text-center text-sm text-[var(--ink-muted)]">No matching roles yet. Add your skills or upload a current resume to personalize this section.</div>}
+              </section>
 
-        {/* Claimed Listings */}
-        <section>
-          <h2 className="font-serif text-xl font-bold text-gray-900 mb-4">
-            My Claims
-            <span className="ml-2 text-sm font-normal text-gray-400">
-              ({claims?.length ?? 0})
-            </span>
-          </h2>
-          {!claims || claims.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 p-8 text-center">
-              <p className="text-sm text-gray-400">
-                You haven&apos;t claimed any business listings yet.
-              </p>
+              <section id="applications" className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm sm:p-7"><p className="text-xs font-bold uppercase text-cyan-600">Applications</p><h2 className="mt-1 font-display text-xl font-bold text-[var(--foreground)]">Application activity</h2><div className="mt-5 border-y border-dashed border-[var(--line)] px-5 py-10 text-center"><p className="text-sm font-bold text-[var(--foreground)]">Application tracking is coming soon.</p><p className="mt-1 text-xs leading-5 text-[var(--ink-muted)]">Roles open their official application pages directly. Your profile and job matches are ready when you are.</p></div></section>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {claims.map((c) => {
-                const listing = Array.isArray(c.listings) ? c.listings[0] : c.listings;
-                return (
-                  <div
-                    key={c.id}
-                    className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white px-5 py-3.5 shadow-xs"
-                  >
-                    <div>
-                      <p className="font-semibold text-sm text-gray-900">
-                        {(listing as any)?.title ?? "Unknown Listing"}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {(listing as any)?.city ?? ""} · Claim{" "}
-                        {new Date(c.created_at).toLocaleDateString("en-IN", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${statusColors[c.status] ?? "bg-gray-100 text-gray-600"}`}
-                    >
-                      {c.status.replace("_", " ")}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
 
-        {/* Favorites */}
-        <section>
-          <h2 className="font-serif text-xl font-bold text-gray-900 mb-4">
-            Saved Places
-            <span className="ml-2 text-sm font-normal text-gray-400">
-              ({favorites?.length ?? 0})
-            </span>
-          </h2>
-          {!favorites || favorites.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 p-8 text-center">
-              <p className="text-sm text-gray-400">
-                You haven&apos;t saved any places yet. Tap ❤️ on any listing to save it here.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {favorites.map((f) => {
-                const listing = Array.isArray(f.listings) ? f.listings[0] : f.listings;
-                return (
-                  <Link
-                    key={f.id}
-                    href={`/listing/${(listing as any)?.slug ?? ""}`}
-                    className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-xs hover:border-rose-200 hover:shadow-sm transition-all"
-                  >
-                    <span className="text-xl shrink-0">❤️</span>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm text-gray-900 group-hover:text-[#0ea5e9] transition-colors line-clamp-1">
-                        {(listing as any)?.title ?? "Unknown Place"}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {[(listing as any)?.locality, (listing as any)?.city]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+            <aside className="space-y-6">
+              <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm"><p className="text-xs font-bold uppercase text-[var(--ink-muted)]">Professional links</p><div className="mt-4 space-y-3 text-sm"><ProfileLink label="GitHub" href={techProfile?.github_url || null} /><ProfileLink label="LinkedIn" href={techProfile?.linkedin_url || null} /><ProfileLink label="Portfolio" href={techProfile?.portfolio_url || null} /><ProfileLink label="Resume" href={resumeUrl} unavailable="Upload a PDF below" /></div></section>
+              <ResumeOnboarding />
+            </aside>
+          </div>
+        )}
+
+        <section className="mt-6 grid gap-6 lg:grid-cols-3">
+          <Activity title="My submissions" count={submissions?.length || 0} empty="You have not submitted a company yet." action={{ href: "/submit", label: "Suggest a company" }}>{submissions?.map((item) => { const payload = item.payload_json as { name?: string; locality?: string; city?: string } | null; return <ActivityItem key={item.id} title={payload?.name || "Company submission"} detail={[payload?.locality, payload?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} />; })}</Activity>
+          <Activity title="My claims" count={claims?.length || 0} empty="You have not claimed a listing yet.">{claims?.map((item) => { const company = listing(item.listings as Listing | Listing[] | null); return <ActivityItem key={item.id} title={company?.title || "Listing claim"} detail={[company?.locality, company?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} href={company?.slug ? `/listing/${company.slug}` : undefined} />; })}</Activity>
+          <Activity title="Saved places" count={favorites?.length || 0} empty="Save a company from the Tech Atlas to find it here.">{favorites?.map((item) => { const company = listing(item.listings as Listing | Listing[] | null); return <ActivityItem key={item.id} title={company?.title || "Saved listing"} detail={[company?.locality, company?.city, date(item.created_at)].filter(Boolean).join(" · ")} href={company?.slug ? `/listing/${company.slug}` : undefined} />; })}</Activity>
         </section>
       </div>
     </main>
   );
+}
+
+function ProfileLink({ label, href, unavailable = "Not connected" }: { label: string; href: string | null; unavailable?: string }) {
+  return <div className="flex items-center justify-between gap-3"><span className="font-bold text-[var(--foreground)]">{label}</span>{href ? <a href={href} target="_blank" rel="noreferrer" className="text-xs font-bold text-cyan-600 hover:underline">View ↗</a> : <span className="text-xs text-[var(--ink-muted)]">{unavailable}</span>}</div>;
+}
+
+function Activity({ title, count, empty, action, children }: { title: string; count: number; empty: string; action?: { href: string; label: string }; children: ReactNode }) {
+  return <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-lg font-bold text-[var(--foreground)]">{title}</h2><span className="rounded-full bg-[var(--background)] px-2 py-0.5 text-xs font-bold text-[var(--ink-muted)]">{count}</span></div>{count ? <div className="mt-4 space-y-3">{children}</div> : <div className="mt-4 rounded-lg border border-dashed border-[var(--line)] p-4 text-sm text-[var(--ink-muted)]">{empty}{action && <Link href={action.href} className="mt-2 block text-xs font-bold text-cyan-600 hover:underline">{action.label} &rarr;</Link>}</div>}</section>;
+}
+
+function ActivityItem({ title, detail, status, href }: { title: string; detail: string; status?: string; href?: string }) {
+  const content = <><p className="truncate text-sm font-bold text-[var(--foreground)]">{title}</p><p className="mt-1 text-xs text-[var(--ink-muted)]">{detail}</p></>;
+  return <div className="flex items-start justify-between gap-3">{href ? <Link href={href} className="min-w-0 hover:text-cyan-600">{content}</Link> : <div className="min-w-0">{content}</div>}{status && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold capitalize ring-1 ${statusColor(status)}`}>{status.replace("_", " ")}</span>}</div>;
 }

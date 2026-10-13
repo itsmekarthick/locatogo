@@ -1,18 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function ResumeOnboarding() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [location, setLocation] = useState("Bangalore");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const clearSelectedFile = () => {
+    setFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Choose a PDF that is 5MB or smaller.");
+      clearSelectedFile();
+      return;
+    }
 
     setIsProcessing(true);
     setError(null);
@@ -31,9 +43,12 @@ export function ResumeOnboarding() {
       if (!res.ok) throw new Error(data.error || "Failed to process resume");
 
       // Reload dashboard to show recommended jobs
+      clearSelectedFile();
+      setIsProcessing(false);
       router.refresh();
     } catch (err: any) {
       setError(err.message);
+      clearSelectedFile();
       setIsProcessing(false);
     }
   };
@@ -72,9 +87,19 @@ export function ResumeOnboarding() {
                 <label className="block text-sm font-semibold text-slate-200 mb-2">Resume (PDF)</label>
                 <div className="relative border-2 border-dashed border-white/20 hover:border-cyan-400/50 transition-colors rounded-xl p-6 text-center cursor-pointer bg-white/5">
                   <input 
+                    ref={fileInputRef}
                     type="file" 
                     accept=".pdf" 
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
+                    onChange={(e) => {
+                      const selectedFile = e.target.files?.[0] || null;
+                      if (selectedFile && !selectedFile.name.toLowerCase().endsWith(".pdf")) {
+                        clearSelectedFile();
+                        setError("Choose a PDF file.");
+                        return;
+                      }
+                      setFile(selectedFile);
+                      setError(null);
+                    }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     required
                   />

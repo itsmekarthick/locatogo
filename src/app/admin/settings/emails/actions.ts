@@ -164,7 +164,7 @@ export async function sendTestEmailAction({
       year: new Date().getFullYear(),
       resetLink: `${appUrl}/auth/reset-password?token=sample-test-token`,
       listingTitle: "Acme Cloud Technologies",
-      listingUrl: `${appUrl}/tech`,
+      listingUrl: `${appUrl}/dashboard`,
     };
 
     const defaultTpl = DEFAULT_EMAIL_TEMPLATES[type];

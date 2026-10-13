@@ -34,8 +34,8 @@ export async function login(_state: ActionResult | undefined, formData: FormData
   if (authData.user) {
     const { data: profile } = await supabase.from("profiles").select("platform_role").eq("id", authData.user.id).single();
     if (profile?.platform_role === "tech_user") {
-      revalidatePath("/tech", "layout");
-      redirect("/tech");
+      revalidatePath("/dashboard", "page");
+      redirect("/dashboard");
     }
   }
 
@@ -81,7 +81,7 @@ export async function signup(_state: ActionResult | undefined, formData: FormDat
 
   if (!data.session) return { success: "Account created! Confirm your email, then sign in to get started." };
   
-  redirect("/tech");
+  redirect("/dashboard");
 }
 
 export async function requestPasswordReset(_state: ActionResult | undefined, formData: FormData): Promise<ActionResult> {

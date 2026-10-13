@@ -400,22 +400,6 @@ export default async function HubDirectoryPage({ params }: Props) {
   const hubCompanies = initialCompanies.filter((c) => matchesHub(c, hub));
   const hubLocalities = KNOWN_HUB_LOCALITIES[hub.id] || [];
 
-  let userProfile = null;
-  try {
-    const serverSupabase = await createSupabaseServerClient();
-    const { data: { user } } = await serverSupabase.auth.getUser();
-    if (user) {
-      const { data: profile } = await serverSupabase
-        .from("user_profiles")
-        .select("skills, preferred_location")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (profile) userProfile = profile;
-    }
-  } catch (e) {
-    // ignore
-  }
-
   return (
     <>
       {/* 1. Fast Interactive Client Atlas Application Pre-Focused on this Hub */}
@@ -425,7 +409,6 @@ export default async function HubDirectoryPage({ params }: Props) {
         totalDatabaseCompanies={totalTechCount || 19095}
         currentHub={hub.id}
         knownHubCounts={KNOWN_HUB_COUNTS}
-        userProfile={userProfile}
       />
 
       {/* 2. Semantic Crawlable SSR Architecture for Search Engines & Robots */}
