@@ -142,7 +142,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   return Number.isFinite(dist) ? dist : 0;
 }
 
-import { getCompanyLogoUrl, getCompanyInitials, getCompanyCategoryIcon } from "@/components/company-brand-avatar";
+import { getCompanyLogoUrl, getCompanyInitials, getCompanyCategoryIcon, isKnownBrand } from "@/components/company-brand-avatar";
 
 const pinIconCache = new Map<string, L.DivIcon>();
 
@@ -180,7 +180,8 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
   }
 
   const ratingInfo = getPlaceRating(place);
-  const logoUrl = getCompanyLogoUrl(place.website, place.title);
+  const isTopBrand = isKnownBrand(place.title);
+  const logoUrl = isTopBrand ? getCompanyLogoUrl(place.website, place.title) : "";
   const techIcon = getCompanyCategoryIcon(place.title);
 
   const isTechPlace = Boolean(

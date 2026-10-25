@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+.venv*
+logs
+test-results
+*.log
+.env*
+.vscode
+.agents
+*.md
+*key*.json
+gcp-key.json

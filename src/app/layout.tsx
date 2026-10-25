@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://locatogo.com"),
   title: "LocaToGo | Global Tech Atlas & Startup Ecosystem Map",
   description: "Explore 67,000+ tech companies, startups, hubs, and active hiring opportunities across the globe on an interactive map.",
   keywords: [

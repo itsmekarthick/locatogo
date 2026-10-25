@@ -149,15 +149,21 @@ export function getCompanyDomain(website?: string | null, title?: string): strin
   return "";
 }
 
+export function isKnownBrand(title?: string): boolean {
+  if (!title) return false;
+  const lowerTitle = title.toLowerCase();
+  return Object.keys(KNOWN_BRAND_DOMAINS).some((key) => lowerTitle.includes(key));
+}
+
 export function getCompanyLogoUrl(website?: string | null, title?: string): string {
   const domain = getCompanyDomain(website, title);
   if (!domain) return "";
-  return `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`;
+  return `/api/company-logo?domain=${encodeURIComponent(domain)}&title=${encodeURIComponent(title || domain)}`;
 }
 
 export function getCompanyInitials(title: string): string {
   const cleanTitle = title
-    .replace(/\b(Pvt|Ltd|Limited|Technologies|Tech|Labs|Hospital|School|Cafe)\b/gi, "")
+    .replace(/\b(Pvt|Ltd|Limited|Technologies|Tech|Labs|Hospital|School|Cafe|Solutions)\b/gi, "")
     .trim();
   const words = cleanTitle.split(/\s+/).filter(Boolean);
   if (words.length > 1) {
@@ -196,10 +202,10 @@ export function CompanyBrandAvatar({
   const hash = title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const gradient = BRAND_GRADIENTS[hash % BRAND_GRADIENTS.length];
 
-  // Cascading logo sources (DuckDuckGo avoids 404 console errors by returning a default icon)
+  // Route logo via /api/company-logo to prevent 404 network errors in the browser console
   const logoSources = domain
     ? [
-        `https://icons.duckduckgo.com/ip3/${encodeURIComponent(domain)}.ico`,
+        `/api/company-logo?domain=${encodeURIComponent(domain)}&title=${encodeURIComponent(title || domain)}`,
       ]
     : [];
 

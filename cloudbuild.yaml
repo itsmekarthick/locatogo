@@ -1,0 +1,45 @@
+steps:
+  # 1. Build container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/locatogo:latest'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_SUPABASE_URL=$_NEXT_PUBLIC_SUPABASE_URL'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_SUPABASE_ANON_KEY=$_NEXT_PUBLIC_SUPABASE_ANON_KEY'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_APP_URL=$_NEXT_PUBLIC_APP_URL'
+      - '.'
+
+  # 2. Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/locatogo:latest'
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'locatogo'
+      - '--image'
+      - '$_LOCATION-docker.pkg.dev/$PROJECT_ID/$_REPO_NAME/locatogo:latest'
+      - '--region'
+      - '$_LOCATION'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+substitutions:
+  _LOCATION: 'us-central1'
+  _REPO_NAME: 'locatogo-repo'
+  _NEXT_PUBLIC_SUPABASE_URL: ''
+  _NEXT_PUBLIC_SUPABASE_ANON_KEY: ''
+  _NEXT_PUBLIC_APP_URL: 'https://locatogo.com'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
