@@ -172,15 +172,12 @@ export function getCompanyInitials(title: string): string {
   return title.slice(0, 2).toUpperCase();
 }
 
-const BRAND_GRADIENTS = [
-  "from-cyan-600 to-violet-700 text-white",
-  "from-cyan-600 to-cyan-700 text-white",
-  "from-teal-600 to-emerald-700 text-white",
-  "from-rose-600 to-pink-700 text-white",
-  "from-amber-500 to-orange-600 text-white",
-  "from-purple-600 to-fuchsia-700 text-white",
-  "from-cyan-600 to-cyan-700 text-white",
-  "from-slate-700 to-slate-900 text-white",
+const BRAND_TONES = [
+  "bg-accent-soft text-accent-text",
+  "bg-success-soft text-success",
+  "bg-info-soft text-info",
+  "bg-warning-soft text-warning",
+  "bg-surface-3 text-fg-muted",
 ];
 
 export function CompanyBrandAvatar({
@@ -198,9 +195,9 @@ export function CompanyBrandAvatar({
   const domain = getCompanyDomain(website, title);
   const initials = getCompanyInitials(title);
 
-  // Consistent color gradient based on place title
+  // Consistent tint based on the company title
   const hash = title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const gradient = BRAND_GRADIENTS[hash % BRAND_GRADIENTS.length];
+  const tone = BRAND_TONES[hash % BRAND_TONES.length];
 
   // Route logo via /api/company-logo to prevent 404 network errors in the browser console
   const logoSources = domain
@@ -215,9 +212,9 @@ export function CompanyBrandAvatar({
     return (
       <div
         style={{ width: size, height: size, minWidth: size, minHeight: size }}
-        className={`flex items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} shadow-xs shrink-0 select-none overflow-hidden ${className}`}
+        className={`flex items-center justify-center rounded-2xl ${tone} shrink-0 select-none overflow-hidden ${className}`}
       >
-        <span style={{ fontSize: size * 0.32 }} className="font-bold leading-none tracking-wide drop-shadow-xs">
+        <span style={{ fontSize: size * 0.32 }} className="font-semibold leading-none tracking-wide">
           {initials}
         </span>
       </div>
@@ -227,7 +224,7 @@ export function CompanyBrandAvatar({
   return (
     <div
       style={{ width: size, height: size, minWidth: size, minHeight: size }}
-      className={`relative flex items-center justify-center rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 shadow-2xs p-1.5 shrink-0 overflow-hidden ${className}`}
+      className={`relative flex items-center justify-center rounded-2xl bg-surface-1 border border-line p-1.5 shrink-0 overflow-hidden ${className}`}
     >
       <img
         src={currentSrc}

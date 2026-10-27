@@ -1,166 +1,164 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserProfileMenu } from "@/components/user-profile-menu";
-
-const APP_URL = process.env.NODE_ENV === "development" ? "http://app.localhost:3000" : "https://app.locatogo.com";
+import { Badge, buttonVariants, IconButton, Sheet } from "@/components/ui";
+import { ArrowRightIcon, MenuIcon } from "@/components/ui/icons";
+import { APP_URL } from "@/lib/constants/app-url";
+import { cn } from "@/lib/utils/cn";
 
 const NAV_LINKS = [
-  { href: APP_URL, label: "Tech Atlas", icon: "💼", badge: "Live" },
-  { href: "/blog", label: "Stories & Guides", icon: "📖" },
-  { href: "/about", label: "About", icon: "ℹ️" },
-  { href: "/submit", label: "Add Company", icon: "➕" },
-  { href: "/advertise", label: "Advertise", icon: "📢" },
+  { href: APP_URL, label: "Tech Atlas", badge: "Live", external: true },
+  { href: "/blog", label: "Stories & Guides" },
+  { href: "/about", label: "About" },
+  { href: "/submit", label: "Add Company" },
+  { href: "/advertise", label: "Advertise" },
 ];
 
-export function PublicHeader({
-  className = "",
-}: {
-  className?: string;
-}) {
+function subscribeScroll(onChange: () => void) {
+  window.addEventListener("scroll", onChange, { passive: true });
+  return () => window.removeEventListener("scroll", onChange);
+}
+
+const isScrolled = () => window.scrollY > 8;
+
+export function PublicHeader({ className = "" }: { className?: string }) {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const scrolled = useSyncExternalStore(subscribeScroll, isScrolled, () => false);
+  // Remembering the path the menu opened on closes it automatically after navigation.
+  const [openedOn, setOpenedOn] = useState<string | null>(null);
+  const menuOpen = openedOn === pathname;
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
-
-  // Prevent background scroll when mobile menu is open
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileMenuOpen]);
-
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
-  };
+  const isActive = (href: string) => (href === "/" ? pathname === "/" : !href.startsWith("http") && pathname.startsWith(href));
 
   return (
     <header
-      className={`sticky top-0 z-50 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-[#090d16]/90 backdrop-blur-md transition-colors ${className}`}
+      data-scrolled={scrolled}
+      className={cn(
+        "sticky top-0 z-[var(--z-header)] border-b transition-[background-color,border-color,backdrop-filter] duration-200 ease-standard",
+        scrolled
+          ? "border-line bg-[var(--glass)] backdrop-blur-xl backdrop-saturate-150"
+          : "border-transparent bg-transparent",
+        className,
+      )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5">
-        {/* Left: Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-          <BrandLogo size={38} className="group-hover:scale-105 transition-transform" />
-          <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-cyan-600 dark:text-cyan-400">.</span></span>
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <Link href="/" className="focus-ring group flex shrink-0 items-center gap-2.5 rounded-lg">
+          <BrandLogo size={36} />
+          <span className="font-display text-xl font-semibold tracking-tight text-fg sm:text-2xl">
+            <span className="animate-brand-reveal">
+              LocaToGo<span className="text-accent-text">.</span>
+            </span>
           </span>
         </Link>
 
-        {/* Center: Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-6 text-xs font-semibold">
+        <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((item) => {
             const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-1.5 transition-colors py-1 px-1 relative ${
-                  active
-                    ? "text-cyan-600 dark:text-cyan-400 font-bold"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
-                }`}
-              >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
+            const classes = cn(
+              "focus-ring relative inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium transition-ui hover:bg-surface-3 hover:text-fg",
+              active ? "text-fg" : "text-fg-muted",
+            );
+            const content = (
+              <>
+                {item.label}
                 {item.badge && (
-                  <span className="rounded-full bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 px-1.5 py-0.2 text-[9px] uppercase font-bold">
+                  <Badge variant="accent" size="sm" dot>
                     {item.badge}
-                  </span>
+                  </Badge>
                 )}
-                {active && (
-                  <span className="absolute -bottom-3.5 left-0 right-0 h-0.5 bg-cyan-600 dark:bg-cyan-400 rounded-full" />
-                )}
+                {active && <span className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-accent" />}
+              </>
+            );
+            return item.external ? (
+              <a key={item.href} href={item.href} className={classes}>
+                {content}
+              </a>
+            ) : (
+              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={classes}>
+                {content}
               </Link>
             );
           })}
         </nav>
 
-        {/* Right: Actions (Theme toggle, User Profile, CTA & Mobile Hamburger) */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
           <UserProfileMenu />
-
-          {/* Primary CTA (Desktop) */}
-          <a
-            href={APP_URL}
-            className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-slate-950 dark:bg-cyan-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 dark:hover:bg-cyan-500 hover:scale-[1.02] transition-all shrink-0"
+          <span className="hidden sm:inline-flex">
+            <a href={APP_URL} className={buttonVariants({ size: "sm" })}>
+              Live Atlas
+              <ArrowRightIcon className="size-4" />
+            </a>
+          </span>
+          <IconButton
+            label="Open menu"
+            variant="secondary"
+            aria-expanded={menuOpen}
+            aria-haspopup="dialog"
+            tooltip={false}
+            className="lg:hidden"
+            onClick={() => setOpenedOn(pathname)}
           >
-            <span>Live Atlas</span>
-            <span>🗺️</span>
-          </a>
-
-          {/* Mobile Hamburger Button */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle Navigation Menu"
-            aria-expanded={mobileMenuOpen}
-            className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <span className="text-base font-bold leading-none">
-              {mobileMenuOpen ? "✕" : "☰"}
-            </span>
-          </button>
+            <MenuIcon />
+          </IconButton>
         </div>
       </div>
 
-      {/* Mobile Slide-down Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200/80 dark:border-slate-800/80 bg-white/98 dark:bg-[#090d16]/98 backdrop-blur-xl px-4 py-6 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="space-y-2">
-            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Navigation
-            </p>
-            {NAV_LINKS.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center justify-between rounded-2xl px-4 py-3 text-xs font-bold transition-colors ${
-                    active
-                      ? "bg-cyan-50 dark:bg-cyan-950/70 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-base">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </div>
+      <Sheet
+        open={menuOpen}
+        onOpenChange={(open) => setOpenedOn(open ? pathname : null)}
+        side="right"
+        title="Menu"
+        footer={
+          <a href={APP_URL} className={buttonVariants({ size: "lg", fullWidth: true })}>
+            Explore live Tech Atlas
+            <ArrowRightIcon className="size-4" />
+          </a>
+        }
+      >
+        <nav aria-label="Mobile" className="-mx-2 flex flex-col gap-1">
+          {NAV_LINKS.map((item) => {
+            const active = isActive(item.href);
+            const classes = cn(
+              "focus-ring flex h-14 items-center justify-between rounded-2xl px-4 text-base font-medium transition-ui active:scale-[0.99]",
+              active ? "bg-accent-soft text-accent-text" : "text-fg hover:bg-surface-3",
+            );
+            const content = (
+              <>
+                <span className="flex items-center gap-3">
+                  {item.label}
                   {item.badge && (
-                    <span className="rounded-full bg-cyan-100 dark:bg-cyan-900/60 px-2 py-0.5 text-[9px] uppercase font-bold text-cyan-700 dark:text-cyan-300">
+                    <Badge variant="accent" size="sm" dot>
                       {item.badge}
-                    </span>
+                    </Badge>
                   )}
-                </Link>
-              );
-            })}
-          </div>
-
-          <div className="mt-6 pt-5 border-t border-slate-200/70 dark:border-slate-800/70">
-            <a
-              href={APP_URL}
-              className="w-full flex items-center justify-center gap-2 rounded-full bg-slate-950 dark:bg-cyan-600 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition-all"
-            >
-              <span>Explore Live Tech Atlas</span>
-              <span>💼</span>
-            </a>
-          </div>
-        </div>
-      )}
+                </span>
+                <ArrowRightIcon className="size-4 text-fg-subtle" />
+              </>
+            );
+            return item.external ? (
+              <a key={item.href} href={item.href} className={classes}>
+                {content}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                onClick={() => setOpenedOn(null)}
+                className={classes}
+              >
+                {content}
+              </Link>
+            );
+          })}
+        </nav>
+      </Sheet>
     </header>
   );
 }

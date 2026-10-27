@@ -11,6 +11,20 @@ import { generateUberRideLink } from "@/lib/services/transit-links";
 import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
 import { getPlaceRating } from "@/lib/services/place-rating";
 import type { WeatherType } from "@/lib/services/weather";
+import "@/app/map-theme.css";
+import { Button, buttonVariants, IconButton } from "@/components/ui";
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  CloudRainIcon,
+  ExpandIcon,
+  LayersIcon,
+  LocateIcon,
+  MinusIcon,
+  PlusIcon,
+  RefreshIcon,
+} from "@/components/ui/icons";
+import { useTheme } from "@/lib/utils/use-theme";
 
 // Safeguard Leaflet 1.9.4 bug where unbindTooltip leaves active focus events on DOM elements,
 // causing "Cannot set properties of null (setting '_source')" when marker is clicked or focused.
@@ -142,48 +156,34 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   return Number.isFinite(dist) ? dist : 0;
 }
 
-import { getCompanyLogoUrl, getCompanyInitials, getCompanyCategoryIcon, isKnownBrand } from "@/components/company-brand-avatar";
+import { getCompanyLogoUrl, isKnownBrand } from "@/components/company-brand-avatar";
 
 const pinIconCache = new Map<string, L.DivIcon>();
+
+const HTML_ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+
+const BUILDING_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M15 10h3a1 1 0 0 1 1 1v10M3 21h18"/><path d="M9 8h2M9 12h2M9 16h2"/></svg>';
+const STAR_SVG =
+  '<svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3z"/></svg>';
+
+function pinGlyph(logoUrl: string) {
+  if (!logoUrl) return BUILDING_SVG;
+  return `<img src="${escapeHtml(logoUrl)}" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false" /><span hidden>${BUILDING_SVG}</span>`;
+}
 
 function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtlas = false, zoom = 14): L.DivIcon {
   const cacheKey = `${place.id}_${isSelected ? "sel" : "unsel"}_${isTechAtlas ? "tech" : "gen"}_${zoom < 14 ? "zOut" : "zIn"}_${place.website || ""}`;
   const cached = pinIconCache.get(cacheKey);
   if (cached) return cached;
 
+  const remember = (icon: L.DivIcon) => {
+    if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
+    return icon;
+  };
+
   const cat = (place.category_name || "").toLowerCase();
-
-  let themeColor = "#0ea5e9";
-  let bgLight = "#eef2ff";
-
-  if (cat.includes("hospital") || cat.includes("health") || cat.includes("clinic") || cat.includes("medical") || cat.includes("care")) {
-    themeColor = "#dc2626";
-    bgLight = "#fef2f2";
-  } else if (cat.includes("school") || cat.includes("education") || cat.includes("college") || cat.includes("academy") || cat.includes("institute")) {
-    themeColor = "#0284c7";
-    bgLight = "#eef2ff";
-  } else if (cat.includes("cafe") || cat.includes("restaurant") || cat.includes("food") || cat.includes("dine") || cat.includes("bakery")) {
-    themeColor = "#ea580c";
-    bgLight = "#fff7ed";
-  } else if (cat.includes("retail") || cat.includes("shop") || cat.includes("store") || cat.includes("market") || cat.includes("mall")) {
-    themeColor = "#059669";
-    bgLight = "#ecfdf5";
-  } else if (cat.includes("hotel") || cat.includes("stay") || cat.includes("resort")) {
-    themeColor = "#0284c7";
-    bgLight = "#f0f9ff";
-  } else if (cat.includes("petrol") || cat.includes("fuel") || cat.includes("pump")) {
-    themeColor = "#d97706";
-    bgLight = "#fffbeb";
-  } else if (cat.includes("art") || cat.includes("creative") || cat.includes("culture")) {
-    themeColor = "#db2777";
-    bgLight = "#fdf2f8";
-  }
-
-  const ratingInfo = getPlaceRating(place);
-  const isTopBrand = isKnownBrand(place.title);
-  const logoUrl = isTopBrand ? getCompanyLogoUrl(place.website, place.title) : "";
-  const techIcon = getCompanyCategoryIcon(place.title);
-
   const isTechPlace = Boolean(
     isTechAtlas ||
     (place.category_name &&
@@ -200,118 +200,71 @@ function getCategoryPinIcon(place: PlaceListing, isSelected: boolean, isTechAtla
         cat.includes("startup")))
   );
   const isHiring = Boolean(place.is_featured);
+  const glyph = pinGlyph(isKnownBrand(place.title) ? getCompanyLogoUrl(place.website, place.title) : "");
+  const id = escapeHtml(place.id);
+  // Atlas companies have no rating, so only hiring status is shown for them.
+  const ratingTag = () =>
+    isTechAtlas ? "" : `<span class="lg-pin__tag">${STAR_SVG} ${getPlaceRating(place).rating.toFixed(1)}</span>`;
 
-  // Universal high-res brand logo with rich domain tech icon fallback
-  const innerIconHtml = logoUrl ? `
-    <img src="${logoUrl}" alt="${place.title}" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';" style="width: 17px; height: 17px; object-fit: contain; border-radius: 4px;" />
-    <span style="display: none; font-size: 11px; line-height: 1; align-items: center; justify-content: center;">${techIcon}</span>
-  ` : `
-    <span style="font-size: 11px; line-height: 1; display: flex; align-items: center; justify-content: center;">${techIcon}</span>
-  `;
-
-  // Active / Selected state: solid black or indigo pill with full title
   if (isSelected) {
-    const shortTitle = place.title.length > 20 ? place.title.slice(0, 18) + "…" : place.title;
-    const badgeHtml = isTechPlace && isHiring
-      ? `<span style="font-size: 9px; font-weight: 800; color: #047857; background: #d1fae5; border-radius: 4px; padding: 1.5px 4px; line-height: 1;">HIRING</span>`
-      : `<span style="font-size: 10px; font-weight: 800; color: #b45309; background: #fef3c7; border-radius: 4px; padding: 1px 4px; line-height: 1;">★${ratingInfo.rating.toFixed(1)}</span>`;
-
-    const html = `
-      <div class="locatogo-pill-pin is-active" style="--theme-color: ${themeColor};">
-        <div class="locatogo-pin-icon-wrap" style="background: white; color: ${themeColor}; padding: 2px;">
-          ${innerIconHtml}
-        </div>
-        <div class="locatogo-pin-label" style="display: flex; align-items: center; gap: 4px;">
-          <span class="locatogo-pin-title">${shortTitle}</span>
-          ${badgeHtml}
-        </div>
-        <div class="locatogo-pin-arrow"></div>
-      </div>
-    `;
-
-    const icon = L.divIcon({
-      className: "locatogo-pill-wrapper is-active",
-      html,
-      iconSize: [190, 36],
-      iconAnchor: [95, 36],
-      popupAnchor: [0, -38],
-    });
-    if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
-    return icon;
+    const shortTitle = escapeHtml(place.title.length > 20 ? `${place.title.slice(0, 18)}…` : place.title);
+    const tag = isTechPlace && isHiring ? '<span class="lg-pin__tag">Hiring</span>' : ratingTag();
+    return remember(
+      L.divIcon({
+        className: "lg-marker",
+        html: `<div class="lg-pin is-active" data-pin-id="${id}"><span class="lg-pin__icon">${glyph}</span><span class="lg-pin__title">${shortTitle}</span>${tag}<span class="lg-pin__arrow"></span></div>`,
+        iconSize: [190, 36],
+        iconAnchor: [95, 36],
+        popupAnchor: [0, -38],
+      })
+    );
   }
 
-  // Compact Dot Pin for zoomed-out city overview to avoid visual clutter/overlap
-  if (isTechPlace && zoom < 14 && !isSelected && !place.is_featured) {
-    const html = `
-      <div class="locatogo-dot-pin ${isHiring ? "is-hiring" : ""}">
-        ${innerIconHtml}
-      </div>
-    `;
-    const icon = L.divIcon({
-      className: "locatogo-dot-wrapper",
-      html,
-      iconSize: [26, 26],
-      iconAnchor: [13, 13],
-      popupAnchor: [0, -15],
-    });
-    if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
-    return icon;
+  // Compact dot for the zoomed-out overview to avoid label collisions
+  if (isTechPlace && zoom < 14 && !place.is_featured) {
+    return remember(
+      L.divIcon({
+        className: "lg-marker",
+        html: `<div class="lg-dot${isHiring ? " is-hiring" : ""}" data-pin-id="${id}">${glyph}</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        popupAnchor: [0, -15],
+      })
+    );
   }
 
-  // Normal Pill Pin: Tech company title + hiring indicator or place star rating
   if (isTechPlace) {
-    const cleanTitle = place.title.length > 15 ? place.title.slice(0, 14) + "…" : place.title;
-    const html = `
-      <div class="locatogo-pill-pin" style="--theme-color: #0284c7; max-width: 145px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 5px;">
-        <div class="locatogo-pin-icon-wrap" style="background: #eef2ff; color: #0284c7; padding: 1px;">
-          ${innerIconHtml}
-        </div>
-        <span class="locatogo-pin-title" style="font-size: 11px; font-weight: 700; line-height: 1;">${cleanTitle}</span>
-        ${isHiring ? `<span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; flex-shrink: 0;" title="Actively Hiring"></span>` : ""}
-        <div class="locatogo-pin-arrow"></div>
-      </div>
-    `;
-
-    const icon = L.divIcon({
-      className: "locatogo-pill-wrapper",
-      html,
-      iconSize: [130, 32],
-      iconAnchor: [65, 32],
-      popupAnchor: [0, -34],
-    });
-    if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
-    return icon;
+    const cleanTitle = escapeHtml(place.title.length > 15 ? `${place.title.slice(0, 14)}…` : place.title);
+    return remember(
+      L.divIcon({
+        className: "lg-marker",
+        html: `<div class="lg-pin" data-pin-id="${id}"><span class="lg-pin__icon">${glyph}</span><span class="lg-pin__title">${cleanTitle}</span>${isHiring ? '<span class="lg-pin__dot" title="Actively hiring"></span>' : ""}<span class="lg-pin__arrow"></span></div>`,
+        iconSize: [130, 32],
+        iconAnchor: [65, 32],
+        popupAnchor: [0, -34],
+      })
+    );
   }
 
-  // Fallback Normal Airbnb-style Pill Pin for non-tech places
-  const html = `
-    <div class="locatogo-pill-pin" style="--theme-color: ${themeColor};">
-      <div class="locatogo-pin-icon-wrap" style="background: ${bgLight}; color: ${themeColor}; padding: 1px;">
-        ${innerIconHtml}
-      </div>
-      <span class="locatogo-pin-rating" style="font-size: 11px; font-weight: 800; line-height: 1;">★${ratingInfo.rating.toFixed(1)}</span>
-      <div class="locatogo-pin-arrow"></div>
-    </div>
-  `;
-
-  const icon = L.divIcon({
-    className: "locatogo-pill-wrapper",
-    html,
-    iconSize: [68, 30],
-    iconAnchor: [34, 30],
-    popupAnchor: [0, -32],
-  });
-  if (pinIconCache.size < 5000) pinIconCache.set(cacheKey, icon);
-  return icon;
+  return remember(
+    L.divIcon({
+      className: "lg-marker",
+      html: `<div class="lg-pin" data-pin-id="${id}"><span class="lg-pin__icon">${glyph}</span>${ratingTag()}<span class="lg-pin__arrow"></span></div>`,
+      iconSize: [68, 30],
+      iconAnchor: [34, 30],
+      popupAnchor: [0, -32],
+    })
+  );
 }
 
 const userLocationIcon = L.divIcon({
-  className: "user-location-marker",
-  html: '<div class="user-location-pulse"></div><div class="user-location-dot"></div>',
+  className: "lg-marker",
+  html: '<div class="lg-user"><div class="lg-user__pulse"></div><div class="lg-user__dot"></div></div>',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
   popupAnchor: [0, -22],
 });
+
 
 /**
  * Responsive 1-Notch Wheel Zoom with Instant Feedback
@@ -529,27 +482,31 @@ function LocationController({
 function MapUpdater({
   located,
   activePlace,
+  focusPlace = null,
   userLocation,
   hubCenter,
   hubNavTrigger = 0,
   flyToUserTrigger,
   searchQuery,
   isTechAtlas,
+  bottomInset = 0,
 }: {
   located: (PlaceListing & { latitude: number; longitude: number })[];
   activePlace: (PlaceListing & { latitude: number; longitude: number }) | null;
+  focusPlace?: (PlaceListing & { latitude: number; longitude: number }) | null;
   userLocation: { lat: number; lng: number } | null;
   hubCenter?: { lat: number; lng: number; zoom?: number } | null;
   hubNavTrigger?: number;
   flyToUserTrigger: number;
   searchQuery?: string;
   isTechAtlas?: boolean;
+  bottomInset?: number;
 }) {
   const map = useMap();
   const prevActiveIdRef = useRef<string | null>(null);
+  const prevFocusIdRef = useRef<string | null>(null);
   const prevUserLocRef = useRef<{ lat: number; lng: number } | null>(null);
   const prevSearchRef = useRef<string>("");
-  const prevSigRef = useRef<string>("");
   const prevHubRef = useRef<string | null>(null);
   const prevHubNavTriggerRef = useRef<number>(0);
   const prevFlyTriggerRef = useRef<number>(0);
@@ -588,13 +545,30 @@ function MapUpdater({
     }
   }, [userLocation, searchQuery, hubCenter, isTechAtlas, map]);
 
-  // 3. Active Place Selection (clicking a card or marker popup)
+  // 3. Active Place Selection (clicking a card or marker). The inset keeps the pin clear of a bottom sheet.
   useEffect(() => {
     if (activePlace && activePlace.id !== prevActiveIdRef.current) {
       prevActiveIdRef.current = activePlace.id;
-      map.flyTo([activePlace.latitude, activePlace.longitude], 16, { duration: 0.5 });
+      const target = L.latLng(activePlace.latitude, activePlace.longitude);
+      const zoom = 16;
+      const center = bottomInset > 0 ? map.unproject(map.project(target, zoom).add([0, bottomInset / 2]), zoom) : target;
+      map.flyTo(center, zoom, { duration: 0.6, easeLinearity: 0.2 });
     }
-  }, [activePlace, map]);
+  }, [activePlace, bottomInset, map]);
+
+  // 3b. Hovering a list card glides the map to that company without changing the selection.
+  useEffect(() => {
+    if (!focusPlace) {
+      prevFocusIdRef.current = null;
+      return;
+    }
+    if (focusPlace.id === prevFocusIdRef.current) return;
+    prevFocusIdRef.current = focusPlace.id;
+    const target = L.latLng(focusPlace.latitude, focusPlace.longitude);
+    const zoom = Math.max(map.getZoom(), 15);
+    const center = bottomInset > 0 ? map.unproject(map.project(target, zoom).add([0, bottomInset / 2]), zoom) : target;
+    map.flyTo(center, zoom, { duration: 0.6, easeLinearity: 0.2 });
+  }, [focusPlace, bottomInset, map]);
 
   // 4. Searching: Only trigger fitBounds when user explicitly enters a search query
   // (Prevents background listing streaming from overriding user zoom or 5km initial view)
@@ -650,13 +624,17 @@ function MapUpdater({
 function ClusteredMarkersLayer({
   locatedListings,
   activePlaceId,
+  highlightedPlaceId = null,
   setActivePlaceId,
+  onHoverPlace,
   userLocation,
   isTechAtlas = false,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
+  highlightedPlaceId?: string | null;
   setActivePlaceId: (id: string | null) => void;
+  onHoverPlace?: (id: string | null) => void;
   userLocation?: { lat: number; lng: number } | null;
   isTechAtlas?: boolean;
 }) {
@@ -793,6 +771,21 @@ function ClusteredMarkersLayer({
     return [...clusterItems.slice(0, 15), ...placeItems.slice(0, 45)];
   }, [clusters, activePlaceId, zoom]);
 
+  // Mirror a hovered list card onto its pin with a class toggle, so the marker is not rebuilt.
+  useEffect(() => {
+    if (!highlightedPlaceId) return;
+    const pin = map.getContainer().querySelector<HTMLElement>(`[data-pin-id="${CSS.escape(highlightedPlaceId)}"]`);
+    if (!pin) return;
+    const marker = pin.closest<HTMLElement>(".leaflet-marker-icon");
+    const previousZ = marker?.style.zIndex ?? "";
+    pin.classList.add("is-highlighted");
+    if (marker) marker.style.zIndex = "2000";
+    return () => {
+      pin.classList.remove("is-highlighted");
+      if (marker) marker.style.zIndex = previousZ;
+    };
+  }, [highlightedPlaceId, visibleClusters, map]);
+
   return (
     <>
       {visibleClusters.map((cluster) => {
@@ -830,28 +823,17 @@ function ClusteredMarkersLayer({
               : pointCount < 10 ? [66, 28] : pointCount < 50 ? [80, 30] : [94, 32];
           const iconAnchor: [number, number] = [iconSize[0] / 2, iconSize[1] / 2];
 
-          const clusterHtml = topLoc ? `
-            <div class="locatogo-cluster-pill tier-${tier} ${hasHiring ? "has-hiring" : ""}">
-              <span class="cluster-icon">📍</span>
-              <span class="cluster-count">${topLoc}</span>
-              <span class="cluster-label">${pointCount}</span>
-              ${hasHiring ? `<span class="cluster-hiring-dot" title="Active Hiring in cluster"></span>` : ""}
-            </div>
-          ` : `
-            <div class="locatogo-cluster-pill tier-${tier} ${hasHiring ? "has-hiring" : ""}">
-              <span class="cluster-icon">${pointCount >= 50 ? "🚀" : pointCount >= 10 ? "⚡" : "🏢"}</span>
-              <span class="cluster-count">${pointCount}</span>
-              <span class="cluster-label">${isTechAtlas ? "tech" : "cos"}</span>
-              ${hasHiring ? `<span class="cluster-hiring-dot" title="Active Hiring in cluster"></span>` : ""}
-            </div>
-          `;
+          const label = topLoc ? escapeHtml(topLoc) : String(pointCount);
+          const labelSuffix = topLoc ? String(pointCount) : isTechAtlas ? "tech" : "cos";
+          const clusterHtml = `<div class="lg-cluster${tier === "sm" ? "" : ` lg-cluster--${tier}`}"><span>${label}</span><span class="lg-cluster__label">${labelSuffix}</span>${hasHiring ? '<span class="lg-cluster__hiring" title="Active hiring in cluster"></span>' : ""}</div>`;
 
           const clusterIcon = L.divIcon({
-            className: "locatogo-cluster-wrapper",
+            className: "lg-marker",
             html: clusterHtml,
             iconSize,
             iconAnchor,
           });
+
 
           return (
             <Marker
@@ -868,34 +850,26 @@ function ClusteredMarkersLayer({
                 },
               }}
             >
-              <Tooltip direction="top" offset={[0, -16]} opacity={1} className="locatogo-cluster-tooltip">
-                <div className="p-1 max-w-[220px] font-sans">
-                  <div className="flex items-center justify-between gap-1 pb-1 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white">
-                    <span>🏢 Cluster of {pointCount} Companies</span>
+              <Tooltip direction="top" offset={[0, -16]} opacity={1} className="lg-tooltip">
+                <div className="max-w-[220px] font-sans">
+                  <div className="flex items-center justify-between gap-2 border-b border-line pb-1.5 text-xs font-medium text-fg">
+                    <span>{pointCount} companies</span>
                     {hasHiring && (
-                      <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-1 py-0.2 rounded font-semibold">
-                        Hiring
-                      </span>
+                      <span className="rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-medium text-success">Hiring</span>
                     )}
                   </div>
-                  <div className="py-1 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-300">
+                  <div className="space-y-0.5 py-1.5 text-[11px] text-fg-muted">
                     {leaves.slice(0, 3).map((l: any, i: number) => (
-                      <div key={i} className="truncate font-medium flex items-center gap-1">
-                        <span>•</span>
-                        <span className="truncate">{l.properties?.title || "Tech Company"}</span>
+                      <div key={i} className="truncate">
+                        {l.properties?.title || "Tech company"}
                       </div>
                     ))}
-                    {pointCount > 3 && (
-                      <div className="text-[10px] text-slate-400 font-semibold pt-0.5">
-                        +{pointCount - 3} more companies...
-                      </div>
-                    )}
+                    {pointCount > 3 && <div className="pt-0.5 text-[10px] text-fg-subtle">+{pointCount - 3} more</div>}
                   </div>
-                  <div className="text-[9px] text-cyan-500 font-semibold pt-0.5">
-                    Click to zoom & explore →
-                  </div>
+                  <div className="text-[10px] font-medium text-accent-text">Click to zoom in</div>
                 </div>
               </Tooltip>
+
             </Marker>
           );
         }
@@ -913,103 +887,88 @@ function ClusteredMarkersLayer({
             zIndexOffset={isSelected ? 1000 : 0}
             eventHandlers={{
               click: () => setActivePlaceId(place.id),
+              mouseover: () => onHoverPlace?.(place.id),
+              mouseout: () => onHoverPlace?.(null),
             }}
           >
             {!isSelected && (
-              <Tooltip direction="top" offset={[0, -28]} opacity={1} className="locatogo-hover-tooltip">
-                <div className="flex items-center gap-1.5 px-1 py-0.5 font-sans">
-                  <span className="font-bold text-xs text-slate-900 dark:text-slate-100">{place.title}</span>
-                  {isTechAtlas || place.is_featured ? (
-                    place.is_featured ? (
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-1 py-0.2 rounded border border-emerald-200/60 dark:border-emerald-800">
-                        🟢 Hiring
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-semibold text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/70 px-1 py-0.2 rounded border border-cyan-200/60 dark:border-cyan-800">
-                        {place.category_name || "Tech"}
+              <Tooltip direction="top" offset={[0, -28]} opacity={1} className="lg-tooltip">
+                <div className="flex items-center gap-2 font-sans">
+                  <span className="text-xs font-medium text-fg">{place.title}</span>
+                  {place.is_featured ? (
+                    <span className="rounded bg-success-soft px-1.5 py-0.5 text-[10px] font-medium text-success">Hiring</span>
+                  ) : isTechAtlas ? (
+                    place.category_name && (
+                      <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[10px] text-accent-text">
+                        {place.category_name}
                       </span>
                     )
                   ) : (
-                    <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-1 py-0.2 rounded border border-amber-200/60 dark:border-amber-800">
-                      ★{ratingInfo.rating.toFixed(1)}
+                    <span className="rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                      {ratingInfo.rating.toFixed(1)} rating
                     </span>
                   )}
                 </div>
               </Tooltip>
             )}
 
-            {/* Render Rich Interactive Popup ONLY on the actively selected pin */}
-            {isSelected && (
-              <Popup className="locatogo-popup" autoPan={false}>
-                <div className="p-3 max-w-[260px] font-sans">
-                  <div className="flex items-center justify-between gap-1.5 mb-1.5">
-                    <div className="flex items-center gap-1">
+            {/* Atlas companies open the detail drawer instead of a popup. */}
+            {isSelected && !isTechAtlas && (
+              <Popup className="lg-popup" autoPan={false}>
+                <div className="max-w-[260px] p-3 font-sans">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
                       {place.category_name && (
-                        <span className="rounded-full bg-cyan-50 dark:bg-cyan-950/70 border border-cyan-200/80 dark:border-cyan-800 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-cyan-900 dark:text-cyan-300">
+                        <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-accent-text">
                           {place.category_name}
                         </span>
                       )}
-                      <span className="rounded-md bg-amber-50 dark:bg-amber-950/70 border border-amber-200/90 dark:border-amber-800 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-0.5">
-                        <span className="text-amber-500">★</span>
-                        <span>{ratingInfo.rating.toFixed(1)}</span>
+                      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-medium text-warning">
+                        {ratingInfo.rating.toFixed(1)} · {ratingInfo.reviewCount} reviews
                       </span>
                     </div>
-
                     {(() => {
-                      const dist = typeof place.distanceKm === "number"
-                        ? place.distanceKm
-                        : (userLocation
-                          ? calculateDistanceKm(userLocation.lat, userLocation.lng, place.latitude, place.longitude)
-                          : null);
+                      const dist =
+                        typeof place.distanceKm === "number"
+                          ? place.distanceKm
+                          : userLocation
+                            ? calculateDistanceKm(userLocation.lat, userLocation.lng, place.latitude, place.longitude)
+                            : null;
                       if (dist === null) return null;
                       return (
-                        <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/80 dark:border-emerald-800 px-1.5 py-0.5 rounded-md">
-                          🚗 {dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)} km`}
+                        <span className="rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-medium text-success">
+                          {dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`}
                         </span>
                       );
                     })()}
                   </div>
 
-                  <h4 className="font-serif font-bold text-sm text-slate-950 dark:text-slate-100 leading-tight">
-                    <Link href={`/listing/${place.slug}`} className="hover:text-[#0ea5e9] transition-colors">
+                  <h4 className="mt-2 font-display text-sm font-semibold leading-tight text-fg">
+                    <Link href={`/listing/${place.slug}`} className="transition-colors hover:text-accent-text">
                       {place.title}
                     </Link>
                   </h4>
 
-                  <div className="mt-1 flex items-center gap-1.5 text-xs">
-                    <span className="text-amber-500 text-xs tracking-tight">{ratingInfo.starsText}</span>
-                    <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">{ratingInfo.rating.toFixed(1)}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">({ratingInfo.reviewCount} reviews)</span>
-                  </div>
-
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-                    <span>📍</span>
-                    <span>{[place.locality, place.city].filter(Boolean).join(", ")}</span>
+                  <p className="mt-1 text-[11px] text-fg-subtle">
+                    {[place.locality, place.city].filter(Boolean).join(", ")}
                   </p>
 
                   {place.short_description && (
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1.5 line-clamp-2 leading-snug">
-                      {place.short_description}
-                    </p>
+                    <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-fg-muted">{place.short_description}</p>
                   )}
 
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
                     <a
                       href={generateUberRideLink(place.latitude, place.longitude, place.title, place.locality)}
                       target="_blank"
                       rel="noreferrer"
-                      className="btn-uber flex items-center gap-1 rounded-full !bg-black px-3 py-1.5 text-[11px] font-bold !text-white hover:!bg-gray-800 transition-colors shadow-2xs cursor-pointer"
+                      className={buttonVariants({ variant: "secondary", size: "sm" })}
                     >
-                      <span>🚕</span>
-                      <span className="!text-white font-bold">Uber</span>
+                      Ride
                     </a>
-
-                    <Link
-                      href={`/listing/${place.slug}`}
-                      className="btn-details flex items-center gap-1 rounded-full !bg-[#0ea5e9] px-3.5 py-1.5 text-[11px] font-bold !text-white hover:!bg-[#0284c7] transition-colors shadow-xs cursor-pointer"
-                    >
-                      <span className="!text-white font-bold">Details</span>
-                      <span className="!text-white font-bold">→</span>
+                    <Link href={`/listing/${place.slug}`} className={buttonVariants({ size: "sm" })}>
+                      Details
+                      <ArrowRightIcon className="size-3.5" />
                     </Link>
                   </div>
                 </div>
@@ -1017,10 +976,142 @@ function ClusteredMarkersLayer({
             )}
           </Marker>
         );
+
       })}
     </>
   );
 }
+
+type MapControlsProps = {
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onLocate: () => void;
+  mapStyle: MapStyleId;
+  onSelectStyle: (id: MapStyleId) => void;
+  weatherFx: WeatherType | null;
+  onCycleWeather: () => void;
+  onToggleFullscreen?: () => void;
+  isFullscreen: boolean;
+};
+
+function MapControls({
+  onZoomIn,
+  onZoomOut,
+  onLocate,
+  mapStyle,
+  onSelectStyle,
+  weatherFx,
+  onCycleWeather,
+  onToggleFullscreen,
+  isFullscreen,
+}: MapControlsProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const groupRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (event: MouseEvent) => {
+      if (!groupRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
+
+  const raining = weatherFx === "rain" || weatherFx === "thunderstorm";
+
+  return (
+    <div className="absolute right-3 top-3 z-[400] flex flex-col items-end gap-2 sm:right-4 sm:top-4">
+      <div className="glass elev-md flex flex-col rounded-2xl p-1">
+        <IconButton label="Zoom in" tooltipSide="left" size="sm" onClick={onZoomIn}>
+          <PlusIcon />
+        </IconButton>
+        <IconButton label="Zoom out" tooltipSide="left" size="sm" onClick={onZoomOut}>
+          <MinusIcon />
+        </IconButton>
+        <span aria-hidden="true" className="mx-1.5 my-0.5 h-px bg-line" />
+        <IconButton label="Find my location" tooltipSide="left" size="sm" onClick={onLocate}>
+          <LocateIcon />
+        </IconButton>
+      </div>
+
+      <div ref={groupRef} className="glass elev-md relative flex flex-col rounded-2xl p-1">
+        <IconButton
+          label="Map style"
+          tooltipSide="left"
+          size="sm"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <LayersIcon />
+        </IconButton>
+        <IconButton
+          label={`Weather effects: ${weatherFx ?? "off"}`}
+          tooltipSide="left"
+          size="sm"
+          variant={raining ? "primary" : "ghost"}
+          onClick={onCycleWeather}
+        >
+          <CloudRainIcon />
+        </IconButton>
+        {onToggleFullscreen && (
+          <IconButton
+            label={isFullscreen ? "Exit full screen" : "Full screen"}
+            tooltipSide="left"
+            size="sm"
+            onClick={onToggleFullscreen}
+          >
+            <ExpandIcon />
+          </IconButton>
+        )}
+
+        {menuOpen && (
+          <div
+            role="menu"
+            aria-label="Map style"
+            className="absolute right-full top-0 mr-2 w-56 rounded-2xl border border-line bg-surface-2 p-1.5 elev-lg"
+          >
+            <p className="px-2.5 pb-1 pt-1.5 text-[11px] font-medium uppercase tracking-wider text-fg-subtle">Map style</p>
+            {[MAP_LAYERS.street, MAP_LAYERS.satellite].map((layer) => {
+              const selected = mapStyle === layer.id;
+              return (
+                <button
+                  key={layer.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={selected}
+                  onClick={() => {
+                    onSelectStyle(layer.id);
+                    setMenuOpen(false);
+                  }}
+                  className={`focus-ring flex min-h-11 w-full items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-150 ${
+                    selected ? "bg-accent-soft text-accent-text" : "text-fg hover:bg-surface-3"
+                  }`}
+                >
+                  <span>
+                    <span className="block text-sm font-medium">{layer.id === "street" ? "Street" : layer.label}</span>
+                    <span className="block text-xs text-fg-subtle">
+                      {layer.id === "street" ? "Follows light and dark theme" : layer.description}
+                    </span>
+                  </span>
+                  {selected && <CheckIcon className="size-4 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 export default function InteractiveLeafletCanvas({
   locatedListings,
@@ -1043,6 +1134,10 @@ export default function InteractiveLeafletCanvas({
   radiusKm = null,
   onSearchArea,
   searchAsMapMoves = false,
+  highlightedPlaceId = null,
+  flyToPlaceId = null,
+  onHoverPlace,
+  bottomInset = 0,
 }: {
   locatedListings: (PlaceListing & { latitude: number; longitude: number })[];
   activePlaceId: string | null;
@@ -1064,15 +1159,21 @@ export default function InteractiveLeafletCanvas({
   radiusKm?: number | null;
   onSearchArea?: (bounds: MapViewportBounds) => void;
   searchAsMapMoves?: boolean;
+  /** Pin that mirrors a hovered list card; highlights without moving the map. */
+  highlightedPlaceId?: string | null;
+  /** Company the map should glide to, e.g. the list card being hovered. */
+  flyToPlaceId?: string | null;
+  /** Fires when a pin is hovered so the list can highlight the matching card. */
+  onHoverPlace?: (id: string | null) => void;
+  /** Pixels at the bottom of the map covered by a sheet; flyTo keeps the pin above it. */
+  bottomInset?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoomInRef = useRef<(() => void) | null>(null);
   const zoomOutRef = useRef<(() => void) | null>(null);
-  const styleMenuRef = useRef<HTMLDivElement>(null);
   const [activeWeatherFx, setActiveWeatherFx] = useState<WeatherType | null>(weatherType ?? null);
   const [isFxEnabled, setIsFxEnabled] = useState(showWeatherOverlay);
   const [userPannedBounds, setUserPannedBounds] = useState<MapViewportBounds | null>(null);
-  const [isStyleMenuOpen, setIsStyleMenuOpen] = useState(false);
 
   const handleUserMoved = useCallback(
     (bounds: MapViewportBounds) => {
@@ -1103,23 +1204,8 @@ export default function InteractiveLeafletCanvas({
     return "street";
   });
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (styleMenuRef.current && !styleMenuRef.current.contains(e.target as Node)) {
-        setIsStyleMenuOpen(false);
-      }
-    };
-    if (isStyleMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isStyleMenuOpen]);
-
   const handleSelectStyle = (styleId: MapStyleId) => {
     setMapStyle(styleId);
-    setIsStyleMenuOpen(false);
     if (typeof window !== "undefined") {
       localStorage.setItem("locatogo_map_style", styleId);
     }
@@ -1128,6 +1214,11 @@ export default function InteractiveLeafletCanvas({
   const activePlace = useMemo(
     () => (activePlaceId ? locatedListings.find((p) => p.id === activePlaceId) ?? null : null),
     [activePlaceId, locatedListings]
+  );
+
+  const focusPlace = useMemo(
+    () => (flyToPlaceId ? locatedListings.find((p) => p.id === flyToPlaceId) ?? null : null),
+    [flyToPlaceId, locatedListings]
   );
 
   const effectiveLocation = userLocation ?? internalUserLocation;
@@ -1165,24 +1256,35 @@ export default function InteractiveLeafletCanvas({
     }
   };
 
+  const theme = useTheme();
+  const tileClass = mapStyle === "street" && theme === "dark" ? "leaflet-dark-tiles" : currentTiles.className;
+
+  const cycleWeather = () => {
+    if (!activeWeatherFx || activeWeatherFx === "clear") {
+      setActiveWeatherFx("rain");
+      setIsFxEnabled(true);
+    } else if (activeWeatherFx === "rain") {
+      setActiveWeatherFx("thunderstorm");
+    } else {
+      setActiveWeatherFx("clear");
+    }
+  };
+
   return (
-    <div
-      ref={containerRef}
-      className="relative h-full w-full overflow-hidden bg-gray-900 select-none"
-    >
+    <div ref={containerRef} className="relative isolate h-full w-full select-none overflow-hidden bg-surface-3">
       <MapContainer
         center={initialCenter}
         zoom={initialZoom}
         zoomControl={false}
         scrollWheelZoom={false}
         doubleClickZoom={true}
-        className="h-full w-full z-0 cursor-crosshair"
+        className="z-0 h-full w-full"
       >
         <TileLayer
-          key={`tiles-${mapStyle}`}
+          key={`tiles-${mapStyle}-${tileClass ?? "plain"}`}
           attribution={currentTiles.attribution}
           url={currentTiles.url}
-          className={currentTiles.className}
+          className={tileClass}
           subdomains={currentTiles.subdomains || "abc"}
           maxZoom={currentTiles.maxZoom || 19}
         />
@@ -1193,36 +1295,34 @@ export default function InteractiveLeafletCanvas({
         <MapUpdater
           located={locatedListings}
           activePlace={activePlace}
+          focusPlace={focusPlace}
           userLocation={effectiveLocation}
           hubCenter={hubCenter}
           hubNavTrigger={hubNavTrigger}
           flyToUserTrigger={flyToUserTrigger}
           searchQuery={searchQuery}
           isTechAtlas={isTechAtlas}
+          bottomInset={bottomInset}
         />
 
-        {/* User Location Radar Marker */}
         {effectiveLocation && (
           <Marker position={[effectiveLocation.lat, effectiveLocation.lng]} icon={userLocationIcon}>
-            <Popup className="locatogo-popup">
-              <div className="p-2 text-center font-sans">
-                <span className="font-bold text-xs text-cyan-700">📍 You Are Here</span>
-                <p className="text-[10px] text-gray-500 mt-0.5">
-                  Showing distances & nearby places
-                </p>
+            <Popup className="lg-popup">
+              <div className="p-3 text-center font-sans">
+                <span className="text-xs font-medium text-fg">You are here</span>
+                <p className="mt-0.5 text-[11px] text-fg-subtle">Showing distances and nearby places</p>
               </div>
             </Popup>
           </Marker>
         )}
 
-        {/* Active Radius Circle around User Location */}
         {effectiveLocation && typeof radiusKm === "number" && radiusKm > 0 && (
           <Circle
             center={[effectiveLocation.lat, effectiveLocation.lng]}
             radius={radiusKm * 1000}
             pathOptions={{
-              color: "#0284c7",
-              fillColor: "#0ea5e9",
+              color: "var(--accent-strong)",
+              fillColor: "var(--accent-vivid)",
               fillOpacity: 0.08,
               weight: 1.5,
               dashArray: "6, 6",
@@ -1230,157 +1330,51 @@ export default function InteractiveLeafletCanvas({
           />
         )}
 
-        {/* Clustered & Rich Pill Place Markers */}
         <ClusteredMarkersLayer
           locatedListings={locatedListings}
           activePlaceId={activePlaceId}
+          highlightedPlaceId={highlightedPlaceId}
           setActivePlaceId={setActivePlaceId}
+          onHoverPlace={onHoverPlace}
           userLocation={effectiveLocation}
           isTechAtlas={isTechAtlas}
         />
         <MapBoundsController onUserMoved={handleUserMoved} />
       </MapContainer>
 
-      {/* Floating Airbnb-Style "Search this area" Button */}
-      {userPannedBounds && (
-        <div className="absolute top-3 sm:top-4 left-1/2 -translate-x-1/2 z-[400] animate-in fade-in slide-in-from-top-3 duration-200">
-          <button
-            type="button"
+      <div aria-hidden="true" className="lg-vignette" />
+
+      {userPannedBounds && onSearchArea && (
+        <div className="absolute left-1/2 top-3 z-[400] -translate-x-1/2 sm:top-4">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="elev-md"
+            leadingIcon={<RefreshIcon className="size-4" />}
             onClick={() => {
-              if (onSearchArea && userPannedBounds) {
-                onSearchArea(userPannedBounds);
-              }
+              onSearchArea(userPannedBounds);
               setUserPannedBounds(null);
             }}
-            className="flex items-center gap-2 rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-bold text-slate-900 dark:text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
           >
-            <span className="text-[#0ea5e9] text-sm font-bold">🔄</span>
-            <span>Search this area</span>
-          </button>
+            Search this area
+          </Button>
         </div>
       )}
 
-      {/* Atmospheric Animated Weather Layer (e.g. Rain, Storm, Sun shimmer) */}
-      {isFxEnabled && activeWeatherFx && (
-        <WeatherAtmosphereOverlay weatherType={activeWeatherFx} />
-      )}
+      {isFxEnabled && activeWeatherFx && <WeatherAtmosphereOverlay weatherType={activeWeatherFx} />}
 
-      {/* Top Floating Map Layer & Zoom Switcher */}
-      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-[400] flex items-center gap-0.5 sm:gap-1.5 rounded-xl sm:rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-0.5 sm:p-1 border border-gray-200/90 dark:border-slate-800 shadow-md text-[10px] sm:text-xs font-semibold">
-        {/* Quick Weather FX Cycle / Toggle */}
-        <button
-          onClick={() => {
-            if (!activeWeatherFx || activeWeatherFx === "clear") {
-              setActiveWeatherFx("rain");
-              setIsFxEnabled(true);
-            } else if (activeWeatherFx === "rain") {
-              setActiveWeatherFx("thunderstorm");
-            } else {
-              setActiveWeatherFx("clear");
-            }
-          }}
-          title={`Weather Effects: ${activeWeatherFx || "Auto"} (Click to cycle Rain/Storm/Sun)`}
-          className={`flex items-center gap-1 px-1.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl transition-all cursor-pointer ${activeWeatherFx === "rain" || activeWeatherFx === "thunderstorm"
-              ? "bg-cyan-600 text-white font-bold shadow-xs animate-pulse"
-              : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"
-            }`}
-        >
-          <span>{activeWeatherFx === "thunderstorm" ? "⚡" : activeWeatherFx === "rain" ? "🌧️" : "🌦️"}</span>
-          <span className="hidden md:inline">
-            {activeWeatherFx === "thunderstorm" ? "Storm FX" : activeWeatherFx === "rain" ? "Rain FX" : "Weather"}
-          </span>
-        </button>
-
-        {/* Modern Map Style Switcher Popover */}
-        <div ref={styleMenuRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setIsStyleMenuOpen((prev) => !prev)}
-            title="Change Map Style"
-            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl font-bold bg-gray-100 dark:bg-slate-800 hover:bg-gray-200/80 dark:hover:bg-slate-700 text-gray-900 dark:text-slate-100 transition-all cursor-pointer"
-          >
-            <span>{currentTiles.icon}</span>
-            <span className="hidden sm:inline text-[11px] sm:text-xs font-semibold">{currentTiles.label}</span>
-            <span className="text-[9px] text-gray-500 dark:text-slate-400">▼</span>
-          </button>
-
-          {isStyleMenuOpen && (
-            <div className="absolute top-full right-0 mt-2 w-56 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 z-[500] animate-in fade-in zoom-in-95 duration-150">
-              <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Map Style
-              </div>
-              <div className="space-y-1">
-                {(Object.values(MAP_LAYERS) as typeof MAP_LAYERS[MapStyleId][]).map((layer) => {
-                  const isSelected = mapStyle === layer.id;
-                  return (
-                    <button
-                      key={layer.id}
-                      type="button"
-                      onClick={() => handleSelectStyle(layer.id)}
-                      className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${isSelected
-                          ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300 font-bold"
-                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                        }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">{layer.icon}</span>
-                        <div>
-                          <p className="leading-none">{layer.label}</p>
-                          <p className="text-[10px] text-slate-400 font-normal mt-0.5">
-                            {layer.description}
-                          </p>
-                        </div>
-                      </div>
-                      {isSelected && <span className="text-cyan-600 dark:text-cyan-400 font-bold">✓</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Explicit 1-Step Click Zoom Buttons */}
-        <div className="flex items-center border-l border-gray-200 dark:border-slate-800 pl-0.5 sm:pl-1.5 gap-0.5">
-          <button
-            onClick={() => zoomInRef.current?.()}
-            title="Zoom In (1 Step)"
-            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 font-bold text-xs sm:text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-          >
-            +
-          </button>
-          <button
-            onClick={() => zoomOutRef.current?.()}
-            title="Zoom Out (1 Step)"
-            className="flex h-5 w-5 sm:h-7 sm:w-7 items-center justify-center rounded-md sm:rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 font-bold text-xs sm:text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-          >
-            −
-          </button>
-        </div>
-
-        {onToggleFullscreen && (
-          <button
-            onClick={onToggleFullscreen}
-            title={isFullscreen ? "Exit Full Screen Map" : "Full Screen Map"}
-            className="border-l border-gray-200 dark:border-slate-800 pl-1.5 pr-1 text-gray-600 dark:text-slate-400 hover:text-gray-950 dark:hover:text-white text-[10px] sm:text-xs font-bold cursor-pointer"
-          >
-            {isFullscreen ? "✕" : "⛶"}
-          </button>
-        )}
-      </div>
-
-      {/* Floating Action Controls on Map (Bottom-Right) - Hidden to prevent overlapping with AI Copilot
-      <div className="absolute bottom-5 right-5 z-[400] flex items-center gap-2 pointer-events-auto">
-        <button
-          onClick={handleTriggerLocate}
-          title="Auto-detect & Center on My Location"
-          className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 px-3.5 py-2 text-xs font-bold text-gray-800 dark:text-slate-100 shadow-lg backdrop-blur-md hover:bg-gray-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
-        >
-          <span className="text-sm">🎯</span>
-          <span className="hidden sm:inline">My Location</span>
-        </button>
-      </div>
-      */}
+      <MapControls
+        onZoomIn={() => zoomInRef.current?.()}
+        onZoomOut={() => zoomOutRef.current?.()}
+        onLocate={handleTriggerLocate}
+        mapStyle={mapStyle}
+        onSelectStyle={handleSelectStyle}
+        weatherFx={activeWeatherFx}
+        onCycleWeather={cycleWeather}
+        onToggleFullscreen={onToggleFullscreen}
+        isFullscreen={isFullscreen}
+      />
     </div>
   );
 }
+

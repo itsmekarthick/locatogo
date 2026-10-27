@@ -1,0 +1,128 @@
+/* Explorer layout effects. Tokens only; motion animates transform and opacity. */
+
+/* Thin indeterminate progress line shown while data loads. Never blocks the UI. */
+.ex-progress {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 30;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.ex-progress[data-active="true"] {
+  opacity: 1;
+}
+.ex-progress::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 40%;
+  border-radius: 9999px;
+  background: var(--accent);
+  animation: ex-indeterminate 1.1s var(--ease-standard) infinite;
+}
+@keyframes ex-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(260%);
+  }
+}
+
+/* Off-screen list rows skip layout and paint, which keeps long lists cheap. */
+.ex-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 124px;
+}
+
+/* Favorite heart: spring pop when saved. */
+@keyframes ex-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.ex-pop {
+  animation: ex-pop 420ms var(--ease-spring);
+}
+
+/* Counts ease in when their value changes. */
+@keyframes ex-tick {
+  from {
+    opacity: 0;
+    transform: translateY(0.25em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ex-tick {
+  animation: ex-tick 260ms var(--ease-emphasized);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ex-tick {
+    animation: none;
+  }
+}
+
+/* Mobile bottom sheet: snap positions come from CSS variables set by the shell. */
+@media (max-width: 767px) {
+  .ex-sheet {
+    --sheet-h: calc(var(--shell-h, 100dvh) - 3rem);
+    --peek-h: 6.5rem;
+    height: var(--sheet-h);
+    transition: transform var(--dur-base) var(--ease-emphasized);
+  }
+  .ex-sheet[data-snap="peek"] {
+    transform: translateY(calc(var(--sheet-h) - var(--peek-h)));
+  }
+  .ex-sheet[data-snap="half"] {
+    transform: translateY(calc(var(--sheet-h) * 0.5));
+  }
+  .ex-sheet[data-snap="full"] {
+    transform: translateY(0);
+  }
+}
+
+/* Floating Map/List pill rides above the sheet on phones. */
+.ex-pill {
+  transition: transform var(--dur-base) var(--ease-emphasized);
+}
+@media (max-width: 767px) {
+  .ex-pill[data-snap="peek"] {
+    transform: translateY(calc(-1 * (6.5rem + 0.75rem)));
+  }
+  .ex-pill[data-snap="half"] {
+    transform: translateY(calc(-1 * ((var(--shell-h, 100dvh) - 3rem) * 0.5 + 0.75rem)));
+  }
+}
+
+/* Header block in the list pane slides up so only the summary pill remains. */
+.ex-collapsible {
+  transition: transform var(--dur-base) var(--ease-emphasized);
+}
+.ex-collapsible[data-collapsed="true"] {
+  transform: translateY(calc(-1 * (var(--hdr-h, 0px) - 3.25rem)));
+}
+.ex-fade {
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.ex-dots {
+  background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+.ex-fade-in {
+  animation: ds-fade-in var(--dur-slow) var(--ease-standard) backwards;
+}

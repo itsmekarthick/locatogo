@@ -1,0 +1,361 @@
+/* Map theme: Leaflet overrides driven by design tokens.
+   Leaflet's defaults are beaten with specificity (doubled classes), not !important. */
+
+.leaflet-container {
+  font-family: inherit;
+  background: var(--surface-3);
+}
+
+/* Tiles follow the app theme. The invert filter softens harsh OSM whites in dark mode. */
+.leaflet-layer.leaflet-dark-tiles {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92) saturate(0.7);
+}
+
+/* ---- Markers ---- */
+.leaflet-marker-icon.lg-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 0;
+}
+
+@keyframes lg-pin-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85);
+  }
+}
+@keyframes lg-cluster-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes lg-pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.lg-pin {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 9px 3px 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9999px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  box-shadow: var(--elev-md);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transform-origin: 50% 100%;
+  transition:
+    transform var(--dur-fast) var(--ease-spring),
+    box-shadow var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard),
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+  animation: lg-pin-in var(--dur-base) var(--ease-emphasized) backwards;
+}
+.lg-pin:hover,
+.lg-pin.is-highlighted {
+  transform: translateY(-3px) scale(1.05);
+  border-color: var(--accent);
+  box-shadow: var(--elev-lg);
+}
+.lg-pin.is-active {
+  transform: translateY(-4px) scale(1.08);
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: var(--elev-glow);
+}
+
+.lg-pin__icon {
+  display: grid;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.lg-pin__icon img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+.lg-pin__icon svg {
+  width: 13px;
+  height: 13px;
+}
+.lg-pin.is-active .lg-pin__icon {
+  background: color-mix(in srgb, var(--accent-fg) 18%, transparent);
+  color: var(--accent-fg);
+}
+.lg-pin__title {
+  max-width: 96px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+.lg-pin.is-active .lg-pin__title {
+  max-width: 120px;
+}
+.lg-pin__dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--success);
+}
+.lg-pin.is-active .lg-pin__dot {
+  background: var(--accent-fg);
+}
+.lg-pin__tag {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.lg-pin.is-active .lg-pin__tag {
+  background: color-mix(in srgb, var(--accent-fg) 18%, transparent);
+  color: var(--accent-fg);
+}
+.lg-pin__arrow {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border: solid;
+  border-color: inherit;
+  border-width: 0 1px 1px 0;
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+/* Compact dot for the zoomed-out overview */
+.lg-dot {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 2px solid var(--accent);
+  border-radius: 9999px;
+  background: var(--surface-2);
+  box-shadow: var(--elev-md);
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-spring),
+    border-color var(--dur-fast) var(--ease-standard);
+  animation: lg-pin-in var(--dur-base) var(--ease-emphasized) backwards;
+}
+.lg-dot img {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: contain;
+}
+.lg-dot svg {
+  width: 12px;
+  height: 12px;
+  color: var(--accent-text);
+}
+.lg-dot:hover,
+.lg-dot.is-highlighted {
+  transform: scale(1.3);
+  border-color: var(--success);
+}
+.lg-dot.is-hiring {
+  border-color: var(--success);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--success) 28%, transparent),
+    var(--elev-sm);
+}
+
+/* Cluster beacon */
+.lg-cluster {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  border: 1.5px solid color-mix(in srgb, var(--surface-1) 85%, transparent);
+  border-radius: 9999px;
+  background: var(--text-primary);
+  color: var(--surface-0);
+  box-shadow: var(--elev-lg);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    transform var(--dur-fast) var(--ease-spring),
+    background-color var(--dur-fast) var(--ease-standard);
+  animation: lg-cluster-in var(--dur-base) var(--ease-spring) backwards;
+}
+.lg-cluster:hover {
+  transform: scale(1.12);
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+.lg-cluster--md {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.lg-cluster--lg {
+  height: 34px;
+  padding: 0 14px;
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  color: var(--accent-fg);
+  font-size: 13px;
+}
+.lg-cluster__label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.lg-cluster__hiring {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--success);
+}
+.lg-cluster__hiring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--success);
+  animation: lg-pulse 2s var(--ease-standard) infinite;
+}
+
+/* "You are here" */
+.lg-user {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.lg-user__dot {
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  border: 2.5px solid var(--surface-1);
+  border-radius: 9999px;
+  background: var(--accent-strong);
+  box-shadow: var(--elev-md);
+}
+.lg-user__pulse {
+  position: absolute;
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--accent-vivid) 35%, transparent);
+  animation: lg-pulse 2s var(--ease-standard) infinite;
+}
+
+/* ---- Tooltips ---- */
+.leaflet-tooltip.lg-tooltip {
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  box-shadow: var(--elev-lg);
+  font-family: inherit;
+}
+.leaflet-tooltip-top.lg-tooltip::before {
+  border-top-color: var(--surface-2);
+}
+.leaflet-tooltip-bottom.lg-tooltip::before {
+  border-bottom-color: var(--surface-2);
+}
+.leaflet-tooltip-left.lg-tooltip::before {
+  border-left-color: var(--surface-2);
+}
+.leaflet-tooltip-right.lg-tooltip::before {
+  border-right-color: var(--surface-2);
+}
+
+/* ---- Popups (non-atlas maps) ---- */
+.leaflet-popup.lg-popup .leaflet-popup-content-wrapper,
+.leaflet-popup.locatogo-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  box-shadow: var(--elev-lg);
+}
+.leaflet-popup.lg-popup .leaflet-popup-content,
+.leaflet-popup.locatogo-popup .leaflet-popup-content {
+  margin: 0;
+  line-height: 1.4;
+}
+.leaflet-popup.lg-popup .leaflet-popup-tip-container,
+.leaflet-popup.locatogo-popup .leaflet-popup-tip-container {
+  display: none;
+}
+.leaflet-popup.lg-popup a,
+.leaflet-popup.locatogo-popup a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---- Attribution: small, glassy and readable ---- */
+.leaflet-container .leaflet-control-attribution {
+  margin: 0;
+  padding: 3px 8px;
+  border-radius: 10px 0 0 0;
+  background: var(--glass);
+  color: var(--text-secondary);
+  font-size: 11px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.leaflet-container .leaflet-control-attribution a {
+  color: var(--accent-text);
+}
+
+/* ---- Overlays ---- */
+.lg-vignette {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 399;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 58%,
+    color-mix(in srgb, var(--surface-0) 38%, transparent) 100%
+  );
+}

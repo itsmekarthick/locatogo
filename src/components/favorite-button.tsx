@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { HeartIcon } from "@/components/ui/icons";
+import { cn } from "@/lib/utils/cn";
+import "@/components/explorer/explorer.css";
 
 interface FavoriteButtonProps {
   listingId: string;
@@ -63,18 +66,23 @@ export function FavoriteButton({
 
   return (
     <button
+      type="button"
       onClick={toggle}
       disabled={loading}
+      aria-pressed={favorited}
       title={favorited ? "Remove from favorites" : "Save to favorites"}
       aria-label={favorited ? "Remove from favorites" : "Save to favorites"}
-      className={`inline-flex items-center gap-1 rounded-xl border transition-all cursor-pointer disabled:opacity-50 ${
+      className={cn(
+        "focus-ring inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm transition-ui active:scale-95 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-h-11",
         favorited
-          ? "border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100"
-          : "border-gray-200 bg-white text-gray-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50"
-      } px-2.5 py-1.5 text-sm ${className}`}
+          ? "border-danger/30 bg-danger-soft text-danger"
+          : "border-line-strong bg-surface-1 text-fg-subtle hover:border-danger/30 hover:bg-danger-soft hover:text-danger",
+        className,
+      )}
     >
-      <span>{favorited ? "❤️" : "🤍"}</span>
-      {showCount && <span className="text-xs font-semibold">Save</span>}
+      {/* Re-keying on `favorited` restarts the pop animation each time it is turned on. */}
+      <HeartIcon key={String(favorited)} className={cn("size-4", favorited && "ex-pop fill-current")} />
+      {showCount && <span className="text-xs font-semibold">{favorited ? "Saved" : "Save"}</span>}
     </button>
   );
 }

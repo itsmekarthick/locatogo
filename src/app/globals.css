@@ -1,56 +1,208 @@
 @import "tailwindcss";
 
-@theme {
+/* Static scales and motion primitives (always emitted so plain CSS and TS can read them). */
+@theme static {
+  /* Legacy cyan-* utilities stay on the sky palette. */
   --color-cyan-400: #38bdf8;
   --color-cyan-500: #0ea5e9;
   --color-cyan-600: #0284c7;
   --color-cyan-700: #0369a1;
-}
-@custom-variant dark (&:is(.dark, .dark *));
 
+  /* Accent scale */
+  --color-accent-50: #f0f9ff;
+  --color-accent-100: #e0f2fe;
+  --color-accent-200: #bae6fd;
+  --color-accent-300: #7dd3fc;
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0ea5e9;
+  --color-accent-600: #0284c7;
+  --color-accent-700: #0369a1;
+  --color-accent-800: #075985;
+  --color-accent-900: #0c4a6e;
+  --color-accent-950: #082f49;
+
+  /* Neutral scale */
+  --color-ink-50: #f8fafc;
+  --color-ink-100: #f1f5f9;
+  --color-ink-200: #e2e8f0;
+  --color-ink-300: #cbd5e1;
+  --color-ink-400: #94a3b8;
+  --color-ink-500: #64748b;
+  --color-ink-600: #475569;
+  --color-ink-700: #334155;
+  --color-ink-800: #1e293b;
+  --color-ink-900: #0f172a;
+  --color-ink-950: #020617;
+
+  /* Easing */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Backdrop blur */
+  --blur-glass: 16px;
+  --blur-soft: 8px;
+}
+
+/* `dark:` follows the root theme unless an ancestor is forced with `.light`. */
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.light, .light *)));
+@custom-variant light (&:where(.light, .light *));
+
+/* Theme-independent primitives. */
 :root {
-  --background: #fdfdfd;
-  --foreground: #111827;
-  --line: #f1f3f5;
-  --line-strong: #e2e5e9;
-  --surface: #ffffff;
-  --surface-raised: #ffffff;
-  --paper: #ffffff;
-  --ink-muted: #6b7280;
-  --ink-faint: #9ca3af;
+  --r-1: 8px;
+  --r-2: 12px;
+  --r-3: 16px;
+  --r-4: 24px;
+  --r-full: 9999px;
+
+  --dur-instant: 120ms;
+  --dur-fast: 200ms;
+  --dur-base: 320ms;
+  --dur-slow: 500ms;
+
+  /* Layers sit above Leaflet panes and controls (z-index up to 1000). */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 500;
+  --z-header: 1100;
+  --z-dropdown: 1200;
+  --z-overlay: 1300;
+  --z-modal: 1400;
+  --z-popover: 1500;
+  --z-toast: 1600;
+  --z-tooltip: 1700;
+}
+
+/* Light theme (default). `.light` forces it inside a dark tree. */
+:root,
+.light {
+  color-scheme: light;
+
+  /* Surfaces: 0 app background, 1 cards, 2 raised (menus, dialogs), 3 fills and wells */
+  --surface-0: #fafbfc;
+  --surface-1: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #f2f4f7;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #5d6b82;
+
+  --border: #e8ecf1;
+  --border-strong: #d6dce4;
+  --ring: #0284c7;
+
+  --accent: #0369a1;
+  --accent-hover: #075985;
+  --accent-fg: #ffffff;
+  --accent-soft: rgb(14 165 233 / 0.12);
+  --accent-text: #0369a1;
+  --accent-vivid: #0ea5e9;
+  --accent-strong: #0284c7;
+
+  --success: #047857;
+  --success-soft: rgb(16 185 129 / 0.12);
+  --warning: #b45309;
+  --warning-soft: rgb(245 158 11 / 0.14);
+  --danger: #b91c1c;
+  --danger-soft: rgb(239 68 68 / 0.1);
+  --danger-solid: #dc2626;
+  --danger-solid-hover: #b91c1c;
+  --info: #0369a1;
+  --info-soft: rgb(14 165 233 / 0.12);
+
+  --overlay: rgb(15 23 42 / 0.45);
+  --glass: rgb(255 255 255 / 0.72);
+  --shimmer: rgb(255 255 255 / 0.7);
+
+  --elev-sm: 0 0 0 1px rgb(15 23 42 / 0.04), 0 1px 2px rgb(15 23 42 / 0.06);
+  --elev-md: 0 0 0 1px rgb(15 23 42 / 0.04), 0 4px 12px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+  --elev-lg: 0 0 0 1px rgb(15 23 42 / 0.05), 0 18px 44px -10px rgb(15 23 42 / 0.22), 0 6px 14px -6px rgb(15 23 42 / 0.1);
+  --elev-glow: 0 0 0 1px rgb(14 165 233 / 0.3), 0 10px 32px -6px rgb(14 165 233 / 0.4);
+
   --leaf: #e8f5e9;
   --leaf-dark: #1b5e20;
-  --coral: #0ea5e9;
-  --coral-dark: #0284c7;
-  --coral-soft: #eef2ff;
   --sun: #fef3c7;
   --sun-dark: #b45309;
   --yellow: #fef08a;
   --yellow-soft: #fef9c3;
 }
 
+/* Dark theme: elevated surfaces get lighter, depth comes from rings and glow. */
 html.dark,
 :root.dark,
 .dark,
 [data-theme="dark"] {
-  --background: #090d16;
-  --foreground: #f3f4f6;
-  --line: #1e293b;
-  --line-strong: #334155;
-  --surface: #0f172a;
-  --surface-raised: #1e293b;
-  --paper: #0f172a;
-  --ink-muted: #94a3b8;
-  --ink-faint: #64748b;
+  color-scheme: dark;
+
+  --surface-0: #090d16;
+  --surface-1: #0f172a;
+  --surface-2: #162033;
+  --surface-3: #1e293b;
+
+  --text-primary: #f1f5f9;
+  --text-secondary: #a3b1c6;
+  --text-tertiary: #8a99b0;
+
+  --border: #1e293b;
+  --border-strong: #334155;
+  --ring: #38bdf8;
+
+  --accent: #38bdf8;
+  --accent-hover: #7dd3fc;
+  --accent-fg: #04283a;
+  --accent-soft: rgb(56 189 248 / 0.14);
+  --accent-text: #7dd3fc;
+  --accent-vivid: #22d3ee;
+  --accent-strong: #0ea5e9;
+
+  --success: #34d399;
+  --success-soft: rgb(52 211 153 / 0.14);
+  --warning: #fbbf24;
+  --warning-soft: rgb(251 191 36 / 0.14);
+  --danger: #f87171;
+  --danger-soft: rgb(248 113 113 / 0.14);
+  --danger-solid: #dc2626;
+  --danger-solid-hover: #b91c1c;
+  --info: #7dd3fc;
+  --info-soft: rgb(56 189 248 / 0.14);
+
+  --overlay: rgb(2 6 15 / 0.66);
+  --glass: rgb(15 23 42 / 0.72);
+  --shimmer: rgb(255 255 255 / 0.06);
+
+  --elev-sm: inset 0 0 0 1px rgb(255 255 255 / 0.06), 0 1px 2px rgb(0 0 0 / 0.4);
+  --elev-md: inset 0 0 0 1px rgb(255 255 255 / 0.07), 0 6px 16px -4px rgb(0 0 0 / 0.5);
+  --elev-lg: inset 0 0 0 1px rgb(255 255 255 / 0.08), 0 24px 56px -12px rgb(0 0 0 / 0.65);
+  --elev-glow: inset 0 0 0 1px rgb(255 255 255 / 0.08), 0 0 0 1px rgb(56 189 248 / 0.35), 0 0 36px -4px rgb(56 189 248 / 0.4);
+
   --leaf: #064e3b;
   --leaf-dark: #34d399;
-  --coral: #22d3ee;
-  --coral-dark: #0ea5e9;
-  --coral-soft: #1e1b4b;
   --sun: #78350f;
   --sun-dark: #fbbf24;
   --yellow: #854d0e;
   --yellow-soft: #713f12;
+}
+
+/* Legacy names. Declared on every theme scope so they re-resolve inside `.light` / `.dark` wrappers. */
+:root,
+.light,
+html.dark,
+.dark,
+[data-theme="dark"] {
+  --background: var(--surface-0);
+  --foreground: var(--text-primary);
+  --line: var(--border);
+  --line-strong: var(--border-strong);
+  --surface: var(--surface-1);
+  --surface-raised: var(--surface-2);
+  --paper: var(--surface-1);
+  --ink-muted: var(--text-secondary);
+  --ink-faint: var(--text-tertiary);
+  --coral: var(--accent-vivid);
+  --coral-dark: var(--accent-strong);
+  --coral-soft: var(--accent-soft);
 }
 
 @theme inline {
@@ -60,23 +212,93 @@ html.dark,
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-display);
   --font-display: var(--font-display);
+
+  /* Surfaces: bg-surface-0..3 */
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  /* Text: text-fg, text-fg-muted, text-fg-subtle */
+  --color-fg: var(--text-primary);
+  --color-fg-muted: var(--text-secondary);
+  --color-fg-subtle: var(--text-tertiary);
+
+  /* Borders and focus: border-line, border-line-strong, ring-focus */
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-focus: var(--ring);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-solid: var(--danger-solid);
+  --color-danger-solid-hover: var(--danger-solid-hover);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
 }
 
-@keyframes app-reveal {
-  0% {
+@utility elev-sm {
+  box-shadow: var(--elev-sm);
+}
+@utility elev-md {
+  box-shadow: var(--elev-md);
+}
+@utility elev-lg {
+  box-shadow: var(--elev-lg);
+}
+@utility elev-glow {
+  box-shadow: var(--elev-glow);
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+@utility focus-ring-inset {
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+}
+
+@utility transition-ui {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-standard);
+}
+
+@utility glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.4);
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.4);
+  border: 1px solid var(--border);
+}
+
+@keyframes route-fade {
+  from {
     opacity: 0;
-    transform: translateY(16px) scale(0.97);
-    filter: blur(8px);
+    transform: translateY(6px);
   }
-  100% {
+  to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
+    transform: none;
   }
 }
 
-.animate-app-reveal {
-  animation: app-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+.animate-route-fade {
+  animation: route-fade 250ms var(--ease-emphasized) backwards;
 }
 
 @keyframes type-search {
@@ -129,440 +351,245 @@ body {
 }
 
 /* =========================================================================
-   NEXT-GEN MODERN MAP MARKERS & PINS (AIRBNB / GOOGLE MAPS STYLE)
+   DESIGN SYSTEM: GLOBAL POLISH
    ========================================================================= */
 
-/* 1. Rich Pill Marker Container */
-.locatogo-pill-wrapper {
-  background: transparent !important;
-  border: none !important;
-  display: flex !important;
-  justify-content: center;
-  align-items: center;
-  pointer-events: auto !important;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    scrollbar-width: thin;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--accent-vivid) 28%, transparent);
+    color: inherit;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  blockquote {
+    text-wrap: pretty;
+  }
 }
 
-.locatogo-pill-pin {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--paper, #ffffff);
-  color: var(--foreground, #111827);
-  padding: 4px 10px 4px 5px;
-  border-radius: 9999px;
-  border: 1.5px solid rgba(17, 24, 39, 0.12);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
-  font-size: 11px;
-  font-weight: 700;
-  font-family: inherit;
-  white-space: nowrap;
-  cursor: pointer;
-  transform-origin: center bottom;
-  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-  user-select: none;
-}
-
-.dark .locatogo-pill-pin {
-  background: #0f172a !important;
-  color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
-}
-
-.dark .locatogo-pill-pin .locatogo-pin-title {
-  color: #f8fafc !important;
-}
-
-.dark .locatogo-pill-pin .locatogo-pin-rating {
-  color: #f8fafc !important;
-}
-
-.dark .locatogo-pill-pin .locatogo-pin-icon-wrap {
-  background: #1e293b !important;
-  color: #a5b4fc !important;
-}
-
-.locatogo-pill-pin:hover {
-  transform: translateY(-3px) scale(1.06);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
-  border-color: var(--theme-color, var(--coral, #0ea5e9));
-  z-index: 999 !important;
-}
-
-.dark .locatogo-pill-pin:hover {
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.7);
-  border-color: #22d3ee !important;
-}
-
-.locatogo-pill-pin.is-active {
-  background: #18181b !important;
-  color: #ffffff !important;
-  border-color: #18181b !important;
-  transform: translateY(-4px) scale(1.1);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-  z-index: 1000 !important;
-}
-
-.dark .locatogo-pill-pin.is-active {
-  background: #0284c7 !important;
-  border-color: #22d3ee !important;
-  color: #ffffff !important;
-}
-
-.locatogo-pill-pin .locatogo-pin-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 9999px;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.locatogo-pill-pin.is-active .locatogo-pin-icon-wrap {
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-
-.locatogo-pill-pin .locatogo-pin-title {
-  max-width: 140px;
+/* Lock page scroll while a native modal is open. */
+body:has(.ds-dialog[open], .ds-sheet[open]) {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  letter-spacing: -0.01em;
+}
+
+/* Theme switch: View Transitions crossfade, with a class-based fallback. */
+html.theme-vt::view-transition-group(root) {
+  animation-duration: 300ms;
+  animation-timing-function: var(--ease-standard);
+}
+html.theme-vt::view-transition-old(root),
+html.theme-vt::view-transition-new(root) {
+  mix-blend-mode: normal;
+}
+html.theme-fallback *,
+html.theme-fallback *::before,
+html.theme-fallback *::after {
+  transition:
+    background-color 250ms var(--ease-standard),
+    color 250ms var(--ease-standard),
+    border-color 250ms var(--ease-standard),
+    fill 250ms var(--ease-standard),
+    stroke 250ms var(--ease-standard) !important;
+}
+
+@keyframes ds-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ds-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes ds-scale-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ds-scale-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(4px) scale(0.98); }
+}
+@keyframes ds-sheet-in {
+  from { transform: var(--sheet-from); }
+  to { transform: none; }
+}
+@keyframes ds-sheet-out {
+  from { transform: translateY(var(--drag-y, 0px)); }
+  to { transform: var(--sheet-from); }
+}
+@keyframes ds-toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+}
+@keyframes ds-toast-out {
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+@keyframes ds-shimmer {
+  to { transform: translateX(100%); }
+}
+
+/* Native <dialog> (Dialog, Sheet): top layer, focus trap and ESC come from the platform. */
+.ds-dialog,
+.ds-sheet {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+  background: transparent;
   color: inherit;
 }
-
-/* Bottom needle pointer arrow */
-.locatogo-pill-pin .locatogo-pin-arrow {
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid var(--paper, #ffffff);
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
-}
-
-.dark .locatogo-pill-pin .locatogo-pin-arrow {
-  border-top-color: #0f172a !important;
-}
-
-.locatogo-pill-pin.is-active .locatogo-pin-arrow {
-  border-top-color: #18181b !important;
-}
-
-.dark .locatogo-pill-pin.is-active .locatogo-pin-arrow {
-  border-top-color: #0284c7 !important;
-}
-
-/* 2. Compact Teardrop Pin for Zoomed Out Mode */
-.locatogo-teardrop-wrapper {
-  background: transparent !important;
-  border: none !important;
-}
-
-.locatogo-teardrop-pin {
-  position: relative;
-  width: 32px;
-  height: 38px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
+.ds-dialog[open],
+.ds-sheet[open] {
   display: flex;
+}
+.ds-dialog::backdrop,
+.ds-sheet::backdrop {
+  background: var(--overlay);
+}
+.ds-sheet::backdrop {
+  opacity: calc(1 - var(--sheet-drag, 0));
+}
+.ds-dialog[open]::backdrop,
+.ds-sheet[open]::backdrop {
+  animation: ds-fade-in var(--dur-base) var(--ease-standard) backwards;
+}
+.ds-dialog[data-state="closing"]::backdrop,
+.ds-sheet[data-state="closing"]::backdrop {
+  animation: ds-fade-out var(--dur-fast) var(--ease-standard) forwards;
+}
+
+.ds-dialog {
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  border: 2px solid #ffffff;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 1rem;
+}
+.ds-dialog[open] .ds-dialog-panel {
+  animation: ds-scale-in var(--dur-base) var(--ease-emphasized) backwards;
+}
+.ds-dialog[data-state="closing"] .ds-dialog-panel {
+  animation: ds-scale-out var(--dur-fast) var(--ease-standard) forwards;
 }
 
-.locatogo-teardrop-pin:hover,
-.locatogo-teardrop-pin.is-active {
-  transform: rotate(-45deg) scale(1.18);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-  z-index: 1000 !important;
+.ds-sheet {
+  --sheet-from: translateY(100%);
 }
-
-.locatogo-teardrop-inner {
-  transform: rotate(45deg);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.ds-sheet[data-side="right"] {
+  --sheet-from: translateX(100%);
 }
-
-/* User Current Location Pulsing Radar Marker */
-.user-location-marker {
-  position: relative;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
+.ds-sheet[data-side="left"] {
+  --sheet-from: translateX(-100%);
 }
-.user-location-dot {
-  width: 14px;
-  height: 14px;
-  background: #0284c7;
-  border: 2.5px solid #ffffff;
-  border-radius: 9999px;
-  box-shadow: 0 0 12px rgba(37, 99, 235, 0.7);
-  z-index: 2;
-}
-.user-location-pulse {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  background: rgba(37, 99, 235, 0.35);
-  border-radius: 9999px;
-  animation: radar-pulse 2s infinite ease-out;
-  z-index: 1;
-}
-
-@keyframes radar-pulse {
-  0% {
-    transform: scale(0.5);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
+@media (min-width: 768px) {
+  .ds-sheet[data-side="responsive"] {
+    --sheet-from: translateX(100%);
   }
 }
-
-/* Compact Dot Pin for Overview Zoom (prevents text collision) */
-.locatogo-dot-wrapper {
-  background: transparent !important;
-  border: none !important;
+.ds-sheet[open] .ds-sheet-panel {
+  animation: ds-sheet-in var(--dur-base) var(--ease-emphasized) backwards;
+}
+.ds-sheet[data-state="closing"] .ds-sheet-panel {
+  animation: ds-sheet-out var(--dur-fast) var(--ease-standard) forwards;
 }
 
-.locatogo-dot-pin {
-  width: 24px;
-  height: 24px;
-  border-radius: 9999px;
-  background: #ffffff;
-  border: 2px solid #0284c7;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+/* Toasts live in a manual popover so they render above open dialogs. */
+.ds-toast-viewport {
+  position: fixed;
+  inset: auto 0 0 0;
+  margin: 0;
+  width: auto;
+  height: auto;
+  max-width: none;
+  border: 0;
+  padding: 0 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: transparent;
+  overflow: visible;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+@media (min-width: 640px) {
+  .ds-toast-viewport {
+    left: auto;
+    width: 26rem;
+    padding: 0 1.25rem 1.25rem;
+  }
+}
+.ds-toast {
+  pointer-events: auto;
+}
+.ds-toast[data-state="open"] {
+  animation: ds-toast-in var(--dur-base) var(--ease-emphasized) backwards;
+}
+.ds-toast[data-state="closing"] {
+  animation: ds-toast-out var(--dur-fast) var(--ease-standard) forwards;
 }
 
-.dark .locatogo-dot-pin {
-  background: #0f172a !important;
-  border-color: #22d3ee !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+.ds-tooltip {
+  animation: ds-fade-in var(--dur-instant) var(--ease-standard) backwards;
 }
 
-.locatogo-dot-pin:hover {
-  transform: scale(1.35);
-  border-color: #10b981;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.5);
-  z-index: 1000 !important;
+.ds-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-3);
+}
+.ds-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--shimmer), transparent);
+  animation: ds-shimmer 1.6s var(--ease-standard) infinite;
 }
 
-.locatogo-dot-pin.is-hiring {
-  border-color: #10b981;
-  box-shadow: 0 0 0 2.5px rgba(16, 185, 129, 0.35);
-}
-
-/* Cluster Marker Badge Styling - Modern Tech Pill Overhaul */
-.locatogo-cluster-wrapper {
-  background: transparent !important;
-  border: none !important;
-}
-
-.locatogo-cluster-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 3px 8px;
-  background: rgba(15, 23, 42, 0.94);
-  color: #ffffff;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
-  border-radius: 9999px;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 11px;
-  line-height: 1;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.locatogo-cluster-pill:hover {
-  transform: scale(1.14);
-  background: #0284c7 !important;
-  border-color: #ffffff;
-  box-shadow: 0 6px 22px rgba(79, 70, 229, 0.6), 0 0 0 4px rgba(99, 102, 241, 0.35);
-  z-index: 1000 !important;
-}
-
-.locatogo-cluster-pill.tier-md {
-  background: rgba(30, 27, 75, 0.96);
-  border-color: rgba(165, 180, 252, 0.9);
-}
-
-.locatogo-cluster-pill.tier-lg {
-  background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);
-  border-color: #c7d2fe;
-  box-shadow: 0 6px 18px rgba(67, 56, 202, 0.5);
-}
-
-.locatogo-cluster-pill .cluster-icon {
-  font-size: 11px;
-  line-height: 1;
-}
-
-.locatogo-cluster-pill .cluster-count {
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.locatogo-cluster-pill .cluster-label {
-  font-size: 9px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  opacity: 0.85;
-}
-
-.locatogo-cluster-pill .cluster-hiring-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 6px #10b981;
-  animation: radar-pulse 2s infinite ease-out;
-}
-
-.locatogo-hover-tooltip {
-  background: #ffffff !important;
-  color: #0f172a !important;
-  border-radius: 8px !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
-  padding: 4px 8px !important;
-}
-
-.dark .locatogo-hover-tooltip {
-  background: #0f172a !important;
-  color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
-}
-
-.locatogo-cluster-tooltip {
-  background: #ffffff !important;
-  border-radius: 12px !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18) !important;
-  padding: 6px 8px !important;
-}
-
-.dark .locatogo-cluster-tooltip {
-  background: #0f172a !important;
-  color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6) !important;
-}
-
-/* Tooltip needle arrows in dark mode */
-.dark .leaflet-tooltip-top:before {
-  border-top-color: #0f172a !important;
-}
-.dark .leaflet-tooltip-bottom:before {
-  border-bottom-color: #0f172a !important;
-}
-.dark .leaflet-tooltip-left:before {
-  border-left-color: #0f172a !important;
-}
-.dark .leaflet-tooltip-right:before {
-  border-right-color: #0f172a !important;
-}
-
-.locatogo-cluster-marker {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  background: #18181b;
-  color: #ffffff;
-  border: 3px solid #ffffff;
-  border-radius: 9999px;
-  font-weight: 800;
-  font-family: inherit;
-  font-size: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(99, 102, 241, 0.4);
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.locatogo-cluster-marker:hover {
-  transform: scale(1.18);
-  background: #0ea5e9 !important;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6), 0 0 0 5px rgba(99, 102, 241, 0.35);
-  z-index: 1000 !important;
-}
-
-/* Custom Leaflet Popup Overhaul */
-.leaflet-popup-content-wrapper {
-  background: var(--paper, #ffffff) !important;
-  color: var(--foreground, #111827) !important;
-  border-radius: 20px !important;
-  padding: 0 !important;
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.2) !important;
-  border: 1px solid var(--line, rgba(0, 0, 0, 0.08)) !important;
-}
-
-.dark .leaflet-popup-content-wrapper {
-  background: #0f172a !important;
-  color: #f8fafc !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.7) !important;
-}
-.leaflet-popup-content {
-  margin: 0 !important;
-  line-height: 1.4 !important;
-}
-.leaflet-popup-tip-container {
-  display: none !important;
-}
-.leaflet-container {
-  font-family: inherit !important;
-}
-
-/* Fix Leaflet default blue text color on buttons and links inside popups */
-.locatogo-popup a,
-.leaflet-popup-content a {
-  text-decoration: none !important;
-  color: inherit !important;
-}
-
-.locatogo-popup .btn-uber,
-.leaflet-popup-content .btn-uber {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-}
-
-.locatogo-popup .btn-details,
-.leaflet-popup-content .btn-details {
-  background-color: var(--coral, #0ea5e9) !important;
-  color: #ffffff !important;
-}
-
-.locatogo-popup .btn-uber *,
-.locatogo-popup .btn-details * {
-  color: #ffffff !important;
-}
-
-/* Dark theme for Leaflet map tiles */
-.leaflet-dark-tiles {
-  filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(115%) !important;
+/* Reduced motion: no movement; spinners keep turning slowly, route fade keeps opacity only. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-route-fade {
+    animation: ds-fade-in 150ms linear backwards !important;
+  }
+  .animate-spin,
+  .ds-spinner {
+    animation-duration: 1.6s !important;
+    animation-iteration-count: infinite !important;
+  }
 }

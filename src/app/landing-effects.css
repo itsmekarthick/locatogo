@@ -1,0 +1,255 @@
+/* Landing page effects. Colours come from design tokens only; motion animates transform and opacity. */
+
+/* ---- Hero backdrop ---- */
+.lp-mesh {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+.lp-blob {
+  position: absolute;
+  border-radius: 9999px;
+  will-change: transform;
+  animation: lp-drift 26s var(--ease-standard) infinite alternate;
+}
+.lp-blob-a {
+  width: 52rem;
+  height: 52rem;
+  left: 50%;
+  top: -30rem;
+  margin-left: -34rem;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-vivid) 30%, transparent), transparent);
+  --dx: 6rem;
+  --dy: 3rem;
+}
+.lp-blob-b {
+  width: 38rem;
+  height: 38rem;
+  right: -12rem;
+  top: -10rem;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-strong) 22%, transparent), transparent);
+  animation-duration: 32s;
+  animation-delay: -8s;
+  --dx: -5rem;
+  --dy: 4rem;
+}
+.lp-blob-c {
+  width: 34rem;
+  height: 34rem;
+  left: -10rem;
+  top: 4rem;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--info) 16%, transparent), transparent);
+  animation-duration: 38s;
+  animation-delay: -16s;
+  --dx: 5rem;
+  --dy: -3rem;
+}
+.dark .lp-blob {
+  opacity: 0.65;
+}
+@keyframes lp-drift {
+  to {
+    transform: translate3d(var(--dx, 4rem), var(--dy, 2rem), 0) scale(1.1);
+  }
+}
+
+/* Paused while the hero is off screen. */
+.lp-static .lp-blob {
+  animation: none;
+}
+.lp-hero[data-active="false"] .lp-blob,
+.lp-hero[data-active="false"] .lp-ping {
+  animation-play-state: paused;
+}
+
+.lp-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark .lp-grain::after {
+  opacity: 0.09;
+}
+
+.lp-dots {
+  background-image: radial-gradient(var(--border-strong) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+/* ---- Entrance and scroll reveals ---- */
+@keyframes lp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+.lp-rise {
+  animation: lp-rise 700ms var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.lp-reveal {
+  transition:
+    opacity var(--dur-slow) var(--ease-emphasized),
+    transform var(--dur-slow) var(--ease-emphasized);
+  transition-delay: calc(var(--i, 0) * 40ms);
+}
+.lp-reveal[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(12px);
+}
+.lp-reveal[data-reveal="in"] {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes lp-ph {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.lp-ph {
+  animation: lp-ph 350ms var(--ease-emphasized) backwards;
+}
+
+/* ---- Product preview ---- */
+.lp-preview {
+  perspective: 1800px;
+}
+.lp-frame {
+  transform: translate3d(0, calc(var(--p, 0.2) * -32px), 0) rotateX(5deg) rotateY(-6deg) rotateZ(0.6deg);
+  transform-origin: 50% 0%;
+  will-change: transform;
+}
+@media (max-width: 767px) {
+  .lp-frame {
+    transform: translate3d(0, calc(var(--p, 0.2) * -16px), 0) rotateX(3deg);
+  }
+}
+.lp-float {
+  transform: translate3d(0, calc(var(--p, 0.2) * 14px), 0);
+}
+.lp-frame-spot {
+  background: radial-gradient(
+    520px circle at var(--sx, 50%) var(--sy, 0%),
+    color-mix(in srgb, var(--accent-vivid) 14%, transparent),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-standard);
+}
+.lp-preview:hover .lp-frame-spot {
+  opacity: 1;
+}
+@media (hover: none) {
+  .lp-frame-spot {
+    display: none;
+  }
+}
+
+@keyframes lp-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  80%,
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+.lp-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lp-ping 2.6s var(--ease-standard) infinite;
+}
+
+/* ---- Hub marquee ---- */
+.lp-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.lp-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: lp-marquee 80s linear infinite;
+}
+.lp-marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.75rem;
+  padding-right: 0.75rem;
+}
+.lp-marquee:hover .lp-marquee-track,
+.lp-marquee:focus-within .lp-marquee-track,
+.lp-marquee[data-active="false"] .lp-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes lp-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .lp-marquee-track {
+    animation: none;
+  }
+}
+
+/* ---- Spotlight card: surface glow and border highlight follow the cursor ---- */
+.lp-spot {
+  position: relative;
+  isolation: isolate;
+}
+.lp-spot > * {
+  position: relative;
+  z-index: 1;
+}
+.lp-spot::before,
+.lp-spot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-standard);
+}
+.lp-spot::before {
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), var(--accent-soft), transparent 70%);
+}
+.lp-spot::after {
+  padding: 1px;
+  background: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent-vivid) 70%, transparent),
+    transparent 70%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+@media (hover: hover) {
+  .lp-spot:hover::before,
+  .lp-spot:hover::after {
+    opacity: 1;
+  }
+}

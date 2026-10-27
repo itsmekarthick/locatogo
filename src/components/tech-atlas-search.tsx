@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import type { CompanyDetail } from "@/components/company-detail-drawer";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
+import { ArrowRightIcon, ArrowUpRightIcon, GlobeIcon, MapPinIcon, SearchIcon, XIcon } from "@/components/ui/icons";
+import { cn } from "@/lib/utils/cn";
 import { GLOBAL_TECH_HUBS, type TechHub } from "@/lib/constants/tech-hubs";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
 
@@ -485,29 +487,37 @@ export function TechAtlasSearch({
     setIsOpen(false);
   };
 
+  const listboxId = "tech-atlas-search-results";
+  const scopes: { id: typeof filterScope; label: ReactNode }[] = [
+    { id: "all", label: <><GlobeIcon className="size-3.5" />All metros</> },
+    { id: "hub", label: <><span aria-hidden="true">{selectedHub.flag}</span>{selectedHub.name} only</> },
+    { id: "hiring", label: <><span aria-hidden="true" className="size-1.5 rounded-full bg-success" />Hiring</> },
+  ];
+
   return (
-    <div ref={containerRef} className={`relative w-full ${className}`}>
-      {/* DIRECT ACTIVE SEARCH BAR INPUT */}
+    <div ref={containerRef} className={cn("relative w-full", className)}>
       <div
-        className={`group relative flex items-center w-full rounded-full border bg-white dark:bg-slate-900 transition-all duration-200 shadow-2xs ${
-          isOpen
-            ? "border-cyan-500/80 dark:border-cyan-500/80 shadow-md ring-3 ring-cyan-500/10"
-            : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs"
-        }`}
+        className={cn(
+          "flex w-full items-center rounded-full border bg-surface-1 transition-[border-color,box-shadow] duration-200",
+          isOpen ? "border-accent ring-4 ring-accent-soft" : "border-line-strong hover:border-accent/50",
+        )}
       >
-        {/* Left Search Icon & Active Metro Tag */}
-        <div className="flex items-center gap-1.5 pl-3.5 pr-1 shrink-0 text-slate-400 dark:text-slate-500">
-          <span className="text-base select-none">🔍</span>
-          <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800/80 text-[11px] font-semibold text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-            <span>{selectedHub.flag}</span>
-            <span>{selectedHub.name}</span>
+        <div className="flex shrink-0 items-center gap-1.5 pl-3.5 pr-1 text-fg-subtle">
+          <SearchIcon className="size-4" />
+          <span className="hidden items-center gap-1 rounded-full border border-line bg-surface-3 px-2 py-0.5 text-[11px] font-semibold text-fg-muted lg:inline-flex">
+            <span aria-hidden="true">{selectedHub.flag}</span>
+            {selectedHub.name}
           </span>
         </div>
 
-        {/* Real Direct Input */}
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          aria-label="Search companies, tech stack and roles"
           value={searchQuery}
           onChange={(e) => {
             onSearchChange(e.target.value);
@@ -516,15 +526,12 @@ export function TechAtlasSearch({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={`Search ${totalDatabaseCompanies.toLocaleString()}+ companies, tech stack (React, Python), roles...`}
-          className="w-full bg-transparent py-2 sm:py-2.5 px-2 text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm font-medium text-fg outline-none placeholder:text-fg-subtle sm:py-2.5 pointer-coarse:py-3"
         />
 
-        {/* Right Action Icons: Spinner / Clear / ⌘K Badge */}
-        <div className="flex items-center gap-1.5 pr-2 sm:pr-3 shrink-0">
+        <div className="flex shrink-0 items-center gap-1.5 pr-1.5 sm:pr-2">
           {isSearchingServer && (
-            <span className="animate-spin text-xs text-cyan-500" title="Searching database...">
-              ⏳
-            </span>
+            <span role="status" aria-label="Searching" className="size-4 animate-spin rounded-full border-2 border-line-strong border-t-accent" />
           )}
 
           {searchQuery ? (
@@ -535,18 +542,17 @@ export function TechAtlasSearch({
                 setServerResults([]);
                 inputRef.current?.focus();
               }}
-              className="flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 text-xs transition-colors cursor-pointer"
-              title="Clear search"
+              aria-label="Clear search"
+              className="focus-ring inline-flex size-7 items-center justify-center rounded-full text-fg-subtle transition-colors hover:bg-surface-3 hover:text-fg pointer-coarse:size-9"
             >
-              ✕
+              <XIcon className="size-4" />
             </button>
           ) : (
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-400 dark:text-slate-400 shadow-2xs">
-              <span className="text-[11px]">⌘</span>K
+            <kbd className="hidden items-center gap-0.5 rounded-md border border-line bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] font-medium text-fg-subtle lg:inline-flex">
+              ⌘K
             </kbd>
           )}
 
-          {/* Quick Submit / Magnifier Pill */}
           <button
             type="button"
             onClick={() => {
@@ -554,84 +560,56 @@ export function TechAtlasSearch({
                 handleSelect(rankedResults[0].company, rankedResults[0].targetHub);
               }
             }}
-            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#0ea5e9] to-[#0284c7] text-white shadow-2xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
-            title="Search"
+            aria-label="Open top result"
+            className="focus-ring inline-flex size-8 items-center justify-center rounded-full bg-accent text-accent-fg transition-[transform,background-color] duration-150 hover:bg-accent-hover active:scale-95 pointer-coarse:size-10"
           >
-            <span className="text-xs">➔</span>
+            <ArrowRightIcon className="size-4" />
           </button>
         </div>
       </div>
 
-      {/* DROPDOWN COMMAND PALETTE & INSTANT RESULTS */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-[1100] max-h-[480px] sm:max-h-[520px] rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-[#0d1424]/98 backdrop-blur-xl p-2.5 sm:p-3 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col">
-          {/* Quick Filter Scope Strip */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2 mb-2 px-1">
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              <button
-                type="button"
-                onClick={() => setFilterScope("all")}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer ${
-                  filterScope === "all"
-                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-2xs font-bold"
-                    : "bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-                }`}
-              >
-                🌐 All Metros
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFilterScope("hub")}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
-                  filterScope === "hub"
-                    ? "bg-cyan-600 text-white shadow-2xs font-bold ring-1 ring-cyan-400"
-                    : "bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-                }`}
-              >
-                <span>{selectedHub.flag}</span>
-                <span>{selectedHub.name} Only</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFilterScope("hiring")}
-                className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
-                  filterScope === "hiring"
-                    ? "bg-emerald-600 text-white shadow-2xs font-bold ring-1 ring-emerald-400"
-                    : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
-                }`}
-              >
-                <span>🔥 Hiring Jobs</span>
-              </button>
+        <div className="absolute left-0 top-full z-[var(--z-dropdown)] mt-2 w-[min(36rem,calc(100vw-1.5rem))] min-w-full flex max-h-[min(32rem,70dvh)] flex-col rounded-2xl border border-line bg-surface-2 p-2.5 elev-lg animate-in fade-in slide-in-from-top-2 duration-150 sm:p-3">
+          <div className="mb-2 flex items-center justify-between gap-2 border-b border-line px-1 pb-2">
+            <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
+              {scopes.map((scope) => (
+                <button
+                  key={scope.id}
+                  type="button"
+                  aria-pressed={filterScope === scope.id}
+                  onClick={() => setFilterScope(scope.id)}
+                  className={cn(
+                    "focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors pointer-coarse:py-2",
+                    filterScope === scope.id
+                      ? "border-accent bg-accent-soft text-accent-text"
+                      : "border-line bg-surface-3 text-fg-muted hover:text-fg",
+                  )}
+                >
+                  {scope.label}
+                </button>
+              ))}
             </div>
 
             {searchQuery.trim() && (
-              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 shrink-0">
-                {rankedResults.length} matches
-              </span>
+              <span className="shrink-0 font-mono text-[10px] text-fg-subtle">{rankedResults.length} matches</span>
             )}
           </div>
 
-          {/* Results List */}
-          <div ref={listRef} className="overflow-y-auto max-h-[380px] space-y-1 pr-1 custom-scrollbar">
+          <div ref={listRef} id={listboxId} role="listbox" aria-label="Search results" className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1">
             {rankedResults.length === 0 ? (
-              <div className="py-8 text-center px-4">
+              <div className="px-4 py-8 text-center">
                 {searchQuery.trim() ? (
                   <>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      No tech companies found matching &ldquo;{searchQuery}&rdquo;
-                    </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
-                      Try searching by tech stack (e.g. <span className="text-cyan-500">Python</span>, <span className="text-cyan-500">AI</span>, <span className="text-cyan-500">React</span>), role, or switch filter to <span className="font-semibold">All Metros</span>.
+                    <p className="text-sm font-semibold text-fg">No tech companies found matching &ldquo;{searchQuery}&rdquo;</p>
+                    <p className="mx-auto mt-1 max-w-sm text-xs text-fg-subtle">
+                      Try a tech stack such as Python, AI or React, a role, or switch the scope to{" "}
+                      <span className="font-semibold text-fg-muted">All metros</span>.
                     </p>
                   </>
                 ) : (
                   <>
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                      Popular Tech Searches
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-1.5 max-w-md mx-auto">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-fg-subtle">Popular tech searches</p>
+                    <div className="mx-auto flex max-w-md flex-wrap justify-center gap-1.5">
                       {["Google", "Microsoft", "Amazon", "Infosys", "Zomato", "Freshworks", "AI & ML", "FinTech", "Python", "Golang"].map((tag) => (
                         <button
                           key={tag}
@@ -640,7 +618,7 @@ export function TechAtlasSearch({
                             onSearchChange(tag);
                             inputRef.current?.focus();
                           }}
-                          className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition-colors cursor-pointer"
+                          className="focus-ring rounded-full border border-line bg-surface-3 px-2.5 py-1 text-xs font-medium text-fg-muted transition-colors hover:border-accent hover:text-accent-text pointer-coarse:py-2"
                         >
                           {tag}
                         </button>
@@ -671,89 +649,76 @@ export function TechAtlasSearch({
                   <button
                     key={company.id}
                     type="button"
+                    role="option"
+                    aria-selected={isHighlighted}
                     onClick={() => handleSelect(company, targetHub)}
                     onMouseEnter={() => setHighlightedIndex(idx)}
-                    className={`w-full flex items-center justify-between gap-3 p-2 sm:p-2.5 rounded-xl text-left transition-all cursor-pointer ${
-                      isHighlighted
-                        ? "bg-slate-100 dark:bg-slate-800/90 shadow-2xs"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    }`}
+                    className={cn(
+                      "focus-ring flex w-full items-center justify-between gap-3 rounded-xl p-2 text-left transition-colors sm:p-2.5",
+                      isHighlighted ? "bg-surface-3" : "hover:bg-surface-3/60",
+                    )}
                   >
-                    {/* Left: Brand Avatar & Company Identity */}
-                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                      <div className="relative shrink-0">
-                        <CompanyBrandAvatar
-                          title={company.title}
-                          website={company.website}
-                          size={36}
-                          className="rounded-lg shadow-2xs border border-slate-200/80 dark:border-slate-700/80"
-                        />
-                      </div>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <CompanyBrandAvatar
+                        title={company.title}
+                        website={company.website}
+                        size={36}
+                        className="shrink-0 rounded-lg border border-line"
+                      />
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
-                            {company.title}
-                          </span>
-
-                          {/* Funding Stage / Type Badge */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="truncate text-sm font-semibold text-fg">{company.title}</span>
                           {company.funding_stage && (
-                            <span className="rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/50 dark:border-cyan-800/50 px-1.5 py-0.2 text-[10px] font-semibold">
+                            <span className="rounded-md bg-accent-soft px-1.5 py-0.5 text-[10px] font-semibold leading-none text-accent-text">
                               {company.funding_stage}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                          <span>📍</span>
+                        <div className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] text-fg-subtle">
+                          <MapPinIcon className="size-3 shrink-0" />
                           <span className="truncate">
                             {[company.locality, company.city || targetHub.name].filter(Boolean).join(", ")}
                           </span>
-
                           {company.tech_stack && company.tech_stack.length > 0 && (
                             <>
-                              <span>•</span>
-                              <span className="text-slate-400 dark:text-slate-500 truncate">
-                                {company.tech_stack.slice(0, 3).join(", ")}
-                              </span>
+                              <span aria-hidden="true">·</span>
+                              <span className="truncate">{company.tech_stack.slice(0, 3).join(", ")}</span>
                             </>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: Job Openings & Metro Indicators */}
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="flex shrink-0 items-center gap-1.5">
                       {activeJobs > 0 && (
-                        <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60 px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                          <span>{activeJobs} jobs</span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-semibold text-success">
+                          <span aria-hidden="true" className="size-1.5 rounded-full bg-success" />
+                          {activeJobs} jobs
                         </span>
                       )}
 
-                      {/* If from another metro, highlight with metro pill */}
                       {isCrossHub && (
                         <span
-                          className="rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-2 py-0.5 text-[10px] font-semibold flex items-center gap-1"
+                          className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-semibold text-warning"
                           title={`Located in ${targetHub.name} - will switch map view`}
                         >
-                          <span>{targetHub.flag}</span>
-                          <span>{targetHub.name}</span>
+                          <span aria-hidden="true">{targetHub.flag}</span>
+                          {targetHub.name}
                         </span>
                       )}
 
-                      {/* Direct Page Link */}
                       <Link
                         href={`/company/${company.slug}`}
                         target="_blank"
                         onClick={(e) => e.stopPropagation()}
-                        className="p-1 rounded-md text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-950/60 transition-colors text-xs font-bold"
-                        title={`Open ${company.title} full profile page in new tab`}
+                        aria-label={`Open ${company.title} full profile page in a new tab`}
+                        title={`Open ${company.title} full profile page in a new tab`}
+                        className="focus-ring inline-flex size-7 items-center justify-center rounded-md text-fg-subtle transition-colors hover:bg-accent-soft hover:text-accent-text pointer-coarse:size-9"
                       >
-                        ↗
+                        <ArrowUpRightIcon className="size-3.5" />
                       </Link>
-
-                      <span className="text-slate-400 text-xs hidden sm:inline-block">➔</span>
                     </div>
                   </button>
                 );
@@ -761,15 +726,14 @@ export function TechAtlasSearch({
             )}
           </div>
 
-          {/* Footer Bar */}
-          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-2 mt-2 px-1 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
-            <div className="hidden sm:flex items-center gap-2">
-              <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">↑</kbd> <kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">↓</kbd> navigate</span>
-              <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">↵</kbd> select</span>
-              <span><kbd className="font-mono bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">esc</kbd> close</span>
+          <div className="mt-2 flex items-center justify-between gap-3 border-t border-line px-1 pt-2 text-[11px] text-fg-subtle">
+            <div className="hidden items-center gap-3 sm:flex">
+              <span><kbd className="rounded bg-surface-3 px-1 py-0.5 font-mono">↑</kbd> <kbd className="rounded bg-surface-3 px-1 py-0.5 font-mono">↓</kbd> navigate</span>
+              <span><kbd className="rounded bg-surface-3 px-1 py-0.5 font-mono">↵</kbd> select</span>
+              <span><kbd className="rounded bg-surface-3 px-1 py-0.5 font-mono">esc</kbd> close</span>
             </div>
             <span className="truncate">
-              Database: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{totalDatabaseCompanies.toLocaleString()}</strong> verified companies
+              Database: <strong className="font-semibold text-fg-muted">{totalDatabaseCompanies.toLocaleString()}</strong> verified companies
             </span>
           </div>
         </div>
