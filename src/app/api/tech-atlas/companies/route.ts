@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: Request) {
   try {
@@ -12,7 +14,12 @@ export async function GET(request: Request) {
     const hub = searchParams.get("hub") || "";
     const type = searchParams.get("type") || "";
 
-    const supabase = await createSupabaseServerClient();
+    let supabase: SupabaseClient;
+    try {
+      supabase = createSupabaseAdminClient();
+    } catch {
+      supabase = await createSupabaseServerClient();
+    }
 
     let query = supabase
       .from("listings")

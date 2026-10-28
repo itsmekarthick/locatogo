@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
+import { getMapTileConfiguration } from "@/lib/map/provider";
 
 interface LocationPinPickerProps {
   initialLat?: number | null;
@@ -58,7 +59,6 @@ const InnerMap = dynamic(
       lng: number;
       onSelect: (lat: number, lng: number) => void;
     }) {
-      const { getMapTileConfiguration } = require("@/lib/map/provider");
       const tiles = getMapTileConfiguration();
       
       return (

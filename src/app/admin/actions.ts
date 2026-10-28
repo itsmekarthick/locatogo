@@ -1018,7 +1018,7 @@ export async function bulkInsertOnlinePlaces(
     }
 
     // Generate unique slug
-    let baseSlug = (place.slug || cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")).replace(/(^-|-$)/g, "");
+    const baseSlug = (place.slug || cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")).replace(/(^-|-$)/g, "");
     let uniqueSlug = baseSlug;
     let counter = 1;
     while (existingSlugSet.has(uniqueSlug)) {

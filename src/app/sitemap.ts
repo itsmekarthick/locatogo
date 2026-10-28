@@ -1,25 +1,52 @@
 import type { MetadataRoute } from "next";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { GLOBAL_TECH_HUBS, KNOWN_HUB_LOCALITIES } from "@/lib/constants/tech-hubs";
 
 export const revalidate = 86400; // Cache sitemap for 24 hours
 
-async function fetchAllPublishedListings(supabase: any) {
-  const pageSize = 1000;
-  const listings: any[] = [];
+type PublishedListingRow = {
+  id: string;
+  slug: string;
+  company_type: string | null;
+  active_jobs_count: number;
+  updated_at: string | null;
+};
 
-  for (let offset = 0; offset < 100000; offset += pageSize) {
-    const { data } = await supabase
+type PublishedBlogRow = {
+  slug: string;
+  updated_at: string | null;
+};
+
+async function fetchAllPublishedListings(supabase: SupabaseClient): Promise<PublishedListingRow[]> {
+  const pageSize = 2000;
+  const listings: PublishedListingRow[] = [];
+  let lastId: string | null = null;
+
+  while (true) {
+    let query = supabase
       .from("listings")
-      .select("slug, company_type, active_jobs_count, updated_at")
+      .select("id, slug, company_type, active_jobs_count, updated_at")
       .eq("status", "published")
       .order("id", { ascending: true })
-      .range(offset, offset + pageSize - 1);
+      .limit(pageSize);
 
-    const page = data || [];
+    if (lastId) {
+      query = query.gt("id", lastId);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("[Sitemap] Error fetching listings batch:", error);
+      break;
+    }
+
+    const page = (data || []) as unknown as PublishedListingRow[];
     listings.push(...page);
+
     if (page.length < pageSize) break;
+    lastId = page[page.length - 1].id;
   }
 
   return listings;
@@ -27,7 +54,7 @@ async function fetchAllPublishedListings(supabase: any) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://locatogo.com";
-  let supabase: any;
+  let supabase: SupabaseClient;
   try {
     supabase = createSupabaseAdminClient();
   } catch {
@@ -38,6 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     supabase.from("blogs").select("slug, updated_at").eq("status", "published"),
     fetchAllPublishedListings(supabase),
   ]);
+  const blogList = (blogs || []) as unknown as PublishedBlogRow[];
 
   // 1. Core static pages
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -81,7 +109,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const legacyListingRoutes: MetadataRoute.Sitemap = [];
   const seenUrls = new Set<string>();
 
-  rawListings.forEach((listing: any) => {
+  rawListings.forEach((listing: PublishedListingRow) => {
     if (!listing.slug) return;
     const lastMod = listing.updated_at ? new Date(listing.updated_at) : new Date();
 
@@ -111,7 +139,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   });
 
   // 5. Blog articles
-  const blogRoutes: MetadataRoute.Sitemap = (blogs || []).map((blog: any) => ({
+  const blogRoutes: MetadataRoute.Sitemap = blogList.map((blog) => ({
     url: `${baseUrl}/blog/${blog.slug}`,
     lastModified: blog.updated_at ? new Date(blog.updated_at) : new Date(),
     changeFrequency: "weekly",

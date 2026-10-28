@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const querySchema = z.object({ q: z.string().trim().min(2).max(80) });
 
@@ -20,7 +22,12 @@ export async function GET(request: Request) {
   if (!parsed.success) return NextResponse.json({ companies: [], roles: [] });
 
   const pattern = `%${escapeLike(parsed.data.q)}%`;
-  const supabase = await createSupabaseServerClient();
+  let supabase: SupabaseClient;
+  try {
+    supabase = createSupabaseAdminClient();
+  } catch {
+    supabase = await createSupabaseServerClient();
+  }
 
   const [companies, roles] = await Promise.all([
     supabase

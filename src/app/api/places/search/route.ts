@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+
+type SearchListingRow = {
+  id: string;
+  title: string;
+  slug: string;
+  locality: string | null;
+  city: string | null;
+  short_description: string | null;
+  is_featured: boolean | null;
+  categories: { name?: string; icon?: string } | { name?: string; icon?: string }[] | null;
+};
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,7 +24,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = await createSupabaseServerClient();
+    let supabase: SupabaseClient;
+    try {
+      supabase = createSupabaseAdminClient();
+    } catch {
+      supabase = await createSupabaseServerClient();
+    }
     const cleanQ = q.replace(/[%_]/g, "\\$&"); // Escape wildcards
 
     const { data: listings, error } = await supabase
@@ -35,10 +53,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ results: [] });
     }
 
-    const results = (listings || []).map((item) => {
+    const results = ((listings || []) as unknown as SearchListingRow[]).map((item) => {
       const cat = Array.isArray(item.categories)
         ? item.categories[0]
-        : (item.categories as { name?: string; icon?: string } | null);
+        : item.categories;
 
       return {
         id: item.id,
@@ -58,3 +76,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results: [] }, { status: 500 });
   }
 }
+
