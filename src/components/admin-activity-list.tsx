@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Pagination } from "@/components/ui/pagination";
+import { DataTable, type Column } from "@/components/admin/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ClockIcon } from "@/components/ui/icons";
 
 type AuditLogItem = {
   id: string;
@@ -11,63 +12,45 @@ type AuditLogItem = {
   created_at: string;
 };
 
-const PAGE_SIZE = 10;
+// UTC keeps the server and browser renders identical.
+const stampFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
+
+const columns: Column<AuditLogItem>[] = [
+  {
+    id: "action",
+    header: "Action",
+    sortValue: (row) => row.action,
+    cell: (row) => (
+      <div>
+        <p className="font-medium text-fg">{row.action}</p>
+        <p className="mt-0.5 text-xs capitalize text-fg-subtle">{row.entity_type}</p>
+      </div>
+    ),
+  },
+  {
+    id: "entity",
+    header: "Entity ID",
+    hideBelow: "md",
+    cell: (row) => <span className="block max-w-[16rem] truncate font-mono text-xs text-fg-muted">{row.entity_id || "None"}</span>,
+  },
+  {
+    id: "time",
+    header: "Timestamp (UTC)",
+    sortValue: (row) => row.created_at,
+    cell: (row) => <span className="whitespace-nowrap text-fg-muted">{stampFormat.format(new Date(row.created_at))}</span>,
+  },
+];
 
 export function AdminActivityList({ logs }: { logs: AuditLogItem[] }) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const totalPages = Math.ceil(logs.length / PAGE_SIZE) || 1;
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return logs.slice(start, start + PAGE_SIZE);
-  }, [logs, currentPage]);
-
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--paper)]">
-      <div className="grid grid-cols-[1.5fr_1fr_1fr] gap-4 border-b border-[var(--line)] px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-muted)] bg-[var(--background)]/50">
-        <span>Action / Entity</span>
-        <span>Entity ID</span>
-        <span>Timestamp</span>
-      </div>
-
-      <div className="divide-y divide-[var(--line)]">
-        {paginated.length > 0 ? (
-          paginated.map((log) => (
-            <div
-              key={log.id}
-              className="grid grid-cols-[1.5fr_1fr_1fr] items-center gap-4 px-5 py-4 text-sm"
-            >
-              <div>
-                <p className="font-semibold">{log.action}</p>
-                <p className="mt-0.5 text-xs text-[var(--ink-muted)] capitalize">{log.entity_type}</p>
-              </div>
-              <span className="font-mono text-xs text-[var(--ink-muted)] truncate">
-                {log.entity_id || "—"}
-              </span>
-              <span className="text-xs text-[var(--ink-muted)]">
-                {new Date(log.created_at).toLocaleString()}
-              </span>
-            </div>
-          ))
-        ) : (
-          <div className="flex min-h-56 items-center justify-center px-5 text-center text-sm text-[var(--ink-muted)]">
-            No logged activity yet. Changes to listings and directory items will appear here automatically.
-          </div>
-        )}
-      </div>
-
-      {logs.length > PAGE_SIZE && (
-        <div className="px-5 pb-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={logs.length}
-            pageSize={PAGE_SIZE}
-            onPageChange={setCurrentPage}
-          />
-        </div>
-      )}
-    </div>
+    <DataTable
+      caption="Activity trail"
+      columns={columns}
+      rows={logs}
+      getRowId={(row) => row.id}
+      pageSize={10}
+      defaultSort={{ id: "time", dir: "desc" }}
+      empty={<EmptyState icon={<ClockIcon />} title="No logged activity yet" description="Changes to listings and directory items will appear here automatically." />}
+    />
   );
 }
-

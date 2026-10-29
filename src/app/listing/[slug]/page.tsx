@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { Suspense, type ReactNode } from "react";
 import { notFound, redirect, RedirectType } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PlaceMiniMap } from "@/components/place-mini-map";
@@ -17,18 +19,36 @@ import {
   generateWhatsAppInquiryLink,
 } from "@/lib/services/transit-links";
 import { fetchLivePlaceDetails } from "@/lib/media/google-places";
-import { ShareButton } from "@/components/share-button";
-import { FavoriteButton } from "@/components/favorite-button";
 import { WeatherAtmosphereOverlay } from "@/components/weather-atmosphere-overlay";
-import { BrandLogo } from "@/components/brand-logo";
-import { getPlaceRating } from "@/lib/services/place-rating";
+import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { computeLiveOpeningStatus } from "@/lib/services/opening-hours";
 import { PlaceReviews } from "@/components/place-reviews-section";
 import { NearbyPlaces } from "@/components/nearby-places";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { UserProfileMenu } from "@/components/user-profile-menu";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
 import { AdBannerSlot } from "@/components/ad-banner-slot";
+import { SiteFooter } from "@/components/site-footer";
+import { DetailActions } from "@/components/detail/detail-actions";
+import { DetailHeader } from "@/components/detail/detail-header";
+import { BLUR_PLACEHOLDER, DetailHero } from "@/components/detail/detail-hero";
+import { DetailStickyBar } from "@/components/detail/detail-sticky-bar";
+import { ModuleBoundary } from "@/components/detail/module-boundary";
+import { ModuleCard, ModuleSkeleton } from "@/components/detail/module-card";
+import { Badge, type BadgeVariant } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  ArrowUpRightIcon,
+  CarIcon,
+  ClockIcon,
+  EyeIcon,
+  FileTextIcon,
+  GlobeIcon,
+  MapPinIcon,
+  MessageIcon,
+  PhoneIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  StarIcon,
+} from "@/components/ui/icons";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -218,362 +238,204 @@ export default async function ListingDetailPage({ params }: Props) {
     ...(listing.website && { url: listing.website }),
   };
 
+  const hasCoordinates = typeof listing.latitude === "number" && typeof listing.longitude === "number";
+  const websiteUrl: string | null = placeDetails.websiteUri || listing.website || null;
+  const phone: string | null = placeDetails.nationalPhoneNumber || listing.phone || null;
+  const coverPhoto = displayPhotos[0] ?? null;
+  const galleryPhotos = displayPhotos.slice(1, 6);
+  const googleRating = placeDetails.rating && placeDetails.rating > 0 ? placeDetails.rating : null;
+
+  const primaryAction = websiteUrl
+    ? { href: websiteUrl, label: "Visit website", icon: <GlobeIcon className="size-4 shrink-0" /> }
+    : phone
+      ? { href: `tel:${phone}`, label: "Call", icon: <PhoneIcon className="size-4 shrink-0" />, external: false }
+      : null;
+
+  const sections = [
+    { id: "overview", label: "Overview" },
+    ...(galleryPhotos.length > 0 ? [{ id: "photos", label: "Photos" }] : []),
+    { id: "contact", label: "Contact", aside: true },
+    { id: "hours", label: "Hours", aside: true },
+    { id: "reviews", label: "Reviews" },
+    { id: "community-reviews", label: "Community" },
+    ...(hasCoordinates ? [{ id: "nearby", label: "Nearby" }] : []),
+  ];
+
+  const statusVariant: BadgeVariant = liveOpening.dotColorClass.includes("emerald")
+    ? "success"
+    : liveOpening.dotColorClass.includes("amber")
+      ? "warning"
+      : liveOpening.dotColorClass.includes("rose")
+        ? "danger"
+        : "neutral";
+
+  const hoursRows: { day: string; value: ReactNode }[] =
+    placeDetails.openingHoursText && placeDetails.openingHoursText.length > 0
+      ? placeDetails.openingHoursText.map((dayLine: string) => {
+          const [dayName, ...timeRest] = dayLine.split(":");
+          return { day: dayName, value: timeRest.join(":").trim() };
+        })
+      : daysOfWeek.map((day, idx) => {
+          const schedule = hours?.find((h: any) => h.day_of_week === idx);
+          return {
+            day,
+            value:
+              !schedule || schedule.is_closed ? (
+                <span className="text-danger">Closed</span>
+              ) : schedule.is_24_hours ? (
+                <span className="text-success">Open 24 hours</span>
+              ) : (
+                `${schedule.open_time || "09:00"} - ${schedule.close_time || "18:00"}`
+              ),
+          };
+        });
+
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#fdfdfd] font-sans antialiased text-[#111827]">
-      {/* Top Navbar with Autocomplete Search */}
-      <header className="border-b border-gray-100 dark:border-slate-800 bg-white dark:bg-[#0c121e] sticky top-0 z-[1000] shadow-2xs">
-        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
-          {/* Logo & Badge */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <Link href="/" className="flex items-center gap-2 font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900 group">
-              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
-              <span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
-            </Link>
-            <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
-              <span className="text-xs">📍</span>
-              <span>Global Atlas</span>
-            </div>
-          </div>
+    <div className="flex min-h-dvh flex-col bg-surface-0 text-fg antialiased">
+      <DetailHeader
+        crumbs={[{ label: "Tech Atlas", href: "/" }, { label: categoryName }, { label: listing.title }]}
+        search={<DetailsAutocompleteSearch />}
+        cta={{ href: "/", label: "Explore map" }}
+      />
 
-          {/* Autocomplete Search Bar in Navbar */}
-          <div className="flex-1 max-w-[200px] xs:max-w-[260px] sm:max-w-md mx-1 sm:mx-2 flex justify-center">
-            <DetailsAutocompleteSearch />
-          </div>
+      <ListingViewTracker listingId={listing.id} />
 
-          {/* Nav Actions */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <Link
-              href="/"
-              className="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs"
+      <DetailHero
+        cover={coverPhoto ? { src: coverPhoto.url, alt: coverPhoto.alt || listing.title, caption: coverPhoto.caption } : null}
+        coverOverlay={weather?.weatherType ? <WeatherAtmosphereOverlay weatherType={weather.weatherType} /> : null}
+        coverAction={
+          placeDetails.googleMapsUri ? (
+            <a
+              href={placeDetails.googleMapsUri}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonVariants({ variant: "secondary", size: "sm", className: "glass" })}
             >
-              Explore Map
-            </Link>
-            <ThemeToggle />
-            <UserProfileMenu />
-          </div>
-        </div>
-      </header>
+              More photos
+              <ArrowUpRightIcon className="size-4" />
+            </a>
+          ) : null
+        }
+        avatar={<CompanyBrandAvatar title={listing.title} website={listing.website} size={88} className="rounded-xl" />}
+        title={listing.title}
+        chips={
+          <>
+            <Badge variant="accent">{categoryName}</Badge>
+            <Badge variant={statusVariant} dot>
+              {liveOpening.statusText}
+            </Badge>
+            {listing.is_featured && (
+              <Badge variant="warning" icon={<SparklesIcon className="size-3.5" />}>
+                Featured
+              </Badge>
+            )}
+            {listing.verification_status === "verified" && (
+              <Badge variant="success" icon={<ShieldCheckIcon className="size-3.5" />}>
+                Verified
+              </Badge>
+            )}
+            {googleRating !== null && (
+              <a href="#reviews" className="focus-ring rounded-full" title="Jump to reviews">
+                <Badge variant="warning" icon={<StarIcon className="size-3.5 fill-current" />}>
+                  {googleRating.toFixed(1)}
+                  {placeDetails.userRatingCount ? (
+                    <span className="opacity-70">({placeDetails.userRatingCount.toLocaleString("en-US")})</span>
+                  ) : null}
+                </Badge>
+              </a>
+            )}
+          </>
+        }
+        meta={
+          <>
+            <span className="inline-flex items-center gap-1.5">
+              <MapPinIcon className="size-4 shrink-0 text-fg-subtle" />
+              {placeDetails.formattedAddress || address || [listing.locality, listing.city].filter(Boolean).join(", ") || "Address not listed"}
+            </span>
+            {hasCoordinates && <PlaceDistanceBadge latitude={listing.latitude} longitude={listing.longitude} />}
+            {weather && <PlaceWeatherBadge weather={weather} locality={listing.locality} compact />}
+          </>
+        }
+        summary={heroSummary}
+      />
 
-      {/* Main Container */}
-      <main className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8 py-5 sm:py-8 pb-24 lg:pb-12">
-        <ListingViewTracker listingId={listing.id} />
-        {/* Back Link & Quick Weather / Distance Banner */}
-        <div className="mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-2.5">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-gray-950 transition-colors"
+      <DetailStickyBar sections={sections} className="mt-6">
+        <DetailActions
+          primary={primaryAction}
+          listingId={listing.id}
+          shareTitle={`${listing.title} on LocaToGo`}
+          latitude={listing.latitude}
+          longitude={listing.longitude}
+        />
+      </DetailStickyBar>
+
+      <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-[minmax(0,1fr)] items-start gap-8 px-4 pb-28 pt-8 sm:px-6 lg:pb-16 lg:grid-cols-[minmax(0,1fr)_23.75rem] lg:px-8">
+        <div className="min-w-0 space-y-6">
+          <ModuleCard
+            id="overview"
+            icon={<FileTextIcon />}
+            title="Overview"
+            description={`What ${listing.title} is for and who it serves`}
           >
-            <span>←</span>
-            <span>Back to Live Atlas</span>
-          </Link>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            {listing.latitude && listing.longitude && (
-              <PlaceDistanceBadge
-                latitude={listing.latitude}
-                longitude={listing.longitude}
-              />
-            )}
-            {weather && (
-              <PlaceWeatherBadge weather={weather} locality={listing.locality} compact />
-            )}
-          </div>
-        </div>
-
-        {/* 1. HERO SHOWCASE CARD */}
-        <section className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs mb-6 sm:mb-8">
-          {/* Category & Badges Row */}
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <span className="rounded bg-cyan-50/90 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-cyan-800 uppercase">
-                {categoryName}
-              </span>
-
-              {/* Live Open Now / Closed Status Badge with Countdown */}
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-md border px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold shadow-2xs ${liveOpening.badgeClass}`}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${liveOpening.dotColorClass} animate-pulse`} />
-                <span>{liveOpening.statusText}</span>
-              </span>
-
-              {listing.is_featured && (
-                <span className="rounded bg-orange-50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] font-bold tracking-wider text-[#0ea5e9] uppercase flex items-center gap-1">
-                  <span>☆</span>
-                  <span>FEATURED</span>
-                </span>
+            <div className="max-w-[65ch] space-y-4 leading-relaxed text-fg-muted">
+              <p className="text-pretty text-fg">{aboutData.overview}</p>
+              {listing.description && listing.description !== aboutData.overview && (
+                <p className="whitespace-pre-line text-pretty border-t border-line pt-4">{listing.description}</p>
               )}
-              {listing.verification_status === "verified" && (
-                <span className="rounded bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                  ✓ Verified Place
-                </span>
-              )}
-              {(() => {
-                const effectiveRating = placeDetails.rating || getPlaceRating(listing).rating;
-                const effectiveCount = placeDetails.userRatingCount || getPlaceRating(listing).reviewCount;
-                return (
-                  <a
-                    href="#reviews"
-                    title="View verified ratings and community reviews"
-                    className="rounded bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-[10px] font-bold text-amber-900 flex items-center gap-1.5 hover:bg-amber-100/80 transition-colors cursor-pointer"
-                  >
-                    <span className="text-amber-500">★</span>
-                    <span>{effectiveRating.toFixed(1)}</span>
-                    <span className="text-[9px] text-amber-800/80">
-                      ({effectiveCount.toLocaleString()} reviews)
-                    </span>
-                    <span className="text-[10px] text-amber-600">↓</span>
-                  </a>
-                );
-              })()}
             </div>
 
-            <Link
-              href={`/listing/${listing.slug}/claim`}
-              className="text-xs font-bold text-[#0ea5e9] hover:underline flex items-center gap-1"
-            >
-              <span>🏷️ Claim</span>
-            </Link>
-          </div>
-
-          {/* Main Title & Locality Subtitle */}
-          <div className="mt-3 sm:mt-4">
-            <h1 className="font-serif text-2xl sm:text-3xl lg:text-[40px] font-bold text-gray-950 leading-tight">
-              {listing.title}
-            </h1>
-            <div className="mt-1.5 sm:mt-2 flex items-center gap-3 flex-wrap">
-              <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5 font-medium">
-                <span className="text-[#0ea5e9] shrink-0">📍</span>
-                <span>{placeDetails.formattedAddress || address || "Bangalore, Karnataka, India"}</span>
-              </p>
-              <a
-                href="#reviews"
-                className="text-xs text-amber-700 hover:text-amber-900 font-semibold flex items-center gap-1 hover:underline"
-              >
-                <span className="text-amber-500">★★★★★</span>
-                <span>See Reviews</span>
-              </a>
-            </div>
-
-            {/* WHAT THIS PLACE IS FOR (HERO SUMMARY) */}
-            <p className="mt-3 text-xs sm:text-sm lg:text-base text-gray-700 leading-relaxed max-w-4xl font-normal">
-              {heroSummary}
-            </p>
-          </div>
-
-          {/* Action Button Bar with Transit & WhatsApp Integration (Scrollable on Mobile) */}
-          <div className="mt-5 sm:mt-6 flex items-center gap-2 sm:gap-2.5 border-t border-gray-100 pt-4 sm:pt-5 text-xs overflow-x-auto pb-1.5 sm:pb-0 sm:flex-wrap no-scrollbar">
-            {/* WhatsApp 1-Click Direct Inquiry */}
-            {whatsappUrl && (
-              <a data-analytics-event="whatsapp_click" href={whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3.5 sm:px-4 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition-colors shadow-2xs shrink-0"
-              >
-                <span>💬</span>
-                <span>WhatsApp</span>
-              </a>
+            {aboutData.keyFacts.length > 0 && (
+              <dl className="mt-6 grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
+                {aboutData.keyFacts.map((fact: { label: string; value: string }) => (
+                  <div key={fact.label} className="flex items-center justify-between gap-3 bg-surface-1 px-4 py-3 text-sm">
+                    <dt className="text-fg-muted">{fact.label}</dt>
+                    <dd className="text-right font-medium text-fg">{fact.value}</dd>
+                  </div>
+                ))}
+              </dl>
             )}
 
-            {/* Phone Call */}
-            {(placeDetails.nationalPhoneNumber || listing.phone) && (
-              <a
-                href={`tel:${placeDetails.nationalPhoneNumber || listing.phone}`}
-                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 sm:px-4 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-2xs shrink-0"
-              >
-                <span>📞</span>
-                <span>Call {placeDetails.nationalPhoneNumber || listing.phone}</span>
-              </a>
-            )}
-
-            {/* 1-Click Cab Booking: Uber */}
-            <a
-              href={uberRideUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-full border border-gray-900 bg-gray-950 px-3.5 sm:px-4 py-2 text-xs font-bold text-white hover:bg-black transition-colors shadow-2xs shrink-0"
-            >
-              <span>🚕</span>
-              <span>Uber</span>
-            </a>
-
-            {/* 1-Click Cab Booking: Ola */}
-            <a
-              href={olaRideUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 rounded-full border border-lime-400 bg-lime-50 px-3.5 sm:px-4 py-2 text-xs font-bold text-lime-900 hover:bg-lime-100 transition-colors shadow-2xs shrink-0"
-            >
-              <span>🛺</span>
-              <span>Ola</span>
-            </a>
-
-            {/* Google Street View 360 Look Around */}
-            {listing.latitude && listing.longitude && (
-              <PlaceStreetViewButton
-                latitude={listing.latitude}
-                longitude={listing.longitude}
-                title={listing.title}
-              />
-            )}
-
-            {/* Official Website */}
-            {(placeDetails.websiteUri || listing.website) && (
-              <a
-                href={placeDetails.websiteUri || listing.website}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 sm:px-4 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-2xs shrink-0"
-              >
-                <span>🌐</span>
-                <span>Website</span>
-              </a>
-            )}
-
-            {/* Live Navigation */}
-            {listing.latitude && listing.longitude && (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 sm:px-4 py-2 text-xs font-semibold text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-2xs shrink-0"
-              >
-                <span>🧭</span>
-                <span>Directions</span>
-              </a>
-            )}
-
-            {/* Share Place */}
-            <ShareButton title={listing.title} className="rounded-full! shrink-0" />
-
-            {/* Save / Favorite */}
-            <FavoriteButton listingId={listing.id} showCount className="rounded-full! shrink-0" />
-          </div>
-        </section>
-
-        {/* 2. PHOTO MOSAIC SHOWCASE (MOBILE OPTIMIZED) */}
-        <section className="mb-6 sm:mb-8 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-            {/* Main Featured Hero Photo */}
-            <div className="md:col-span-2 relative aspect-[16/10] sm:aspect-[16/9] w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-gray-200 bg-gray-100 shadow-xs group">
-              <img
-                src={displayPhotos[0]?.url || "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=1200&q=80"}
-                alt={displayPhotos[0]?.alt || listing.title}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              {weather?.weatherType && (
-                <WeatherAtmosphereOverlay weatherType={weather.weatherType} />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end p-4 sm:p-5 pointer-events-none">
-                <div>
-                  <span className="rounded bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white uppercase tracking-wider">
-                    {displayPhotos[0]?.caption || "Main Venue Facade"}
-                  </span>
-                  <p className="text-white text-sm sm:text-base font-semibold mt-1">
-                    {listing.title}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Secondary Photo Stack */}
-            <div className="grid grid-cols-2 md:grid-cols-1 gap-3 sm:gap-4">
-              <div className="relative aspect-[16/10] md:aspect-auto md:h-full overflow-hidden rounded-2xl sm:rounded-3xl border border-gray-200 bg-gray-100 shadow-xs group">
-                <img
-                  src={displayPhotos[1]?.url || displayPhotos[0]?.url || "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80"}
-                  alt={displayPhotos[1]?.alt || listing.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold text-white">
-                  {displayPhotos[1]?.caption || "Interior"}
-                </div>
-              </div>
-
-              <div className="relative aspect-[16/10] md:aspect-auto md:h-full overflow-hidden rounded-2xl sm:rounded-3xl border border-gray-200 bg-gray-100 shadow-xs group">
-                <img
-                  src={displayPhotos[2]?.url || displayPhotos[0]?.url || "https://images.unsplash.com/photo-1527018607637-a616330326d7?auto=format&fit=crop&w=800&q=80"}
-                  alt={displayPhotos[2]?.alt || listing.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                {placeDetails.googleMapsUri && (
-                  <a
-                    href={placeDetails.googleMapsUri}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="absolute inset-0 bg-black/50 backdrop-blur-2xs flex items-center justify-center text-white text-[11px] sm:text-xs font-bold hover:bg-black/40 transition-colors p-2 text-center"
-                  >
-                    <span>📸 View Photos in Maps ↗</span>
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. TWO-COLUMN EDITORIAL CONTENT GRID */}
-        <section className="w-full grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
-          {/* LEFT: WHAT THIS PLACE IS FOR / ABOUT & REVIEWS */}
-          <div className="space-y-6">
-            {/* OVERVIEW & PURPOSE CARD */}
-            <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
-              <div className="flex items-center gap-2 border-b border-gray-100 pb-4">
-                <span className="text-xl">📖</span>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-950">
-                    What this place is for & Overview
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Essential details, community role, and services for {listing.title}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 space-y-4 text-xs sm:text-sm leading-relaxed text-gray-700">
-                <p className="text-sm sm:text-base font-medium text-gray-900 leading-relaxed">
-                  {aboutData.overview}
-                </p>
-                {listing.description && listing.description !== aboutData.overview && (
-                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed whitespace-pre-line border-t border-gray-100 pt-4">
-                    {listing.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Quick Facts Grid */}
-              <div className="mt-6 sm:mt-8 rounded-2xl bg-gray-50/80 border border-gray-200/80 p-4 sm:p-5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
-                  Overview & Key Facts
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 text-xs">
-                  {aboutData.keyFacts.map((fact: { label: string; value: string }, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-gray-100">
-                      <span className="text-gray-500">{fact.label}:</span>
-                      <span className="font-semibold text-gray-900">{fact.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Highlights & Features */}
-              <div className="mt-6 sm:mt-8 border-t border-gray-100 pt-5 sm:pt-6">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">
-                  Key Amenities & Highlights
-                </h3>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2 text-xs">
-                  {aboutData.highlights.map((highlight: string, idx: number) => (
-                    <span
-                      key={idx}
-                      className="rounded-xl bg-gray-50 border border-gray-200/80 px-3 py-1.5 font-medium text-gray-700 shadow-2xs"
-                    >
+            {aboutData.highlights.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-fg">Amenities and highlights</h3>
+                <ul role="list" className="mt-3 flex flex-wrap gap-2">
+                  {aboutData.highlights.map((highlight: string) => (
+                    <li key={highlight} className="rounded-lg border border-line bg-surface-3 px-2.5 py-1 text-sm text-fg-muted">
                       {highlight}
-                    </span>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
-            </div>
+            )}
+          </ModuleCard>
 
-            {/* REAL COMMUNITY & GOOGLE REVIEWS CARD */}
+          {galleryPhotos.length > 0 && (
+            <ModuleCard id="photos" icon={<EyeIcon />} title="Photos" description={`${displayPhotos.length} from Google Maps and the community`}>
+              <ul role="list" className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                {galleryPhotos.map((photo, index) => (
+                  <li
+                    key={`${photo.url}-${index}`}
+                    className={`relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-surface-3 ${index === 0 ? "col-span-2 md:row-span-2 md:aspect-auto" : ""}`}
+                  >
+                    <Image
+                      src={photo.url}
+                      alt={photo.alt || listing.title}
+                      fill
+                      unoptimized
+                      placeholder="blur"
+                      blurDataURL={BLUR_PLACEHOLDER}
+                      sizes="(min-width: 1024px) 400px, 50vw"
+                      className="object-cover transition-transform duration-500 ease-emphasized hover:scale-[1.03]"
+                    />
+                  </li>
+                ))}
+              </ul>
+            </ModuleCard>
+          )}
+
+          <ModuleBoundary title="Visitor reviews">
             <PlaceGoogleReviews
+              id="reviews"
               reviews={placeDetails.reviews}
               rating={placeDetails.rating}
               userRatingCount={placeDetails.userRatingCount}
@@ -581,271 +443,116 @@ export default async function ListingDetailPage({ params }: Props) {
               categoryName={categoryName}
               locality={listing.locality}
             />
+          </ModuleBoundary>
 
-            {/* DETAILED CATEGORY SECTIONS (Schools, Hospitals, Tech Parks) */}
-            {categoryName.toLowerCase().includes("school") && (
-              <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
-                <h3 className="font-serif text-lg font-bold text-gray-950 mb-2 flex items-center gap-2">
-                  <span>🎓</span>
-                  <span>Curriculum & Academic Environment</span>
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                  Equipped with modern laboratories, expansive sporting grounds, smart classrooms, and dedicated extracurricular clubs designed to support holistic student development in Bangalore.
-                </p>
-              </div>
+          <PlaceReviews id="community-reviews" listingId={listing.id} initialReviews={reviews} />
+
+          {hasCoordinates && (
+            <ModuleBoundary title="Nearby places">
+              <Suspense fallback={<ModuleSkeleton lines={3} />}>
+                <NearbyPlaces
+                  listingId={listing.id}
+                  categoryId={listing.category_id}
+                  latitude={listing.latitude}
+                  longitude={listing.longitude}
+                />
+              </Suspense>
+            </ModuleBoundary>
+          )}
+
+          <AdBannerSlot placementLocation="detail_bottom" variant="detail_bottom" categoryId={listing.category_id} />
+        </div>
+
+        <aside aria-label="Contact, hours and map" className="space-y-6 lg:sticky lg:top-36 lg:max-h-[calc(100dvh-10rem)] lg:overflow-y-auto lg:overscroll-contain lg:pr-1 lg:[scrollbar-width:thin]">
+          {weather && <PlaceWeatherBadge id="weather" weather={weather} locality={listing.locality} />}
+
+          <ModuleCard id="contact" icon={<MapPinIcon />} title="Contact and travel" description={listing.locality || listing.city || undefined}>
+            {hasCoordinates && (
+              <PlaceMiniMap
+                listing={{ ...listing, latitude: listing.latitude, longitude: listing.longitude }}
+                weatherType={weather?.weatherType}
+              />
+            )}
+            {hasCoordinates && (
+              <p className="mt-3 font-mono text-xs text-fg-subtle">
+                {listing.latitude.toFixed(4)}, {listing.longitude.toFixed(4)}
+              </p>
             )}
 
-            {categoryName.toLowerCase().includes("hospital") && (
-              <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
-                <h3 className="font-serif text-lg font-bold text-gray-950 mb-2 flex items-center gap-2">
-                  <span>➕</span>
-                  <span>Medical Specialties & Emergency Care</span>
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                  Features 24x7 emergency response units, advanced diagnostic imaging, specialized intensive care, and a team of multi-disciplinary physicians providing quality healthcare services.
-                </p>
-              </div>
-            )}
-
-            {categoryName.toLowerCase().includes("tech") && (
-              <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 lg:p-8 shadow-xs">
-                <h3 className="font-serif text-lg font-bold text-gray-950 mb-2 flex items-center gap-2">
-                  <span>💻</span>
-                  <span>Campus Infrastructure & Amenities</span>
-                </h3>
-                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                  World-class technology campus offering redundant power grids, high-speed fiber connectivity, multi-cuisine food courts, EV charging stations, and dedicated multi-level parking.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT: MAP, LIVE WEATHER & TRANSIT SIDEBAR */}
-          <div className="space-y-6">
-            {/* Live Weather & AQI Card */}
-            {weather && (
-              <PlaceWeatherBadge weather={weather} locality={listing.locality} />
-            )}
-
-            {/* Live Interactive Map Widget Card */}
-            <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 shadow-xs">
-              <h3 className="font-serif text-base font-bold text-gray-950 flex items-center gap-1.5">
-                <span>🗺️</span>
-                <span>Live Map & Directions</span>
-              </h3>
-              <p className="mt-1 text-xs text-gray-500">Exact GPS positioning in Bangalore</p>
-
-              {listing.latitude && listing.longitude ? (
-                <div className="mt-4 space-y-3">
-                  <PlaceMiniMap
-                    listing={{
-                      ...listing,
-                      latitude: listing.latitude,
-                      longitude: listing.longitude,
-                    }}
-                    weatherType={weather?.weatherType}
-                  />
-                  <div className="flex items-center justify-between text-xs font-mono bg-gray-50 border border-gray-200 p-2.5 rounded-xl">
-                    <span className="text-gray-500">GPS:</span>
-                    <span className="font-bold text-emerald-700">
-                      {listing.latitude.toFixed(4)}, {listing.longitude.toFixed(4)}
-                    </span>
-                  </div>
-
-                  {/* Quick Ride Booking Actions */}
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <a
-                      href={uberRideUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-center gap-1.5 rounded-xl bg-black py-2.5 text-xs font-bold text-white hover:bg-gray-800 transition-colors shadow-xs"
-                    >
-                      <span>🚕</span>
-                      <span>Uber Ride</span>
-                    </a>
-                    <a
-                      href={olaRideUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-center gap-1.5 rounded-xl bg-lime-400 py-2.5 text-xs font-bold text-lime-950 hover:bg-lime-300 transition-colors shadow-xs"
-                    >
-                      <span>🛺</span>
-                      <span>Ola Cab</span>
-                    </a>
-                  </div>
-
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full block text-center rounded-xl bg-gray-100 py-2.5 text-xs font-bold text-gray-800 hover:bg-gray-200 transition-colors"
-                  >
-                    Open Driving Route in Maps 🧭
+            <div className="mt-4 grid gap-2">
+              {phone && (
+                <a
+                  data-analytics-event="phone_click"
+                  href={`tel:${phone}`}
+                  className={buttonVariants({ variant: "secondary", fullWidth: true })}
+                >
+                  <PhoneIcon className="size-4" />
+                  Call {phone}
+                </a>
+              )}
+              {whatsappUrl && (
+                <a
+                  data-analytics-event="whatsapp_click"
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={buttonVariants({ variant: "secondary", fullWidth: true })}
+                >
+                  <MessageIcon className="size-4" />
+                  WhatsApp
+                </a>
+              )}
+              {hasCoordinates && (
+                <div className="grid grid-cols-2 gap-2">
+                  <a href={uberRideUrl} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "secondary" })}>
+                    <CarIcon className="size-4" />
+                    Uber
+                  </a>
+                  <a href={olaRideUrl} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "secondary" })}>
+                    <CarIcon className="size-4" />
+                    Ola
                   </a>
                 </div>
-              ) : null}
-            </div>
-
-            {/* Operating Hours Card */}
-            <div className="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-white p-4 sm:p-6 shadow-xs">
-              <div className="flex items-center justify-between">
-                <h3 className="font-serif text-base font-bold text-gray-950 flex items-center gap-1.5">
-                  <span>⏰</span>
-                  <span>Operating Schedule</span>
-                </h3>
-                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs ${liveOpening.badgeClass}`}>
-                  {liveOpening.statusBadge}
-                </span>
-              </div>
-
-              {/* Show Google Verified Opening Hours if present */}
-              {placeDetails.openingHoursText && placeDetails.openingHoursText.length > 0 ? (
-                <div className="mt-4 divide-y divide-gray-100 text-xs">
-                  {placeDetails.openingHoursText.map((dayLine: string, idx: number) => {
-                    const [dayName, ...timeRest] = dayLine.split(":");
-                    const timeStr = timeRest.join(":").trim();
-                    return (
-                      <div key={idx} className="flex items-center justify-between py-2">
-                        <span className="font-medium text-gray-700">{dayName}</span>
-                        <span className="text-gray-600 font-semibold">{timeStr}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="mt-4 divide-y divide-gray-100 text-xs">
-                  {daysOfWeek.map((day, idx) => {
-                    const schedule = hours?.find((h: any) => h.day_of_week === idx);
-                    return (
-                      <div key={day} className="flex items-center justify-between py-2">
-                        <span className="font-medium text-gray-700">{day}</span>
-                        <span className="text-gray-500 font-semibold">
-                          {!schedule || schedule.is_closed ? (
-                            <span className="text-red-600">Closed</span>
-                          ) : schedule.is_24_hours ? (
-                            <span className="text-emerald-700">Open 24 Hours</span>
-                          ) : (
-                            `${schedule.open_time || "09:00"} - ${schedule.close_time || "18:00"}`
-                          )}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+              )}
+              {hasCoordinates && (
+                <PlaceStreetViewButton latitude={listing.latitude} longitude={listing.longitude} title={listing.title} />
               )}
             </div>
+          </ModuleCard>
 
-            {/* Partner Spotlight Ad Banner Placement */}
-            <AdBannerSlot placementLocation="sidebar" variant="sidebar" categoryId={listing.category_id} />
+          <ModuleCard
+            id="hours"
+            icon={<ClockIcon />}
+            title="Opening hours"
+            action={<Badge variant={statusVariant}>{liveOpening.statusBadge}</Badge>}
+          >
+            <dl className="divide-y divide-line text-sm">
+              {hoursRows.map((row) => (
+                <div key={row.day} className="flex items-center justify-between gap-3 py-2.5">
+                  <dt className="text-fg-muted">{row.day}</dt>
+                  <dd className="font-medium text-fg">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </ModuleCard>
 
-            {/* Claim Card */}
-            <div className="rounded-2xl sm:rounded-3xl border border-dashed border-gray-300 bg-white p-5 sm:p-6 text-center shadow-xs">
-              <span className="text-2xl">🤝</span>
-              <h4 className="font-serif text-sm font-bold text-gray-900 mt-2">
-                Own or Manage this Place?
-              </h4>
-              <p className="text-xs text-gray-500 mt-1">
-                Claim this official listing to manage profile details, upload more photos, and update contact hours.
-              </p>
-              <Link
-                href={`/listing/${listing.slug}/claim`}
-                className="mt-4 inline-block w-full rounded-xl bg-gray-900 py-2.5 text-xs font-bold text-white hover:bg-black transition-colors"
-              >
-                Claim Listing Profile →
-              </Link>
-            </div>
-          </div>
-        </section>
+          <AdBannerSlot placementLocation="sidebar" variant="sidebar" categoryId={listing.category_id} />
 
-        {/* 6. COMMUNITY REVIEWS & RATINGS */}
-        <PlaceReviews listingId={listing.id} initialReviews={reviews} />
-
-        {/* 7. NEARBY PLACES WIDGET */}
-        {listing.latitude && listing.longitude && (
-          <NearbyPlaces
-            listingId={listing.id}
-            categoryId={listing.category_id}
-            latitude={listing.latitude}
-            longitude={listing.longitude}
-          />
-        )}
-
-        {/* 8. FEATURED PARTNER SHOWCASE */}
-        <section className="pt-2">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-serif text-base font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
-              <span>🤝</span>
-              <span>Recommended Local & Business Partners</span>
-            </h3>
-            <Link
-              href="/advertise"
-              className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
-            >
-              Partner with us ↗
+          <div className="rounded-2xl border border-dashed border-line-strong bg-surface-1 p-5 text-center sm:p-6">
+            <span className="mx-auto grid size-10 place-items-center rounded-xl bg-accent-soft text-xl text-accent-text">
+              <ShieldCheckIcon />
+            </span>
+            <h2 className="mt-3 font-display text-base font-semibold tracking-tight text-fg">Own or manage this place?</h2>
+            <p className="mt-1 text-sm text-fg-muted">Claim the listing to update details, add photos and keep hours accurate.</p>
+            <Link href={`/listing/${listing.slug}/claim`} className={buttonVariants({ fullWidth: true, className: "mt-4" })}>
+              Claim this listing
             </Link>
           </div>
-          <AdBannerSlot placementLocation="detail_bottom" variant="detail_bottom" categoryId={listing.category_id} />
-        </section>
-      </main>
-
-      {/* Floating Bottom Quick-Action Bar for Mobile Devices */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur-md p-3 sm:hidden flex items-center justify-between gap-2 shadow-lg">
-        {listing.phone && (
-          <a data-analytics-event="phone_click" href={`tel:${listing.phone}`}
-            className="flex-1 rounded-xl bg-gray-900 py-2.5 text-center text-xs font-bold text-white shadow-xs"
-          >
-            Call 📞
-          </a>
-        )}
-        {whatsappUrl && (
-          <a data-analytics-event="whatsapp_click" href={whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex-1 rounded-xl bg-emerald-600 py-2.5 text-center text-xs font-bold text-white shadow-xs"
-          >
-            WhatsApp 💬
-          </a>
-        )}
-        {listing.latitude && listing.longitude && (
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${listing.latitude},${listing.longitude}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex-1 rounded-xl bg-[#0ea5e9] py-2.5 text-center text-xs font-bold text-white shadow-xs"
-          >
-            Navigate 🧭
-          </a>
-        )}
+        </aside>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-8">
-        <div className="mx-auto flex max-w-[1400px] flex-col items-center justify-between gap-4 px-6 sm:flex-row text-xs text-gray-500">
-          <Link href="/" className="flex items-center gap-2 group font-serif text-xl font-bold tracking-tight text-gray-900">
-            <BrandLogo size={24} />
-            <span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
-          </Link>
-
-          <div className="flex flex-wrap items-center justify-center gap-6 font-medium text-gray-600">
-            <Link href="/about" className="hover:text-gray-900 transition-colors">
-              About
-            </Link>
-            <Link href="/terms" className="hover:text-gray-900 transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/privacy" className="hover:text-gray-900 transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/contact" className="hover:text-gray-900 transition-colors">
-              Contact Support
-            </Link>
-          </div>
-
-          <p className="text-gray-400">
-            © 2026 LocaToGo. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <SiteFooter />
+      <div aria-hidden="true" className="h-[calc(5rem+env(safe-area-inset-bottom))] lg:hidden" />
 
       <script
         type="application/ld+json"

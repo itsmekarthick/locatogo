@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { AlertCircleIcon, RefreshIcon } from "@/components/ui/icons";
 
 export default function AdminError({
   error,
@@ -15,30 +17,21 @@ export default function AdminError({
   }, [error]);
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center font-sans text-slate-900 dark:text-slate-100">
-      <div className="w-full max-w-md rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 dark:bg-rose-900/40 text-2xl">
-          ⚙️
-        </div>
-        <h2 className="mt-4 font-serif text-2xl font-bold text-slate-950 dark:text-slate-50">
-          Admin Console Notice
-        </h2>
-        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-          We encountered an issue loading this administrative view or dataset.
-        </p>
+    <div role="alert" className="flex min-h-[60vh] items-center justify-center px-4 text-center">
+      <div className="w-full max-w-md rounded-2xl border border-line bg-surface-1 p-8 elev-md">
+        <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-danger-soft text-[1.75rem] text-danger">
+          <AlertCircleIcon />
+        </span>
+        <h2 className="mt-5 font-display text-xl font-semibold tracking-tight text-fg">This view couldn&apos;t load</h2>
+        <p className="mt-2 text-sm text-fg-muted">Something went wrong fetching this administrative view. Your data is safe; try again in a moment.</p>
+        {error.digest && <p className="mt-3 font-mono text-xs text-fg-subtle">Reference {error.digest}</p>}
 
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button
-            onClick={() => reset()}
-            className="w-full sm:w-auto rounded-full bg-[#0ea5e9] px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-[#0284c7] transition-all cursor-pointer"
-          >
-            ↻ Retry Query
-          </button>
-          <Link
-            href="/admin"
-            className="w-full sm:w-auto rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-6 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all text-center"
-          >
-            Admin Overview
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Button onClick={() => reset()} leadingIcon={<RefreshIcon className="size-4" />} fullWidth className="sm:w-auto">
+            Retry
+          </Button>
+          <Link href="/admin" className={buttonVariants({ variant: "secondary", fullWidth: true, className: "sm:w-auto" })}>
+            Admin overview
           </Link>
         </div>
       </div>

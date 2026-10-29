@@ -1,118 +1,140 @@
 "use client";
 
 import { useState } from "react";
-import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
+import { ModuleCard } from "@/components/detail/module-card";
 import { WeatherForecastModal } from "@/components/weather-forecast-modal";
+import { Badge, type BadgeVariant } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowUpRightIcon,
+  BoltIcon,
+  CloudIcon,
+  CloudRainIcon,
+  DropletIcon,
+  SnowflakeIcon,
+  SunIcon,
+  WindIcon,
+} from "@/components/ui/icons";
+import type { PlaceWeather, WeatherType } from "@/lib/services/weather";
+import { cn } from "@/lib/utils/cn";
 
 type Props = {
   weather: PlaceWeather | null;
   locality?: string | null;
   compact?: boolean;
+  /** Anchor id for the section nav (full card only). */
+  id?: string;
   onSimulateWeather?: (type: WeatherType | null) => void;
   currentSimulated?: WeatherType | null;
 };
 
-export function PlaceWeatherBadge({
-  weather,
-  locality,
-  compact = false,
-  onSimulateWeather,
-  currentSimulated,
-}: Props) {
+export function WeatherGlyph({ type, className }: { type: WeatherType; className?: string }) {
+  switch (type) {
+    case "rain":
+    case "drizzle":
+      return <CloudRainIcon className={className} />;
+    case "thunderstorm":
+      return <BoltIcon className={className} />;
+    case "snow":
+      return <SnowflakeIcon className={className} />;
+    case "clouds":
+    case "fog":
+      return <CloudIcon className={className} />;
+    default:
+      return <SunIcon className={className} />;
+  }
+}
+
+function aqiVariant(aqi: number): BadgeVariant {
+  if (aqi <= 50) return "success";
+  if (aqi <= 100) return "warning";
+  return "danger";
+}
+
+export function PlaceWeatherBadge({ weather, locality, compact = false, id, onSimulateWeather, currentSimulated }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!weather) return null;
 
-  const isRain =
-    weather.weatherType === "rain" ||
-    weather.weatherType === "drizzle" ||
-    weather.weatherType === "thunderstorm";
+  const modal = (
+    <WeatherForecastModal
+      weather={weather}
+      locality={locality}
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      onSimulateWeather={onSimulateWeather}
+      currentSimulated={currentSimulated}
+    />
+  );
 
   if (compact) {
     return (
       <>
         <button
+          type="button"
           onClick={() => setIsModalOpen(true)}
-          title="Click to view 5-Day Prediction & Hourly Timeline"
-          className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-gray-200/90 bg-white/95 px-2.5 sm:px-3 py-1 text-xs font-semibold text-gray-700 shadow-2xs backdrop-blur-xs hover:border-cyan-400 hover:bg-cyan-50/40 transition-all cursor-pointer group max-w-[140px] sm:max-w-none truncate"
+          title="5-day forecast and hourly timeline"
+          className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-line-strong bg-surface-1 px-3 text-sm font-medium text-fg transition-ui hover:bg-surface-3 active:scale-[0.98] pointer-coarse:h-11"
         >
-          <span>{weather.weatherIcon}</span>
-          <span className="font-bold">{weather.temperature}°C</span>
-          <span className="text-gray-300">|</span>
-          <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${weather.aqiColor}`}>
-            <span className="hidden sm:inline">AQI {weather.aqi} · {weather.aqiStatus}</span>
-            <span className="sm:hidden">{weather.aqi} AQI</span>
-          </span>
-          {isRain && (
-            <span className="rounded-full bg-cyan-500/10 px-1.5 py-0.2 text-[10px] font-bold text-cyan-600 animate-pulse">
-              🌧️
-            </span>
-          )}
-          <span className="text-gray-400 group-hover:text-cyan-600 text-[10px]">↗</span>
+          <WeatherGlyph type={weather.weatherType} className="size-4 text-accent-text" />
+          <span>{weather.temperature}°C</span>
+          <span aria-hidden="true" className="h-4 w-px bg-line-strong" />
+          <Badge variant={aqiVariant(weather.aqi)} size="sm">
+            <span className="max-sm:hidden">AQI {weather.aqi} · {weather.aqiStatus}</span>
+            <span className="sm:hidden">AQI {weather.aqi}</span>
+          </Badge>
         </button>
-
-        <WeatherForecastModal
-          weather={weather}
-          locality={locality}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSimulateWeather={onSimulateWeather}
-          currentSimulated={currentSimulated}
-        />
+        {modal}
       </>
     );
   }
 
   return (
     <>
-      <div
-        onClick={() => setIsModalOpen(true)}
-        className="rounded-2xl border border-gray-200/90 bg-gradient-to-br from-cyan-50/50 via-white to-gray-50/50 p-4 shadow-2xs hover:border-cyan-300 transition-all cursor-pointer group"
+      <ModuleCard
+        id={id}
+        icon={<WeatherGlyph type={weather.weatherType} />}
+        title="Weather"
+        description={locality ? `Around ${locality}` : "Local conditions"}
+        action={
+          <Badge variant={aqiVariant(weather.aqi)} size="sm">
+            AQI {weather.aqi} · {weather.aqiStatus}
+          </Badge>
+        }
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="font-display text-4xl font-semibold tracking-tight text-fg">{weather.temperature}°C</p>
+            <p className="mt-1 text-sm capitalize text-fg-muted">{weather.weatherDescription}</p>
+          </div>
+          <WeatherGlyph type={weather.weatherType} className={cn("size-12 text-accent-text opacity-80")} />
+        </div>
+
+        <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-line pt-4 text-sm">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{weather.weatherIcon}</span>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-gray-900">{weather.temperature}°C</span>
-                <span className="text-xs font-medium text-gray-500">{weather.weatherDescription}</span>
-              </div>
-              <p className="text-[11px] text-gray-400">
-                {locality ? `${locality}, Atmosphere` : "Local Atmosphere"}
-              </p>
-            </div>
+            <DropletIcon className="size-4 text-fg-subtle" />
+            <dt className="text-fg-muted">Humidity</dt>
+            <dd className="ml-auto font-medium text-fg">{weather.humidity}%</dd>
           </div>
+          <div className="flex items-center gap-2">
+            <WindIcon className="size-4 text-fg-subtle" />
+            <dt className="text-fg-muted">Wind</dt>
+            <dd className="ml-auto font-medium text-fg">{weather.windSpeed} km/h</dd>
+          </div>
+        </dl>
 
-          <div className="text-right">
-            <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${weather.aqiColor}`}>
-              AQI {weather.aqi} · {weather.aqiStatus}
-            </span>
-            <span className="block text-[10px] text-cyan-600 font-semibold mt-0.5 group-hover:underline">
-              View 5-Day Forecast ↗
-            </span>
-          </div>
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-100 pt-2.5 text-[11px] text-gray-600">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400">💧 Humidity:</span>
-            <span className="font-semibold text-gray-800">{weather.humidity}%</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400">💨 Wind Speed:</span>
-            <span className="font-semibold text-gray-800">{weather.windSpeed} km/h</span>
-          </div>
-        </div>
-      </div>
-
-      <WeatherForecastModal
-        weather={weather}
-        locality={locality}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSimulateWeather={onSimulateWeather}
-        currentSimulated={currentSimulated}
-      />
+        <Button
+          variant="secondary"
+          size="sm"
+          fullWidth
+          className="mt-4"
+          trailingIcon={<ArrowUpRightIcon className="size-4" />}
+          onClick={() => setIsModalOpen(true)}
+        >
+          5-day forecast
+        </Button>
+      </ModuleCard>
+      {modal}
     </>
   );
 }

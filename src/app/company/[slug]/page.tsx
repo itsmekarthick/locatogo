@@ -6,10 +6,29 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { GLOBAL_TECH_HUBS, type TechHub, matchesHub } from "@/lib/constants/tech-hubs";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
-import { ShareButton } from "@/components/share-button";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { CompanyJobsFilter } from "@/components/company-jobs-filter";
-import { BrandLogo } from "@/components/brand-logo";
+import { PlaceMiniMap } from "@/components/place-mini-map";
+import { SiteFooter } from "@/components/site-footer";
+import { DetailActions } from "@/components/detail/detail-actions";
+import { DetailHeader } from "@/components/detail/detail-header";
+import { DetailHero } from "@/components/detail/detail-hero";
+import { DetailStickyBar } from "@/components/detail/detail-sticky-bar";
+import { CompanyReviews, CompanyWeather } from "@/components/detail/company-modules";
+import { ModuleCard } from "@/components/detail/module-card";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import {
+  ArrowUpRightIcon,
+  BriefcaseIcon,
+  BuildingIcon,
+  CalendarIcon,
+  CodeIcon,
+  FileTextIcon,
+  GlobeIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  UsersIcon,
+} from "@/components/ui/icons";
 
 export const revalidate = 3600;
 
@@ -249,327 +268,218 @@ export default async function CompanyProfilePage({ params }: Props) {
     "directApply": true,
   }));
 
+  const hubHref = `/${matchingCityHub.id}`;
+  const hasCoordinates = typeof company.latitude === "number" && typeof company.longitude === "number";
+  const primaryAction = company.careers_url
+    ? { href: company.careers_url as string, label: "Careers portal", icon: <BriefcaseIcon className="size-4 shrink-0" /> }
+    : company.website
+      ? { href: company.website as string, label: "Visit website", icon: <GlobeIcon className="size-4 shrink-0" /> }
+      : null;
+
+  const techStack: string[] = company.tech_stack ?? [];
+  const aboutText: string | null = company.description || company.short_description || null;
+  const facts: { label: string; value: string }[] = [
+    { label: "Open roles", value: activeJobsCount.toLocaleString("en-US") },
+    { label: "Tech hub", value: matchingCityHub.name },
+    { label: "Stage", value: company.funding_stage || "Not disclosed" },
+    { label: "Team size", value: company.employee_range ? `${company.employee_range} people` : "Not disclosed" },
+    { label: "Founded", value: company.founded_year ? String(company.founded_year) : "Not disclosed" },
+    { label: "Type", value: typeDisplay.replace(/\b\w/g, (c: string) => c.toUpperCase()) },
+  ];
+
+  const sections = [
+    { id: "overview", label: "Overview" },
+    ...(techStack.length > 0 ? [{ id: "stack", label: "Tech stack" }] : []),
+    { id: "jobs", label: "Jobs" },
+    { id: "location", label: "Location", aside: true },
+    { id: "reviews", label: "Reviews" },
+    ...(related && related.length > 0 ? [{ id: "similar", label: "Similar" }] : []),
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#080d1a] text-slate-900 dark:text-slate-100 flex flex-col antialiased">
-      {/* 1. Global Navigation Bar */}
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800/80 bg-white/95 dark:bg-[#0c121e]/95 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 group">
-              <BrandLogo size={36} className="group-hover:scale-105 transition-transform" />
-              <div className="flex flex-col">
-                <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white leading-none">
-                  LocaToGo<span className="text-cyan-600">.</span>
-                </span>
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">
-                  Tech Atlas
-                </span>
-              </div>
-            </Link>
+    <div className="flex min-h-dvh flex-col bg-surface-0 text-fg antialiased">
+      <DetailHeader
+        crumbs={[
+          { label: "Tech Atlas", href: "/" },
+          { label: matchingCityHub.name, href: hubHref },
+          { label: company.title },
+        ]}
+        cta={{ href: hubHref, label: `${matchingCityHub.name} map` }}
+      />
 
-            {/* Breadcrumb path */}
-            <nav className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-500">
-              <span>/</span>
-              <Link href={`/${matchingCityHub.id}`} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">
-                {matchingCityHub.flag} {matchingCityHub.name}
-              </Link>
-              {company.locality && (
-                <>
-                  <span>/</span>
-                  <span className="text-slate-400 dark:text-slate-600">{company.locality}</span>
-                </>
-              )}
-              <span>/</span>
-              <span className="text-slate-900 dark:text-slate-200 truncate max-w-[200px]">{company.title}</span>
-            </nav>
-          </div>
+      <DetailHero
+        avatar={<CompanyBrandAvatar title={company.title} website={company.website} size={88} className="rounded-xl" />}
+        title={company.title}
+        chips={
+          <>
+            <Badge variant="success" icon={<ShieldCheckIcon className="size-3.5" />}>
+              Verified
+            </Badge>
+            {activeJobsCount > 0 && (
+              <Badge variant="accent" dot>
+                {activeJobsCount.toLocaleString("en-US")} open {activeJobsCount === 1 ? "role" : "roles"}
+              </Badge>
+            )}
+            <Badge className="capitalize">{typeDisplay}</Badge>
+            {company.funding_stage && <Badge variant="info">{company.funding_stage}</Badge>}
+          </>
+        }
+        meta={
+          <>
+            <span className="inline-flex items-center gap-1.5">
+              <MapPinIcon className="size-4 text-fg-subtle" />
+              {[company.locality, companyCity].filter(Boolean).join(", ")}
+            </span>
+            {company.employee_range && (
+              <span className="inline-flex items-center gap-1.5">
+                <UsersIcon className="size-4 text-fg-subtle" />
+                {company.employee_range} employees
+              </span>
+            )}
+            {company.founded_year && (
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarIcon className="size-4 text-fg-subtle" />
+                Founded {company.founded_year}
+              </span>
+            )}
+          </>
+        }
+        summary={company.short_description}
+      />
 
-          <div className="flex items-center gap-3">
-            <Link
-              href={`/${matchingCityHub.id}`}
-              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition-colors shadow-2xs"
-            >
-              <span>🗺️</span>
-              <span>Open {matchingCityHub.name} Map</span>
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      {/* 2. Company Profile Hero */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800/80 bg-white dark:bg-[#0d1424] p-6 sm:p-8 shadow-xs relative overflow-hidden">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 relative z-10">
-            {/* Left: Brand identity */}
-            <div className="flex items-start gap-4 sm:gap-5 min-w-0">
-              <CompanyBrandAvatar
-                title={company.title}
-                website={company.website}
-                size={72}
-                className="rounded-2xl shadow-md border border-slate-100 dark:border-slate-800 shrink-0"
-              />
-
-              <div className="space-y-2 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                    {company.title}
-                  </h1>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Verified Tech Entity
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                  <span className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
-                    📍 {company.locality ? `${company.locality}, ` : ""}{companyCity}
-                  </span>
-                  <span>•</span>
-                  <span className="rounded-md bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/60 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">
-                    {typeDisplay}
-                  </span>
-                  {company.funding_stage && (
-                    <span className="rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 text-[11px] font-semibold">
-                      {company.funding_stage}
-                    </span>
-                  )}
-                  {company.employee_range && (
-                    <span>👥 {company.employee_range} employees</span>
-                  )}
-                  {company.founded_year && (
-                    <span>📅 Founded {company.founded_year}</span>
-                  )}
-                </div>
-
-                {company.short_description && (
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-3xl pt-1">
-                    {company.short_description}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Right: Primary Action Buttons */}
-            <div className="flex flex-wrap md:flex-col items-stretch gap-2.5 shrink-0 pt-2 md:pt-0">
-              {company.careers_url ? (
-                <a
-                  href={company.careers_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-5 py-3 text-center shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>🚀</span>
-                  <span>Official Careers Portal</span>
-                  <span>↗</span>
-                </a>
-              ) : company.website ? (
-                <a
-                  href={company.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs px-5 py-3 text-center shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>🌐</span>
-                  <span>Visit Website</span>
-                  <span>↗</span>
-                </a>
-              ) : null}
-
-              {company.website && company.careers_url && (
-                <a
-                  href={company.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 font-bold text-xs px-4 py-2.5 text-center transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <span>🌐</span>
-                  <span>Company Website</span>
-                  <span>↗</span>
-                </a>
-              )}
-
-              <ShareButton
-                title={`${company.title} on LocaToGo`}
-                url={`https://locatogo.com/company/${company.slug}`}
-                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Quick Metrics Bar */}
-          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/60">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Openings</p>
-              <p className="text-xl font-black text-cyan-600 dark:text-cyan-400 mt-0.5">
-                {activeJobsCount} {activeJobsCount === 1 ? "Role" : "Roles"}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/60">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tech Ecosystem</p>
-              <p className="text-xl font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">
-                {matchingCityHub.name}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/60">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Company Stage</p>
-              <p className="text-xl font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">
-                {company.funding_stage || "Product"}
-              </p>
-            </div>
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/60">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Team Size</p>
-              <p className="text-xl font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">
-                {company.employee_range || "Established"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 2.5 About the Company (Long Description) */}
-        {company.description && (
-          <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800/80 bg-white dark:bg-[#0d1424] p-6 sm:p-7 shadow-xs space-y-3">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>📖</span>
-              <span>About {company.title}</span>
-            </h2>
-            <div className="pt-1 prose prose-sm sm:prose-base dark:prose-invert prose-slate max-w-none text-slate-700 dark:text-slate-300 leading-relaxed">
-              <p className="whitespace-pre-wrap">{company.description}</p>
-            </div>
-          </section>
-        )}
-
-        {/* 3. Tech Stack Tags */}
-        {company.tech_stack && company.tech_stack.length > 0 && (
-          <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800/80 bg-white dark:bg-[#0d1424] p-6 sm:p-7 shadow-xs space-y-3">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>⚡</span>
-              <span>Engineering Tech Stack &amp; Core Tools</span>
-            </h2>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {company.tech_stack.map((tech: string) => (
-                <span
-                  key={tech}
-                  className="rounded-xl bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60"
-                >
-                  {tech}
-                </span>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* 4. Live Job Openings – Interactive Filter */}
-        <CompanyJobsFilter
-          jobs={jobs}
-          companyTitle={company.title}
-          companyCity={companyCity}
-          careersUrl={company.careers_url}
-          websiteUrl={company.website}
-          localJobCount={localJobs.length}
-          totalJobCount={activeJobsCount}
+      <DetailStickyBar sections={sections} className="mt-6">
+        <DetailActions
+          primary={primaryAction}
+          listingId={company.id}
+          shareTitle={`${company.title} on LocaToGo`}
+          shareUrl={`https://locatogo.com/company/${company.slug}`}
+          latitude={company.latitude}
+          longitude={company.longitude}
         />
+      </DetailStickyBar>
 
-        {/* 5. Office Location & Map Details */}
-        <section className="rounded-3xl border border-slate-200/90 dark:border-slate-800/80 bg-white dark:bg-[#0d1424] p-6 sm:p-8 shadow-xs space-y-4">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span>📍</span>
-            <span>Office Headquarters &amp; Physical Address</span>
-          </h2>
+      <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-[minmax(0,1fr)] items-start gap-8 px-4 pb-28 pt-8 sm:px-6 lg:pb-16 lg:grid-cols-[minmax(0,1fr)_23.75rem] lg:px-8">
+        <div className="min-w-0 space-y-6">
+          <ModuleCard id="overview" icon={<FileTextIcon />} title={`About ${company.title}`}>
+            {aboutText ? (
+              <p className="max-w-[65ch] whitespace-pre-wrap text-pretty leading-relaxed text-fg-muted">{aboutText}</p>
+            ) : (
+              <p className="text-sm text-fg-subtle">{company.title} hasn&apos;t added a description yet.</p>
+            )}
 
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1 text-sm">
-              <p className="font-semibold text-slate-800 dark:text-slate-200">
-                {company.address_line_1 || `${company.locality || "Tech Hub"}, ${companyCity}`}
-              </p>
-              <p className="text-xs text-slate-500">
-                {company.locality ? `${company.locality}, ` : ""}{companyCity}, India
-              </p>
-              {company.latitude && company.longitude && (
-                <p className="text-[11px] font-mono text-slate-400">
-                  Coordinates: {company.latitude.toFixed(4)}° N, {company.longitude.toFixed(4)}° E
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Link
-                href={`/${matchingCityHub.id}`}
-                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-cyan-400 hover:text-cyan-600 transition-colors"
-              >
-                View on {matchingCityHub.name} Atlas →
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* 6. Related Tech Companies in Same Hub */}
-        {related && related.length > 0 && (
-          <section className="space-y-4">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>🏢</span>
-              <span>More Tech Companies in {matchingCityHub.name}</span>
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {related.map((rel: any) => (
-                <Link
-                  key={rel.id}
-                  href={`/company/${rel.slug}`}
-                  className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0d1424] p-4 shadow-2xs hover:shadow-md hover:border-cyan-400 transition-all flex flex-col justify-between group"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <CompanyBrandAvatar
-                        title={rel.title}
-                        website={rel.website}
-                        size={36}
-                        className="rounded-lg shadow-2xs shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors truncate">
-                          {rel.title}
-                        </h3>
-                        <p className="text-[11px] text-slate-400 truncate">
-                          📍 {rel.locality || rel.city}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
-                    <span className="rounded bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 px-1.5 py-0.5 font-bold uppercase text-[9px]">
-                      {(rel.company_type || "Tech").replace(/_/g, " ")}
-                    </span>
-                    {rel.active_jobs_count > 0 ? (
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {rel.active_jobs_count} jobs
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">Profile →</span>
-                    )}
-                  </div>
-                </Link>
+            <dl className="mt-6 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+              {facts.map((fact) => (
+                <div key={fact.label} className="bg-surface-1 p-4">
+                  <dt className="text-xs text-fg-subtle">{fact.label}</dt>
+                  <dd className="mt-1 truncate font-display text-base font-semibold tracking-tight text-fg">{fact.value}</dd>
+                </div>
               ))}
-            </div>
-          </section>
-        )}
-      </main>
+            </dl>
+          </ModuleCard>
 
-      {/* 7. Footer */}
-      <footer className="mt-16 border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0c121e] py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} LocaToGo. Global Tech Atlas &amp; Startup Directory.</p>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="hover:text-cyan-600">Global Map</Link>
-            <Link href={`/${matchingCityHub.id}`} className="hover:text-cyan-600">{matchingCityHub.name} Directory</Link>
-            <Link href="/about" className="hover:text-cyan-600">About</Link>
-            <Link href="/submit" className="hover:text-cyan-600">List Company</Link>
-          </div>
+          {techStack.length > 0 && (
+            <ModuleCard id="stack" icon={<CodeIcon />} title="Tech stack" description="Languages, frameworks and tools the engineering team uses.">
+              <ul role="list" className="flex flex-wrap gap-2">
+                {techStack.map((tech) => (
+                  <li key={tech} className="rounded-lg border border-line bg-surface-3 px-2.5 py-1 font-mono text-xs text-fg-muted">
+                    {tech}
+                  </li>
+                ))}
+              </ul>
+            </ModuleCard>
+          )}
+
+          <CompanyJobsFilter
+            jobs={jobs}
+            companyTitle={company.title}
+            companyCity={companyCity}
+            careersUrl={company.careers_url}
+            websiteUrl={company.website}
+            localJobCount={localJobs.length}
+            totalJobCount={activeJobsCount}
+          />
+
+          <CompanyReviews listingId={company.id} />
+
+          {related && related.length > 0 && (
+            <ModuleCard
+              id="similar"
+              icon={<BuildingIcon />}
+              title={`More companies in ${matchingCityHub.name}`}
+              action={
+                <Link href={hubHref} className="focus-ring inline-flex items-center gap-1 rounded text-sm font-medium text-accent-text hover:underline">
+                  Explore all
+                  <ArrowUpRightIcon className="size-4" />
+                </Link>
+              }
+            >
+              <ul role="list" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {related.map((rel: any) => (
+                  <li key={rel.id}>
+                    <Link
+                      href={`/company/${rel.slug}`}
+                      className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50"
+                    >
+                      <CompanyBrandAvatar title={rel.title} website={rel.website} size={40} className="shrink-0 rounded-lg" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-fg">{rel.title}</span>
+                        <span className="block truncate text-xs text-fg-subtle">
+                          {[rel.locality || rel.city, (rel.company_type || "tech").replace(/_/g, " ")].filter(Boolean).join(" · ")}
+                        </span>
+                      </span>
+                      {rel.active_jobs_count > 0 && (
+                        <Badge variant="success" size="sm">
+                          {rel.active_jobs_count.toLocaleString("en-US")} {rel.active_jobs_count === 1 ? "role" : "roles"}
+                        </Badge>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </ModuleCard>
+          )}
         </div>
-      </footer>
 
-      {/* 8. Structured Data JSON-LD */}
+        <aside aria-label="Location and conditions" className="space-y-6 lg:sticky lg:top-36">
+          <ModuleCard id="location" icon={<MapPinIcon />} title="Location" description={[company.locality, companyCity].filter(Boolean).join(", ")}>
+            {hasCoordinates ? (
+              <PlaceMiniMap
+                listing={{
+                  id: company.id,
+                  title: company.title,
+                  slug: company.slug,
+                  locality: company.locality,
+                  city: company.city,
+                  website: company.website,
+                  latitude: company.latitude,
+                  longitude: company.longitude,
+                }}
+              />
+            ) : (
+              <p className="rounded-xl border border-dashed border-line-strong p-4 text-sm text-fg-muted">
+                Exact coordinates haven&apos;t been verified for this office yet.
+              </p>
+            )}
+            {company.address_line_1 && <p className="mt-4 text-sm text-fg">{company.address_line_1}</p>}
+            {hasCoordinates && (
+              <p className="mt-1 font-mono text-xs text-fg-subtle">
+                {company.latitude.toFixed(4)}, {company.longitude.toFixed(4)}
+              </p>
+            )}
+            <Link href={hubHref} className={buttonVariants({ variant: "secondary", size: "sm", fullWidth: true, className: "mt-4" })}>
+              View on {matchingCityHub.name} atlas
+              <ArrowUpRightIcon className="size-4" />
+            </Link>
+          </ModuleCard>
+
+          {hasCoordinates && <CompanyWeather latitude={company.latitude} longitude={company.longitude} locality={company.locality} />}
+        </aside>
+      </div>
+
+      <SiteFooter />
+      <div aria-hidden="true" className="h-[calc(5rem+env(safe-area-inset-bottom))] lg:hidden" />
+
+      {/* Structured Data JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { HeartIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
@@ -11,6 +12,8 @@ interface FavoriteButtonProps {
   initialFavorited?: boolean;
   className?: string;
   showCount?: boolean;
+  /** Hides the text label below the md breakpoint, leaving an icon-only button. */
+  collapseLabel?: boolean;
 }
 
 export function FavoriteButton({
@@ -18,7 +21,9 @@ export function FavoriteButton({
   initialFavorited = false,
   className = "",
   showCount = false,
+  collapseLabel = false,
 }: FavoriteButtonProps) {
+  const router = useRouter();
   const [favorited, setFavorited] = useState(initialFavorited);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -42,8 +47,7 @@ export function FavoriteButton({
 
   const toggle = useCallback(async () => {
     if (!userId) {
-      // Redirect to login
-      window.location.href = "/auth/login?next=" + encodeURIComponent(window.location.pathname);
+      router.push("/auth/login?next=" + encodeURIComponent(window.location.pathname));
       return;
     }
     setLoading(true);
@@ -62,7 +66,7 @@ export function FavoriteButton({
       setFavorited(true);
     }
     setLoading(false);
-  }, [userId, favorited, listingId]);
+  }, [userId, favorited, listingId, router]);
 
   return (
     <button
@@ -73,16 +77,18 @@ export function FavoriteButton({
       title={favorited ? "Remove from favorites" : "Save to favorites"}
       aria-label={favorited ? "Remove from favorites" : "Save to favorites"}
       className={cn(
-        "focus-ring inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm transition-ui active:scale-95 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-h-11",
+        "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm transition-ui active:scale-95 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-h-11",
         favorited
           ? "border-danger/30 bg-danger-soft text-danger"
-          : "border-line-strong bg-surface-1 text-fg-subtle hover:border-danger/30 hover:bg-danger-soft hover:text-danger",
+          : "border-line-strong bg-surface-1 text-fg-muted hover:border-danger/30 hover:bg-danger-soft hover:text-danger",
         className,
       )}
     >
       {/* Re-keying on `favorited` restarts the pop animation each time it is turned on. */}
       <HeartIcon key={String(favorited)} className={cn("size-4", favorited && "ex-pop fill-current")} />
-      {showCount && <span className="text-xs font-semibold">{favorited ? "Saved" : "Save"}</span>}
+      {showCount && (
+        <span className={cn("text-xs font-semibold", collapseLabel && "max-md:sr-only")}>{favorited ? "Saved" : "Save"}</span>
+      )}
     </button>
   );
 }

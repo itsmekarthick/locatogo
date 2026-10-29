@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { createListing } from "@/app/admin/actions";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminListingsTabbedView } from "@/components/admin-listings-tabbed-view";
 import { AdminClearListingsButton } from "@/components/admin-clear-listings-button";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 export default async function ListingsPage() {
   const { supabase, tenant } = await requireTenantContext();
@@ -20,17 +20,12 @@ export default async function ListingsPage() {
 
   return (
     <div className="space-y-10">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Content & Places</p>
-          <h1 className="mt-2 font-display text-4xl font-bold tracking-[-0.06em]">Listings Directory</h1>
-          <p className="mt-2 text-sm text-[var(--ink-muted)]">
-            Create, edit coordinates, and manage places organized with category tabs across your directories.
-          </p>
-        </div>
-
-        <AdminClearListingsButton listingsCount={listings?.length ?? 0} />
-      </div>
+      <AdminPageHeader
+        eyebrow="Content and places"
+        title="Listings directory"
+        description="Create, edit coordinates and manage places organized with category tabs across your directories."
+        actions={<AdminClearListingsButton listingsCount={listings?.length ?? 0} />}
+      />
 
       {/* Creation Form with Explanatory Labels & Coordinates Fields */}
       <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-xs">

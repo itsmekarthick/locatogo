@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { CarIcon, MapPinIcon } from "@/components/ui/icons";
 
 function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth radius in km
@@ -78,38 +80,28 @@ export function PlaceDistanceBadge({
 
   if (distanceInfo) {
     return (
-      <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/90 px-3.5 py-2 text-xs font-semibold text-emerald-950 shadow-2xs animate-in fade-in duration-200">
-        <span className="text-sm">🚗</span>
+      <div className="inline-flex h-9 items-center gap-2 rounded-full border border-success/30 bg-success-soft px-3 text-sm font-medium text-success animate-in fade-in duration-200">
+        <CarIcon className="size-4" />
         <span>
-          <strong className="font-bold text-emerald-900">{distanceInfo.driveMins} mins drive</strong>{" "}
-          <span className="text-emerald-700 font-medium">({distanceInfo.km} km away)</span>
+          {distanceInfo.driveMins} min drive <span className="opacity-70">({distanceInfo.km} km)</span>
         </span>
-        {distanceInfo.km <= 2 && (
-          <span className="hidden sm:inline border-l border-emerald-300 pl-2 text-emerald-800">
-            🚶 {distanceInfo.walkMins} mins walk
-          </span>
-        )}
+        {distanceInfo.km <= 2 && <span className="hidden border-l border-success/30 pl-2 sm:inline">{distanceInfo.walkMins} min walk</span>}
       </div>
     );
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="sm"
+      className="rounded-full"
+      loading={isLoading}
+      leadingIcon={<MapPinIcon className="size-4" />}
       onClick={fetchDistance}
-      disabled={isLoading}
-      className="flex items-center gap-1.5 rounded-2xl border border-gray-200 bg-gray-50/80 hover:bg-gray-100 px-3.5 py-2 text-xs font-semibold text-gray-700 shadow-2xs transition-colors cursor-pointer"
-      title="Click to calculate driving distance from your location"
+      title="Calculate driving distance from your location"
     >
-      <span className="text-sm">📍</span>
-      <span>
-        {isLoading
-          ? "Calculating distance..."
-          : errorMsg
-          ? `${errorMsg} (Retry)`
-          : "Calculate distance from you"}
-      </span>
-    </button>
+      {isLoading ? "Locating you" : errorMsg ? `${errorMsg}. Retry` : "Distance from you"}
+    </Button>
   );
 }
 

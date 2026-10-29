@@ -2,13 +2,24 @@
 
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { AlertCircleIcon, FileTextIcon, SparklesIcon, UploadIcon, XIcon } from "@/components/ui/icons";
+import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils/cn";
 
-export function ResumeOnboarding() {
+const HUBS = ["Bangalore", "San Francisco", "New York", "Seattle", "Austin", "London", "Remote"];
+
+function formatSize(bytes: number) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function ResumeOnboarding({ hasResume = false }: { hasResume?: boolean }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [location, setLocation] = useState("Bangalore");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const clearSelectedFile = () => {
@@ -46,111 +57,112 @@ export function ResumeOnboarding() {
       clearSelectedFile();
       setIsProcessing(false);
       router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to process resume");
       clearSelectedFile();
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl p-8 sm:p-10 shadow-2xl text-white relative overflow-hidden">
-      {/* Decorative background shapes */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-cyan-500/10 blur-3xl" />
-      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-purple-500/10 blur-3xl" />
+    <section id="resume" className="relative scroll-mt-24 overflow-hidden rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-accent/10 blur-3xl" />
 
-      <div className="relative z-10">
-        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
-          Unlock Personalized Job Matches 🚀
-        </h2>
-        <p className="text-slate-300 mb-8 max-w-xl">
-          Upload your resume and our Gemini AI will extract your core skills to find perfectly matching open roles in your preferred city.
+      <div className="relative">
+        <span className="grid size-10 place-items-center rounded-xl bg-accent-soft text-[1.25rem] text-accent-text">
+          <SparklesIcon />
+        </span>
+        <h2 className="mt-4 font-display text-xl font-semibold tracking-tight">{hasResume ? "Refresh your matches" : "Unlock personalized matches"}</h2>
+        <p className="mt-1.5 text-sm leading-6 text-fg-muted">
+          {hasResume ? "Upload an updated resume and we will re-read your skills and refresh the roles on this page." : "Upload your resume and we will extract your core skills to find open roles in your preferred city."}
         </p>
 
         {isProcessing ? (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 flex flex-col items-center justify-center text-center animate-pulse">
-            <div className="text-4xl mb-4 animate-bounce">✨</div>
-            <h3 className="font-bold text-lg mb-1">AI is parsing your resume...</h3>
-            <p className="text-sm text-cyan-200">Extracting skills and matching jobs. This takes just a moment.</p>
+          <div role="status" aria-live="polite" className="mt-5 flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-4">
+            <span aria-hidden="true" className="size-5 shrink-0 animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
+            <div>
+              <p className="text-sm font-medium">Analyzing your resume…</p>
+              <p className="text-xs text-fg-subtle">Extracting skills and matching roles. This takes a moment.</p>
+            </div>
           </div>
         ) : (
-          <form onSubmit={handleUpload} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 sm:p-8">
+          <form onSubmit={handleUpload} className="mt-5 space-y-4">
             {error && (
-              <div className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-200 text-sm">
-                ⚠️ {error}
-              </div>
+              <p role="alert" className="flex items-start gap-2 rounded-xl bg-danger-soft p-3 text-sm text-danger">
+                <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
+                {error}
+              </p>
             )}
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-              {/* File Upload */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-200 mb-2">Resume (PDF)</label>
-                <div className="relative border-2 border-dashed border-white/20 hover:border-cyan-400/50 transition-colors rounded-xl p-6 text-center cursor-pointer bg-white/5">
-                  <input 
-                    ref={fileInputRef}
-                    type="file" 
-                    accept=".pdf" 
-                    onChange={(e) => {
-                      const selectedFile = e.target.files?.[0] || null;
-                      if (selectedFile && !selectedFile.name.toLowerCase().endsWith(".pdf")) {
-                        clearSelectedFile();
-                        setError("Choose a PDF file.");
-                        return;
-                      }
-                      setFile(selectedFile);
-                      setError(null);
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    required
-                  />
-                  <div className="text-slate-300 text-sm">
-                    {file ? (
-                      <span className="text-cyan-300 font-bold flex items-center justify-center gap-2">
-                        📄 {file.name}
-                      </span>
-                    ) : (
-                      <>
-                        <span className="block text-2xl mb-2">📂</span>
-                        Click to upload or drag and drop<br/>
-                        <span className="text-xs text-slate-400 mt-1 block">PDF up to 5MB</span>
-                      </>
-                    )}
-                  </div>
-                </div>
+
+            <div>
+              <label htmlFor="resume-file" className="mb-1.5 block text-sm font-medium">
+                Resume (PDF)
+              </label>
+              <div
+                className={cn(
+                  "relative rounded-xl border-2 border-dashed p-5 text-center transition-ui focus-within:border-accent focus-within:ring-4 focus-within:ring-accent/15",
+                  isDragging ? "border-accent bg-accent-soft" : "border-line-strong bg-surface-2 hover:border-accent/50",
+                )}
+              >
+                <input
+                  id="resume-file"
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => {
+                    const selectedFile = e.target.files?.[0] || null;
+                    if (selectedFile && !selectedFile.name.toLowerCase().endsWith(".pdf")) {
+                      clearSelectedFile();
+                      setError("Choose a PDF file.");
+                      return;
+                    }
+                    setFile(selectedFile);
+                    setError(null);
+                  }}
+                  onDragEnter={() => setIsDragging(true)}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={() => setIsDragging(false)}
+                  className="absolute inset-0 size-full cursor-pointer opacity-0"
+                  required
+                />
+                <span className="mx-auto grid size-10 place-items-center rounded-full bg-surface-3 text-[1.2rem] text-fg-muted">
+                  <UploadIcon />
+                </span>
+                <p className="mt-2 text-sm font-medium">{isDragging ? "Drop to upload" : "Click to upload or drag and drop"}</p>
+                <p className="mt-0.5 text-xs text-fg-subtle">PDF up to 5MB</p>
               </div>
 
-              {/* Location Select */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-200 mb-2">Preferred Hub</label>
-                <select 
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3.5 text-white outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 appearance-none"
-                >
-                  <option value="Bangalore" className="text-slate-900">🇮🇳 Bangalore</option>
-                  <option value="San Francisco" className="text-slate-900">🇺🇸 San Francisco</option>
-                  <option value="New York" className="text-slate-900">🇺🇸 New York</option>
-                  <option value="Seattle" className="text-slate-900">🇺🇸 Seattle</option>
-                  <option value="Austin" className="text-slate-900">🇺🇸 Austin</option>
-                  <option value="London" className="text-slate-900">🇬🇧 London</option>
-                  <option value="Remote" className="text-slate-900">🌍 Remote Anywhere</option>
-                </select>
-                <p className="text-xs text-slate-400 mt-2">
-                  Where would you like to work next?
-                </p>
-              </div>
+              {file && (
+                <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-line bg-surface-1 py-2 pl-3 pr-2">
+                  <FileTextIcon className="size-5 shrink-0 text-accent-text" />
+                  <p className="min-w-0 flex-1 truncate text-sm font-medium">{file.name}</p>
+                  <span className="shrink-0 text-xs text-fg-subtle">{formatSize(file.size)}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${file.name}`}
+                    onClick={clearSelectedFile}
+                    className="focus-ring grid size-7 shrink-0 place-items-center rounded-lg text-fg-subtle transition-colors hover:bg-surface-3 hover:text-fg"
+                  >
+                    <XIcon className="size-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            <button 
-              type="submit"
-              disabled={!file}
-              className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 px-6 rounded-xl transition-colors shadow-lg hover:shadow-cyan-500/25"
-            >
-              Analyze Resume & Find Matches
-            </button>
+            <Select label="Preferred hub" value={location} onChange={(e) => setLocation(e.target.value)} hint="Where would you like to work next?">
+              {HUBS.map((hub) => (
+                <option key={hub} value={hub}>
+                  {hub === "Remote" ? "Remote anywhere" : hub}
+                </option>
+              ))}
+            </Select>
+
+            <Button type="submit" fullWidth disabled={!file}>
+              {hasResume ? "Re-analyze resume" : "Analyze resume & find matches"}
+            </Button>
           </form>
         )}
       </div>
-    </div>
+    </section>
   );
 }

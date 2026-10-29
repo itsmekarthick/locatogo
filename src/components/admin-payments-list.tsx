@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Pagination } from "@/components/ui/pagination";
+import { DataTable, type Column } from "@/components/admin/data-table";
+import { Badge, type BadgeVariant } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CreditCardIcon } from "@/components/ui/icons";
 
 type PaymentItem = {
   id: string;
@@ -15,67 +17,83 @@ type PaymentItem = {
   created_at: string;
 };
 
-const PAGE_SIZE = 6;
+// UTC keeps the server and browser renders identical.
+const stampFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
+
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
+  succeeded: "success",
+  paid: "success",
+  pending: "warning",
+  failed: "danger",
+  refunded: "neutral",
+};
+
+const money = (value: number, currency: string) => `${Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+
+const columns: Column<PaymentItem>[] = [
+  {
+    id: "type",
+    header: "Payment",
+    sortValue: (row) => row.payment_type,
+    cell: (row) => (
+      <div className="flex items-center gap-2">
+        <span className="font-medium capitalize text-fg">{row.payment_type.replace(/_/g, " ")}</span>
+        <span className="rounded-md bg-surface-3 px-1.5 py-0.5 font-mono text-[11px] text-fg-subtle">{row.gateway}</span>
+      </div>
+    ),
+  },
+  {
+    id: "date",
+    header: "Date (UTC)",
+    hideBelow: "md",
+    sortValue: (row) => row.created_at,
+    cell: (row) => <span className="whitespace-nowrap text-fg-muted">{stampFormat.format(new Date(row.created_at))}</span>,
+  },
+  {
+    id: "commission",
+    header: "Commission",
+    align: "right",
+    hideBelow: "lg",
+    sortValue: (row) => Number(row.commission_amount),
+    cell: (row) => <span className="font-mono text-xs text-fg-muted">{money(row.commission_amount, row.currency)}</span>,
+  },
+  {
+    id: "payout",
+    header: "Payout",
+    align: "right",
+    hideBelow: "md",
+    sortValue: (row) => Number(row.tenant_payout_amount),
+    cell: (row) => <span className="font-mono text-xs text-success">{money(row.tenant_payout_amount, row.currency)}</span>,
+  },
+  {
+    id: "amount",
+    header: "Amount",
+    align: "right",
+    sortValue: (row) => Number(row.amount),
+    cell: (row) => <span className="font-display text-base font-semibold text-fg">{money(row.amount, row.currency)}</span>,
+  },
+  {
+    id: "status",
+    header: "Status",
+    sortValue: (row) => row.status,
+    cell: (row) => (
+      <Badge variant={STATUS_VARIANT[row.status] ?? "neutral"} dot className="capitalize">
+        {row.status}
+      </Badge>
+    ),
+  },
+];
 
 export function AdminPaymentsList({ payments }: { payments: PaymentItem[] }) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const totalPages = Math.ceil(payments.length / PAGE_SIZE) || 1;
-  const paginated = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return payments.slice(start, start + PAGE_SIZE);
-  }, [payments, currentPage]);
-
   return (
-    <div className="space-y-4">
-      <div className="divide-y divide-[var(--line)]">
-        {paginated.length > 0 ? (
-          paginated.map((payment) => (
-            <div key={payment.id} className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-sm text-[var(--foreground)] capitalize">
-                    {payment.payment_type.replace("_", " ")}
-                  </span>
-                  <span className="rounded bg-[var(--background)] px-2 py-0.5 text-[10px] font-mono text-[var(--ink-muted)]">
-                    {payment.gateway}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-[var(--ink-muted)]">
-                  Date: {new Date(payment.created_at).toLocaleString()} · Commission: {payment.commission_amount} {payment.currency}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="font-display text-lg font-bold text-[var(--foreground)]">
-                    {payment.amount} {payment.currency}
-                  </p>
-                  <p className="text-[11px] text-green-700 font-medium">
-                    Payout: {payment.tenant_payout_amount} {payment.currency}
-                  </p>
-                </div>
-                <span className="rounded-full bg-[var(--leaf)] px-3 py-1 text-xs font-bold text-[var(--leaf-dark)] uppercase">
-                  {payment.status}
-                </span>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="py-12 text-center text-xs text-[var(--ink-muted)]">
-            No transactions recorded yet. When users purchase featured spots or claims, payment records will populate here.
-          </div>
-        )}
-      </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={payments.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={setCurrentPage}
-      />
-    </div>
+    <DataTable
+      caption="Transaction history"
+      columns={columns}
+      rows={payments}
+      getRowId={(row) => row.id}
+      pageSize={8}
+      defaultSort={{ id: "date", dir: "desc" }}
+      empty={<EmptyState icon={<CreditCardIcon />} title="No transactions yet" description="When users purchase featured spots or claims, payment records will appear here." />}
+    />
   );
 }
-

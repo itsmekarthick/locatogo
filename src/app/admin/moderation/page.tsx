@@ -1,5 +1,6 @@
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminModerationList } from "@/components/admin-moderation-list";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 export default async function ModerationPage() {
   const { supabase, tenant } = await requireTenantContext();
@@ -12,15 +13,11 @@ export default async function ModerationPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Review Queue</p>
-        <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
-          Community Submissions
-        </h1>
-        <p className="mt-2 text-sm text-[var(--ink-muted)]">
-          Review places suggested by public visitors before they appear live on your directory.
-        </p>
-      </div>
+      <AdminPageHeader
+        eyebrow="Review queue"
+        title="Community submissions"
+        description="Review places suggested by public visitors before they appear live on your directory."
+      />
 
       <AdminModerationList submissions={submissions ?? []} />
     </div>

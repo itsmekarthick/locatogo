@@ -1,0 +1,54 @@
+/* Staggered entrance for admin cards; opacity and transform only. */
+@keyframes adm-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.adm-rise {
+  animation: adm-rise 420ms var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+/* Chart bars grow from the baseline. */
+@keyframes adm-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+.adm-bar {
+  transform-origin: bottom;
+  animation: adm-grow 600ms var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+
+/* Sparklines and area lines draw in. */
+@keyframes adm-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.adm-line {
+  stroke-dasharray: 1;
+  animation: adm-draw 900ms var(--ease-emphasized) backwards;
+}
+
+/* Bulk-select bar slides up into place. */
+@keyframes adm-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.adm-bulk {
+  animation: adm-slide-up 220ms var(--ease-emphasized) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-rise,
+  .adm-bar,
+  .adm-line,
+  .adm-bulk {
+    animation: none;
+  }
+}

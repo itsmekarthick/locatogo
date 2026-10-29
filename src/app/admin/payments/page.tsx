@@ -1,5 +1,6 @@
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminPaymentsList } from "@/components/admin-payments-list";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 
 export default async function PaymentsPage() {
   const { supabase, tenant } = await requireTenantContext();
@@ -11,23 +12,13 @@ export default async function PaymentsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Financial Operations</p>
-        <h1 className="mt-1 font-display text-3xl font-bold tracking-[-0.05em] text-[var(--foreground)] sm:text-4xl">
-          Payments & Revenue
-        </h1>
-        <p className="mt-2 text-sm text-[var(--ink-muted)]">
-          Track customer payments, paid claim verifications, platform commission splits, and net payouts.
-        </p>
-      </div>
+      <AdminPageHeader
+        eyebrow="Financial operations"
+        title="Payments and revenue"
+        description="Track customer payments, paid claim verifications, platform commission splits and net payouts."
+      />
 
-      {/* Transaction Table Card */}
-      <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
-        <h2 className="font-display text-lg font-bold text-[var(--foreground)] mb-1">Transaction History</h2>
-        <p className="mb-6 text-xs text-[var(--ink-muted)]">Real-time ledger of inbound gateway transactions.</p>
-
-        <AdminPaymentsList payments={payments ?? []} />
-      </div>
+      <AdminPaymentsList payments={payments ?? []} />
     </div>
   );
 }

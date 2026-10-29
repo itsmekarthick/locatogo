@@ -1,7 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { ModuleCard } from "@/components/detail/module-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { controlClasses } from "@/components/ui/input";
+import { CheckCircleIcon, MessageSquareIcon, StarIcon } from "@/components/ui/icons";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils/cn";
 
 interface Review {
   id: string;
@@ -14,37 +22,48 @@ interface Review {
 interface PlaceReviewsProps {
   listingId: string;
   initialReviews: Review[];
+  /** Anchor id for the section nav. */
+  id?: string;
 }
 
-function StarRating({
-  value,
-  onChange,
-}: {
-  value: number;
-  onChange?: (v: number) => void;
-}) {
-  const [hovered, setHovered] = useState(0);
+const dateFormat = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+
+function Stars({ value, className }: { value: number; className?: string }) {
   return (
-    <div className="flex gap-0.5">
+    <span role="img" aria-label={`${value} out of 5 stars`} className={cn("inline-flex gap-0.5", className)}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <StarIcon key={star} className={cn("size-4", star <= value ? "fill-current text-warning" : "text-line-strong")} />
+      ))}
+    </span>
+  );
+}
+
+function RatingInput({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+  const [hovered, setHovered] = useState(0);
+  const shown = hovered || value;
+
+  return (
+    <div role="radiogroup" aria-label="Your rating" className="inline-flex gap-1" onMouseLeave={() => setHovered(0)}>
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
           type="button"
-          onClick={() => onChange?.(star)}
-          onMouseEnter={() => onChange && setHovered(star)}
-          onMouseLeave={() => onChange && setHovered(0)}
-          className={`text-2xl leading-none transition-colors ${
-            star <= (hovered || value) ? "text-amber-400" : "text-gray-200"
-          } ${onChange ? "cursor-pointer hover:scale-110" : "cursor-default"}`}
+          role="radio"
+          aria-checked={value === star}
+          aria-label={`${star} ${star === 1 ? "star" : "stars"}`}
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          className="focus-ring grid size-9 place-items-center rounded-lg transition-transform duration-150 active:scale-90 pointer-coarse:size-11"
         >
-          ★
+          <StarIcon className={cn("size-6 transition-colors", star <= shown ? "fill-current text-warning" : "text-line-strong")} />
         </button>
       ))}
     </div>
   );
 }
 
-export function PlaceReviews({ listingId, initialReviews }: PlaceReviewsProps) {
+export function PlaceReviews({ listingId, initialReviews, id = "community-reviews" }: PlaceReviewsProps) {
+  const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>(initialReviews);
   const [rating, setRating] = useState(0);
   const [body, setBody] = useState("");
@@ -52,12 +71,9 @@ export function PlaceReviews({ listingId, initialReviews }: PlaceReviewsProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 0;
+  const avgRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
       setError("Please select a star rating.");
@@ -65,10 +81,11 @@ export function PlaceReviews({ listingId, initialReviews }: PlaceReviewsProps) {
     }
     setSubmitting(true);
     setError(null);
+    setSuccess(false);
     const supabase = createSupabaseBrowserClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      window.location.href = "/auth/login?next=" + encodeURIComponent(window.location.pathname);
+      router.push("/auth/login?next=" + encodeURIComponent(window.location.pathname));
       return;
     }
     const { data, error: dbError } = await supabase
@@ -80,7 +97,7 @@ export function PlaceReviews({ listingId, initialReviews }: PlaceReviewsProps) {
       .select()
       .single();
     if (dbError) {
-      setError("Could not submit review. Please try again.");
+      setError("Could not submit your review. Please try again.");
     } else if (data) {
       setReviews((prev) => {
         const without = prev.filter((r) => r.user_id !== user.id);
@@ -94,61 +111,65 @@ export function PlaceReviews({ listingId, initialReviews }: PlaceReviewsProps) {
   };
 
   return (
-    <section className="mt-10 border-t border-gray-100 pt-8">
-      <div className="flex items-center gap-4 mb-6">
-        <h2 className="font-serif text-2xl font-bold text-gray-900">Reviews</h2>
-        {reviews.length > 0 && (
-          <div className="flex items-center gap-2">
-            <StarRating value={Math.round(avgRating)} />
-            <span className="text-sm font-semibold text-gray-700">
-              {avgRating.toFixed(1)} · {reviews.length} review{reviews.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Submit form */}
-      <form onSubmit={handleSubmit} className="mb-8 rounded-2xl border border-gray-100 bg-gray-50 p-5 space-y-3">
-        <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Leave a Review</p>
-        <StarRating value={rating} onChange={setRating} />
+    <ModuleCard
+      id={id}
+      icon={<MessageSquareIcon />}
+      title="Community reviews"
+      description={
+        reviews.length > 0 ? (
+          <span className="inline-flex items-center gap-2">
+            <Stars value={Math.round(avgRating)} />
+            {avgRating.toFixed(1)} · {reviews.length.toLocaleString("en-US")} {reviews.length === 1 ? "review" : "reviews"}
+          </span>
+        ) : (
+          "Be the first to share your experience"
+        )
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-line bg-surface-2/60 p-4">
+        <p className="text-sm font-medium text-fg">Leave a review</p>
+        <RatingInput value={rating} onChange={setRating} />
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Share your experience (optional)..."
+          placeholder="Share your experience (optional)"
+          aria-label="Your review"
           rows={3}
-          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-gray-400 focus:outline-none resize-none"
+          className={cn(controlClasses, "h-auto resize-none py-2.5")}
         />
-        {error && <p className="text-xs text-red-600">{error}</p>}
-        {success && <p className="text-xs text-emerald-700 font-semibold">✓ Review submitted!</p>}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-xl bg-gray-900 px-5 py-2 text-xs font-bold text-white hover:bg-black transition-colors disabled:opacity-50 cursor-pointer"
-        >
-          {submitting ? "Submitting..." : "Submit Review →"}
-        </button>
+        <div aria-live="polite" className="min-h-5 text-sm">
+          {error && <p className="text-danger">{error}</p>}
+          {success && (
+            <p className="inline-flex items-center gap-1.5 font-medium text-success">
+              <CheckCircleIcon className="size-4" /> Thanks, your review is live.
+            </p>
+          )}
+        </div>
+        <Button type="submit" loading={submitting}>
+          {submitting ? "Submitting" : "Submit review"}
+        </Button>
       </form>
 
-      {/* Review list */}
       {reviews.length === 0 ? (
-        <p className="text-sm text-gray-400">No reviews yet. Be the first to review!</p>
+        <EmptyState
+          className="py-8"
+          icon={<MessageSquareIcon />}
+          title="No reviews yet"
+          description="Your rating helps others decide. It only takes a few seconds."
+        />
       ) : (
-        <div className="space-y-4">
+        <ul role="list" className="mt-5 space-y-3">
           {reviews.map((rev) => (
-            <div key={rev.id} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-xs">
-              <div className="flex items-center gap-3 mb-2">
-                <StarRating value={rev.rating} />
-                <span className="text-xs text-gray-400">
-                  {new Date(rev.created_at).toLocaleDateString("en-IN", {
-                    year: "numeric", month: "short", day: "numeric",
-                  })}
-                </span>
+            <li key={rev.id} className="rounded-xl border border-line bg-surface-1 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <Stars value={rev.rating} />
+                <Badge size="sm">{dateFormat.format(new Date(rev.created_at))}</Badge>
               </div>
-              {rev.body && <p className="text-sm text-gray-700 leading-relaxed">{rev.body}</p>}
-            </div>
+              {rev.body && <p className="mt-2.5 text-sm leading-relaxed text-fg-muted">{rev.body}</p>}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
-    </section>
+    </ModuleCard>
   );
 }

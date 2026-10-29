@@ -33,6 +33,10 @@ export async function login(_state: ActionResult | undefined, formData: FormData
   
   if (authData.user) {
     const { data: profile } = await supabase.from("profiles").select("platform_role").eq("id", authData.user.id).single();
+    if (profile?.platform_role === "platform_admin") {
+      revalidatePath("/platform-admin", "layout");
+      redirect("/platform-admin");
+    }
     if (profile?.platform_role === "tech_user") {
       revalidatePath("/dashboard", "page");
       redirect("/dashboard");

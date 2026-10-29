@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { MapErrorBoundary } from "@/components/map-error-boundary";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tab, TabList, Tabs } from "@/components/ui/tabs";
 import type { PlaceListing } from "@/components/modern-directory-explorer";
 import type { WeatherType } from "@/lib/services/weather";
 
@@ -9,11 +12,7 @@ const InteractiveLeafletCanvas = dynamic(
   () => import("@/components/interactive-leaflet-canvas"),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-[#f0f4f8] text-xs font-semibold text-gray-400 animate-pulse">
-        Loading Map Coordinates...
-      </div>
-    ),
+    loading: () => <Skeleton role="status" aria-label="Loading map" className="h-full w-full rounded-none" />,
   }
 );
 
@@ -27,48 +26,28 @@ export function PlaceMiniMap({
   const [mapPerspective, setMapPerspective] = useState<"street" | "satellite">("street");
 
   return (
-    <div className="space-y-2">
-      {/* Top Map Switcher */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-          <span>Map Layer:</span>
-        </div>
-        <div className="flex items-center gap-1 rounded-xl bg-gray-100 p-0.5 text-xs font-semibold">
-          <button
-            onClick={() => setMapPerspective("street")}
-            className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              mapPerspective === "street"
-                ? "bg-white text-gray-900 shadow-2xs font-bold"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            🗺️ Street
-          </button>
-          <button
-            onClick={() => setMapPerspective("satellite")}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-              mapPerspective === "satellite"
-                ? "bg-[#0ea5e9] text-white shadow-2xs font-bold"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            <span>🛰️</span>
-            <span>Satellite</span>
-          </button>
-        </div>
-      </div>
+    <div className="space-y-3">
+      <Tabs variant="pill" value={mapPerspective} onValueChange={(next) => setMapPerspective(next as "street" | "satellite")}>
+        <TabList aria-label="Map layer">
+          <Tab value="street">Street</Tab>
+          <Tab value="satellite">Satellite</Tab>
+        </TabList>
+      </Tabs>
 
-      {/* Flat Map Display (0° Tilt) */}
-      <div className="relative h-56 w-full overflow-hidden rounded-2xl border border-gray-200 shadow-xs">
-        <InteractiveLeafletCanvas
-          key={`mini-map-${mapPerspective}`}
-          locatedListings={[listing]}
-          activePlaceId={listing.id}
-          setActivePlaceId={() => {}}
-          isFullscreen={false}
-          initialPerspective={mapPerspective}
-          weatherType={weatherType}
-        />
+      <div className="relative h-56 w-full overflow-hidden rounded-xl border border-line sm:h-64">
+        <MapErrorBoundary fallbackText="The map couldn't load. The address and directions above still work.">
+          <InteractiveLeafletCanvas
+            key={`mini-map-${mapPerspective}`}
+            locatedListings={[listing]}
+            activePlaceId={listing.id}
+            setActivePlaceId={() => {}}
+            isFullscreen={false}
+            // Atlas mode keeps the pin free of the placeholder rating tag.
+            isTechAtlas
+            initialPerspective={mapPerspective}
+            weatherType={weatherType}
+          />
+        </MapErrorBoundary>
       </div>
     </div>
   );

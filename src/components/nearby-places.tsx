@@ -1,15 +1,9 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
-
-interface NearbyPlace {
-  id: string;
-  title: string;
-  slug: string;
-  locality: string | null;
-  latitude: number;
-  longitude: number;
-  category_name?: string;
-}
+import { ModuleCard } from "@/components/detail/module-card";
+import { ModuleError } from "@/components/detail/module-boundary";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ArrowUpRightIcon, MapPinIcon } from "@/components/ui/icons";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371;
@@ -29,20 +23,24 @@ interface Props {
   latitude: number;
   longitude: number;
   radiusKm?: number;
+  /** Anchor id for the section nav. */
+  id?: string;
 }
 
-export async function NearbyPlaces({
-  listingId,
-  categoryId,
-  latitude,
-  longitude,
-  radiusKm = 5,
-}: Props) {
-  if (!categoryId) return null;
+export async function NearbyPlaces({ listingId, categoryId, latitude, longitude, radiusKm = 5, id = "nearby" }: Props) {
+  const header = { id, icon: <MapPinIcon />, title: "Nearby places", description: `Similar places within ${radiusKm} km` };
+
+  if (!categoryId) {
+    return (
+      <ModuleCard {...header}>
+        <EmptyState className="py-8" icon={<MapPinIcon />} title="Nothing to compare yet" description="This place isn't in a category, so we can't suggest similar ones." />
+      </ModuleCard>
+    );
+  }
 
   const supabase = await createSupabaseServerClient();
 
-  const { data: candidates } = await supabase
+  const { data: candidates, error } = await supabase
     .from("listings")
     .select(
       "id, title, slug, locality, latitude, longitude, categories:categories!listings_category_id_fkey(name)"
@@ -52,45 +50,55 @@ export async function NearbyPlaces({
     .neq("id", listingId)
     .limit(50);
 
-  if (!candidates || candidates.length === 0) return null;
+  // Rendering the fallback instead of throwing keeps static regeneration healthy.
+  if (error) return <ModuleError title="Nearby places" />;
 
-  const nearby = candidates
+  const nearby = (candidates ?? [])
     .filter((p) => p.latitude && p.longitude)
     .map((p) => ({
       ...p,
       distKm: haversineKm(latitude, longitude, p.latitude, p.longitude),
-      category_name: Array.isArray(p.categories)
-        ? p.categories[0]?.name
-        : (p.categories as { name?: string } | null)?.name,
     }))
     .filter((p) => p.distKm <= radiusKm)
     .sort((a, b) => a.distKm - b.distKm)
-    .slice(0, 5);
+    .slice(0, 6);
 
-  if (nearby.length === 0) return null;
+  if (nearby.length === 0) {
+    return (
+      <ModuleCard {...header}>
+        <EmptyState
+          className="py-8"
+          icon={<MapPinIcon />}
+          title="No similar places nearby"
+          description={`We couldn't find another listing like this within ${radiusKm} km.`}
+        />
+      </ModuleCard>
+    );
+  }
 
   return (
-    <section className="mt-10 border-t border-gray-100 pt-8">
-      <h2 className="font-serif text-2xl font-bold text-gray-900 mb-5">Nearby Places</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
+    <ModuleCard {...header}>
+      <ul role="list" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {nearby.map((place) => (
-          <Link
-            key={place.id}
-            href={`/listing/${place.slug}`}
-            className="group flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-xs hover:border-gray-300 hover:shadow-sm transition-all"
-          >
-            <span className="text-2xl shrink-0">📍</span>
-            <div className="min-w-0">
-              <p className="font-semibold text-sm text-gray-900 group-hover:text-[#0ea5e9] transition-colors line-clamp-1">
-                {place.title}
-              </p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {place.locality ?? ""} · {place.distKm.toFixed(1)} km away
-              </p>
-            </div>
-          </Link>
+          <li key={place.id}>
+            <Link
+              href={`/listing/${place.slug}`}
+              className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-surface-3 text-lg text-fg-muted">
+                <MapPinIcon />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-fg">{place.title}</span>
+                <span className="block truncate text-xs text-fg-subtle">
+                  {[place.locality, `${place.distKm.toFixed(1)} km away`].filter(Boolean).join(" · ")}
+                </span>
+              </span>
+              <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
+            </Link>
+          </li>
         ))}
-      </div>
-    </section>
+      </ul>
+    </ModuleCard>
   );
 }

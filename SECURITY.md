@@ -14,4 +14,11 @@
 - Production responses include baseline content-type, framing, referrer, permissions, and content-security headers.
 - User-facing errors are sanitized; detailed failures go to server-side logging.
 
+## Platform console navigation
+
+- The platform console account menu provides account identity, platform navigation, theme controls, and sign-out; it is not a personal-settings editor.
+- Workspace shortcuts require an authenticated active membership in an active workspace, checked by the platform layout.
+- The tenant console settings icon opens workspace settings, not personal account settings.
+- Link visibility does not grant authorization. Destination guards and database RLS remain responsible for access control.
+
 Security-sensitive work requires unit/integration coverage plus explicit RLS tests before a phase is considered complete. Rate limiting and anti-spam controls for public submissions remain deployment work and must be enabled before production traffic.

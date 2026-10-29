@@ -1,7 +1,31 @@
+import type { ComponentType } from "react";
 import Link from "next/link";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminKpiCard } from "@/components/admin-kpi-card";
-import { AdminMiniChart, AdminAreaChart } from "@/components/admin-mini-chart";
+import { AdminMiniChart } from "@/components/admin-mini-chart";
+import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  AlertTriangleIcon,
+  ArchiveIcon,
+  ArrowRightIcon,
+  ArrowUpRightIcon,
+  BuildingIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  ClockIcon,
+  DownloadIcon,
+  FileTextIcon,
+  GlobeIcon,
+  MapPinIcon,
+  MegaphoneIcon,
+  PlusIcon,
+  ShieldCheckIcon,
+  StarIcon,
+  TagIcon,
+  XIcon,
+  type IconProps,
+} from "@/components/ui/icons";
 
 const statuses = ["published", "draft", "pending_review", "rejected", "suspended", "archived"] as const;
 
@@ -99,18 +123,18 @@ export default async function AdminPage() {
   }
 
   // Get action icon
-  function getActionIcon(action: string) {
-    if (action.includes("create")) return "🆕";
-    if (action.includes("publish")) return "🟢";
-    if (action.includes("update") || action.includes("edit")) return "✏️";
-    if (action.includes("delete") || action.includes("archive")) return "🗑️";
-    if (action.includes("reject")) return "❌";
-    if (action.includes("approve")) return "✅";
-    if (action.includes("import")) return "📥";
-    if (action.includes("claim")) return "🤝";
-    if (action.includes("feature")) return "⭐";
-    if (action.includes("verify")) return "🔵";
-    return "📋";
+  function getActionIcon(action: string): ComponentType<IconProps> {
+    if (action.includes("create")) return PlusIcon;
+    if (action.includes("publish")) return CheckCircleIcon;
+    if (action.includes("update") || action.includes("edit")) return FileTextIcon;
+    if (action.includes("delete") || action.includes("archive")) return ArchiveIcon;
+    if (action.includes("reject")) return XIcon;
+    if (action.includes("approve")) return CheckIcon;
+    if (action.includes("import")) return DownloadIcon;
+    if (action.includes("claim")) return BuildingIcon;
+    if (action.includes("feature")) return StarIcon;
+    if (action.includes("verify")) return ShieldCheckIcon;
+    return ClockIcon;
   }
 
   // Time ago helper
@@ -126,253 +150,186 @@ export default async function AdminPage() {
     return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
+  const quickActions = [
+    { label: "Add listing", icon: MapPinIcon, href: "/admin/listings", desc: "Create a new place" },
+    { label: "Import CSV", icon: DownloadIcon, href: "/admin/import", desc: "Bulk import listings" },
+    { label: "Review submissions", icon: ShieldCheckIcon, href: "/admin/moderation", desc: `${submissionsCount ?? 0} pending` },
+    { label: "Review claims", icon: BuildingIcon, href: "/admin/claims", desc: `${claimsCount ?? 0} pending` },
+    { label: "Add category", icon: TagIcon, href: "/admin/categories", desc: "Organize taxonomy" },
+    { label: "Create ad slot", icon: MegaphoneIcon, href: "/admin/advertising", desc: "Monetize inventory" },
+  ];
+
+  const statusBreakdown = [
+    { label: "Published", count: published, color: "bg-success" },
+    { label: "Draft", count: draft, color: "bg-fg-subtle" },
+    { label: "Pending review", count: pending, color: "bg-warning" },
+    { label: "Suspended", count: suspended, color: "bg-danger" },
+  ];
+
   return (
     <div className="space-y-8">
-      {/* Greeting & Header */}
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Workspace Overview</p>
-          <h1 className="mt-1 font-display text-4xl font-bold tracking-[-0.05em] text-[var(--foreground)]">
+          <p className="text-xs font-medium uppercase tracking-wider text-accent-text">Workspace overview</p>
+          <h1 className="mt-1 font-display text-[clamp(1.75rem,3.5vw,2.5rem)] font-semibold tracking-tight text-fg">
             Welcome, {user.email?.split("@")[0]}.
           </h1>
-          <p className="mt-2 text-sm text-[var(--ink-muted)]">
-            Here is a snapshot of your directory listings, curation pipeline, and recent operations.
+          <p className="mt-2 max-w-[60ch] text-sm text-fg-muted">
+            A snapshot of your directory listings, curation pipeline and recent operations.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Link
-            href="/admin/listings"
-            className="rounded-full bg-[var(--foreground)] px-5 py-2.5 text-xs font-bold text-[var(--paper)] shadow-sm hover:bg-[var(--foreground)]/85 transition-all"
-          >
-            + Add Listing
+          <Link href="/admin/listings" className={buttonVariants()}>
+            <PlusIcon className="size-4" />
+            Add listing
           </Link>
-          <Link
-            href="/admin/import"
-            className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-5 py-2.5 text-xs font-bold text-[var(--foreground)] hover:bg-[var(--line)]/50 transition-colors"
-          >
-            📥 Import CSV
+          <Link href="/admin/import" className={buttonVariants({ variant: "secondary" })}>
+            <DownloadIcon className="size-4" />
+            Import CSV
           </Link>
         </div>
       </div>
 
-      {/* KPI Metrics Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <section aria-label="Key metrics" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <AdminKpiCard
-          title="Total Listings"
+          index={0}
+          title="Total listings"
           value={total}
-          icon="📍"
+          icon={<MapPinIcon />}
           description="Across all directories"
           sparklineData={sparklineValues}
           trend={weeklyTrend !== 0 ? { value: weeklyTrend, label: "vs last week" } : null}
-          accentClass="bg-gradient-to-r from-cyan-500 to-cyan-500"
+          tone="accent"
           href="/admin/listings"
         />
-        <AdminKpiCard
-          title="Published"
-          value={published}
-          icon="🟢"
-          description="Live on map"
-          accentClass="bg-gradient-to-r from-emerald-500 to-green-500"
-          href="/admin/listings"
-        />
-        <AdminKpiCard
-          title="Pending Review"
-          value={pending}
-          icon="⏳"
-          description="Awaiting approval"
-          accentClass="bg-gradient-to-r from-amber-400 to-orange-500"
-          href="/admin/moderation"
-        />
-        <AdminKpiCard
-          title="Drafts"
-          value={draft}
-          icon="📝"
-          description="Unpublished edits"
-          accentClass="bg-gradient-to-r from-slate-400 to-slate-500"
-          href="/admin/listings"
-        />
-        <AdminKpiCard
-          title="Featured"
-          value={featuredCount ?? 0}
-          icon="⭐"
-          description="Promoted listings"
-          accentClass="bg-gradient-to-r from-amber-400 to-yellow-500"
-        />
-        <AdminKpiCard
-          title="Verified"
-          value={verifiedCount ?? 0}
-          icon="🔵"
-          description="Confirmed places"
-          accentClass="bg-gradient-to-r from-sky-400 to-cyan-500"
-        />
-        <AdminKpiCard
-          title="Directories"
-          value={domainsRes.count ?? 1}
-          icon="🌐"
-          description="Active atlases"
-          accentClass="bg-gradient-to-r from-rose-400 to-pink-500"
-          href="/admin/domains"
-        />
-        <AdminKpiCard
-          title="Suspended"
-          value={suspended}
-          icon="🚫"
-          description="Paused listings"
-          accentClass="bg-gradient-to-r from-red-400 to-red-600"
-        />
-      </div>
+        <AdminKpiCard index={1} title="Published" value={published} icon={<CheckCircleIcon />} description="Live on the map" tone="success" href="/admin/listings" />
+        <AdminKpiCard index={2} title="Pending review" value={pending} icon={<ClockIcon />} description="Awaiting approval" tone="warning" href="/admin/moderation" />
+        <AdminKpiCard index={3} title="Drafts" value={draft} icon={<FileTextIcon />} description="Unpublished edits" tone="neutral" href="/admin/listings" />
+        <AdminKpiCard index={4} title="Featured" value={featuredCount ?? 0} icon={<StarIcon />} description="Promoted listings" tone="warning" />
+        <AdminKpiCard index={5} title="Verified" value={verifiedCount ?? 0} icon={<ShieldCheckIcon />} description="Confirmed places" tone="info" />
+        <AdminKpiCard index={6} title="Directories" value={domainsRes.count ?? 1} icon={<GlobeIcon />} description="Active atlases" tone="accent" href="/admin/domains" />
+        <AdminKpiCard index={7} title="Suspended" value={suspended} icon={<AlertTriangleIcon />} description="Paused listings" tone="danger" />
+      </section>
 
-      {/* Quick Actions Strip */}
-      <div>
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">Quick Actions</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
-          {[
-            { label: "Add Listing", icon: "📍", href: "/admin/listings", desc: "Create a new place" },
-            { label: "Import CSV", icon: "📥", href: "/admin/import", desc: "Bulk import listings" },
-            { label: "Review Submissions", icon: "🛡️", href: "/admin/moderation", desc: `${submissionsCount ?? 0} pending` },
-            { label: "Review Claims", icon: "🤝", href: "/admin/claims", desc: `${claimsCount ?? 0} pending` },
-            { label: "Add Category", icon: "🏷️", href: "/admin/categories", desc: "Organize taxonomy" },
-            { label: "Create Ad Slot", icon: "📢", href: "/admin/advertising", desc: "Monetize inventory" },
-          ].map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="group flex items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--paper)] p-3.5 transition-all hover:border-[var(--foreground)] hover:shadow-sm"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--background)] text-base transition-transform group-hover:scale-110">
-                {action.icon}
-              </span>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-[var(--foreground)] group-hover:text-[var(--coral)] transition-colors">{action.label}</p>
-                <p className="truncate text-[10px] text-[var(--ink-muted)]">{action.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Two-Column: Activity + Charts */}
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        {/* Recent Activity Timeline */}
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
-            <div>
-              <h2 className="font-display text-lg font-bold text-[var(--foreground)]">Recent Activity</h2>
-              <p className="text-[11px] text-[var(--ink-muted)]">Audit trail of workspace operations</p>
-            </div>
-            <Link href="/admin/activity" className="text-xs font-bold text-[var(--coral)] hover:underline">
-              View all →
-            </Link>
-          </div>
-
-          <div className="mt-4 space-y-0.5">
-            {recentAudits && recentAudits.length > 0 ? (
-              recentAudits.map((audit, i) => (
-                <div
-                  key={audit.id}
-                  className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-[var(--background)]"
+      <section aria-labelledby="quick-actions">
+        <h2 id="quick-actions" className="text-sm font-medium text-fg-muted">
+          Quick actions
+        </h2>
+        <ul role="list" className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <li key={action.href + action.label}>
+                <Link
+                  href={action.href}
+                  className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50"
                 >
-                  {/* Timeline connector */}
-                  <div className="relative flex flex-col items-center">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--background)] text-sm transition-transform group-hover:scale-110">
-                      {getActionIcon(audit.action)}
-                    </span>
-                    {i < (recentAudits.length ?? 0) - 1 && (
-                      <div className="absolute top-8 h-full w-[1px] bg-[var(--line)]" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[var(--foreground)]">
-                      {formatAction(audit.action)}
-                    </p>
-                    <p className="truncate text-[10px] text-[var(--ink-muted)]">
-                      {audit.entity_type && <span className="capitalize">{audit.entity_type} · </span>}
-                      {timeAgo(audit.created_at)}
-                    </p>
-                  </div>
-
-                  <span className="shrink-0 rounded-full bg-[var(--background)] px-2 py-0.5 text-[9px] font-mono text-[var(--ink-faint)]">
-                    #{audit.id.slice(0, 6)}
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-lg text-accent-text">
+                    <Icon />
                   </span>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center py-12 text-center">
-                <span className="text-3xl">📋</span>
-                <p className="mt-3 text-sm font-semibold text-[var(--foreground)]">No activity yet</p>
-                <p className="mt-1 text-xs text-[var(--ink-muted)]">
-                  Create or edit a listing to generate audit history.
-                </p>
-              </div>
-            )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-fg">{action.label}</span>
+                    <span className="block truncate text-xs text-fg-subtle">{action.desc}</span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+        <section aria-labelledby="recent-activity" className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+          <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
+            <div>
+              <h2 id="recent-activity" className="font-display text-lg font-semibold tracking-tight text-fg">
+                Recent activity
+              </h2>
+              <p className="text-xs text-fg-subtle">Audit trail of workspace operations</p>
+            </div>
+            <Link href="/admin/activity" className="focus-ring rounded text-sm font-medium text-accent-text hover:underline">
+              View all
+            </Link>
           </div>
+
+          {recentAudits && recentAudits.length > 0 ? (
+            <ul role="list" className="mt-3 space-y-0.5">
+              {recentAudits.map((audit) => {
+                const Icon = getActionIcon(audit.action);
+                return (
+                  <li key={audit.id} className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-surface-3/60">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-3 text-lg text-fg-muted">
+                      <Icon />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-fg">{formatAction(audit.action)}</p>
+                      <p className="truncate text-xs text-fg-subtle">
+                        {audit.entity_type && <span className="capitalize">{audit.entity_type} · </span>}
+                        {timeAgo(audit.created_at)}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-md bg-surface-3 px-2 py-0.5 font-mono text-[11px] text-fg-subtle">#{audit.id.slice(0, 6)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState
+              icon={<ClockIcon />}
+              title="No activity yet"
+              description="Create or edit a listing to generate audit history."
+              action={
+                <Link href="/admin/listings" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                  Go to listings
+                </Link>
+              }
+            />
+          )}
         </section>
 
-        {/* Charts Column */}
         <div className="space-y-6">
-          {/* Weekly Listing Growth */}
-          <section className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-xs">
-            <AdminMiniChart
-              data={weeklyData}
-              title="Listing Growth"
-              subtitle="New listings per week (last 7 weeks)"
-              height={110}
-            />
+          <section className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+            <AdminMiniChart data={weeklyData} title="Listing growth" subtitle="New listings per week, last 7 weeks" height={110} />
           </section>
 
-          {/* Status Distribution */}
-          <section className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-xs">
-            <h3 className="text-sm font-bold text-[var(--foreground)]">Status Breakdown</h3>
-            <p className="mt-0.5 text-[11px] text-[var(--ink-muted)]">Current listing pipeline</p>
-            <div className="mt-4 space-y-2.5">
-              {[
-                { label: "Published", count: published, color: "bg-emerald-500" },
-                { label: "Draft", count: draft, color: "bg-slate-400" },
-                { label: "Pending Review", count: pending, color: "bg-amber-500" },
-                { label: "Suspended", count: suspended, color: "bg-red-500" },
-              ].map((item) => (
-                <div key={item.label}>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="font-medium text-[var(--foreground)]">{item.label}</span>
-                    <span className="font-mono font-bold text-[var(--ink-muted)]">{item.count}</span>
-                  </div>
-                  <div className="mt-1 h-1.5 w-full rounded-full bg-[var(--background)]">
-                    <div
-                      className={`h-1.5 rounded-full ${item.color} transition-all duration-1000`}
-                      style={{ width: `${total > 0 ? (item.count / total) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+          <section aria-labelledby="status-breakdown" className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+            <h3 id="status-breakdown" className="text-sm font-semibold text-fg">
+              Status breakdown
+            </h3>
+            <p className="mt-0.5 text-xs text-fg-subtle">Current listing pipeline</p>
+            <ul role="list" className="mt-4 space-y-3">
+              {statusBreakdown.map((item) => {
+                const share = total > 0 ? Math.round((item.count / total) * 100) : 0;
+                return (
+                  <li key={item.label}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-fg">{item.label}</span>
+                      <span className="font-mono text-fg-muted">
+                        {item.count.toLocaleString("en-US")} · {share}%
+                      </span>
+                    </div>
+                    <div role="meter" aria-label={`${item.label} share of listings`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={share} className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
+                      <div className={`h-full w-full origin-left rounded-full ${item.color}`} style={{ transform: `scaleX(${share / 100})` }} />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
 
-          {/* Promo Card */}
-          <section className="flex flex-col justify-between rounded-2xl bg-gradient-to-br from-[var(--leaf)] to-emerald-100 p-6 shadow-xs">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--leaf-dark)]">Multi-Atlas Engine</p>
-              <h3 className="mt-2 font-display text-xl font-bold tracking-tight text-[var(--foreground)]">
-                Curate with precision.
-              </h3>
-              <p className="mt-2 text-[11px] leading-5 text-[var(--ink-muted)]">
-                Power multiple directories with independent branding, categories, and monetization.
-              </p>
-            </div>
-            <div className="mt-5 space-y-2">
-              <Link
-                href="/admin/domains"
-                className="block w-full rounded-xl bg-[var(--foreground)] px-4 py-2.5 text-center text-xs font-semibold text-[var(--paper)] hover:bg-[var(--foreground)]/85 transition-colors"
-              >
-                Directory settings →
+          <section className="rounded-2xl border border-line bg-gradient-to-br from-accent-soft to-surface-1 p-5 elev-sm sm:p-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-accent-text">Multi-atlas engine</p>
+            <h3 className="mt-2 font-display text-xl font-semibold tracking-tight text-fg">Curate with precision.</h3>
+            <p className="mt-2 text-sm text-fg-muted">Power multiple directories with independent branding, categories and monetization.</p>
+            <div className="mt-5 grid gap-2">
+              <Link href="/admin/domains" className={buttonVariants({ fullWidth: true })}>
+                Directory settings
+                <ArrowRightIcon className="size-4" />
               </Link>
-              <Link
-                href="/"
-                target="_blank"
-                className="block w-full rounded-xl border border-[var(--line)] bg-[var(--paper)]/80 px-4 py-2.5 text-center text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--paper)] transition-colors"
-              >
-                View live atlas ↗
+              <Link href="/" target="_blank" className={buttonVariants({ variant: "secondary", fullWidth: true })}>
+                View live atlas
+                <ArrowUpRightIcon className="size-4" />
               </Link>
             </div>
           </section>

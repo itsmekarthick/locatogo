@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { archiveListing, bulkUpdateListingStatus, bulkToggleFeatured } from "@/app/admin/actions";
-import { Pagination } from "@/components/ui/pagination";
-
-const PAGE_SIZE = 8;
+import { BulkBar } from "@/components/admin/bulk-bar";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { DataTable, type Column } from "@/components/admin/data-table";
+import { Badge, Chip, type BadgeVariant } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ArchiveIcon, CheckCircleIcon, DownloadIcon, FileTextIcon, MapPinIcon, SearchIcon, StarIcon, XIcon } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { useToast } from "@/components/ui/toast";
 
 type ListingItem = {
   id: string;
@@ -29,412 +36,320 @@ type CategoryItem = {
   sort_order: number;
 };
 
-export function AdminListingsTabbedView({
-  listings,
-  categories,
-}: {
-  listings: ListingItem[];
-  categories: CategoryItem[];
-}) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+const STATUS_VARIANT: Record<string, BadgeVariant> = {
+  published: "success",
+  pending_review: "warning",
+  draft: "neutral",
+  archived: "neutral",
+  rejected: "danger",
+  suspended: "danger",
+};
+
+// UTC keeps the server and browser renders identical.
+const updatedFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+function categoryName(item: ListingItem) {
+  const cat = item.categories;
+  if (!cat) return "";
+  return (Array.isArray(cat) ? cat[0]?.name : cat.name) || "";
+}
+
+function csvCell(value: string) {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
+function exportCsv(items: ListingItem[]) {
+  const headers = ["ID", "Title", "Slug", "Status", "Locality", "City", "Category", "Featured", "Latitude", "Longitude", "Updated At"];
+  const rows = items.map((item) =>
+    [
+      item.id,
+      csvCell(item.title || ""),
+      item.slug,
+      item.status,
+      csvCell(item.locality || ""),
+      csvCell(item.city || ""),
+      csvCell(categoryName(item)),
+      item.is_featured ? "Yes" : "No",
+      item.latitude ?? "",
+      item.longitude ?? "",
+      item.updated_at,
+    ].join(","),
+  );
+
+  const blob = new Blob([[headers.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `listings_export_${new Date().toISOString().split("T")[0]}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+type PendingArchive = { ids: string[]; label: string } | null;
+
+export function AdminListingsTabbedView({ listings, categories }: { listings: ListingItem[]; categories: CategoryItem[] }) {
+  const { toast } = useToast();
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [pendingArchive, setPendingArchive] = useState<PendingArchive>(null);
+  const [isProcessing, startTransition] = useTransition();
 
-  // Reset to page 1 when category, search, or status filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-    setSelectedIds(new Set());
-  }, [selectedCategory, searchQuery, statusFilter]);
-
-  const filteredListings = useMemo(() => {
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return listings.filter((item) => {
-      if (selectedCategory && item.category_id !== selectedCategory) {
-        return false;
-      }
-      if (statusFilter !== "all" && item.status !== statusFilter) {
-        return false;
-      }
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchesTitle = item.title.toLowerCase().includes(q);
-        const matchesLoc = (item.locality ?? "").toLowerCase().includes(q) || (item.city ?? "").toLowerCase().includes(q);
-        if (!matchesTitle && !matchesLoc) return false;
-      }
-      return true;
+      if (selectedCategory && item.category_id !== selectedCategory) return false;
+      if (statusFilter !== "all" && item.status !== statusFilter) return false;
+      if (!q) return true;
+      return item.title.toLowerCase().includes(q) || (item.locality ?? "").toLowerCase().includes(q) || (item.city ?? "").toLowerCase().includes(q);
     });
   }, [listings, selectedCategory, statusFilter, searchQuery]);
 
-  const totalPages = Math.ceil(filteredListings.length / PAGE_SIZE) || 1;
-  const paginatedListings = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredListings.slice(start, start + PAGE_SIZE);
-  }, [filteredListings, currentPage]);
+  // Changing a filter drops the selection so bulk actions never touch rows that are no longer shown.
+  function changeFilter(apply: () => void) {
+    apply();
+    setSelectedIds(new Set());
+  }
 
-  const isAllSelected = useMemo(() => {
-    if (paginatedListings.length === 0) return false;
-    return paginatedListings.every((item) => selectedIds.has(item.id));
-  }, [paginatedListings, selectedIds]);
-
-  const toggleSelectAll = () => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (isAllSelected) {
-        paginatedListings.forEach((item) => next.delete(item.id));
-      } else {
-        paginatedListings.forEach((item) => next.add(item.id));
+  function run(task: () => Promise<string>) {
+    startTransition(async () => {
+      try {
+        const message = await task();
+        toast({ title: message, variant: "success" });
+        setSelectedIds(new Set());
+      } catch (error) {
+        toast({ title: "That didn't work", description: error instanceof Error ? error.message : "Please try again.", variant: "error" });
       }
-      return next;
     });
-  };
+  }
 
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  const handleBulkStatus = async (status: "published" | "draft" | "archived") => {
-    if (selectedIds.size === 0) return;
-    setIsProcessing(true);
-    try {
-      const ids = Array.from(selectedIds);
+  function bulkStatus(status: "published" | "draft") {
+    const ids = Array.from(selectedIds);
+    run(async () => {
       const res = await bulkUpdateListingStatus(ids, status);
-      setNotification(`Updated ${res.count} listings to "${status}".`);
-      setSelectedIds(new Set());
-      setTimeout(() => setNotification(null), 4000);
-    } catch (e: any) {
-      alert(e.message || "Failed to update listings");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleBulkFeature = async (isFeatured: boolean) => {
-    if (selectedIds.size === 0) return;
-    setIsProcessing(true);
-    try {
-      const ids = Array.from(selectedIds);
-      const res = await bulkToggleFeatured(ids, isFeatured);
-      setNotification(`${isFeatured ? "Featured" : "Unfeatured"} ${res.count} listings.`);
-      setSelectedIds(new Set());
-      setTimeout(() => setNotification(null), 4000);
-    } catch (e: any) {
-      alert(e.message || "Failed to update listings");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleExportCsv = (itemsToExport: ListingItem[]) => {
-    const headers = [
-      "ID",
-      "Title",
-      "Slug",
-      "Status",
-      "Locality",
-      "City",
-      "Category",
-      "Featured",
-      "Latitude",
-      "Longitude",
-      "Updated At",
-    ];
-    const rows = itemsToExport.map((item) => {
-      const catName =
-        typeof item.categories === "object" && item.categories !== null
-          ? Array.isArray(item.categories)
-            ? item.categories[0]?.name || ""
-            : item.categories.name || ""
-          : "";
-      return [
-        item.id,
-        `"${(item.title || "").replace(/"/g, '""')}"`,
-        item.slug,
-        item.status,
-        `"${(item.locality || "").replace(/"/g, '""')}"`,
-        `"${(item.city || "").replace(/"/g, '""')}"`,
-        `"${catName.replace(/"/g, '""')}"`,
-        item.is_featured ? "Yes" : "No",
-        item.latitude ?? "",
-        item.longitude ?? "",
-        item.updated_at,
-      ].join(",");
+      return `Updated ${res.count} ${res.count === 1 ? "listing" : "listings"} to ${status}.`;
     });
+  }
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `listings_export_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  function bulkFeature(isFeatured: boolean) {
+    const ids = Array.from(selectedIds);
+    run(async () => {
+      const res = await bulkToggleFeatured(ids, isFeatured);
+      return `${isFeatured ? "Featured" : "Unfeatured"} ${res.count} ${res.count === 1 ? "listing" : "listings"}.`;
+    });
+  }
+
+  function confirmArchive() {
+    const target = pendingArchive;
+    if (!target) return;
+    setPendingArchive(null);
+    run(async () => {
+      if (target.ids.length === 1) {
+        const formData = new FormData();
+        formData.set("listingId", target.ids[0]);
+        await archiveListing(formData);
+        return `Archived ${target.label}.`;
+      }
+      const res = await bulkUpdateListingStatus(target.ids, "archived");
+      return `Archived ${res.count} listings.`;
+    });
+  }
+
+  const columns: Column<ListingItem>[] = [
+    {
+      id: "title",
+      header: "Place",
+      sortValue: (row) => row.title,
+      cell: (row) => (
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Link href={`/admin/listings/${row.id}`} className="focus-ring truncate rounded font-medium text-fg hover:text-accent-text">
+              {row.title}
+            </Link>
+            {row.is_featured && (
+              <Badge variant="warning" size="sm" icon={<StarIcon className="size-3 fill-current" />}>
+                Featured
+              </Badge>
+            )}
+          </div>
+          <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-fg-subtle">
+            <MapPinIcon className="size-3 shrink-0" />
+            {[row.locality, row.city].filter(Boolean).join(", ") || "Locality pending"}
+          </p>
+        </div>
+      ),
+    },
+    {
+      id: "gps",
+      header: "GPS",
+      hideBelow: "md",
+      sortValue: (row) => (row.latitude && row.longitude ? 1 : 0),
+      cell: (row) =>
+        row.latitude && row.longitude ? (
+          <span className="font-mono text-xs text-success">
+            {row.latitude.toFixed(4)}, {row.longitude.toFixed(4)}
+          </span>
+        ) : (
+          <span className="text-xs text-warning">Missing</span>
+        ),
+    },
+    {
+      id: "category",
+      header: "Category",
+      hideBelow: "lg",
+      sortValue: (row) => categoryName(row),
+      cell: (row) => <span className="text-fg-muted">{categoryName(row) || "None"}</span>,
+    },
+    {
+      id: "status",
+      header: "Status",
+      sortValue: (row) => row.status,
+      cell: (row) => (
+        <Badge variant={STATUS_VARIANT[row.status] ?? "neutral"} dot className="capitalize">
+          {row.status.replace(/_/g, " ")}
+        </Badge>
+      ),
+    },
+    {
+      id: "updated",
+      header: "Updated",
+      hideBelow: "lg",
+      sortValue: (row) => row.updated_at,
+      cell: (row) => <span className="whitespace-nowrap text-fg-muted">{updatedFormat.format(new Date(row.updated_at))}</span>,
+    },
+    {
+      id: "actions",
+      header: <span className="sr-only">Actions</span>,
+      align: "right",
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-2">
+          <Link href={`/admin/listings/${row.id}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
+            Edit
+          </Link>
+          <Button variant="ghost" size="sm" className="text-danger hover:bg-danger-soft hover:text-danger" onClick={() => setPendingArchive({ ids: [row.id], label: row.title })}>
+            Archive
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const selectedListings = listings.filter((item) => selectedIds.has(item.id));
 
   return (
-    <div className="space-y-6 relative">
-      {/* Toast Notification */}
-      {notification && (
-        <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-xs text-emerald-800 font-bold flex items-center justify-between shadow-xs">
-          <span>✓ {notification}</span>
-          <button onClick={() => setNotification(null)} className="text-emerald-700 hover:text-emerald-950">
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* Category Tabs & Quick Search */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-[var(--line)] pb-4">
-        {/* Horizontal Category Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <button
-            onClick={() => setSelectedCategory("")}
-            className={`rounded-2xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-              !selectedCategory
-                ? "bg-[var(--foreground)] text-[var(--paper)] shadow-xs"
-                : "border border-[var(--line)] bg-[var(--paper)] text-[var(--ink-muted)] hover:text-[var(--foreground)]"
-            }`}
-          >
-            🌐 All Places
-          </button>
-
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            const icon =
-              cat.name.includes("School") || cat.name.includes("Education")
-                ? "🏫"
-                : cat.name.includes("Hospital") || cat.name.includes("Health")
-                ? "🏥"
-                : "📍";
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(isSelected ? "" : cat.id)}
-                className={`whitespace-nowrap rounded-2xl px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
-                  isSelected
-                    ? "bg-[var(--foreground)] text-[var(--paper)] shadow-xs"
-                    : "border border-[var(--line)] bg-[var(--paper)] text-[var(--ink-muted)] hover:text-[var(--foreground)]"
-                }`}
-              >
-                {icon} {cat.name}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search, Status & Export CSV Actions */}
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] focus:outline-none cursor-pointer"
-          >
-            <option value="all">All Statuses</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="pending_review">Pending Review</option>
-            <option value="archived">Archived</option>
-          </select>
-
-          <div className="relative min-w-[200px]">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter by title, area..."
-              className="w-full rounded-full border border-[var(--line)] bg-[var(--paper)] pl-8 pr-4 py-1.5 text-xs text-[var(--foreground)] placeholder-[var(--ink-muted)] focus:outline-none"
-            />
-            <span className="absolute left-2.5 top-2 text-xs text-[var(--ink-muted)]">🔍</span>
-          </div>
-
-          <button
-            onClick={() => handleExportCsv(filteredListings)}
-            title="Export filtered listings to CSV"
-            className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-3 py-1.5 text-xs font-bold text-[var(--foreground)] hover:bg-[var(--line)]/50 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
-          >
-            <span>📥</span>
-            <span>Export CSV</span>
-          </button>
-        </div>
+    <div className="space-y-4">
+      <div className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 py-0.5" role="group" aria-label="Filter by category">
+        <Chip selected={!selectedCategory} onClick={() => changeFilter(() => setSelectedCategory(""))}>
+          All places
+        </Chip>
+        {categories.map((cat) => (
+          <Chip key={cat.id} selected={selectedCategory === cat.id} onClick={() => changeFilter(() => setSelectedCategory(selectedCategory === cat.id ? "" : cat.id))}>
+            {cat.name}
+          </Chip>
+        ))}
       </div>
 
-      {/* Tab Content: Places Table / Cards */}
-      <div className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] overflow-hidden shadow-xs">
-        <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-3.5 bg-[var(--background)]/50 text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={isAllSelected}
-              onChange={toggleSelectAll}
-              className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer"
-              title="Select all on this page"
-            />
-            <span>Place & GPS Coordinates</span>
-          </div>
-          <span>Status & Actions</span>
-        </div>
-
-        <div className="divide-y divide-[var(--line)]">
-          {paginatedListings.length > 0 ? (
-            paginatedListings.map((listing) => {
-              const isSelected = selectedIds.has(listing.id);
-              return (
-                <div
-                  key={listing.id}
-                  className={`flex flex-col justify-between gap-3 px-6 py-4 transition-colors hover:bg-[var(--background)]/40 sm:flex-row sm:items-center ${
-                    isSelected ? "bg-cyan-50/40 dark:bg-cyan-950/20" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleSelect(listing.id)}
-                      className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500 cursor-pointer shrink-0"
-                    />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/admin/listings/${listing.id}`}
-                          className="font-bold text-sm text-[var(--foreground)] hover:text-[var(--coral)] transition-colors"
-                        >
-                          {listing.title}
-                        </Link>
-                        {listing.is_featured && (
-                          <span className="rounded bg-[var(--coral-soft)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--coral)] uppercase">
-                            ★ Featured
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 text-xs text-[var(--ink-muted)] flex items-center gap-2">
-                        <span>📍 {[listing.locality, listing.city].filter(Boolean).join(", ") || "Locality pending"}</span>
-                        <span>·</span>
-                        <span>
-                          GPS:{" "}
-                          {listing.latitude && listing.longitude ? (
-                            <span className="font-mono text-[11px] font-semibold text-emerald-700">
-                              {listing.latitude.toFixed(4)}, {listing.longitude.toFixed(4)}
-                            </span>
-                          ) : (
-                            <span className="text-amber-700">None</span>
-                          )}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 pl-7 sm:pl-0">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
-                        listing.status === "published"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : listing.status === "pending_review"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {listing.status}
-                    </span>
-                    <Link
-                      href={`/admin/listings/${listing.id}`}
-                      className="rounded-full border border-[var(--line)] bg-[var(--paper)] px-3.5 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--line)]/50 transition-colors"
-                    >
-                      Edit ✏️
-                    </Link>
-                    <form action={archiveListing}>
-                      <input type="hidden" name="listingId" value={listing.id} />
-                      <button className="text-xs font-semibold text-red-600 hover:underline cursor-pointer">
-                        Archive
-                      </button>
-                    </form>
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="p-10 text-center text-xs text-[var(--ink-muted)]">
-              No places found in this tab. Try selecting another category tab or clearing search.
+      <DataTable
+        caption="Listings"
+        columns={columns}
+        rows={filtered}
+        getRowId={(row) => row.id}
+        selectable
+        selected={selectedIds}
+        onSelectedChange={setSelectedIds}
+        defaultSort={{ id: "updated", dir: "desc" }}
+        pageSize={10}
+        resetKey={`${selectedCategory}|${statusFilter}|${searchQuery}`}
+        toolbar={
+          <>
+            <div className="w-full min-w-[12rem] sm:w-64">
+              <Input
+                type="search"
+                aria-label="Filter by title or area"
+                placeholder="Filter by title or area"
+                value={searchQuery}
+                onChange={(event) => changeFilter(() => setSearchQuery(event.target.value))}
+                leading={<SearchIcon />}
+                trailing={
+                  searchQuery ? (
+                    <button type="button" aria-label="Clear filter" onClick={() => changeFilter(() => setSearchQuery(""))} className="focus-ring grid size-8 place-items-center rounded-lg text-fg-subtle hover:bg-surface-3 hover:text-fg">
+                      <XIcon className="size-4" />
+                    </button>
+                  ) : undefined
+                }
+              />
             </div>
-          )}
-        </div>
+            <div className="w-40">
+              <Select aria-label="Filter by status" value={statusFilter} onChange={(event) => changeFilter(() => setStatusFilter(event.target.value))}>
+                <option value="all">All statuses</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+                <option value="pending_review">Pending review</option>
+              </Select>
+            </div>
+            <Button variant="secondary" leadingIcon={<DownloadIcon className="size-4" />} onClick={() => exportCsv(filtered)} disabled={filtered.length === 0}>
+              Export CSV
+            </Button>
+          </>
+        }
+        empty={
+          <EmptyState
+            icon={<FileTextIcon />}
+            title="No places match"
+            description="Try another category or status, or clear the search."
+            action={
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  changeFilter(() => {
+                    setSelectedCategory("");
+                    setStatusFilter("all");
+                    setSearchQuery("");
+                  })
+                }
+              >
+                Clear filters
+              </Button>
+            }
+          />
+        }
+      />
 
-        {/* Pagination Footer */}
-        {filteredListings.length > PAGE_SIZE && (
-          <div className="px-6 pb-4">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={filteredListings.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        )}
-      </div>
+      <BulkBar count={selectedIds.size} onClear={() => setSelectedIds(new Set())}>
+        <Button size="sm" loading={isProcessing} leadingIcon={<CheckCircleIcon className="size-4" />} onClick={() => bulkStatus("published")}>
+          Publish
+        </Button>
+        <Button size="sm" variant="secondary" disabled={isProcessing} leadingIcon={<FileTextIcon className="size-4" />} onClick={() => bulkStatus("draft")}>
+          Draft
+        </Button>
+        <Button size="sm" variant="secondary" disabled={isProcessing} leadingIcon={<StarIcon className="size-4" />} onClick={() => bulkFeature(true)}>
+          Feature
+        </Button>
+        <span className="max-sm:hidden">
+          <Button size="sm" variant="secondary" disabled={isProcessing} leadingIcon={<DownloadIcon className="size-4" />} onClick={() => exportCsv(selectedListings)}>
+            Export
+          </Button>
+        </span>
+        <Button size="sm" variant="danger" disabled={isProcessing} leadingIcon={<ArchiveIcon className="size-4" />} onClick={() => setPendingArchive({ ids: Array.from(selectedIds), label: `${selectedIds.size} listings` })}>
+          Archive
+        </Button>
+      </BulkBar>
 
-      {/* Floating Sticky Batch Action Toolbar */}
-      {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-2xl border border-[var(--line)] bg-[var(--paper)]/95 backdrop-blur-md px-4 sm:px-6 py-3 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200">
-          <span className="text-xs font-bold text-[var(--foreground)] pr-2 border-r border-[var(--line)] whitespace-nowrap">
-            ✓ {selectedIds.size} Selected
-          </span>
-          <button
-            onClick={() => handleBulkStatus("published")}
-            disabled={isProcessing}
-            className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs cursor-pointer transition-colors disabled:opacity-50"
-          >
-            🟢 Publish
-          </button>
-          <button
-            onClick={() => handleBulkStatus("draft")}
-            disabled={isProcessing}
-            className="rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs font-bold text-[var(--foreground)] hover:bg-[var(--line)]/60 cursor-pointer transition-colors disabled:opacity-50"
-          >
-            📝 Draft
-          </button>
-          <button
-            onClick={() => handleBulkFeature(true)}
-            disabled={isProcessing}
-            className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-600 shadow-xs cursor-pointer transition-colors disabled:opacity-50"
-          >
-            ★ Feature
-          </button>
-          <button
-            onClick={() => handleBulkStatus("archived")}
-            disabled={isProcessing}
-            className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 shadow-xs cursor-pointer transition-colors disabled:opacity-50"
-          >
-            🗑️ Archive
-          </button>
-          <button
-            onClick={() => {
-              const selectedListings = listings.filter((l) => selectedIds.has(l.id));
-              handleExportCsv(selectedListings);
-            }}
-            className="hidden sm:inline-flex rounded-xl border border-slate-300 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-50 cursor-pointer transition-colors"
-          >
-            📥 Export CSV
-          </button>
-          <button
-            onClick={() => setSelectedIds(new Set())}
-            title="Deselect all"
-            className="text-xs text-[var(--ink-muted)] hover:text-[var(--foreground)] pl-2 cursor-pointer font-bold"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      <ConfirmDialog
+        open={pendingArchive !== null}
+        onOpenChange={(open) => !open && setPendingArchive(null)}
+        title={pendingArchive && pendingArchive.ids.length > 1 ? `Archive ${pendingArchive.ids.length} listings?` : "Archive this listing?"}
+        description={
+          pendingArchive && pendingArchive.ids.length === 1
+            ? `${pendingArchive.label} will be hidden from the public atlas.`
+            : "These listings will be hidden from the public atlas."
+        }
+        confirmLabel="Archive"
+        onConfirm={confirmArchive}
+      />
     </div>
   );
 }

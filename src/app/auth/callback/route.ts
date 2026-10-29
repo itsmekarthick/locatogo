@@ -41,6 +41,9 @@ export async function GET(request: Request) {
         }
 
         const { data: profile } = await supabase.from("profiles").select("platform_role").eq("id", user.id).single();
+        if (profile?.platform_role === "platform_admin") {
+          return NextResponse.redirect(`${origin}/platform-admin`);
+        }
         if (profile?.platform_role === "tech_user") {
           return NextResponse.redirect(`${origin}/dashboard`);
         }

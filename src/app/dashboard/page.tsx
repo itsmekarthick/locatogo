@@ -1,17 +1,26 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminKpiCard } from "@/components/admin-kpi-card";
+import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { ResumeOnboarding } from "@/components/resume-onboarding";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge, type BadgeVariant } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, BriefcaseIcon, BuildingIcon, HeartIcon, MapPinIcon, PlusIcon, ShieldCheckIcon, UploadIcon } from "@/components/ui/icons";
 import { UserProfileMenu } from "@/components/user-profile-menu";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ProfileEditor } from "./profile-editor";
+import { ProfileStrength, type StrengthItem } from "./profile-strength";
+import { RolesPanel, type DashboardRole } from "./roles-panel";
 
 export const metadata = {
   title: "My Dashboard | LocaToGo",
   description: "Manage your professional profile, job matches, submissions, claims, and saved places.",
 };
 
-type Listing = { title?: string | null; slug?: string | null; city?: string | null; locality?: string | null };
+type Listing = { title?: string | null; slug?: string | null; city?: string | null; locality?: string | null; website?: string | null };
 
 function listing(value: Listing | Listing[] | null) {
   return Array.isArray(value) ? value[0] : value;
@@ -21,10 +30,10 @@ function date(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
 }
 
-function statusColor(status: string) {
-  if (status === "approved" || status === "published") return "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800";
-  if (status === "rejected") return "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-800";
-  return "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-800";
+function statusVariant(status: string): BadgeVariant {
+  if (status === "approved" || status === "published") return "success";
+  if (status === "rejected") return "danger";
+  return "warning";
 }
 
 export default async function DashboardPage() {
@@ -45,7 +54,7 @@ export default async function DashboardPage() {
       : Promise.resolve({ data: null }),
     supabase.from("listing_submissions").select("id, status, payload_json, submitted_at").eq("submitted_by_user_id", user.id).order("submitted_at", { ascending: false }).limit(20),
     supabase.from("listing_claims").select("id, status, submitted_at, listings(id, title, slug, city, locality)").eq("user_id", user.id).order("submitted_at", { ascending: false }).limit(20),
-    supabase.from("user_favorites").select("id, created_at, listings(id, title, slug, city, locality)").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
+    supabase.from("user_favorites").select("id, created_at, listings(id, title, slug, city, locality, website)").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
   ]);
 
   const skills: string[] = Array.isArray(techProfile?.skills)
@@ -56,7 +65,7 @@ export default async function DashboardPage() {
     const filters = skills.slice(0, 12).map((skill) => `title.ilike.%${skill}%,department.ilike.%${skill}%`).join(",");
     let query = supabase
       .from("company_jobs")
-      .select("id, title, location_name, workplace_type, apply_url, listings(title, slug, city)")
+      .select("id, title, department, location_name, workplace_type, apply_url, listings(title, slug, city, website)")
       .eq("is_active", true)
       .or(filters)
       .limit(8);
@@ -76,69 +85,373 @@ export default async function DashboardPage() {
   const displayName = account?.display_name || user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "Member";
   const firstName = String(displayName).split(" ")[0];
 
+  const savedDates = (favorites ?? []).map((item) => item.created_at);
+  const submissionDates = (submissions ?? []).map((item) => item.submitted_at);
+  const claimDates = (claims ?? []).map((item) => item.submitted_at);
+
+  const hasResume = Boolean(techProfile?.resume_storage_path);
+  const strengthItems: StrengthItem[] = [
+    { label: "Bio added", done: Boolean(techProfile?.bio?.trim()), href: "#profile", hint: "Write a short bio" },
+    { label: "Skills listed", done: skills.length >= 3, href: "#profile", hint: "Add at least 3 skills" },
+    { label: "Preferred location set", done: Boolean(techProfile?.preferred_location?.trim()), href: "#profile", hint: "Set your preferred location" },
+    { label: "Professional link added", done: Boolean(techProfile?.github_url || techProfile?.linkedin_url || techProfile?.portfolio_url), href: "#profile", hint: "Link GitHub, LinkedIn or a portfolio" },
+    { label: "Resume uploaded", done: hasResume, href: "#resume", hint: "Upload your resume" },
+  ];
+
+  const roles: DashboardRole[] = jobs.map((job) => {
+    const company = listing(job.listings as Listing | Listing[] | null);
+    const haystack = `${job.title ?? ""} ${job.department ?? ""}`.toLowerCase();
+    return {
+      id: String(job.id),
+      title: String(job.title),
+      company: company?.title || "Tech company",
+      slug: company?.slug || null,
+      website: company?.website || null,
+      location: job.location_name || company?.city || "Location not listed",
+      workplace: job.workplace_type ? String(job.workplace_type) : null,
+      applyUrl: job.apply_url || null,
+      matched: skills.filter((skill) => haystack.includes(skill.toLowerCase())).slice(0, 4),
+    };
+  });
+
+  const subtitle = isTechUser
+    ? roles.length
+      ? `${roles.length} open ${roles.length === 1 ? "role matches" : "roles match"} your ${skills.slice(0, 2).join(" and ") || "profile"}${skills.length > 2 ? " skills" : ""}.`
+      : "Complete your profile to start receiving role matches."
+    : "Your saved companies and directory activity in one place.";
+
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(6,182,212,0.12),_transparent_32%),var(--background)] px-4 py-5 sm:px-6 sm:py-8 lg:px-10">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--line)] pb-5">
-          <div className="min-w-0">
-            <Link href="/map" className="text-xs font-bold text-[var(--ink-muted)] transition hover:text-cyan-600">&larr; Back to Tech Atlas</Link>
-            <h1 className="mt-3 font-display text-3xl font-bold text-[var(--foreground)] sm:text-4xl">Welcome back, {firstName}.</h1>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">Your profile, opportunities, and directory activity in one place.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/map" className="rounded-lg bg-slate-950 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 dark:bg-cyan-600 dark:hover:bg-cyan-500">Explore companies</Link>
-            <UserProfileMenu />
-          </div>
-        </header>
+    <div className="min-h-dvh bg-surface-0 text-fg">
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <Link href="/map" className="focus-ring inline-flex items-center gap-1.5 rounded text-sm text-fg-muted transition-colors hover:text-fg">
+            <ArrowLeftIcon className="size-4" />
+            Back to Tech Atlas
+          </Link>
+          <UserProfileMenu />
+        </div>
 
-        {isTechUser && (
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,0.8fr)]">
-            <div className="space-y-6">
-              <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm sm:p-7">
-                <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-                  <div><p className="text-xs font-bold uppercase text-cyan-600">Professional profile</p><h2 className="mt-1 font-display text-xl font-bold text-[var(--foreground)]">Show employers the work you do best.</h2></div>
-                  <ProfileEditor displayName={String(displayName)} bio={techProfile?.bio || null} skills={skills} preferredLocation={techProfile?.preferred_location || null} githubUrl={techProfile?.github_url || null} linkedinUrl={techProfile?.linkedin_url || null} portfolioUrl={techProfile?.portfolio_url || null} />
+        <section className="adm-rise relative overflow-hidden rounded-3xl border border-line bg-linear-to-br from-accent-soft via-surface-1 to-surface-1 p-6 elev-sm sm:p-8">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-accent/10 blur-3xl" />
+          <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 left-1/3 size-72 rounded-full bg-info/10 blur-3xl" />
+
+          <div className="relative grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)]">
+            <div className="min-w-0">
+              <div className="flex items-center gap-4">
+                <Avatar name={String(displayName)} src={user.user_metadata?.avatar_url} size="lg" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-accent-text">Dashboard</p>
+                  <h1 className="mt-1 text-balance font-display text-[clamp(1.875rem,3.6vw,2.75rem)] font-semibold leading-tight tracking-tight">Welcome back, {firstName}.</h1>
                 </div>
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div><p className="text-xs font-bold uppercase text-[var(--ink-muted)]">About</p><p className="mt-2 text-sm leading-6 text-[var(--foreground)]">{techProfile?.bio || "Add a concise bio so the right opportunities can find you."}</p></div>
-                  <div><p className="text-xs font-bold uppercase text-[var(--ink-muted)]">Top skills</p>{skills.length ? <div className="mt-2 flex flex-wrap gap-2">{skills.map((skill) => <span key={skill} className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-bold text-cyan-700 ring-1 ring-cyan-100 dark:bg-cyan-950/40 dark:text-cyan-300 dark:ring-cyan-900">{skill}</span>)}</div> : <p className="mt-2 text-sm text-[var(--ink-muted)]">Add skills to improve your recommendations.</p>}</div>
-                </div>
-              </section>
+              </div>
+              <p className="mt-4 max-w-xl text-pretty text-base text-fg-muted">{subtitle}</p>
 
-              <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm sm:p-7">
-                <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase text-cyan-600">Your matches</p><h2 className="mt-1 font-display text-xl font-bold text-[var(--foreground)]">Roles aligned with your stack</h2><p className="mt-1 text-sm text-[var(--ink-muted)]">{skills.length ? `Matching ${skills.slice(0, 4).join(", ")}.` : "Upload a resume or add skills to receive matches."}</p></div><Link href="/map" className="text-xs font-bold text-cyan-600 hover:text-cyan-700">View all roles &rarr;</Link></div>
-                {jobs.length ? <div className="mt-6 grid gap-3 sm:grid-cols-2">{jobs.map((job) => { const company = listing(job.listings as Listing | Listing[] | null); return <article key={job.id} className="flex min-w-0 flex-col justify-between rounded-lg border border-[var(--line)] p-4 transition hover:border-cyan-300 hover:shadow-sm"><div><p className="text-xs font-bold text-cyan-600">{company?.title || "Tech company"}</p><h3 className="mt-1 text-sm font-bold text-[var(--foreground)]">{job.title}</h3><p className="mt-2 text-xs text-[var(--ink-muted)]">{job.location_name || company?.city || "Location not listed"}{job.workplace_type ? ` · ${job.workplace_type}` : ""}</p></div><div className="mt-4 flex items-center justify-between gap-3">{company?.slug ? <Link href={`/listing/${company.slug}`} className="text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--foreground)]">Company</Link> : <span />}{job.apply_url && <a href={job.apply_url} target="_blank" rel="noreferrer" className="rounded-md bg-cyan-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-cyan-700">Apply ↗</a>}</div></article>; })}</div> : <div className="mt-6 rounded-lg border border-dashed border-[var(--line)] px-5 py-8 text-center text-sm text-[var(--ink-muted)]">No matching roles yet. Add your skills or upload a current resume to personalize this section.</div>}
-              </section>
+              {isTechUser && (
+                <ul role="list" className="mt-4 flex flex-wrap gap-2">
+                  {techProfile?.preferred_location && (
+                    <li>
+                      <Badge icon={<MapPinIcon className="size-3.5" />}>{techProfile.preferred_location}</Badge>
+                    </li>
+                  )}
+                  <li>
+                    <Badge>
+                      {skills.length} {skills.length === 1 ? "skill" : "skills"}
+                    </Badge>
+                  </li>
+                  <li>
+                    <Badge variant={hasResume ? "success" : "warning"} dot>
+                      {hasResume ? "Resume on file" : "No resume yet"}
+                    </Badge>
+                  </li>
+                </ul>
+              )}
 
-              <section id="applications" className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm sm:p-7"><p className="text-xs font-bold uppercase text-cyan-600">Applications</p><h2 className="mt-1 font-display text-xl font-bold text-[var(--foreground)]">Application activity</h2><div className="mt-5 border-y border-dashed border-[var(--line)] px-5 py-10 text-center"><p className="text-sm font-bold text-[var(--foreground)]">Application tracking is coming soon.</p><p className="mt-1 text-xs leading-5 text-[var(--ink-muted)]">Roles open their official application pages directly. Your profile and job matches are ready when you are.</p></div></section>
+              <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
+                <Link href="/map" className={buttonVariants({ size: "lg" })}>
+                  Explore companies
+                  <ArrowRightIcon className="size-4" />
+                </Link>
+                <Link href="/submit" className={buttonVariants({ variant: "secondary", size: "lg" })}>
+                  <PlusIcon className="size-4" />
+                  Suggest a company
+                </Link>
+                {isTechUser && (
+                  <Link href="#resume" className={buttonVariants({ variant: "ghost", size: "lg" })}>
+                    <UploadIcon className="size-4" />
+                    {hasResume ? "Update resume" : "Upload resume"}
+                  </Link>
+                )}
+              </div>
             </div>
 
-            <aside className="space-y-6">
-              <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm"><p className="text-xs font-bold uppercase text-[var(--ink-muted)]">Professional links</p><div className="mt-4 space-y-3 text-sm"><ProfileLink label="GitHub" href={techProfile?.github_url || null} /><ProfileLink label="LinkedIn" href={techProfile?.linkedin_url || null} /><ProfileLink label="Portfolio" href={techProfile?.portfolio_url || null} /><ProfileLink label="Resume" href={resumeUrl} unavailable="Upload a PDF below" /></div></section>
-              <ResumeOnboarding />
+            {isTechUser && (
+              <div className="rounded-2xl border border-line bg-surface-1/80 p-5 backdrop-blur">
+                <ProfileStrength items={strengthItems} />
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section aria-label="Your activity at a glance" className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <AdminKpiCard index={1} title="Saved places" value={favorites?.length ?? 0} icon={<HeartIcon />} description="Companies you follow" tone="danger" sparklineData={weeklySeries(savedDates)} trend={monthlyDelta(savedDates)} href="#saved" />
+          <AdminKpiCard index={2} title="Submissions" value={submissions?.length ?? 0} icon={<BuildingIcon />} description="Companies you suggested" tone="info" sparklineData={weeklySeries(submissionDates)} trend={monthlyDelta(submissionDates)} href="#activity" />
+          <AdminKpiCard index={3} title="Claims" value={claims?.length ?? 0} icon={<ShieldCheckIcon />} description="Listings you claimed" tone="success" sparklineData={weeklySeries(claimDates)} trend={monthlyDelta(claimDates)} href="#activity" />
+          {isTechUser && <AdminKpiCard index={4} title="Role matches" value={roles.length} icon={<BriefcaseIcon />} description="Open roles for your skills" tone="accent" href="#matches" />}
+        </section>
+
+        {isTechUser && (
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(19rem,0.8fr)]">
+            <div className="min-w-0 space-y-6">
+              <Panel id="profile">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <Eyebrow>Professional profile</Eyebrow>
+                    <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Show employers the work you do best.</h2>
+                  </div>
+                  <ProfileEditor
+                    displayName={String(displayName)}
+                    bio={techProfile?.bio || null}
+                    skills={skills}
+                    preferredLocation={techProfile?.preferred_location || null}
+                    githubUrl={techProfile?.github_url || null}
+                    linkedinUrl={techProfile?.linkedin_url || null}
+                    portfolioUrl={techProfile?.portfolio_url || null}
+                  />
+                </div>
+                <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <p className="text-sm font-medium text-fg-muted">About</p>
+                    <p className="mt-2 text-sm leading-6">{techProfile?.bio || <span className="text-fg-subtle">Add a concise bio so the right opportunities can find you.</span>}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-fg-muted">Top skills</p>
+                    {skills.length ? (
+                      <ul role="list" className="mt-2 flex flex-wrap gap-2">
+                        {skills.map((skill) => (
+                          <li key={skill}>
+                            <Badge variant="accent">{skill}</Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-sm text-fg-subtle">Add skills to improve your recommendations.</p>
+                    )}
+                  </div>
+                </div>
+              </Panel>
+
+              <Panel id="matches">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <Eyebrow>Your matches</Eyebrow>
+                    <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Roles aligned with your stack</h2>
+                    <p className="mt-1 text-sm text-fg-muted">{skills.length ? `Matching ${skills.slice(0, 4).join(", ")}.` : "Upload a resume or add skills to receive matches."}</p>
+                  </div>
+                  <Link href="/map" className="focus-ring rounded text-sm font-medium text-accent-text hover:underline">
+                    Browse the atlas
+                  </Link>
+                </div>
+                {roles.length ? (
+                  <RolesPanel roles={roles} />
+                ) : (
+                  <div className="mt-6 rounded-xl border border-dashed border-line-strong">
+                    <EmptyState className="py-8" icon={<BriefcaseIcon />} title="No matching roles yet" description="Add your skills or upload a current resume to personalize this section." />
+                  </div>
+                )}
+              </Panel>
+            </div>
+
+            <aside className="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
+              <Panel>
+                <p className="text-sm font-medium text-fg-muted">Professional links</p>
+                <div className="mt-4 space-y-3 text-sm">
+                  <ProfileLink label="GitHub" href={techProfile?.github_url || null} />
+                  <ProfileLink label="LinkedIn" href={techProfile?.linkedin_url || null} />
+                  <ProfileLink label="Portfolio" href={techProfile?.portfolio_url || null} />
+                  <ProfileLink label="Resume" href={resumeUrl} unavailable="Upload a PDF below" />
+                </div>
+              </Panel>
+              <ResumeOnboarding hasResume={hasResume} />
             </aside>
           </div>
         )}
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-3">
-          <Activity title="My submissions" count={submissions?.length || 0} empty="You have not submitted a company yet." action={{ href: "/submit", label: "Suggest a company" }}>{submissions?.map((item) => { const payload = item.payload_json as { name?: string; locality?: string; city?: string } | null; return <ActivityItem key={item.id} title={payload?.name || "Company submission"} detail={[payload?.locality, payload?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} />; })}</Activity>
-          <Activity title="My claims" count={claims?.length || 0} empty="You have not claimed a listing yet.">{claims?.map((item) => { const company = listing(item.listings as Listing | Listing[] | null); return <ActivityItem key={item.id} title={company?.title || "Listing claim"} detail={[company?.locality, company?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} href={company?.slug ? `/listing/${company.slug}` : undefined} />; })}</Activity>
-          <Activity title="Saved places" count={favorites?.length || 0} empty="Save a company from the Tech Atlas to find it here.">{favorites?.map((item) => { const company = listing(item.listings as Listing | Listing[] | null); return <ActivityItem key={item.id} title={company?.title || "Saved listing"} detail={[company?.locality, company?.city, date(item.created_at)].filter(Boolean).join(" · ")} href={company?.slug ? `/listing/${company.slug}` : undefined} />; })}</Activity>
+        <Panel className="mt-6" id="saved">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <Eyebrow>Saved companies</Eyebrow>
+              <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Your shortlist</h2>
+            </div>
+            <Badge>{(favorites?.length ?? 0).toLocaleString("en-US")}</Badge>
+          </div>
+
+          {favorites?.length ? (
+            <ul role="list" className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {favorites.map((item) => {
+                const company = listing(item.listings as Listing | Listing[] | null);
+                const place = [company?.locality, company?.city].filter(Boolean).join(", ");
+                const card = (
+                  <>
+                    <CompanyBrandAvatar title={company?.title || "Saved listing"} website={company?.website} size={44} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{company?.title || "Saved listing"}</span>
+                      <span className="block truncate text-xs text-fg-subtle">{place || "Location not listed"}</span>
+                      <span className="mt-0.5 block text-xs text-fg-subtle">Saved {date(item.created_at)}</span>
+                    </span>
+                    <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
+                  </>
+                );
+                return (
+                  <li key={item.id}>
+                    {company?.slug ? (
+                      <Link href={`/listing/${company.slug}`} className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50">
+                        {card}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5">{card}</div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="mt-6 rounded-xl border border-dashed border-line-strong">
+              <EmptyState
+                className="py-10"
+                icon={<HeartIcon />}
+                title="Nothing saved yet"
+                description="Save a company from the Tech Atlas to find it here."
+                action={
+                  <Link href="/map" className={buttonVariants({ variant: "secondary" })}>
+                    Explore the atlas
+                  </Link>
+                }
+              />
+            </div>
+          )}
+        </Panel>
+
+        <section id="activity" className="mt-6 grid scroll-mt-24 grid-cols-1 gap-6 lg:grid-cols-2">
+          <Activity title="My submissions" count={submissions?.length || 0} empty="You have not submitted a company yet." action={{ href: "/submit", label: "Suggest a company" }}>
+            {submissions?.map((item) => {
+              const payload = item.payload_json as { name?: string; locality?: string; city?: string } | null;
+              return <ActivityItem key={item.id} title={payload?.name || "Company submission"} detail={[payload?.locality, payload?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} />;
+            })}
+          </Activity>
+          <Activity title="My claims" count={claims?.length || 0} empty="You have not claimed a listing yet.">
+            {claims?.map((item) => {
+              const company = listing(item.listings as Listing | Listing[] | null);
+              return <ActivityItem key={item.id} title={company?.title || "Listing claim"} detail={[company?.locality, company?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} href={company?.slug ? `/listing/${company.slug}` : undefined} />;
+            })}
+          </Activity>
         </section>
       </div>
-    </main>
+    </div>
+  );
+}
+
+const DAY_MS = 86_400_000;
+
+/** Items per week over the last `weeks` weeks, oldest first; undefined when there is nothing to draw. */
+function weeklySeries(dates: string[], weeks = 8) {
+  const now = Date.now();
+  const series = Array.from({ length: weeks }, (_, i) => {
+    const start = now - (weeks - i) * 7 * DAY_MS;
+    const end = start + 7 * DAY_MS;
+    return dates.filter((value) => {
+      const time = new Date(value).getTime();
+      return time >= start && time < end;
+    }).length;
+  });
+  return series.some(Boolean) ? series : undefined;
+}
+
+/** Change in items over the last 30 days against the 30 before, as a percentage. */
+function monthlyDelta(dates: string[]) {
+  const now = Date.now();
+  const recent = dates.filter((value) => now - new Date(value).getTime() < 30 * DAY_MS).length;
+  const prior = dates.filter((value) => {
+    const age = now - new Date(value).getTime();
+    return age >= 30 * DAY_MS && age < 60 * DAY_MS;
+  }).length;
+  if (recent === 0 && prior === 0) return null;
+  const value = prior === 0 ? 100 : Math.round(((recent - prior) / prior) * 100);
+  return { value, label: "vs prior 30 days" };
+}
+
+function Eyebrow({ children }: { children: ReactNode }) {
+  return <p className="text-xs font-medium uppercase tracking-wider text-accent-text">{children}</p>;
+}
+
+function Panel({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
+  return (
+    <section id={id} className={`scroll-mt-24 rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6 ${className ?? ""}`}>
+      {children}
+    </section>
   );
 }
 
 function ProfileLink({ label, href, unavailable = "Not connected" }: { label: string; href: string | null; unavailable?: string }) {
-  return <div className="flex items-center justify-between gap-3"><span className="font-bold text-[var(--foreground)]">{label}</span>{href ? <a href={href} target="_blank" rel="noreferrer" className="text-xs font-bold text-cyan-600 hover:underline">View ↗</a> : <span className="text-xs text-[var(--ink-muted)]">{unavailable}</span>}</div>;
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="font-medium">{label}</span>
+      {href ? (
+        <a href={href} target="_blank" rel="noreferrer" className="focus-ring inline-flex items-center gap-1 rounded text-sm font-medium text-accent-text hover:underline">
+          View
+          <ArrowUpRightIcon className="size-3.5" />
+        </a>
+      ) : (
+        <span className="text-sm text-fg-subtle">{unavailable}</span>
+      )}
+    </div>
+  );
 }
 
 function Activity({ title, count, empty, action, children }: { title: string; count: number; empty: string; action?: { href: string; label: string }; children: ReactNode }) {
-  return <section className="rounded-lg border border-[var(--line)] bg-[var(--paper)] p-5 shadow-sm"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-lg font-bold text-[var(--foreground)]">{title}</h2><span className="rounded-full bg-[var(--background)] px-2 py-0.5 text-xs font-bold text-[var(--ink-muted)]">{count}</span></div>{count ? <div className="mt-4 space-y-3">{children}</div> : <div className="mt-4 rounded-lg border border-dashed border-[var(--line)] p-4 text-sm text-[var(--ink-muted)]">{empty}{action && <Link href={action.href} className="mt-2 block text-xs font-bold text-cyan-600 hover:underline">{action.label} &rarr;</Link>}</div>}</section>;
+  return (
+    <Panel>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
+        <Badge>{count.toLocaleString("en-US")}</Badge>
+      </div>
+      {count ? (
+        <div className="mt-4 space-y-3">{children}</div>
+      ) : (
+        <div className="mt-4 rounded-xl border border-dashed border-line-strong p-4 text-sm text-fg-muted">
+          <p>{empty}</p>
+          {action && (
+            <Link href={action.href} className="focus-ring mt-2 inline-flex items-center gap-1 rounded text-sm font-medium text-accent-text hover:underline">
+              {action.label}
+              <ArrowRightIcon className="size-4" />
+            </Link>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
 }
 
 function ActivityItem({ title, detail, status, href }: { title: string; detail: string; status?: string; href?: string }) {
-  const content = <><p className="truncate text-sm font-bold text-[var(--foreground)]">{title}</p><p className="mt-1 text-xs text-[var(--ink-muted)]">{detail}</p></>;
-  return <div className="flex items-start justify-between gap-3">{href ? <Link href={href} className="min-w-0 hover:text-cyan-600">{content}</Link> : <div className="min-w-0">{content}</div>}{status && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold capitalize ring-1 ${statusColor(status)}`}>{status.replace("_", " ")}</span>}</div>;
+  const content = (
+    <>
+      <p className="truncate text-sm font-medium">{title}</p>
+      <p className="mt-0.5 text-xs text-fg-subtle">{detail}</p>
+    </>
+  );
+  return (
+    <div className="flex items-start justify-between gap-3">
+      {href ? (
+        <Link href={href} className="focus-ring min-w-0 rounded transition-colors hover:text-accent-text">
+          {content}
+        </Link>
+      ) : (
+        <div className="min-w-0">{content}</div>
+      )}
+      {status && (
+        <Badge variant={statusVariant(status)} size="sm" className="capitalize">
+          {status.replace(/_/g, " ")}
+        </Badge>
+      )}
+    </div>
+  );
 }

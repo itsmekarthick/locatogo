@@ -1,136 +1,126 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
+import { PasswordField } from "@/app/auth/password-field";
+import { emailError, nameError, passwordError } from "@/app/auth/validation";
+import { Button } from "@/components/ui/button";
+import { AlertCircleIcon, CheckCircleIcon, MailIcon, UserIcon } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
 import type { ActionResult } from "@/lib/validation/directory";
 
 type AuthAction = (state: ActionResult | undefined, formData: FormData) => Promise<ActionResult>;
 
+type Values = { displayName: string; email: string; password: string };
+type Field = keyof Values;
+
 export function AuthForm({ action, signup = false }: { action: AuthAction; signup?: boolean }) {
   const [state, formAction, pending] = useActionState(action, undefined);
-  const [showPassword, setShowPassword] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  // Controlled values survive the form reset React applies after an action finishes.
+  const [values, setValues] = useState<Values>({ displayName: "", email: "", password: "" });
+  const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const errors: Partial<Record<Field, string>> = {
+    ...(signup ? { displayName: nameError(values.displayName) } : {}),
+    email: emailError(values.email),
+    password: passwordError(values.password),
+  };
+  const visibleError = (field: Field) => (touched[field] || submitted ? errors[field] : undefined);
+
+  const update = (field: Field) => (event: React.ChangeEvent<HTMLInputElement>) => setValues((prev) => ({ ...prev, [field]: event.target.value }));
+  const blur = (field: Field) => () => setTouched((prev) => ({ ...prev, [field]: true }));
+
+  function handleSubmit(formData: FormData) {
+    setSubmitted(true);
+    if (Object.values(errors).some(Boolean)) {
+      requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus());
+      return;
+    }
+    formAction(formData);
+  }
+
+  const passwordLongEnough = values.password.length >= 8;
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form ref={formRef} action={handleSubmit} noValidate className="space-y-4">
       {signup && (
-        <>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-              Full Name <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                name="displayName"
-                required
-                autoComplete="name"
-                placeholder="e.g. Jordan Miller"
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all"
-              />
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">
-                👤
-              </span>
-            </div>
-          </div>
-        </>
+        <Input
+          label="Full name"
+          name="displayName"
+          required
+          autoComplete="name"
+          placeholder="Jordan Miller"
+          value={values.displayName}
+          onChange={update("displayName")}
+          onBlur={blur("displayName")}
+          error={visibleError("displayName")}
+          leading={<UserIcon />}
+        />
       )}
 
-      {/* Email Address */}
-      <div>
-        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-          Email Address <span className="text-rose-500">*</span>
-        </label>
-        <div className="relative">
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="name@company.com"
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 pl-11 pr-4 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all"
-          />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">
-            ✉️
-          </span>
-        </div>
-      </div>
+      <Input
+        label="Email address"
+        name="email"
+        type="email"
+        required
+        autoComplete="email"
+        inputMode="email"
+        placeholder="name@company.com"
+        value={values.email}
+        onChange={update("email")}
+        onBlur={blur("email")}
+        error={visibleError("email")}
+        leading={<MailIcon />}
+      />
 
-      {/* Password */}
       <div>
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-            Password <span className="text-rose-500">*</span>
-          </label>
-          {!signup && (
-            <Link
-              href="/auth/forgot-password"
-              prefetch={false}
-              className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline"
-            >
+        <PasswordField
+          label="Password"
+          name="password"
+          required
+          autoComplete={signup ? "new-password" : "current-password"}
+          placeholder="At least 8 characters"
+          value={values.password}
+          onChange={update("password")}
+          onBlur={blur("password")}
+          error={visibleError("password")}
+          hint={signup ? "Use at least 8 characters." : undefined}
+        />
+        {signup && values.password && (
+          <p className={`mt-1.5 flex items-center gap-1.5 text-[13px] ${passwordLongEnough ? "text-success" : "text-fg-subtle"}`}>
+            <CheckCircleIcon className="size-3.5" />
+            {passwordLongEnough ? "Long enough" : `${8 - values.password.length} more to go`}
+          </p>
+        )}
+        {!signup && (
+          <div className="mt-2 text-right">
+            <Link href="/auth/forgot-password" prefetch={false} className="focus-ring rounded text-sm font-medium text-accent-text hover:underline">
               Forgot password?
             </Link>
-          )}
-        </div>
-        {signup && <p className="text-[11px] text-slate-400 mb-1">Must be at least 8 characters.</p>}
-        <div className="relative">
-          <input
-            name="password"
-            type={showPassword ? "text" : "password"}
-            minLength={8}
-            required
-            autoComplete={signup ? "new-password" : "current-password"}
-            placeholder="••••••••••••"
-            className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 pl-11 pr-11 py-3 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-cyan-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 transition-all"
-          />
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none select-none">
-            🔒
-          </span>
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            tabIndex={-1}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 text-xs cursor-pointer select-none transition-colors"
-          >
-            {showPassword ? "🙈" : "👁️"}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Error Feedback */}
-      {state?.error && (
-        <div className="rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 p-3.5 text-xs font-medium text-rose-700 dark:text-rose-300 flex items-start gap-2.5 animate-in fade-in duration-150">
-          <span className="text-sm">⚠️</span>
-          <span>{state.error}</span>
-        </div>
-      )}
-
-      {/* Success Feedback */}
-      {state?.success && (
-        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50 dark:bg-emerald-950/40 p-3.5 text-xs font-medium text-emerald-700 dark:text-emerald-300 flex items-start gap-2.5 animate-in fade-in duration-150">
-          <span className="text-sm">✓</span>
-          <span>{state.success}</span>
-        </div>
-      )}
-
-      {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-slate-950 hover:bg-slate-800 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white font-bold text-sm py-3.5 px-6 shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 transition-all cursor-pointer select-none"
-      >
-        {pending ? (
-          <>
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            <span>Authenticating...</span>
-          </>
-        ) : (
-          <>
-            <span>{signup ? "Create Free Account" : "Sign In"}</span>
-            <span className="text-xs">→</span>
-          </>
+      <div aria-live="polite">
+        {state?.error && (
+          <div role="alert" className="flex items-start gap-2.5 rounded-xl border border-danger/30 bg-danger-soft p-3.5 text-sm text-danger">
+            <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
+            <span>{state.error}</span>
+          </div>
         )}
-      </button>
+        {state?.success && (
+          <div role="status" className="flex items-start gap-2.5 rounded-xl border border-success/30 bg-success-soft p-3.5 text-sm text-success">
+            <CheckCircleIcon className="mt-0.5 size-4 shrink-0" />
+            <span>{state.success}</span>
+          </div>
+        )}
+      </div>
+
+      <Button type="submit" size="lg" fullWidth loading={pending}>
+        {pending ? (signup ? "Creating account" : "Signing in") : signup ? "Create free account" : "Sign in"}
+      </Button>
     </form>
   );
 }

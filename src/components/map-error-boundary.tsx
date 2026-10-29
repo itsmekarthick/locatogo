@@ -1,6 +1,8 @@
 "use client";
 
 import React, { Component, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { MapIcon, RefreshIcon } from "@/components/ui/icons";
 
 interface Props {
   children: ReactNode;
@@ -33,22 +35,17 @@ export class MapErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="relative flex h-full w-full flex-col items-center justify-center bg-slate-100 dark:bg-slate-900 p-6 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-900/40 text-xl mb-3">
-            🗺️
+        <div role="alert" className="relative flex h-full w-full flex-col items-center justify-center bg-surface-2 p-6 text-center">
+          <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-warning-soft text-[1.5rem] text-warning">
+            <MapIcon />
           </div>
-          <h3 className="font-serif text-base font-bold text-slate-900 dark:text-slate-100">
-            Map View Unavailable
-          </h3>
-          <p className="mt-1 text-xs text-slate-500 max-w-xs">
+          <h3 className="font-display text-base font-semibold tracking-tight text-fg">Map view unavailable</h3>
+          <p className="mt-1 max-w-xs text-sm text-fg-muted">
             {this.props.fallbackText || "The interactive map canvas encountered a rendering issue."}
           </p>
-          <button
-            onClick={this.handleReset}
-            className="mt-4 rounded-full bg-[#0ea5e9] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-[#0284c7] transition-colors cursor-pointer"
-          >
-            ↻ Reload Map
-          </button>
+          <Button variant="secondary" size="sm" className="mt-4" leadingIcon={<RefreshIcon className="size-4" />} onClick={this.handleReset}>
+            Reload map
+          </Button>
         </div>
       );
     }

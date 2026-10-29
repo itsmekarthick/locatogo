@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowRightIcon, MapPinIcon, SearchIcon, XIcon } from "@/components/ui/icons";
 
 type SearchResultItem = {
   id: string;
@@ -102,14 +103,17 @@ export function DetailsAutocompleteSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-[280px] sm:max-w-[340px] md:max-w-[400px]">
+    <div ref={containerRef} className="relative w-full">
       <div className="relative flex items-center">
-        <span className="pointer-events-none absolute left-3.5 text-gray-400 text-sm">
-          🔍
-        </span>
+        <SearchIcon className="pointer-events-none absolute left-3.5 size-4 text-fg-subtle" />
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls="place-search-results"
+          aria-autocomplete="list"
+          aria-label="Search places by name or address"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
@@ -118,99 +122,83 @@ export function DetailsAutocompleteSearch() {
             }
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Search places by name or address..."
-          className="w-full rounded-full border border-gray-200 bg-gray-50/70 py-2 pl-9 pr-8 text-xs font-medium text-gray-900 placeholder:text-gray-400 focus:border-[#0ea5e9] focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-[#0ea5e9]/20 transition-all shadow-2xs"
+          placeholder="Search places by name or address"
+          className="h-10 w-full rounded-full border border-line-strong bg-surface-1 pl-10 pr-10 text-base text-fg outline-none transition-ui placeholder:text-fg-subtle hover:border-fg-subtle focus:border-accent focus:ring-4 focus:ring-accent/15 sm:text-sm pointer-coarse:h-11"
         />
         {isLoading ? (
-          <div className="absolute right-3 h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-[#0ea5e9]" />
+          <span role="status" aria-label="Searching" className="absolute right-3.5 size-4 animate-spin rounded-full border-2 border-line-strong border-t-accent" />
         ) : query.length > 0 ? (
           <button
             type="button"
+            aria-label="Clear search"
             onClick={() => {
               setQuery("");
               setResults([]);
               setIsOpen(false);
               inputRef.current?.focus();
             }}
-            className="absolute right-3 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            className="focus-ring absolute right-1.5 grid size-8 place-items-center rounded-full text-fg-subtle transition-colors hover:bg-surface-3 hover:text-fg"
           >
-            ✕
+            <XIcon className="size-4" />
           </button>
         ) : null}
       </div>
 
       {/* Autocomplete Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="absolute left-0 top-full z-[var(--z-dropdown)] mt-2 w-[min(28rem,calc(100vw-2rem))] min-w-full overflow-hidden rounded-2xl border border-line bg-surface-2 elev-lg animate-in fade-in-0 zoom-in-95 duration-150">
           {results.length > 0 ? (
             <div className="py-2">
-              <div className="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 flex justify-between items-center">
-                <span>Places ({results.length})</span>
-                <span className="text-gray-400 font-normal">Use ↑↓ arrows to navigate</span>
+              <div className="flex items-center justify-between border-b border-line px-3.5 py-1.5 text-xs text-fg-subtle">
+                <span className="font-medium">Places ({results.length})</span>
+                <span className="max-sm:hidden">↑↓ to navigate</span>
               </div>
-              <ul className="max-h-[340px] overflow-y-auto divide-y divide-gray-50">
+              <ul id="place-search-results" role="listbox" className="max-h-[340px] divide-y divide-line overflow-y-auto overscroll-contain">
                 {results.map((item, index) => (
-                  <li key={item.id}>
+                  <li key={item.id} role="option" aria-selected={selectedIndex === index}>
                     <button
                       type="button"
                       onClick={() => handleSelect(item.slug)}
                       onMouseEnter={() => setSelectedIndex(index)}
-                      className={`w-full text-left px-3.5 py-2.5 flex items-start gap-3 transition-colors ${
-                        selectedIndex === index ? "bg-gray-50" : "hover:bg-gray-50/70"
+                      className={`focus-ring flex w-full items-start gap-3 px-3.5 py-2.5 text-left transition-colors ${
+                        selectedIndex === index ? "bg-surface-3" : "hover:bg-surface-3/60"
                       }`}
                     >
-                      <span className="text-base mt-0.5 shrink-0">
-                        {item.category_icon || "📍"}
+                      <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-base text-accent-text">
+                        <MapPinIcon />
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-gray-900 truncate">
-                            {item.title}
-                          </p>
-                          {item.is_featured && (
-                            <span className="rounded bg-orange-50 px-1.5 py-0.2 text-[9px] font-bold text-[#0ea5e9]">
-                              ★
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                          📍 {item.locality} · <span className="text-gray-400">{item.category_name}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-fg">{item.title}</p>
+                        <p className="mt-0.5 truncate text-xs text-fg-subtle">
+                          {item.locality} · {item.category_name}
                         </p>
-                        {item.short_description && (
-                          <p className="text-[10px] text-gray-400 truncate mt-0.5">
-                            {item.short_description}
-                          </p>
-                        )}
+                        {item.short_description && <p className="mt-0.5 truncate text-xs text-fg-subtle">{item.short_description}</p>}
                       </div>
-                      <span className="text-xs text-gray-400 self-center shrink-0">
-                        →
-                      </span>
+                      <ArrowRightIcon className="size-4 shrink-0 self-center text-fg-subtle" />
                     </button>
                   </li>
                 ))}
               </ul>
-              <div className="border-t border-gray-100 p-2 bg-gray-50/50">
+              <div className="border-t border-line p-2">
                 <Link
                   href={`/?q=${encodeURIComponent(query.trim())}`}
                   onClick={() => setIsOpen(false)}
-                  className="block text-center text-[11px] font-bold text-[#0ea5e9] hover:underline py-1"
+                  className="focus-ring block rounded-lg py-1.5 text-center text-sm font-medium text-accent-text hover:underline"
                 >
-                  Explore all results for &quot;{query.trim()}&quot; on live map →
+                  Explore all results for &quot;{query.trim()}&quot; on the live map
                 </Link>
               </div>
             </div>
           ) : query.trim().length >= 3 && !isLoading ? (
-            <div className="p-4 text-center text-xs text-gray-500">
-              <p className="font-semibold text-gray-800">No matching places found</p>
-              <p className="text-[11px] text-gray-400 mt-1">
-                Try searching for schools, hospitals, cafes, tech parks, or neighborhoods.
-              </p>
+            <div className="p-5 text-center">
+              <p className="text-sm font-medium text-fg">No matching places found</p>
+              <p className="mt-1 text-xs text-fg-subtle">Try schools, hospitals, cafes, tech parks or neighborhoods.</p>
               <Link
                 href={`/?q=${encodeURIComponent(query.trim())}`}
                 onClick={() => setIsOpen(false)}
-                className="mt-3 inline-block rounded-full bg-gray-100 px-3 py-1 text-[11px] font-bold text-gray-700 hover:bg-gray-200 transition-colors"
+                className="focus-ring mt-3 inline-flex rounded-full border border-line-strong bg-surface-1 px-3 py-1.5 text-xs font-medium text-fg transition-colors hover:bg-surface-3"
               >
-                Search on Live Atlas Map ↗
+                Search on the live map
               </Link>
             </div>
           ) : null}
@@ -219,4 +207,3 @@ export function DetailsAutocompleteSearch() {
     </div>
   );
 }
-

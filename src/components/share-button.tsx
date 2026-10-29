@@ -1,66 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { CheckIcon, ShareIcon } from "@/components/ui/icons";
+import { useToast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils/cn";
+import "@/components/explorer/explorer.css";
 
 interface ShareButtonProps {
   title: string;
   url?: string;
   className?: string;
+  /** Hides the text label below the md breakpoint, leaving an icon-only button. */
+  collapseLabel?: boolean;
 }
 
-export function ShareButton({ title, url, className = "" }: ShareButtonProps) {
-  const [copied, setCopied] = useState(false);
+async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const el = document.createElement("textarea");
+    el.value = text;
+    el.setAttribute("readonly", "");
+    el.style.position = "fixed";
+    el.style.opacity = "0";
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand("copy");
+    document.body.removeChild(el);
+  }
+}
 
-  const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
+export function ShareButton({ title, url, className = "", collapseLabel = false }: ShareButtonProps) {
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title, url: shareUrl });
-      } catch {
-        // User cancelled or error — fall back to clipboard
-        await copyToClipboard(shareUrl);
-      }
-    } else {
-      await copyToClipboard(shareUrl);
-    }
-  };
+    const shareUrl = url ?? `${window.location.origin}${window.location.pathname}`;
+    const data = { title, url: shareUrl };
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-      const el = document.createElement("textarea");
-      el.value = text;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand("copy");
-      document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+    if (typeof navigator.share === "function" && (!navigator.canShare || navigator.canShare(data))) {
+      try {
+        await navigator.share(data);
+        return;
+      } catch (error) {
+        // Dismissing the native sheet is not a failure, so don't fall through to copying.
+        if (error instanceof DOMException && error.name === "AbortError") return;
+      }
     }
+
+    await copyText(shareUrl);
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 2000);
+    toast({
+      title: "Link copied",
+      description: shareUrl.replace(/^https?:\/\//, ""),
+      variant: "success",
+      duration: 3000,
+    });
   };
 
   return (
     <button
+      type="button"
       onClick={handleShare}
-      title="Share this place"
-      className={`inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:border-gray-300 cursor-pointer ${className}`}
-    >
-      {copied ? (
-        <>
-          <span>✓</span>
-          <span>Link Copied!</span>
-        </>
-      ) : (
-        <>
-          <span>🔗</span>
-          <span>Share</span>
-        </>
+      title="Share this page"
+      aria-label={copied ? "Link copied" : "Share this page"}
+      className={cn(
+        "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm font-semibold transition-ui active:scale-95 pointer-coarse:min-h-11",
+        copied
+          ? "border-success/30 bg-success-soft text-success"
+          : "border-line-strong bg-surface-1 text-fg-muted hover:bg-surface-3 hover:text-fg",
+        className,
       )}
+    >
+      {copied ? <CheckIcon key="done" className="ex-pop size-4" /> : <ShareIcon className="size-4" />}
+      <span className={cn("text-xs", collapseLabel && "max-md:sr-only")}>{copied ? "Copied" : "Share"}</span>
     </button>
   );
 }

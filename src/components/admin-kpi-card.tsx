@@ -1,136 +1,156 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { TrendingDownIcon, TrendingUpIcon } from "@/components/ui/icons";
+import { cn } from "@/lib/utils/cn";
+import "@/components/admin/admin.css";
+
+export type KpiTone = "accent" | "success" | "warning" | "danger" | "info" | "neutral";
+
+const TONES: Record<KpiTone, { tile: string; stroke: string }> = {
+  accent: { tile: "bg-accent-soft text-accent-text", stroke: "var(--accent)" },
+  success: { tile: "bg-success-soft text-success", stroke: "var(--success)" },
+  warning: { tile: "bg-warning-soft text-warning", stroke: "var(--warning)" },
+  danger: { tile: "bg-danger-soft text-danger", stroke: "var(--danger)" },
+  info: { tile: "bg-info-soft text-info", stroke: "var(--info)" },
+  neutral: { tile: "bg-surface-3 text-fg-muted", stroke: "var(--text-tertiary)" },
+};
 
 type KpiCardProps = {
   title: string;
   value: number;
-  icon: string;
+  icon: ReactNode;
   description: string;
+  /** Percentage change; the label says what it is compared with. */
   trend?: { value: number; label: string } | null;
   sparklineData?: number[];
-  accentClass?: string;
+  tone?: KpiTone;
   href?: string;
+  /** ISO 4217 code; formats the value as money. */
+  currency?: string;
+  /** Position in the grid, for the staggered entrance. */
+  index?: number;
 };
 
-function useCountUp(target: number, duration = 1200) {
-  const [count, setCount] = useState(0);
+function useCountUp(target: number, duration = 900) {
+  const [count, setCount] = useState(target);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setCount(target);
+      return;
+    }
 
+    let frame = 0;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          const start = performance.now();
-          const animate = (now: number) => {
-            const elapsed = now - start;
-            const progress = Math.min(elapsed / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
-            setCount(Math.round(eased * target));
-            if (progress < 1) requestAnimationFrame(animate);
-          };
-          requestAnimationFrame(animate);
-          observer.disconnect();
-        }
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        const start = performance.now();
+        const tick = (now: number) => {
+          const progress = Math.min((now - start) / duration, 1);
+          setCount(Math.round((1 - Math.pow(1 - progress, 3)) * target));
+          if (progress < 1) frame = requestAnimationFrame(tick);
+        };
+        setCount(0);
+        frame = requestAnimationFrame(tick);
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
-
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   }, [target, duration]);
 
   return { count, ref };
 }
 
-function MiniSparkline({ data, color = "var(--coral)" }: { data: number[]; color?: string }) {
-  if (!data.length) return null;
+function Sparkline({ data, stroke, label }: { data: number[]; stroke: string; label: string }) {
+  const gradientId = useId();
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
   const range = max - min || 1;
-  const w = 80;
-  const h = 28;
-  const points = data.map((v, i) => ({
-    x: (i / (data.length - 1)) * w,
-    y: h - ((v - min) / range) * h,
-  }));
-
-  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
-  const areaD = `${pathD} L${w},${h} L0,${h} Z`;
+  const w = 88;
+  const h = 32;
+  const points = data.map((value, i) => ({ x: (i / (data.length - 1)) * w, y: 2 + (h - 4) - ((value - min) / range) * (h - 4) }));
+  const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const last = points[points.length - 1];
 
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible">
+    <svg role="img" aria-label={label} width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="overflow-visible">
       <defs>
-        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={stroke} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={stroke} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={areaD} fill="url(#sparkGrad)" />
-      <path d={pathD} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      {/* Glow dot at last point */}
-      {points.length > 0 && (
-        <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="2.5" fill={color}>
-          <animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite" />
-        </circle>
-      )}
+      <path d={`${line} L${w},${h} L0,${h} Z`} fill={`url(#${gradientId})`} />
+      <path d={line} pathLength={1} fill="none" stroke={stroke} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="adm-line" />
+      <circle cx={last.x} cy={last.y} r="2.5" fill={stroke} />
     </svg>
   );
 }
 
-export function AdminKpiCard({ title, value, icon, description, trend, sparklineData, accentClass, href }: KpiCardProps) {
+export function AdminKpiCard({ title, value, icon, description, trend, sparklineData, tone = "accent", href, currency, index = 0 }: KpiCardProps) {
   const { count, ref } = useCountUp(value);
+  const format = (amount: number) => (currency ? new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount) : amount.toLocaleString("en-US"));
+  // The count-up works in whole numbers; show the exact value once it lands.
+  const shown = count === Math.round(value) ? value : count;
+  const colors = TONES[tone];
+  const hasSpark = Boolean(sparklineData && sparklineData.length > 1);
+  const up = trend ? trend.value >= 0 : true;
 
-  const content = (
+  const body = (
     <div
       ref={ref}
-      className={`group relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-[var(--line-strong)] ${href ? "cursor-pointer" : ""}`}
+      style={{ "--i": index } as React.CSSProperties}
+      className={cn(
+        "adm-rise relative h-full rounded-2xl border border-line bg-surface-1 p-5 elev-sm transition-ui",
+        href && "group-hover:-translate-y-0.5 group-hover:border-line-strong group-hover:elev-md",
+      )}
     >
-      {/* Decorative gradient accent at top */}
-      <div className={`absolute inset-x-0 top-0 h-[3px] rounded-t-2xl ${accentClass ?? "bg-gradient-to-r from-[var(--coral)] to-[var(--coral)]/40"}`} />
-
-      <div className="flex items-start justify-between">
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{title}</p>
-          <p className="mt-2 font-display text-3xl font-bold tracking-tight text-[var(--foreground)]">
-            {count.toLocaleString()}
-          </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl text-[1.15rem]", colors.tile)}>{icon}</span>
+          <p className="truncate text-sm font-medium text-fg-muted">{title}</p>
         </div>
-
-        <div className="flex flex-col items-end gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--background)] text-base transition-transform duration-300 group-hover:scale-110">
-            {icon}
-          </span>
-          {sparklineData && sparklineData.length > 1 && (
-            <MiniSparkline data={sparklineData} />
-          )}
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between">
-        <p className="text-[11px] text-[var(--ink-muted)]">{description}</p>
         {trend && (
-          <span
-            className={`flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-              trend.value >= 0
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-red-50 text-red-600"
-            }`}
-          >
-            {trend.value >= 0 ? "↑" : "↓"} {Math.abs(trend.value)}% {trend.label}
-          </span>
+          <Badge variant={up ? "success" : "danger"} size="sm" icon={up ? <TrendingUpIcon className="size-3.5" /> : <TrendingDownIcon className="size-3.5" />}>
+            <span aria-hidden="true">{`${up ? "+" : ""}${trend.value}%`}</span>
+            <span className="sr-only">{`${up ? "Up" : "Down"} ${Math.abs(trend.value)} percent ${trend.label}`}</span>
+          </Badge>
         )}
       </div>
+
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <p className="font-display text-3xl font-semibold tracking-tight text-fg">{format(shown)}</p>
+        {hasSpark && (
+          <Sparkline
+            data={sparklineData!}
+            stroke={colors.stroke}
+            label={`${title} trend over ${sparklineData!.length} periods, from ${sparklineData![0].toLocaleString("en-US")} to ${sparklineData![sparklineData!.length - 1].toLocaleString("en-US")}`}
+          />
+        )}
+      </div>
+
+      <p className="mt-2 text-xs text-fg-subtle">
+        {description}
+        {trend && <span className="text-fg-subtle"> · {trend.label}</span>}
+      </p>
     </div>
   );
 
-  if (href) {
-    // Using a regular anchor since this is a client component
-    return <a href={href} className="block no-underline">{content}</a>;
-  }
+  if (!href) return body;
 
-  return content;
+  return (
+    <Link href={href} aria-label={`${title}: ${format(value)}. ${description}`} className="focus-ring group block h-full rounded-2xl">
+      {body}
+    </Link>
+  );
 }

@@ -1,7 +1,9 @@
-import Link from "next/link";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminKpiCard } from "@/components/admin-kpi-card";
-import { AdminMiniChart, AdminAreaChart } from "@/components/admin-mini-chart";
+import { AdminMiniChart } from "@/components/admin-mini-chart";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ArrowUpRightIcon, ClockIcon, EyeIcon, MapIcon, MapPinIcon, SearchIcon } from "@/components/ui/icons";
 
 export default async function TenantAnalyticsPage() {
   const { supabase, tenant } = await requireTenantContext();
@@ -84,182 +86,143 @@ export default async function TenantAnalyticsPage() {
 
   const sparklineValues = dailyTraffic.map((d) => d.value);
 
+  const channels = [
+    { label: "Directory and place views", count: pageViews, color: "bg-accent", icon: EyeIcon },
+    { label: "Search queries", count: searches, color: "bg-warning", icon: SearchIcon },
+    { label: "Map clicks and exploration", count: mapInteractions, color: "bg-success", icon: MapIcon },
+    { label: "Outbound leads (WhatsApp, Uber)", count: outboundLeads, color: "bg-danger", icon: ArrowUpRightIcon },
+  ];
+
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Traffic & Telemetry</p>
-          <h1 className="mt-1 font-display text-4xl font-bold tracking-[-0.05em] text-[var(--foreground)]">
-            Visitor Analytics
-          </h1>
-          <p className="mt-2 text-sm text-[var(--ink-muted)]">
-            Live visitor traffic, search inquiries, and community engagement over the last 30 days.
+          <p className="text-xs font-medium uppercase tracking-wider text-accent-text">Traffic and telemetry</p>
+          <h1 className="mt-1 font-display text-[clamp(1.75rem,3.5vw,2.5rem)] font-semibold tracking-tight text-fg">Visitor analytics</h1>
+          <p className="mt-2 max-w-[60ch] text-sm text-fg-muted">
+            Live visitor traffic, search inquiries and community engagement over the last 30 days.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-semibold text-[var(--ink-muted)]">Live Telemetry Active</span>
-        </div>
+        <Badge variant="success" dot>
+          Live telemetry active
+        </Badge>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <AdminKpiCard
-          title="Total Page Views"
-          value={pageViews}
-          icon="👀"
-          description="Directory & listing views"
-          sparklineData={sparklineValues}
-          accentClass="bg-gradient-to-r from-cyan-500 to-cyan-500"
-        />
-        <AdminKpiCard
-          title="Search Inquiries"
-          value={searches}
-          icon="🔍"
-          description="Place searches performed"
-          accentClass="bg-gradient-to-r from-amber-400 to-orange-500"
-        />
-        <AdminKpiCard
-          title="Map Interactions"
-          value={mapInteractions}
-          icon="🗺️"
-          description="Pins clicked & clustered"
-          accentClass="bg-gradient-to-r from-emerald-400 to-green-500"
-        />
-        <AdminKpiCard
-          title="Outbound Leads"
-          value={outboundLeads}
-          icon="🚀"
-          description="WhatsApp, Uber & calls"
-          accentClass="bg-gradient-to-r from-rose-400 to-pink-500"
-        />
-      </div>
+      <section aria-label="Key metrics" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <AdminKpiCard index={0} title="Total page views" value={pageViews} icon={<EyeIcon />} description="Directory and listing views" sparklineData={sparklineValues} tone="accent" />
+        <AdminKpiCard index={1} title="Search inquiries" value={searches} icon={<SearchIcon />} description="Place searches performed" tone="warning" />
+        <AdminKpiCard index={2} title="Map interactions" value={mapInteractions} icon={<MapIcon />} description="Pins clicked and clustered" tone="success" />
+        <AdminKpiCard index={3} title="Outbound leads" value={outboundLeads} icon={<ArrowUpRightIcon />} description="WhatsApp, Uber and calls" tone="danger" />
+      </section>
 
-      {/* Charts Section */}
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        {/* Daily Traffic Chart */}
-        <section className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+        <section aria-labelledby="daily-activity" className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+          <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
             <div>
-              <h2 className="font-display text-xl font-bold text-[var(--foreground)]">Daily Visitor Activity</h2>
-              <p className="text-xs text-[var(--ink-muted)]">Event volume over the past 14 days</p>
+              <h2 id="daily-activity" className="font-display text-lg font-semibold tracking-tight text-fg">
+                Daily visitor activity
+              </h2>
+              <p className="text-xs text-fg-subtle">Event volume over the past 14 days</p>
             </div>
-            <span className="rounded-full bg-[var(--background)] px-3 py-1 text-xs font-mono text-[var(--ink-muted)] border border-[var(--line)]">
-              {allEvents.length} total events
-            </span>
+            <Badge>{allEvents.length.toLocaleString("en-US")} total events</Badge>
           </div>
 
           <div className="mt-6">
-            <AdminMiniChart
-              data={dailyTraffic}
-              height={140}
-              barColor="var(--line-strong)"
-              activeBarColor="var(--coral)"
-            />
+            <AdminMiniChart data={dailyTraffic} height={140} title="Events per day" />
           </div>
         </section>
 
-        {/* Engagement Channel Breakdown */}
-        <section className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
-          <h2 className="font-display text-xl font-bold text-[var(--foreground)]">Event Channels</h2>
-          <p className="mt-0.5 text-xs text-[var(--ink-muted)]">Breakdown by visitor action</p>
+        <section aria-labelledby="event-channels" className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+          <h2 id="event-channels" className="font-display text-lg font-semibold tracking-tight text-fg">
+            Event channels
+          </h2>
+          <p className="mt-0.5 text-xs text-fg-subtle">Breakdown by visitor action</p>
 
-          <div className="mt-6 space-y-3">
-            {[
-              { label: "Directory & Place Views", count: pageViews, color: "bg-cyan-500", icon: "👀" },
-              { label: "Search Queries", count: searches, color: "bg-amber-500", icon: "🔍" },
-              { label: "Map Clicks & Exploration", count: mapInteractions, color: "bg-emerald-500", icon: "🗺️" },
-              { label: "Outbound Leads (WhatsApp/Uber)", count: outboundLeads, color: "bg-rose-500", icon: "🚀" },
-            ].map((channel) => {
+          <ul role="list" className="mt-5 space-y-3">
+            {channels.map((channel) => {
               const pct = allEvents.length > 0 ? Math.round((channel.count / allEvents.length) * 100) : 0;
+              const Icon = channel.icon;
               return (
-                <div key={channel.label} className="rounded-2xl border border-[var(--line)] bg-[var(--background)] p-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                      <span>{channel.icon}</span>
-                      <span>{channel.label}</span>
+                <li key={channel.label} className="rounded-xl border border-line bg-surface-2/60 p-3">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="flex min-w-0 items-center gap-2 font-medium text-fg">
+                      <Icon className="size-4 shrink-0 text-fg-subtle" />
+                      <span className="truncate">{channel.label}</span>
                     </span>
-                    <span className="font-mono font-bold text-[var(--ink-muted)]">{channel.count} ({pct}%)</span>
+                    <span className="shrink-0 font-mono text-xs text-fg-muted">
+                      {channel.count.toLocaleString("en-US")} ({pct}%)
+                    </span>
                   </div>
-                  <div className="mt-2 h-1.5 w-full rounded-full bg-[var(--line)]">
-                    <div className={`h-1.5 rounded-full ${channel.color}`} style={{ width: `${pct}%` }} />
+                  <div role="meter" aria-label={`${channel.label} share of events`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
+                    <div className={`h-full w-full origin-left rounded-full ${channel.color}`} style={{ transform: `scaleX(${pct / 100})` }} />
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </section>
       </div>
 
-      {/* Top Viewed Places Leaderboard & Live Telemetry Stream */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Most Viewed Places */}
-        <section className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
-          <div className="border-b border-[var(--line)] pb-4">
-            <h2 className="font-display text-xl font-bold text-[var(--foreground)]">Top Viewed Places</h2>
-            <p className="text-xs text-[var(--ink-muted)]">Listings generating the highest interest</p>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <section aria-labelledby="top-places" className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+          <div className="border-b border-line pb-4">
+            <h2 id="top-places" className="font-display text-lg font-semibold tracking-tight text-fg">
+              Top viewed places
+            </h2>
+            <p className="text-xs text-fg-subtle">Listings generating the highest interest</p>
           </div>
 
-          <div className="mt-4 divide-y divide-[var(--line)]">
-            {topListings.length > 0 ? (
-              topListings.map((item, i) => (
-                <div key={item.id} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--background)] text-xs font-bold text-[var(--foreground)] border border-[var(--line)]">
-                      #{i + 1}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-[var(--foreground)]">{item.title}</p>
-                      <p className="text-[11px] text-[var(--ink-muted)]">📍 {item.locality}</p>
+          {topListings.length > 0 ? (
+            <ol role="list" className="mt-2 divide-y divide-line">
+              {topListings.map((item, i) => (
+                <li key={item.id} className="flex items-center justify-between gap-3 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-surface-3 text-xs font-semibold text-fg-muted">{i + 1}</span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-fg">{item.title}</p>
+                      <p className="flex items-center gap-1 truncate text-xs text-fg-subtle">
+                        <MapPinIcon className="size-3 shrink-0" />
+                        {item.locality}
+                      </p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-[var(--coral-soft)] px-2.5 py-0.5 text-xs font-bold text-[var(--coral)]">
-                    {item.count} views
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="py-8 text-center text-xs text-[var(--ink-muted)]">
-                Place view events will appear here as visitors discover listings.
-              </div>
-            )}
-          </div>
+                  <Badge variant="accent" size="sm">
+                    {item.count.toLocaleString("en-US")} views
+                  </Badge>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EmptyState className="py-10" icon={<EyeIcon />} title="No views yet" description="Place view events will appear here as visitors discover listings." />
+          )}
         </section>
 
-        {/* Live Event Stream */}
-        <section className="rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-7 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
-            <div>
-              <h2 className="font-display text-xl font-bold text-[var(--foreground)]">Real-Time Activity Stream</h2>
-              <p className="text-xs text-[var(--ink-muted)]">Latest 8 actions recorded</p>
-            </div>
+        <section aria-labelledby="activity-stream" className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+          <div className="border-b border-line pb-4">
+            <h2 id="activity-stream" className="font-display text-lg font-semibold tracking-tight text-fg">
+              Real-time activity stream
+            </h2>
+            <p className="text-xs text-fg-subtle">Latest 8 actions recorded</p>
           </div>
 
-          <div className="mt-4 space-y-2">
-            {allEvents.slice(0, 8).map((evt) => (
-              <div
-                key={evt.id}
-                className="flex items-center justify-between rounded-xl bg-[var(--background)] px-3.5 py-2.5 text-xs border border-[var(--line)]"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="h-2 w-2 rounded-full bg-[var(--coral)]" />
-                  <span className="font-mono font-semibold text-[var(--foreground)] capitalize">
-                    {evt.event_type.replace(/_/g, " ")}
+          {allEvents.length > 0 ? (
+            <ul role="list" className="mt-4 space-y-2">
+              {allEvents.slice(0, 8).map((evt) => (
+                <li key={evt.id} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface-2/60 px-3.5 py-2.5 text-sm">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-accent" />
+                    <span className="truncate font-mono text-xs font-medium capitalize text-fg">{evt.event_type.replace(/_/g, " ")}</span>
                   </span>
-                </div>
-                <span className="text-[11px] text-[var(--ink-muted)] font-mono">
-                  {new Date(evt.occurred_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                </span>
-              </div>
-            ))}
-            {allEvents.length === 0 && (
-              <div className="py-8 text-center text-xs text-[var(--ink-muted)]">
-                No visitor activity recorded in the last 30 days.
-              </div>
-            )}
-          </div>
+                  <time dateTime={evt.occurred_at} className="shrink-0 font-mono text-xs text-fg-subtle">
+                    {new Date(evt.occurred_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                  </time>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState className="py-10" icon={<ClockIcon />} title="No activity recorded" description="Nothing in the last 30 days." />
+          )}
         </section>
       </div>
     </div>
