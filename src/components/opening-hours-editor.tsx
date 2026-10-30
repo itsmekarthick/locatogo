@@ -198,7 +198,7 @@ export function OpeningHoursEditor({ listingId, initialHours, saveAction }: Prop
           type="button"
           onClick={handleSaveAll}
           disabled={isPending}
-          className="rounded-full bg-[var(--foreground)] px-5 py-2 text-xs font-semibold text-[var(--paper)] hover:bg-[var(--foreground)]/90 transition-all disabled:opacity-50"
+          className="rounded-full bg-[var(--foreground)] px-5 py-2 text-xs font-semibold text-[var(--paper)] hover:bg-[var(--foreground)]/90 transition-ui disabled:opacity-50"
         >
           {isPending ? "Saving..." : "Save All Hours"}
         </button>

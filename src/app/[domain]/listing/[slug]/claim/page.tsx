@@ -65,7 +65,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ domain: 
 
           <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between">
             <p className="text-xs text-[var(--ink-muted)]">🔒 You must be signed in to submit claims.</p>
-            <button className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow transition-all hover:bg-[var(--foreground)]/85 hover:shadow-md">
+            <button className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow transition-ui hover:bg-[var(--foreground)]/85 hover:shadow-md">
               Submit verification claim →
             </button>
           </div>

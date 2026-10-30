@@ -201,7 +201,7 @@ export function EmailTemplatesManager({
                   setActiveType(tab.type);
                   setStatusMessage(null);
                 }}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-ui ${
                   isActive
                     ? "bg-[var(--foreground)] text-[var(--paper)] shadow-sm"
                     : "bg-[var(--background)] text-[var(--ink-muted)] hover:bg-[var(--line)]/50 hover:text-[var(--foreground)]"
@@ -227,7 +227,7 @@ export function EmailTemplatesManager({
       {/* Status Notification Alert */}
       {statusMessage && (
         <div
-          className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all ${
+          className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-ui ${
             statusMessage.type === "success"
               ? "border border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
               : "border border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
@@ -283,7 +283,7 @@ export function EmailTemplatesManager({
                   key={v}
                   type="button"
                   onClick={() => copyVariable(v)}
-                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-mono font-medium transition-all ${
+                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-mono font-medium transition-ui ${
                     copiedVar === v
                       ? "bg-emerald-500 text-white"
                       : "bg-[var(--background)] text-[var(--coral)] hover:bg-[var(--coral)]/10 border border-[var(--line)]"
@@ -368,7 +368,7 @@ export function EmailTemplatesManager({
                 <button
                   type="button"
                   onClick={() => setEditorTab("code")}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-ui ${
                     editorTab === "code"
                       ? "bg-[var(--foreground)] text-[var(--paper)]"
                       : "text-[var(--ink-muted)] hover:text-[var(--foreground)]"
@@ -379,7 +379,7 @@ export function EmailTemplatesManager({
                 <button
                   type="button"
                   onClick={() => setEditorTab("preview")}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-ui ${
                     editorTab === "preview"
                       ? "bg-[var(--foreground)] text-[var(--paper)]"
                       : "text-[var(--ink-muted)] hover:text-[var(--foreground)]"
@@ -437,7 +437,7 @@ export function EmailTemplatesManager({
                   type="button"
                   onClick={handleSave}
                   disabled={isPending}
-                  className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/85 disabled:opacity-50 transition-all flex items-center gap-2"
+                  className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/85 disabled:opacity-50 transition-ui flex items-center gap-2"
                 >
                   {isPending ? (
                     <>

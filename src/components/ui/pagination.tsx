@@ -34,7 +34,7 @@ function pageNumbers(currentPage: number, totalPages: number) {
 }
 
 const controlClasses =
-  "focus-ring inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-line-strong bg-surface-1 px-3 text-sm font-medium text-fg transition-ui hover:bg-surface-3 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 pointer-coarse:h-11";
+  "focus-ring inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-line-strong bg-surface-1 px-3 text-sm font-medium text-fg transition-ui hover:bg-surface-3 motion-safe:active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40 pointer-coarse:h-11";
 
 export function Pagination({
   currentPage,

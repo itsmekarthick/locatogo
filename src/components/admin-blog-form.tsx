@@ -232,7 +232,7 @@ export function AdminBlogForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-full bg-slate-900 dark:bg-cyan-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all cursor-pointer disabled:opacity-50"
+                className="w-full rounded-full bg-slate-900 dark:bg-cyan-600 px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-slate-800 dark:hover:bg-cyan-500 transition-ui cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting
                   ? "Saving Article..."

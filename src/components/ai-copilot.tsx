@@ -96,7 +96,7 @@ export function AiCopilot() {
       {/* Mobile backdrop when chat is open */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-xs z-[550] sm:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/50 z-[550] sm:hidden animate-fade-in"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
         />
@@ -104,7 +104,7 @@ export function AiCopilot() {
 
       <div className={`fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-3 sm:bottom-6 sm:right-6 ${isOpen ? "z-[600]" : "z-[420]"} flex flex-col items-end`}>
         {isOpen && (
-          <div className="mb-3 sm:mb-4 fixed sm:static inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] sm:inset-auto sm:bottom-auto w-auto sm:w-96 h-[65dvh] max-h-[520px] flex flex-col bg-white/95 dark:bg-[#0d1424]/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 ease-in-out origin-bottom-right">
+          <div className="mb-3 sm:mb-4 fixed sm:static inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] sm:inset-auto sm:bottom-auto w-auto sm:w-96 h-[65dvh] max-h-[520px] flex flex-col bg-white/95 dark:bg-[#0d1424]/95 backdrop-blur-xl border border-white/20 dark:border-slate-700/50 shadow-2xl rounded-3xl overflow-hidden transition-ui duration-300 ease-in-out origin-bottom-right">
             {/* Header */}
             <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 bg-slate-900 dark:bg-[#151b2b] border-b border-slate-800 text-white shadow-sm shrink-0">
             <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export function AiCopilot() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Toggle AI Career Assistant"
-        className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
+        className={`group flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl transition-ui duration-300 motion-safe:hover:scale-105 motion-safe:active:scale-95 cursor-pointer ${
           isOpen 
             ? "bg-slate-800 dark:bg-[#151b2b] border border-slate-700 text-white rotate-90" 
             : "bg-slate-900 dark:bg-slate-800 border border-slate-800 dark:border-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-700"

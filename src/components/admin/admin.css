@@ -1,13 +1,15 @@
-/* Staggered entrance for admin cards; opacity and transform only. */
+/* Admin motion. Transform, opacity and stroke-dashoffset only; durations stay at or under --dur-slow. */
+
+/* Staggered entrance for admin cards. */
 @keyframes adm-rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(calc(var(--motion-distance) * 1.25));
   }
 }
 .adm-rise {
-  animation: adm-rise 420ms var(--ease-emphasized) backwards;
-  animation-delay: calc(var(--i, 0) * 40ms);
+  animation: adm-rise var(--dur-base) var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--i, 0) * var(--motion-stagger));
 }
 
 /* Chart bars grow from the baseline. */
@@ -18,7 +20,7 @@
 }
 .adm-bar {
   transform-origin: bottom;
-  animation: adm-grow 600ms var(--ease-emphasized) backwards;
+  animation: adm-grow var(--dur-slow) var(--ease-emphasized) backwards;
   animation-delay: calc(var(--i, 0) * 30ms);
 }
 
@@ -30,25 +32,26 @@
 }
 .adm-line {
   stroke-dasharray: 1;
-  animation: adm-draw 900ms var(--ease-emphasized) backwards;
+  animation: adm-draw var(--dur-slow) var(--ease-emphasized) backwards;
 }
 
 /* Bulk-select bar slides up into place. */
 @keyframes adm-slide-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(calc(var(--motion-distance) * 2));
   }
 }
 .adm-bulk {
-  animation: adm-slide-up 220ms var(--ease-emphasized) backwards;
+  animation: adm-slide-up var(--dur-fast) var(--ease-emphasized) backwards;
 }
 
+/* Reduced motion: bars and lines appear without growing or drawing; cards and the bulk bar keep their fade. */
 @media (prefers-reduced-motion: reduce) {
-  .adm-rise,
-  .adm-bar,
-  .adm-line,
-  .adm-bulk {
+  .adm-bar {
+    animation-name: fade-in;
+  }
+  .adm-line {
     animation: none;
   }
 }

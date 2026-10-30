@@ -157,7 +157,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-2.5 sm:py-3">
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link href="/" className="flex items-center gap-2 font-serif text-xl sm:text-2xl font-bold tracking-tight text-gray-900 group">
-              <BrandLogo size={32} className="group-hover:scale-105 transition-transform" />
+              <BrandLogo size={32} className="motion-safe:group-hover:scale-105 transition-transform" />
               <span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
             </Link>
             <div className="hidden md:flex items-center gap-1.5 rounded-full border border-gray-200/80 bg-gray-50/60 px-2.5 py-0.5 text-[11px] font-semibold text-gray-700">
@@ -380,7 +380,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
               <img
                 src={displayPhotos[0]?.url || "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=1200&q=80"}
                 alt={displayPhotos[0]?.alt || listing.title}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
               />
               {weather?.weatherType && (
                 <WeatherAtmosphereOverlay weatherType={weather.weatherType} />
@@ -402,7 +402,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
                 <img
                   src={displayPhotos[1]?.url || displayPhotos[0]?.url || "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80"}
                   alt={displayPhotos[1]?.alt || listing.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
                 />
                 <div className="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold text-white">
                   {displayPhotos[1]?.caption || "Interior"}
@@ -413,7 +413,7 @@ export default async function DomainListingDetailPage({ params }: Props) {
                 <img
                   src={displayPhotos[2]?.url || displayPhotos[0]?.url || "https://images.unsplash.com/photo-1527018607637-a616330326d7?auto=format&fit=crop&w=800&q=80"}
                   alt={displayPhotos[2]?.alt || listing.title}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform duration-500 motion-safe:group-hover:scale-105"
                 />
               </div>
             </div>

@@ -214,7 +214,7 @@ export function AdminAdCreationForm({
                 key={idx}
                 type="button"
                 onClick={() => applyPreset(p)}
-                className="rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:border-cyan-400 hover:bg-cyan-50/30 transition-all cursor-pointer shadow-2xs"
+                className="rounded-xl border border-[var(--line)] bg-[var(--background)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] hover:border-cyan-400 hover:bg-cyan-50/30 transition-ui cursor-pointer shadow-2xs"
               >
                 {p.label}
               </button>
@@ -239,7 +239,7 @@ export function AdminAdCreationForm({
                     key={opt.id}
                     type="button"
                     onClick={() => handleSelectPlacement(opt)}
-                    className={`text-left rounded-2xl border p-3.5 transition-all cursor-pointer ${
+                    className={`text-left rounded-2xl border p-3.5 transition-ui cursor-pointer ${
                       isSelected
                         ? "border-cyan-600 bg-cyan-50/40 dark:bg-cyan-950/40 ring-1 ring-cyan-600 shadow-xs"
                         : "border-[var(--line)] bg-[var(--background)] hover:border-slate-300"
@@ -495,7 +495,7 @@ export function AdminAdCreationForm({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-full bg-slate-900 dark:bg-cyan-600 px-6 py-3 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-700 transition-all shadow-md cursor-pointer disabled:opacity-50"
+              className="w-full rounded-full bg-slate-900 dark:bg-cyan-600 px-6 py-3 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-700 transition-ui shadow-md cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? "Creating Advertisement..." : `Publish to ${currentPlacement.name} 🚀`}
             </button>

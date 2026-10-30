@@ -81,7 +81,7 @@ export function AirbnbCategoryCarousel({
           {showLeftArrow && (
             <button
               onClick={() => scrollBy(-260)}
-              className="absolute left-0 z-10 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/90 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 shadow-md text-xs hover:scale-110 transition-all cursor-pointer backdrop-blur-xs text-slate-700 dark:text-slate-200"
+              className="absolute left-0 z-10 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/90 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 shadow-md text-xs motion-safe:hover:scale-110 transition-ui cursor-pointer backdrop-blur-xs text-slate-700 dark:text-slate-200"
               aria-label="Scroll left"
             >
               ❮
@@ -96,7 +96,7 @@ export function AirbnbCategoryCarousel({
             {/* All Places Item */}
             <button
               onClick={() => onSelectCategory("")}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all cursor-pointer shrink-0 select-none ${
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-ui cursor-pointer shrink-0 select-none ${
                 !selectedCategory
                   ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold shadow-xs"
                   : "bg-slate-100/90 text-slate-700 hover:bg-slate-200 hover:text-slate-950 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white border border-slate-200/60 dark:border-slate-700/60 font-medium"
@@ -114,7 +114,7 @@ export function AirbnbCategoryCarousel({
                 <button
                   key={cat.id}
                   onClick={() => onSelectCategory(cat.id)}
-                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-all cursor-pointer shrink-0 select-none ${
+                  className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-ui cursor-pointer shrink-0 select-none ${
                     isSelected
                       ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-bold shadow-xs"
                       : "bg-slate-100/90 text-slate-700 hover:bg-slate-200 hover:text-slate-950 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white border border-slate-200/60 dark:border-slate-700/60 font-medium"
@@ -131,7 +131,7 @@ export function AirbnbCategoryCarousel({
           {showRightArrow && (
             <button
               onClick={() => scrollBy(260)}
-              className="absolute right-0 z-10 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/90 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 shadow-md text-xs hover:scale-110 transition-all cursor-pointer backdrop-blur-xs text-slate-700 dark:text-slate-200"
+              className="absolute right-0 z-10 hidden sm:flex h-7 w-7 items-center justify-center rounded-full border border-slate-200/90 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 shadow-md text-xs motion-safe:hover:scale-110 transition-ui cursor-pointer backdrop-blur-xs text-slate-700 dark:text-slate-200"
               aria-label="Scroll right"
             >
               ❯
@@ -143,7 +143,7 @@ export function AirbnbCategoryCarousel({
         <div className="shrink-0 flex items-center pl-1 sm:pl-2 border-l border-slate-200/60 dark:border-slate-800">
           <button
             onClick={onOpenFilters}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition-ui cursor-pointer ${
               activeFilterCount > 0
                 ? "border-slate-950 bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-950 shadow-xs"
                 : "border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/80 shadow-2xs"

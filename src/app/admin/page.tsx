@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { ContentEnter } from "@/components/page-transition";
 import Link from "next/link";
 import { requireTenantContext } from "@/lib/auth/tenant-context";
 import { AdminKpiCard } from "@/components/admin-kpi-card";
@@ -167,7 +168,7 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <ContentEnter><div className="space-y-8">
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-accent-text">Workspace overview</p>
@@ -223,7 +224,7 @@ export default async function AdminPage() {
               <li key={action.href + action.label}>
                 <Link
                   href={action.href}
-                  className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50"
+                  className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 lift hover:border-line-strong hover:bg-surface-3/50"
                 >
                   <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-lg text-accent-text">
                     <Icon />
@@ -335,6 +336,6 @@ export default async function AdminPage() {
           </section>
         </div>
       </div>
-    </div>
+    </div></ContentEnter>
   );
 }

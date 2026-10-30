@@ -251,7 +251,7 @@ export default async function ListingsPage() {
             </label>
             <button
               disabled={!domains?.length || !categories?.length}
-              className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow transition-transform hover:-translate-y-0.5 disabled:opacity-50"
+              className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow lift disabled:opacity-50"
             >
               Add listing & Place on Map
             </button>

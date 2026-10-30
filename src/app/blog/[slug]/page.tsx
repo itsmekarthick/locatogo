@@ -340,7 +340,7 @@ export default async function BlogPostPage({ params }: Props) {
 
           <Link
             href="/"
-            className="rounded-full bg-slate-950 dark:bg-cyan-600 text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all shrink-0 flex items-center gap-2"
+            className="rounded-full bg-slate-950 dark:bg-cyan-600 text-white px-6 py-3 text-xs font-bold shadow-md hover:bg-slate-800 dark:hover:bg-cyan-500 transition-ui shrink-0 flex items-center gap-2"
           >
             <span>Explore Tech Atlas</span>
             <span>🗺️</span>
@@ -358,7 +358,7 @@ export default async function BlogPostPage({ params }: Props) {
                 <Link
                   key={rel.id}
                   href={`/blog/${rel.slug}`}
-                  className="group rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between hover:-translate-y-0.5"
+                  className="group rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xs hover:shadow-md lift flex flex-col justify-between"
                 >
                   <div>
                     {rel.cover_image_url && (
@@ -367,7 +367,7 @@ export default async function BlogPostPage({ params }: Props) {
                         <img
                           src={rel.cover_image_url}
                           alt={rel.title}
-                          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="h-full w-full object-cover motion-safe:group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     )}

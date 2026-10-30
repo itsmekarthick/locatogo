@@ -85,6 +85,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html
       lang="en"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${bodyFont.variable} ${displayFont.variable} h-full antialiased`}
     >
       <head>

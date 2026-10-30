@@ -282,7 +282,7 @@ export function SettingsForm({ tenant, membership, userEmail, userId, logoutActi
           <button
             onClick={handleSave}
             disabled={isPending}
-            className="rounded-full bg-[var(--foreground)] px-8 py-3 text-xs font-bold uppercase tracking-wider text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-full bg-[var(--foreground)] px-8 py-3 text-xs font-bold uppercase tracking-wider text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? "Saving..." : "Save Settings"}
           </button>

@@ -271,7 +271,7 @@ export function MobileDock({ viewMode, onViewMode, totalOpenings }: MobileDockPr
                 aria-current={active ? "page" : undefined}
                 onClick={() => onViewMode(item.id)}
                 className={cn(
-                  "focus-ring relative flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-medium transition-colors duration-200 active:scale-[0.97]",
+                  "focus-ring relative flex h-14 w-full flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-medium transition-colors duration-200 motion-safe:active:scale-[0.97]",
                   active ? "text-accent-text" : "text-fg-subtle",
                 )}
               >

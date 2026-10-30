@@ -1,5 +1,10 @@
+import { SkeletonExit } from "@/components/page-transition";
 import { TechAtlasSkeleton } from "@/components/tech-atlas-skeleton";
 
 export default function Loading() {
-  return <TechAtlasSkeleton />;
+  return (
+    <SkeletonExit>
+      <TechAtlasSkeleton />
+    </SkeletonExit>
+  );
 }

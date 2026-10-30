@@ -224,7 +224,7 @@ export function ExplorerShell({ list, map, mapOverlay, peek, snap, onSnapChange,
             if (layout === "mobile") onSnapChange(snap === "full" ? "peek" : "full");
             else onPaneChange(pane === "list" ? "map" : "list");
           }}
-          className="glass elev-lg focus-ring pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-medium text-fg transition-ui active:scale-[0.97]"
+          className="glass elev-lg focus-ring pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-medium text-fg transition-ui motion-safe:active:scale-[0.97]"
         >
           {showMapLabel ? <MapIcon className="size-4" /> : <ListIcon className="size-4" />}
           {showMapLabel ? "Map" : "List"}

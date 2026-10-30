@@ -38,13 +38,7 @@ export function PublicHeader({ className = "" }: { className?: string }) {
   return (
     <header
       data-scrolled={scrolled}
-      className={cn(
-        "sticky top-0 z-[var(--z-header)] border-b transition-[background-color,border-color,backdrop-filter] duration-200 ease-standard",
-        scrolled
-          ? "border-line bg-[var(--glass)] backdrop-blur-xl backdrop-saturate-150"
-          : "border-transparent bg-transparent",
-        className,
-      )}
+      className={cn("hdr-glass sticky top-0 z-[var(--z-header)]", className)}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="focus-ring group flex shrink-0 items-center gap-2.5 rounded-lg">
@@ -125,7 +119,7 @@ export function PublicHeader({ className = "" }: { className?: string }) {
           {NAV_LINKS.map((item) => {
             const active = isActive(item.href);
             const classes = cn(
-              "focus-ring flex h-14 items-center justify-between rounded-2xl px-4 text-base font-medium transition-ui active:scale-[0.99]",
+              "focus-ring flex h-14 items-center justify-between rounded-2xl px-4 text-base font-medium transition-ui motion-safe:active:scale-[0.99]",
               active ? "bg-accent-soft text-accent-text" : "text-fg hover:bg-surface-3",
             );
             const content = (

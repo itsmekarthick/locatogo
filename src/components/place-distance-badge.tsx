@@ -80,7 +80,7 @@ export function PlaceDistanceBadge({
 
   if (distanceInfo) {
     return (
-      <div className="inline-flex h-9 items-center gap-2 rounded-full border border-success/30 bg-success-soft px-3 text-sm font-medium text-success animate-in fade-in duration-200">
+      <div className="inline-flex h-9 items-center gap-2 rounded-full border border-success/30 bg-success-soft px-3 text-sm font-medium text-success animate-fade-in">
         <CarIcon className="size-4" />
         <span>
           {distanceInfo.driveMins} min drive <span className="opacity-70">({distanceInfo.km} km)</span>

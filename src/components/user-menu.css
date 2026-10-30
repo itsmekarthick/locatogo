@@ -1,17 +1,5 @@
-/* Menu pops from the trigger corner; opacity and transform only. */
-@keyframes um-pop {
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.97);
-  }
-}
+/* Account menu pops from the trigger corner using the shared scale-in keyframes. */
 .um-pop {
   transform-origin: top right;
-  animation: um-pop 150ms var(--ease-emphasized) backwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .um-pop {
-    animation: none;
-  }
+  animation: scale-in var(--dur-fast) var(--ease-emphasized) backwards;
 }

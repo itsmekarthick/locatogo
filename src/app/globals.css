@@ -39,6 +39,15 @@
   --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
+  /* Animation utilities: animate-fade-in, -fade-up, -scale-in, -slide-in-right, -pop, -shimmer.
+     Keyframes are plain CSS below and read the --motion-* distances, which reduced motion zeroes. */
+  --animate-fade-in: fade-in var(--dur-base) var(--ease-standard) backwards;
+  --animate-fade-up: fade-up var(--dur-base) var(--ease-emphasized) backwards;
+  --animate-scale-in: scale-in var(--dur-base) var(--ease-emphasized) backwards;
+  --animate-slide-in-right: slide-in-right var(--dur-base) var(--ease-emphasized) backwards;
+  --animate-pop: pop 360ms var(--ease-spring);
+  --animate-shimmer: shimmer 1.6s var(--ease-standard) infinite;
+
   /* Backdrop blur */
   --blur-glass: 16px;
   --blur-soft: 8px;
@@ -59,7 +68,15 @@
   --dur-instant: 120ms;
   --dur-fast: 200ms;
   --dur-base: 320ms;
+  /* Longest duration allowed for UI feedback. */
   --dur-slow: 500ms;
+  --motion-stagger: 40ms;
+
+  /* How far things travel on enter; reduced motion sets these to rest values so only fades remain. */
+  --motion-distance: 8px;
+  --motion-scale-from: 0.97;
+  --motion-slide: 24px;
+  --motion-pop-scale: 1.35;
 
   /* Layers sit above Leaflet panes and controls (z-index up to 1000). */
   --z-base: 0;
@@ -273,10 +290,35 @@ html.dark,
   }
 }
 
+/* Tailwind v4 moves elements with the `translate`, `scale` and `rotate` properties, so they must be listed too. */
 @utility transition-ui {
-  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-property: color, background-color, border-color, box-shadow, transform, translate, scale, rotate, opacity;
   transition-duration: var(--dur-fast);
   transition-timing-function: var(--ease-standard);
+}
+
+/* Same as transition-ui without box-shadow, for cards in long lists whose shadow changes on hover. */
+@utility transition-flat {
+  transition-property: color, background-color, border-color, transform, translate, scale, rotate, opacity;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-standard);
+}
+
+/* Hover lift: 2px rise in 200ms. Pair with an overlay for any shadow change so box-shadow is never animated. */
+@utility lift {
+  transition-property: translate, color, background-color, border-color, opacity;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-standard);
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    &:hover {
+      translate: 0 -2px;
+    }
+  }
+}
+
+/* Staggered entrance: set `--i` on each child. */
+@utility stagger {
+  animation-delay: calc(var(--i, 0) * var(--motion-stagger));
 }
 
 @utility glass {
@@ -286,51 +328,27 @@ html.dark,
   border: 1px solid var(--border);
 }
 
-@keyframes route-fade {
+/* Route entrance for browsers without the View Transitions API; see app/template.tsx. */
+@supports not (view-transition-name: none) {
+  .route-shell {
+    animation: fade-up var(--dur-fast) var(--ease-emphasized) backwards;
+  }
+}
+
+/* Wordmark wipes in left to right; clip-path is paint-only, so no layout or blur is animated. */
+@keyframes brand-wipe {
   from {
-    opacity: 0;
-    transform: translateY(6px);
+    clip-path: inset(0 100% 0 0);
   }
   to {
-    opacity: 1;
-    transform: none;
+    clip-path: inset(0);
   }
-}
-
-.animate-route-fade {
-  animation: route-fade 250ms var(--ease-emphasized) backwards;
-}
-
-@keyframes type-search {
-  0% {
-    max-width: 0;
-    opacity: 0;
-    filter: blur(2px);
-  }
-  1% {
-    opacity: 1;
-  }
-  100% {
-    max-width: 100%;
-    opacity: 1;
-    filter: blur(0);
-  }
-}
-
-@keyframes cursor-blink {
-  0%, 100% { border-right-color: transparent; }
-  50% { border-right-color: var(--coral-dark); }
 }
 
 .animate-brand-reveal {
   display: inline-flex;
-  overflow: hidden;
   white-space: nowrap;
-  border-right: 2px solid transparent;
-  padding-right: 2px;
-  animation: 
-    type-search 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards,
-    cursor-blink 0.6s step-end 3 forwards;
+  animation: brand-wipe var(--dur-slow) var(--ease-standard) backwards;
 }
 
 body {
@@ -415,38 +433,59 @@ html.theme-fallback *::after {
     stroke 250ms var(--ease-standard) !important;
 }
 
-@keyframes ds-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Route and skeleton transitions: classes come from React <ViewTransition> (app/template.tsx, components/page-transition.tsx).
+   Old content leaves quickly, new content arrives a little later; fade-up loses its movement under reduced motion. */
+::view-transition-old(.route-exit) {
+  animation: fade-out var(--dur-instant) var(--ease-standard) both;
 }
-@keyframes ds-fade-out {
-  from { opacity: 1; }
+::view-transition-new(.route-enter) {
+  animation: fade-up var(--dur-fast) var(--ease-emphasized) 60ms both;
+}
+::view-transition-old(.skeleton-exit) {
+  animation: fade-out var(--dur-fast) var(--ease-standard) both;
+}
+::view-transition-new(.content-enter) {
+  animation: fade-in var(--dur-base) var(--ease-standard) var(--dur-instant) both;
+}
+
+/* Motion keyframes. Distances come from --motion-* so reduced motion leaves only the opacity change. */
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes fade-out {
   to { opacity: 0; }
 }
-@keyframes ds-scale-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.97); }
-  to { opacity: 1; transform: none; }
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(var(--motion-distance)); }
 }
-@keyframes ds-scale-out {
-  from { opacity: 1; transform: none; }
-  to { opacity: 0; transform: translateY(4px) scale(0.98); }
+@keyframes scale-in {
+  from { opacity: 0; transform: translateY(var(--motion-distance)) scale(var(--motion-scale-from)); }
 }
-@keyframes ds-sheet-in {
+@keyframes scale-out {
+  to { opacity: 0; transform: translateY(calc(var(--motion-distance) / 2)) scale(calc(1 - (1 - var(--motion-scale-from)) / 1.5)); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(var(--motion-slide)); }
+}
+@keyframes pop {
+  35% { transform: scale(var(--motion-pop-scale)); }
+}
+@keyframes shimmer {
+  to { transform: translateX(100%); }
+}
+@keyframes sheet-in {
   from { transform: var(--sheet-from); }
   to { transform: none; }
 }
-@keyframes ds-sheet-out {
+@keyframes sheet-out {
   from { transform: translateY(var(--drag-y, 0px)); }
   to { transform: var(--sheet-from); }
 }
-@keyframes ds-toast-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(calc(var(--motion-distance) * 1.5)) scale(var(--motion-scale-from)); }
 }
-@keyframes ds-toast-out {
-  to { opacity: 0; transform: translateY(8px) scale(0.98); }
-}
-@keyframes ds-shimmer {
-  to { transform: translateX(100%); }
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(var(--motion-distance)) scale(var(--motion-scale-from)); }
 }
 
 /* Native <dialog> (Dialog, Sheet): top layer, focus trap and ESC come from the platform. */
@@ -476,11 +515,11 @@ html.theme-fallback *::after {
 }
 .ds-dialog[open]::backdrop,
 .ds-sheet[open]::backdrop {
-  animation: ds-fade-in var(--dur-base) var(--ease-standard) backwards;
+  animation: fade-in var(--dur-base) var(--ease-standard) backwards;
 }
 .ds-dialog[data-state="closing"]::backdrop,
 .ds-sheet[data-state="closing"]::backdrop {
-  animation: ds-fade-out var(--dur-fast) var(--ease-standard) forwards;
+  animation: fade-out var(--dur-fast) var(--ease-standard) forwards;
 }
 
 .ds-dialog {
@@ -489,10 +528,10 @@ html.theme-fallback *::after {
   padding: 1rem;
 }
 .ds-dialog[open] .ds-dialog-panel {
-  animation: ds-scale-in var(--dur-base) var(--ease-emphasized) backwards;
+  animation: scale-in var(--dur-base) var(--ease-emphasized) backwards;
 }
 .ds-dialog[data-state="closing"] .ds-dialog-panel {
-  animation: ds-scale-out var(--dur-fast) var(--ease-standard) forwards;
+  animation: scale-out var(--dur-fast) var(--ease-standard) forwards;
 }
 
 .ds-sheet {
@@ -510,10 +549,10 @@ html.theme-fallback *::after {
   }
 }
 .ds-sheet[open] .ds-sheet-panel {
-  animation: ds-sheet-in var(--dur-base) var(--ease-emphasized) backwards;
+  animation: sheet-in var(--dur-base) var(--ease-emphasized) backwards;
 }
 .ds-sheet[data-state="closing"] .ds-sheet-panel {
-  animation: ds-sheet-out var(--dur-fast) var(--ease-standard) forwards;
+  animation: sheet-out var(--dur-fast) var(--ease-standard) forwards;
 }
 
 /* Toasts live in a manual popover so they render above open dialogs. */
@@ -545,14 +584,33 @@ html.theme-fallback *::after {
   pointer-events: auto;
 }
 .ds-toast[data-state="open"] {
-  animation: ds-toast-in var(--dur-base) var(--ease-emphasized) backwards;
+  animation: toast-in var(--dur-base) var(--ease-emphasized) backwards;
 }
 .ds-toast[data-state="closing"] {
-  animation: ds-toast-out var(--dur-fast) var(--ease-standard) forwards;
+  animation: toast-out var(--dur-fast) var(--ease-standard) forwards;
 }
 
 .ds-tooltip {
-  animation: ds-fade-in var(--dur-instant) var(--ease-standard) backwards;
+  animation: fade-in var(--dur-instant) var(--ease-standard) backwards;
+}
+
+/* Scroll-linked header: the glass bar fades in behind the content once the page scrolls (data-scrolled).
+   Only the overlay's opacity animates; the blur itself is never transitioned. */
+.hdr-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.4);
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.4);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.hdr-glass[data-scrolled="true"]::before {
+  opacity: 1;
 }
 
 .ds-skeleton {
@@ -566,26 +624,46 @@ html.theme-fallback *::after {
   inset: 0;
   transform: translateX(-100%);
   background: linear-gradient(90deg, transparent, var(--shimmer), transparent);
-  animation: ds-shimmer 1.6s var(--ease-standard) infinite;
+  animation: shimmer 1.6s var(--ease-standard) infinite;
 }
 
-/* Reduced motion: no movement; spinners keep turning slowly, route fade keeps opacity only. */
+/* Reduced motion keeps opacity and colour fades and drops everything that moves:
+   entrance keyframes degrade to fades through the --motion-* variables, transform-type
+   transitions are switched off, and ambient loops stop. Spinners keep turning slowly. */
 @media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-distance: 0px;
+    --motion-scale-from: 1;
+    --motion-slide: 0px;
+    --motion-pop-scale: 1;
+  }
   html {
     scroll-behavior: auto;
   }
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
+    transition-property: opacity, color, background-color, border-color, fill, stroke, text-decoration-color !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
-  .animate-route-fade {
-    animation: ds-fade-in 150ms linear backwards !important;
+  .ds-skeleton::after,
+  .lg-cluster__hiring::after,
+  .lg-user__pulse,
+  .animate-ping,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
+  }
+  .ds-sheet[open] .ds-sheet-panel {
+    animation-name: fade-in;
+  }
+  .ds-sheet[data-state="closing"] .ds-sheet-panel {
+    animation-name: fade-out;
+  }
+  .animate-brand-reveal {
+    animation-name: fade-in;
   }
   .animate-spin,
   .ds-spinner {

@@ -71,14 +71,14 @@ export function PlaceStreetViewButton({
                 href={option.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/60"
+                className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 lift hover:border-line-strong hover:bg-surface-3/60"
               >
                 <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent-soft text-lg text-accent-text">{option.icon}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-fg">{option.label}</span>
                   <span className="block text-xs text-fg-subtle">{option.hint}</span>
                 </span>
-                <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 motion-safe:group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
               </a>
             </li>
           ))}

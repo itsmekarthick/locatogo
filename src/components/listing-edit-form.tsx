@@ -142,7 +142,7 @@ export function ListingEditForm({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-semibold transition-ui ${
                 activeTab === tab.id
                   ? "bg-[var(--foreground)] text-[var(--paper)] shadow-sm"
                   : "text-[var(--ink-muted)] hover:bg-[var(--background)] hover:text-[var(--foreground)]"
@@ -157,7 +157,7 @@ export function ListingEditForm({
         <button
           type="button"
           onClick={() => setShowPreview(!showPreview)}
-          className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+          className={`shrink-0 rounded-xl px-3 py-2 text-xs font-semibold transition-ui ${
             showPreview
               ? "bg-[var(--coral)] text-white"
               : "border border-[var(--line)] text-[var(--ink-muted)] hover:bg-[var(--background)]"
@@ -233,7 +233,7 @@ export function ListingEditForm({
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all">
+                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui">
                     Save Basic Info
                   </button>
                 </div>
@@ -298,7 +298,7 @@ export function ListingEditForm({
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all">
+                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui">
                     Save Location
                   </button>
                 </div>
@@ -345,7 +345,7 @@ export function ListingEditForm({
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all">
+                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui">
                     Save Contact Info
                   </button>
                 </div>
@@ -573,7 +573,7 @@ export function ListingEditForm({
                 )}
 
                 <div className="flex justify-end pt-2">
-                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all">
+                  <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui">
                     Save Publishing Settings
                   </button>
                 </div>

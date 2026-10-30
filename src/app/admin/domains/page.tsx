@@ -68,7 +68,7 @@ export default async function DomainsPage() {
           </div>
 
           <div className="flex justify-end pt-2">
-            <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all">
+            <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui">
               + Create Directory Atlas
             </button>
           </div>

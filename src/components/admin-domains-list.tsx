@@ -36,7 +36,7 @@ export function AdminDomainsList({ domains }: { domains: DomainItem[] }) {
           paginated.map((domain) => (
             <article
               key={domain.id}
-              className="flex flex-col justify-between rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-xs transition-all hover:shadow-md"
+              className="flex flex-col justify-between rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-xs transition-flat hover:shadow-md"
             >
               <div>
                 <div className="flex items-center justify-between">
@@ -135,7 +135,7 @@ export function AdminDomainsList({ domains }: { domains: DomainItem[] }) {
       {/* Edit Domain Modal */}
       {editingDomain && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-lg rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
               <div>
                 <h3 className="font-display text-xl font-bold text-[var(--foreground)]">
@@ -206,7 +206,7 @@ export function AdminDomainsList({ domains }: { domains: DomainItem[] }) {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full bg-[var(--foreground)] px-6 py-2 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all"
+                  className="rounded-full bg-[var(--foreground)] px-6 py-2 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui"
                 >
                   Save Changes
                 </button>

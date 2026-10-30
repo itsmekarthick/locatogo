@@ -170,7 +170,7 @@ export default function DirectSubmitPage() {
 
           <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between">
             <p className="text-xs text-[var(--ink-muted)]">🔒 Company submissions are moderated before appearing in the Tech Atlas.</p>
-            <button className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow transition-all hover:bg-[var(--foreground)]/85 hover:shadow-md cursor-pointer">
+            <button className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow transition-ui hover:bg-[var(--foreground)]/85 hover:shadow-md cursor-pointer">
               Submit Company →
             </button>
           </div>

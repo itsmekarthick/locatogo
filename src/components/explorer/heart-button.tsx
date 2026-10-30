@@ -22,7 +22,7 @@ export function HeartButton({ saved, onToggle, label, className }: HeartButtonPr
         onToggle();
       }}
       className={cn(
-        "focus-ring grid size-9 shrink-0 place-items-center rounded-full text-lg transition-ui active:scale-90 pointer-coarse:size-11",
+        "focus-ring grid size-9 shrink-0 place-items-center rounded-full text-lg transition-ui motion-safe:active:scale-90 pointer-coarse:size-11",
         saved ? "text-danger" : "text-fg-subtle hover:bg-surface-3 hover:text-fg",
         className,
       )}

@@ -83,7 +83,7 @@ export async function NearbyPlaces({ listingId, categoryId, latitude, longitude,
           <li key={place.id}>
             <Link
               href={`/listing/${place.slug}`}
-              className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50"
+              className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 lift hover:border-line-strong hover:bg-surface-3/50"
             >
               <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-surface-3 text-lg text-fg-muted">
                 <MapPinIcon />
@@ -94,7 +94,7 @@ export async function NearbyPlaces({ listingId, categoryId, latitude, longitude,
                   {[place.locality, `${place.distKm.toFixed(1)} km away`].filter(Boolean).join(" · ")}
                 </span>
               </span>
-              <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
+              <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 motion-safe:group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
             </Link>
           </li>
         ))}

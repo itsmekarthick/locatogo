@@ -127,7 +127,7 @@ export function TeamMembersList({ members, invitations, currentUserId, isOwner }
             {!isInviting && (
               <button
                 onClick={() => setIsInviting(true)}
-                className="rounded-full bg-[var(--foreground)] px-5 py-2 text-xs font-bold text-[var(--paper)] hover:bg-[var(--foreground)]/85 transition-all shadow-xs"
+                className="rounded-full bg-[var(--foreground)] px-5 py-2 text-xs font-bold text-[var(--paper)] hover:bg-[var(--foreground)]/85 transition-ui shadow-xs"
               >
                 + Invite Person
               </button>

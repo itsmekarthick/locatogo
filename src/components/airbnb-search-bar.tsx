@@ -268,7 +268,7 @@ export function AirbnbSearchBar({
           setIsOpen(true);
           setTimeout(() => inputRef.current?.focus(), 100);
         }}
-        className={`flex items-center justify-between rounded-full border bg-white dark:bg-slate-900 px-2 py-1.5 shadow-xs transition-all duration-200 cursor-pointer ${
+        className={`flex items-center justify-between rounded-full border bg-white dark:bg-slate-900 px-2 py-1.5 shadow-xs transition-ui duration-200 cursor-pointer ${
           isOpen
             ? "border-slate-400 dark:border-slate-600 shadow-md ring-2 ring-slate-100 dark:ring-slate-800"
             : "border-slate-200 dark:border-slate-800 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700"
@@ -340,7 +340,7 @@ export function AirbnbSearchBar({
                 ✕
               </button>
             )}
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] text-white shadow-xs hover:scale-105 transition-transform">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] text-white shadow-xs motion-safe:hover:scale-105 transition-transform">
               <span className="text-xs">🔍</span>
             </div>
           </div>
@@ -349,13 +349,13 @@ export function AirbnbSearchBar({
 
       {/* 2. EXPANDABLE AIRBNB POPOVER PANEL */}
       {isOpen && (
-        <div className="absolute top-14 left-0 right-0 z-50 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute top-14 left-0 right-0 z-50 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-2xl animate-scale-in">
           {/* Top Tabs */}
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
             <button
               type="button"
               onClick={() => setActiveTab("search")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-ui cursor-pointer ${
                 activeTab === "search"
                   ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -366,7 +366,7 @@ export function AirbnbSearchBar({
             <button
               type="button"
               onClick={() => setActiveTab("where")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-ui cursor-pointer ${
                 activeTab === "where"
                   ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -377,7 +377,7 @@ export function AirbnbSearchBar({
             <button
               type="button"
               onClick={() => setActiveTab("category")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-ui cursor-pointer ${
                 activeTab === "category"
                   ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -485,7 +485,7 @@ export function AirbnbSearchBar({
                       key={opt.id || opt.name}
                       type="button"
                       onClick={() => handleSelectWhereItem(opt)}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                      className={`p-3 rounded-2xl border text-left transition-ui cursor-pointer ${
                         isSelected
                           ? "border-[#18181b] bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-900 shadow-xs"
                           : "border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-white dark:bg-slate-800/60 text-slate-800 dark:text-slate-200"
@@ -524,7 +524,7 @@ export function AirbnbSearchBar({
                   <button
                     type="button"
                     onClick={() => handleSelectCategoryItem(isTechAtlas ? "all" : "")}
-                    className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-all cursor-pointer ${
+                    className={`px-3.5 py-2 rounded-2xl text-xs font-bold border transition-ui cursor-pointer ${
                       resolvedCategoryName === (isTechAtlas ? "All Sectors" : "All Places")
                         ? "border-[#18181b] bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900 shadow-xs"
                         : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400"
@@ -544,7 +544,7 @@ export function AirbnbSearchBar({
                         key={cat.id}
                         type="button"
                         onClick={() => handleSelectCategoryItem(cat.id)}
-                        className={`px-3.5 py-2 rounded-2xl text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        className={`px-3.5 py-2 rounded-2xl text-xs font-semibold border transition-ui cursor-pointer flex items-center gap-1.5 ${
                           isSelected
                             ? "border-[#18181b] bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900 font-bold shadow-xs"
                             : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400"
@@ -572,7 +572,7 @@ export function AirbnbSearchBar({
                           key={stg}
                           type="button"
                           onClick={() => onSelectStage(stg)}
-                          className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition-ui cursor-pointer ${
                             isStgSelected
                               ? "bg-cyan-600 text-white border-cyan-600 font-bold shadow-xs"
                               : "bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400"

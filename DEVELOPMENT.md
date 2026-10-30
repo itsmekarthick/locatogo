@@ -23,6 +23,16 @@ Use the Stitch plugin configuration already present in `.agents/plugins/stitch`.
 
 CSV imports currently process bounded uploads within an authenticated server action. The geocoding provider is intentionally unconfigured; add a queue/worker and compliant provider before enabling large imports in production.
 
+## Motion system
+
+Tokens and utilities live in `src/app/globals.css`; do not hard-code durations or curves.
+
+- **Durations:** `--dur-instant` 120ms, `--dur-fast` 200ms, `--dur-base` 320ms, `--dur-slow` 500ms (the ceiling for UI feedback). **Easings:** `--ease-standard`, `--ease-emphasized`, `--ease-spring` (markers and toggles only).
+- **Utilities:** `animate-fade-in`, `animate-fade-up`, `animate-scale-in`, `animate-slide-in-right`, `animate-pop`, `animate-shimmer`, plus `stagger` (set `--i` per child), `lift` (2px hover rise), `transition-ui` and `transition-flat` (same without `box-shadow`; use it on cards in long lists).
+- **Rules:** animate `transform`, `opacity` and paint-only properties (`clip-path`, `stroke-dashoffset`) only, never layout properties or blur. Fade a pseudo-element overlay for hover shadows instead of transitioning `box-shadow`. Press and hover movement uses `motion-safe:`.
+- **Reduced motion:** keyframes read `--motion-distance`, `--motion-scale-from`, `--motion-slide` and `--motion-pop-scale`, which are zeroed under `prefers-reduced-motion`, so entrances degrade to opacity fades. The same block restricts transitions to opacity and colour and stops ambient loops. Write new keyframes with those variables.
+- **Navigation:** `src/app/template.tsx` wraps each route in React `<ViewTransition>`; `SkeletonExit` and `ContentEnter` (`src/components/page-transition.tsx`) crossfade a `loading.tsx` skeleton into its page. Browsers without the API get the `.route-shell` fade-up fallback.
+
 ## Automated US company sync
 
 Use `sync:us-companies` to import a JSON or CSV company feed and immediately sync each company's supported ATS jobs. The feed is external to the repository, so new companies can be added without a code change or migration.

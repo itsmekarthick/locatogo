@@ -43,7 +43,7 @@ export function BlogHubClient({
                 <img
                   src={featuredBlog.cover_image_url}
                   alt={featuredBlog.title}
-                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="h-full w-full object-cover motion-safe:group-hover:scale-105 transition-transform duration-500"
                 />
               )}
               <div className="absolute top-4 left-4 flex items-center gap-2">
@@ -117,7 +117,7 @@ export function BlogHubClient({
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer shadow-2xs ${
+                className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-ui whitespace-nowrap cursor-pointer shadow-2xs ${
                   isActive
                     ? "bg-slate-950 dark:bg-cyan-600 text-white shadow-sm"
                     : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white"
@@ -156,7 +156,7 @@ export function BlogHubClient({
           {filteredBlogs.map((blog) => (
             <article
               key={blog.id}
-              className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+              className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-xl lift"
             >
               <div>
                 {/* Cover Image */}
@@ -166,7 +166,7 @@ export function BlogHubClient({
                     <img
                       src={blog.cover_image_url}
                       alt={blog.title}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="h-full w-full object-cover motion-safe:group-hover:scale-105 transition-transform duration-300"
                     />
                     <span className="absolute top-2.5 left-2.5 rounded-full bg-black/60 backdrop-blur-md text-white px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
                       {blog.category}

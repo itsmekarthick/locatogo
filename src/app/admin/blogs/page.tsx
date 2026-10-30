@@ -42,7 +42,7 @@ export default async function AdminBlogsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/admin/blogs/new"
-            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-all shadow-xs flex items-center gap-1.5"
+            className="rounded-full bg-slate-900 dark:bg-cyan-600 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:hover:bg-cyan-500 transition-ui shadow-xs flex items-center gap-1.5"
           >
             <span>+ Write Article</span>
           </Link>

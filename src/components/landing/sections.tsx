@@ -182,7 +182,7 @@ export function Stories({ stories }: { stories: StoryItem[] }) {
                         height={400}
                         loading="lazy"
                         decoding="async"
-                        className="size-full object-cover transition-transform duration-500 ease-emphasized group-hover:scale-[1.03]"
+                        className="size-full object-cover transition-transform duration-500 ease-emphasized motion-safe:group-hover:scale-[1.03]"
                       />
                     )}
                     {story.category && (

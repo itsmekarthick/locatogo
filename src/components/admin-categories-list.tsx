@@ -87,7 +87,7 @@ export function AdminCategoriesList({
             return (
               <article
                 key={category.id}
-                className={`flex flex-col justify-between rounded-3xl border p-5 shadow-xs transition-all hover:shadow-md ${
+                className={`flex flex-col justify-between rounded-3xl border p-5 shadow-xs transition-flat hover:shadow-md ${
                   isEnabled
                     ? "border-[var(--line)] bg-[var(--paper)]"
                     : "border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/40 opacity-75"
@@ -136,7 +136,7 @@ export function AdminCategoriesList({
                     <button
                       type="submit"
                       title={isEnabled ? "Click to Disable in Directory UI" : "Click to Enable in Directory UI"}
-                      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+                      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition-ui cursor-pointer ${
                         isEnabled
                           ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-200"
                           : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-700 hover:bg-slate-300"
@@ -193,7 +193,7 @@ export function AdminCategoriesList({
       {/* Edit Category Modal */}
       {editingCategory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-lg rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 sm:p-8 shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
               <div>
                 <h3 className="font-display text-xl font-bold text-[var(--foreground)]">
@@ -300,7 +300,7 @@ export function AdminCategoriesList({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full bg-[var(--foreground)] px-6 py-2 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all cursor-pointer"
+                  className="rounded-full bg-[var(--foreground)] px-6 py-2 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui cursor-pointer"
                 >
                   Save Changes
                 </button>

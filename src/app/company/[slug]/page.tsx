@@ -418,7 +418,7 @@ export default async function CompanyProfilePage({ params }: Props) {
                   <li key={rel.id}>
                     <Link
                       href={`/company/${rel.slug}`}
-                      className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50"
+                      className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 lift hover:border-line-strong hover:bg-surface-3/50"
                     >
                       <CompanyBrandAvatar title={rel.title} website={rel.website} size={40} className="shrink-0 rounded-lg" />
                       <span className="min-w-0 flex-1">

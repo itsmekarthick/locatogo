@@ -13,15 +13,14 @@ import {
   HeartIcon,
   LogOutIcon,
   MapPinIcon,
-  MoonIcon,
   PlusIcon,
   SettingsIcon,
   ShieldCheckIcon,
   SparklesIcon,
-  SunIcon,
   UserIcon,
 } from "@/components/ui/icons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ThemeIcon } from "@/components/ui/theme-icon";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils/cn";
 import { applyTheme, type Theme } from "@/lib/utils/theme-transition";
@@ -266,7 +265,7 @@ export function UserProfileMenu({ className = "", hasWorkspace = false }: { clas
           <div role="separator" className="mx-1 h-px bg-line" />
           <div className="py-1.5">
             <button type="button" role="menuitem" tabIndex={-1} onClick={() => applyTheme(theme === "dark" ? "light" : "dark")} className={itemClasses}>
-              <IconTile>{theme === "dark" ? <SunIcon /> : <MoonIcon />}</IconTile>
+              <IconTile><ThemeIcon showSun={theme === "dark"} /></IconTile>
               <span className="flex-1 text-sm font-medium">{theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}</span>
             </button>
             {user && (

@@ -20,7 +20,7 @@ const paddings: Record<CardPadding, string> = {
 
 // The hover shadow fades in on a pseudo-element so only opacity animates.
 const interactiveClasses =
-  "relative cursor-pointer transition-ui hover:-translate-y-0.5 active:translate-y-0 after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:opacity-0 after:elev-md after:transition-opacity after:duration-200 hover:after:opacity-100";
+  "relative cursor-pointer lift active:translate-y-0 after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:opacity-0 after:elev-md after:transition-opacity after:duration-200 hover:after:opacity-100";
 
 type CardProps = ComponentPropsWithRef<"div"> & {
   variant?: CardVariant;

@@ -97,10 +97,10 @@ export function AirbnbFiltersModal({
     (draft.selectedArea ? 1 : 0);
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4 animate-fade-in">
       {/* Dark overlay backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+        className="absolute inset-0 bg-black/60 animate-fade-in"
         onClick={onClose}
       />
 
@@ -132,7 +132,7 @@ export function AirbnbFiltersModal({
               <button
                 type="button"
                 onClick={() => setDraft((p) => ({ ...p, verifiedOnly: !p.verifiedOnly }))}
-                className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
+                className={`flex items-center justify-between p-3.5 rounded-2xl border transition-ui text-left cursor-pointer ${
                   draft.verifiedOnly
                     ? "border-[#18181b] bg-slate-950 text-white dark:border-white dark:bg-white dark:text-slate-900 shadow-xs"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200"
@@ -155,7 +155,7 @@ export function AirbnbFiltersModal({
               <button
                 type="button"
                 onClick={() => setDraft((p) => ({ ...p, featuredOnly: !p.featuredOnly }))}
-                className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all text-left cursor-pointer ${
+                className={`flex items-center justify-between p-3.5 rounded-2xl border transition-ui text-left cursor-pointer ${
                   draft.featuredOnly
                     ? "border-[#0ea5e9] bg-[#0ea5e9] text-white shadow-xs"
                     : "border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-slate-50/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200"
@@ -196,7 +196,7 @@ export function AirbnbFiltersModal({
                     key={tier.label}
                     type="button"
                     onClick={() => setDraft((p) => ({ ...p, minRating: tier.val }))}
-                    className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-all border cursor-pointer text-center ${
+                    className={`py-2.5 px-3 rounded-2xl text-xs font-bold transition-ui border cursor-pointer text-center ${
                       isSelected
                         ? "border-[#18181b] bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900 shadow-xs"
                         : "border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
@@ -242,7 +242,7 @@ export function AirbnbFiltersModal({
                     key={item.label}
                     type="button"
                     onClick={() => setDraft((p) => ({ ...p, radiusKm: item.val }))}
-                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-all border cursor-pointer text-center ${
+                    className={`py-2 px-2 rounded-xl text-xs font-bold transition-ui border cursor-pointer text-center ${
                       isSelected
                         ? "border-[#18181b] bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900 shadow-xs"
                         : "border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
@@ -273,7 +273,7 @@ export function AirbnbFiltersModal({
                     key={amenity.id}
                     type="button"
                     onClick={() => toggleAmenity(amenity.id)}
-                    className={`flex items-center gap-2 p-3 rounded-2xl border text-xs font-semibold transition-all cursor-pointer text-left ${
+                    className={`flex items-center gap-2 p-3 rounded-2xl border text-xs font-semibold transition-ui cursor-pointer text-left ${
                       isSelected
                         ? "border-[#18181b] bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900 shadow-xs"
                         : "border-slate-200 dark:border-slate-800 hover:border-slate-400 bg-white dark:bg-slate-800/60 text-slate-700 dark:text-slate-300"
@@ -299,7 +299,7 @@ export function AirbnbFiltersModal({
                   <button
                     type="button"
                     onClick={() => setDraft((p) => ({ ...p, selectedArea: "" }))}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-ui cursor-pointer ${
                       !draft.selectedArea
                         ? "border-[#18181b] bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900"
                         : "border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
@@ -319,7 +319,7 @@ export function AirbnbFiltersModal({
                             selectedArea: isSelected ? "" : area,
                           }))
                         }
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-ui cursor-pointer ${
                           isSelected
                             ? "border-[#18181b] bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900 font-bold"
                             : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400"
@@ -347,7 +347,7 @@ export function AirbnbFiltersModal({
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] px-6 py-3 text-xs font-bold text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
+            className="rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] px-6 py-3 text-xs font-bold text-white shadow-md hover:shadow-lg motion-safe:hover:scale-[1.02] transition-ui cursor-pointer"
           >
             Show {totalMatchingPlaces} places
           </button>

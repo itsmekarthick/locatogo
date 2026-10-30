@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { CountUp } from "@/components/ui/count-up";
 import { TrendingDownIcon, TrendingUpIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils/cn";
 import "@/components/admin/admin.css";
@@ -34,43 +35,6 @@ type KpiCardProps = {
   index?: number;
 };
 
-function useCountUp(target: number, duration = 900) {
-  const [count, setCount] = useState(target);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setCount(target);
-      return;
-    }
-
-    let frame = 0;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        const start = performance.now();
-        const tick = (now: number) => {
-          const progress = Math.min((now - start) / duration, 1);
-          setCount(Math.round((1 - Math.pow(1 - progress, 3)) * target));
-          if (progress < 1) frame = requestAnimationFrame(tick);
-        };
-        setCount(0);
-        frame = requestAnimationFrame(tick);
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      cancelAnimationFrame(frame);
-    };
-  }, [target, duration]);
-
-  return { count, ref };
-}
-
 function Sparkline({ data, stroke, label }: { data: number[]; stroke: string; label: string }) {
   const gradientId = useId();
   const max = Math.max(...data, 1);
@@ -98,21 +62,18 @@ function Sparkline({ data, stroke, label }: { data: number[]; stroke: string; la
 }
 
 export function AdminKpiCard({ title, value, icon, description, trend, sparklineData, tone = "accent", href, currency, index = 0 }: KpiCardProps) {
-  const { count, ref } = useCountUp(value);
   const format = (amount: number) => (currency ? new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount) : amount.toLocaleString("en-US"));
-  // The count-up works in whole numbers; show the exact value once it lands.
-  const shown = count === Math.round(value) ? value : count;
   const colors = TONES[tone];
   const hasSpark = Boolean(sparklineData && sparklineData.length > 1);
   const up = trend ? trend.value >= 0 : true;
 
   const body = (
     <div
-      ref={ref}
       style={{ "--i": index } as React.CSSProperties}
       className={cn(
-        "adm-rise relative h-full rounded-2xl border border-line bg-surface-1 p-5 elev-sm transition-ui",
-        href && "group-hover:-translate-y-0.5 group-hover:border-line-strong group-hover:elev-md",
+        "adm-rise relative h-full rounded-2xl border border-line bg-surface-1 p-5 elev-sm transition-flat",
+        // The hover shadow fades in on an overlay so box-shadow itself is never animated.
+        href && "motion-safe:group-hover:-translate-y-0.5 group-hover:border-line-strong after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:opacity-0 after:elev-md after:transition-opacity after:duration-200 group-hover:after:opacity-100",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -129,7 +90,7 @@ export function AdminKpiCard({ title, value, icon, description, trend, sparkline
       </div>
 
       <div className="mt-4 flex items-end justify-between gap-3">
-        <p className="font-display text-3xl font-semibold tracking-tight text-fg">{format(shown)}</p>
+        <p className="font-display text-3xl font-semibold tracking-tight text-fg"><CountUp value={value} currency={currency} /></p>
         {hasSpark && (
           <Sparkline
             data={sparklineData!}

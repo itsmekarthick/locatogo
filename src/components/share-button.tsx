@@ -70,7 +70,7 @@ export function ShareButton({ title, url, className = "", collapseLabel = false 
       title="Share this page"
       aria-label={copied ? "Link copied" : "Share this page"}
       className={cn(
-        "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm font-semibold transition-ui active:scale-95 pointer-coarse:min-h-11",
+        "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm font-semibold transition-ui motion-safe:active:scale-95 pointer-coarse:min-h-11",
         copied
           ? "border-success/30 bg-success-soft text-success"
           : "border-line-strong bg-surface-1 text-fg-muted hover:bg-surface-3 hover:text-fg",

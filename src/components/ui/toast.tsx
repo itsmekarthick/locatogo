@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -55,6 +56,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<ToastItem[]>([]);
   const counter = useRef(0);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const stackOffsets = useRef(new Map<string, number>());
 
   const dismiss = useCallback((id?: string) => {
     setItems((prev) => prev.map((item) => (id === undefined || item.id === id ? { ...item, closing: true } : item)));
@@ -82,6 +84,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     if (!items.some((item) => item.closing)) return;
     const timer = window.setTimeout(() => setItems((prev) => prev.filter((item) => !item.closing)), EXIT_MS);
     return () => window.clearTimeout(timer);
+  }, [items]);
+
+  // Toasts that stay put while others come or go slide to their new slot (transform-only FLIP).
+  // Layout offsets are used so the entering toast's own transform never skews the measurement.
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const next = new Map<string, number>();
+    viewport.querySelectorAll<HTMLElement>("[data-toast-id]").forEach((el) => {
+      const id = el.dataset.toastId as string;
+      const fromBottom = viewport.offsetHeight - el.offsetTop;
+      next.set(id, fromBottom);
+      const previous = stackOffsets.current.get(id);
+      if (!reduce && previous !== undefined && Math.abs(fromBottom - previous) > 1 && typeof el.animate === "function") {
+        el.animate([{ translate: `0 ${fromBottom - previous}px` }, { translate: "0 0" }], { duration: 200, easing: "cubic-bezier(0.2, 0, 0, 1)" });
+      }
+    });
+    stackOffsets.current = next;
   }, [items]);
 
   // Re-adding the popover moves it above any dialog that opened after the last toast.
@@ -152,6 +173,7 @@ function ToastView({ item, onClose }: { item: ToastItem; onClose: (id: string) =
   return (
     <div
       role={variant === "error" ? "alert" : "status"}
+      data-toast-id={item.id}
       data-state={item.closing ? "closing" : "open"}
       onPointerEnter={pause}
       onPointerLeave={start}

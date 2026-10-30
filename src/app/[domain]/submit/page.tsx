@@ -85,7 +85,7 @@ export default async function SubmitPage({ params }: { params: Promise<{ domain:
 
           <div className="pt-3 border-t border-[var(--line)] flex items-center justify-between">
             <p className="text-xs text-[var(--ink-muted)]">🔒 Submissions are moderated prior to listing.</p>
-            <button className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow transition-all hover:bg-[var(--foreground)]/85 hover:shadow-md">
+            <button className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-[var(--paper)] shadow transition-ui hover:bg-[var(--foreground)]/85 hover:shadow-md">
               Send suggestion →
             </button>
           </div>

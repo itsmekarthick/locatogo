@@ -26,7 +26,7 @@ export function AirbnbListingCard({ place, isSelected, onHover, onSelect }: Prop
       data-listing-id={place.id}
       onMouseEnter={() => onHover(place.id)}
       onClick={() => onSelect(place.id)}
-      className={`group relative flex flex-col rounded-3xl border bg-white dark:bg-slate-900 overflow-hidden transition-all duration-300 cursor-pointer ${
+      className={`group relative flex flex-col rounded-3xl border bg-white dark:bg-slate-900 overflow-hidden transition-flat duration-300 cursor-pointer ${
         isSelected
           ? "border-slate-900 dark:border-white ring-2 ring-slate-900/20 dark:ring-white/20 shadow-xl"
           : "border-slate-200/90 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600 hover:shadow-lg"
@@ -38,7 +38,7 @@ export function AirbnbListingCard({ place, isSelected, onHover, onSelect }: Prop
           src={coverPhoto}
           alt={place.title}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover:scale-105"
         />
 
         {/* Gradient Overlay on Bottom of Image */}

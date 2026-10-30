@@ -425,7 +425,7 @@ export default async function ListingDetailPage({ params }: Props) {
                       placeholder="blur"
                       blurDataURL={BLUR_PLACEHOLDER}
                       sizes="(min-width: 1024px) 400px, 50vw"
-                      className="object-cover transition-transform duration-500 ease-emphasized hover:scale-[1.03]"
+                      className="object-cover transition-transform duration-500 ease-emphasized motion-safe:hover:scale-[1.03]"
                     />
                   </li>
                 ))}

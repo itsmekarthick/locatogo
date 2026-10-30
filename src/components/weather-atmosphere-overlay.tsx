@@ -186,7 +186,7 @@ export function WeatherAtmosphereOverlay({
         className={`pointer-events-none absolute inset-0 z-[350] overflow-hidden ${className}`}
         aria-hidden="true"
       >
-        <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-gradient-to-br from-amber-300/20 via-orange-300/10 to-transparent blur-3xl animate-pulse" />
+        <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-gradient-to-br from-amber-300/20 via-orange-300/10 to-transparent blur-3xl" />
       </div>
     );
   }

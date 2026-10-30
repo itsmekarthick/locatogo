@@ -133,7 +133,7 @@ export function CompanyGridCard({ company, jobCount, hubName, saved, onToggleSav
     <Card interactive padding="none" className="@container group flex h-full flex-col overflow-hidden">
       <div className={cn("relative aspect-[16/7] overflow-hidden bg-gradient-to-br", coverFor(company.title))}>
         <div aria-hidden="true" className="ex-dots absolute inset-0 opacity-50" />
-        <div className="ex-fade-in absolute inset-0 grid place-items-center transition-transform duration-500 ease-emphasized group-hover:scale-[1.03]">
+        <div className="ex-fade-in absolute inset-0 grid place-items-center transition-transform duration-500 ease-emphasized motion-safe:group-hover:scale-[1.03]">
           <CompanyBrandAvatar title={company.title} website={company.website} size={56} className="rounded-2xl" />
         </div>
         <Badge size="sm" className="absolute left-3 top-3 bg-surface-1/90 capitalize backdrop-blur-sm">

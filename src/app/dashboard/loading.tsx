@@ -1,7 +1,9 @@
+import { SkeletonExit } from "@/components/page-transition";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLoading() {
   return (
+    <SkeletonExit>
     <div className="min-h-dvh bg-surface-0" aria-busy="true" aria-label="Loading your dashboard">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
         <div className="mb-8 flex items-center gap-4 border-b border-line pb-6">
@@ -25,5 +27,6 @@ export default function DashboardLoading() {
         </div>
       </div>
     </div>
+    </SkeletonExit>
   );
 }

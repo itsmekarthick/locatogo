@@ -110,7 +110,7 @@ export function AdminDuplicateMergeModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 animate-fade-in">
       <div className="relative w-full max-w-3xl rounded-3xl border border-[var(--line)] bg-[var(--paper)] p-6 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[var(--line)] pb-4">
@@ -174,7 +174,7 @@ export function AdminDuplicateMergeModal({
                   {/* Primary Option */}
                   <label
                     onClick={() => setChosenFields((prev) => ({ ...prev, [key]: "primary" }))}
-                    className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
+                    className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-ui ${
                       isChosenPrimary
                         ? "border-cyan-500 bg-cyan-50/40 dark:bg-cyan-950/30 ring-1 ring-cyan-500"
                         : "border-[var(--line)] bg-[var(--paper)] hover:border-slate-300"
@@ -195,7 +195,7 @@ export function AdminDuplicateMergeModal({
                   {/* Duplicate Option */}
                   <label
                     onClick={() => setChosenFields((prev) => ({ ...prev, [key]: "duplicate" }))}
-                    className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-all ${
+                    className={`flex items-start gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-ui ${
                       !isChosenPrimary
                         ? "border-cyan-500 bg-cyan-50/40 dark:bg-cyan-950/30 ring-1 ring-cyan-500"
                         : "border-[var(--line)] bg-[var(--paper)] hover:border-slate-300"
@@ -236,7 +236,7 @@ export function AdminDuplicateMergeModal({
           <button
             onClick={handleMerge}
             disabled={isMerging}
-            className="rounded-full bg-emerald-600 px-6 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-md cursor-pointer transition-all disabled:opacity-50 flex items-center gap-2"
+            className="rounded-full bg-emerald-600 px-6 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-md cursor-pointer transition-ui disabled:opacity-50 flex items-center gap-2"
           >
             {isMerging ? (
               <span>Merging...</span>

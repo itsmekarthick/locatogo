@@ -561,7 +561,7 @@ export function TechAtlasSearch({
               }
             }}
             aria-label="Open top result"
-            className="focus-ring inline-flex size-8 items-center justify-center rounded-full bg-accent text-accent-fg transition-[transform,background-color] duration-150 hover:bg-accent-hover active:scale-95 pointer-coarse:size-10"
+            className="focus-ring inline-flex size-8 items-center justify-center rounded-full bg-accent text-accent-fg transition-[transform,background-color] duration-150 hover:bg-accent-hover motion-safe:active:scale-95 pointer-coarse:size-10"
           >
             <ArrowRightIcon className="size-4" />
           </button>
@@ -569,7 +569,7 @@ export function TechAtlasSearch({
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-[var(--z-dropdown)] mt-2 w-[min(36rem,calc(100vw-1.5rem))] min-w-full flex max-h-[min(32rem,70dvh)] flex-col rounded-2xl border border-line bg-surface-2 p-2.5 elev-lg animate-in fade-in slide-in-from-top-2 duration-150 sm:p-3">
+        <div className="absolute left-0 top-full z-[var(--z-dropdown)] mt-2 w-[min(36rem,calc(100vw-1.5rem))] min-w-full flex max-h-[min(32rem,70dvh)] flex-col rounded-2xl border border-line bg-surface-2 p-2.5 elev-lg animate-scale-in sm:p-3">
           <div className="mb-2 flex items-center justify-between gap-2 border-b border-line px-1 pb-2">
             <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto">
               {scopes.map((scope) => (

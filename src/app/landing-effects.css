@@ -86,11 +86,11 @@
 @keyframes lp-rise {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(calc(var(--motion-distance) * 1.5));
   }
 }
 .lp-rise {
-  animation: lp-rise 700ms var(--ease-emphasized) backwards;
+  animation: lp-rise var(--dur-slow) var(--ease-emphasized) backwards;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
 
@@ -102,7 +102,7 @@
 }
 .lp-reveal[data-reveal="pending"] {
   opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(calc(var(--motion-distance) * 1.5));
 }
 .lp-reveal[data-reveal="in"] {
   opacity: 1;
@@ -112,7 +112,7 @@
 @keyframes lp-ph {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(calc(var(--motion-distance) * 0.75));
   }
 }
 .lp-ph {
@@ -199,6 +199,16 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .lp-blob,
+  .lp-ping {
+    animation: none;
+  }
+  .lp-frame {
+    transform: rotateX(5deg) rotateY(-6deg) rotateZ(0.6deg) !important;
+  }
+  .lp-float {
+    transform: none !important;
+  }
   .lp-marquee {
     overflow-x: auto;
     -webkit-mask-image: none;

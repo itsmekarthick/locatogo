@@ -41,13 +41,13 @@ export default function AdvertisePage() {
           <div className="pt-2 flex items-center justify-center gap-3">
             <a
               href="#inquire-form"
-              className="rounded-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold px-6 py-3 text-xs shadow-md transition-all"
+              className="rounded-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-bold px-6 py-3 text-xs shadow-md transition-ui"
             >
               Book an Advertising Slot →
             </a>
             <Link
               href="/admin/advertising"
-              className="rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold px-5 py-3 text-xs hover:bg-slate-50 transition-all shadow-2xs"
+              className="rounded-full border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold px-5 py-3 text-xs hover:bg-slate-50 transition-ui shadow-2xs"
             >
               Manage Active Ads (Admin)
             </Link>
@@ -87,7 +87,7 @@ export default function AdvertisePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Tier 1 */}
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#0ea5e9] transition-all">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#0ea5e9] transition-ui">
               <div>
                 <span className="rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                   Maximum Visibility
@@ -154,7 +154,7 @@ export default function AdvertisePage() {
             </div>
 
             {/* Tier 3 */}
-            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#0ea5e9] transition-all">
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col justify-between hover:border-[#0ea5e9] transition-ui">
               <div>
                 <span className="rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                   Partner Spotlight

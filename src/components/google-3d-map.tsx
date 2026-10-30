@@ -90,7 +90,7 @@ export function Google3DMap({
             setIsRotating(false);
             setRotationAngle(0);
           }}
-          className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+          className={`px-2.5 py-1 rounded-lg transition-ui cursor-pointer ${
             mapMode === "2d" ? "bg-white text-gray-950 font-bold shadow-xs" : "text-gray-300 hover:text-white"
           }`}
         >
@@ -102,7 +102,7 @@ export function Google3DMap({
             setIsRotating(false);
             setRotationAngle(0);
           }}
-          className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+          className={`px-2.5 py-1 rounded-lg transition-ui cursor-pointer ${
             mapMode === "satellite" ? "bg-white text-gray-950 font-bold shadow-xs" : "text-gray-300 hover:text-white"
           }`}
         >
@@ -110,7 +110,7 @@ export function Google3DMap({
         </button>
         <button
           onClick={() => setMapMode("3d")}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-ui cursor-pointer ${
             mapMode === "3d" ? "bg-[#0ea5e9] text-white font-bold shadow-xs" : "text-gray-300 hover:text-white"
           }`}
         >
@@ -122,7 +122,7 @@ export function Google3DMap({
           <button
             onClick={() => setIsRotating((prev) => !prev)}
             title="Auto-Rotate 3D Perspective"
-            className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`px-2 py-1 rounded-lg text-xs font-bold transition-ui cursor-pointer ${
               isRotating
                 ? "bg-cyan-600 text-white animate-pulse"
                 : "bg-gray-800 text-gray-200 hover:bg-gray-700"

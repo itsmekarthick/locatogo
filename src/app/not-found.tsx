@@ -21,7 +21,7 @@ export default function NotFound() {
         <div className="mt-8 flex items-center justify-center">
           <Link
             href="/"
-            className="w-full sm:w-auto rounded-full bg-cyan-600 px-8 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-cyan-700 transition-all text-center flex items-center justify-center gap-2"
+            className="w-full sm:w-auto rounded-full bg-cyan-600 px-8 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-md hover:bg-cyan-700 transition-ui text-center flex items-center justify-center gap-2"
           >
             <span>💼</span>
             <span>Back to Tech Atlas</span>

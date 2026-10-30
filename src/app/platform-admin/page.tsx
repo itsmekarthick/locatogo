@@ -4,6 +4,7 @@ import { AdminKpiCard } from "@/components/admin-kpi-card";
 import { AdminMiniChart } from "@/components/admin-mini-chart";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { LiveRefresh } from "@/components/admin/live-refresh";
+import { ContentEnter } from "@/components/page-transition";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowRightIcon, BuildingIcon, ChartIcon, ClockIcon, CreditCardIcon, GlobeIcon, MapPinIcon } from "@/components/ui/icons";
@@ -60,7 +61,7 @@ export default async function PlatformAdminPage() {
   const feed = latestEvents.data ?? [];
 
   return (
-    <div className="mx-auto max-w-[1280px] space-y-8">
+    <ContentEnter><div className="mx-auto max-w-[1280px] space-y-8">
       <AdminPageHeader
         eyebrow="Platform pulse"
         title="System overview"
@@ -170,7 +171,7 @@ export default async function PlatformAdminPage() {
           )}
         </Panel>
       </div>
-    </div>
+    </div></ContentEnter>
   );
 }
 

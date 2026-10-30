@@ -108,7 +108,7 @@ export default async function CustomFieldsPage() {
 
             <button
               disabled={!domains?.length}
-              className="rounded-full bg-[var(--foreground)] px-5 py-2.5 text-xs font-bold text-[var(--paper)] shadow-xs hover:bg-[var(--foreground)]/85 transition-all disabled:opacity-50"
+              className="rounded-full bg-[var(--foreground)] px-5 py-2.5 text-xs font-bold text-[var(--paper)] shadow-xs hover:bg-[var(--foreground)]/85 transition-ui disabled:opacity-50"
             >
               + Create field
             </button>

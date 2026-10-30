@@ -75,7 +75,7 @@ export function AdminAdvertisingList({ slots }: { slots: AdSlotItem[] }) {
               setFilterStatus(s);
               setCurrentPage(1);
             }}
-            className={`rounded-full px-3.5 py-1 text-xs font-bold capitalize transition-all cursor-pointer ${
+            className={`rounded-full px-3.5 py-1 text-xs font-bold capitalize transition-ui cursor-pointer ${
               filterStatus === s
                 ? "bg-[var(--foreground)] text-[var(--paper)]"
                 : "text-[var(--ink-muted)] hover:text-[var(--foreground)]"

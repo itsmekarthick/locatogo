@@ -687,7 +687,7 @@ export function ModernDirectoryExplorer({
       <span className="shrink-0 text-[11px] font-semibold text-gray-400">Categories:</span>
       <button
         onClick={() => handleSelectCategory("")}
-        className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+        className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-ui cursor-pointer ${
           !selectedCategory ? "bg-[#18181b] text-white" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
         }`}
       >
@@ -697,7 +697,7 @@ export function ModernDirectoryExplorer({
         <button
           key={category.id}
           onClick={() => handleSelectCategory(category.id)}
-          className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold transition-all cursor-pointer ${
+          className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold transition-ui cursor-pointer ${
             selectedCategory === category.id ? "bg-[#18181b] text-white" : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
           }`}
         >
@@ -724,7 +724,7 @@ export function ModernDirectoryExplorer({
     <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50/50 p-1 self-start sm:self-auto overflow-x-auto no-scrollbar max-w-full">
       <button
         onClick={() => setViewMode("split")}
-        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-ui cursor-pointer whitespace-nowrap ${
           currentMode === "split" ? "bg-[#18181b] text-white shadow-xs" : "text-gray-600 hover:text-gray-950"
         }`}
       >
@@ -733,7 +733,7 @@ export function ModernDirectoryExplorer({
       </button>
       <button
         onClick={() => setViewMode("immersive")}
-        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-ui cursor-pointer whitespace-nowrap ${
           currentMode === "immersive" ? "bg-[#18181b] text-white shadow-xs" : "text-gray-600 hover:text-gray-950"
         }`}
       >
@@ -742,7 +742,7 @@ export function ModernDirectoryExplorer({
       </button>
       <button
         onClick={() => setViewMode("3d")}
-        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-ui cursor-pointer whitespace-nowrap ${
           currentMode === "3d" ? "bg-[#18181b] text-white shadow-xs" : "text-gray-600 hover:text-gray-950"
         }`}
       >
@@ -751,7 +751,7 @@ export function ModernDirectoryExplorer({
       </button>
       <button
         onClick={() => setViewMode("fullscreen")}
-        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-ui cursor-pointer whitespace-nowrap ${
           currentMode === "fullscreen" ? "bg-[#18181b] text-white shadow-xs" : "text-gray-600 hover:text-gray-950"
         }`}
       >
@@ -813,7 +813,7 @@ export function ModernDirectoryExplorer({
           {/* Logo & Dual Atlas Switcher */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-4 shrink-0">
             <Link href="/" className="flex items-center gap-2.5 group" title="LocaToGo">
-              <BrandLogo size={38} className="group-hover:scale-105 transition-transform" />
+              <BrandLogo size={38} className="motion-safe:group-hover:scale-105 transition-transform" />
               <span className="hidden sm:inline font-serif text-xl sm:text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-100"><span className="animate-brand-reveal">LocaToGo<span className="text-[#0ea5e9]">.</span></span>
               </span>
             </Link>
@@ -822,7 +822,7 @@ export function ModernDirectoryExplorer({
             <div className="flex items-center rounded-full border border-slate-200 dark:border-slate-800 bg-slate-100/90 dark:bg-slate-900/90 p-0.5 shadow-2xs">
               <Link
                 href={`/${domain?.slug || "bangalore"}`}
-                className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold text-slate-900 dark:text-white shadow-xs transition-all"
+                className="flex items-center gap-1.5 rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-xs font-bold text-slate-900 dark:text-white shadow-xs transition-ui"
               >
                 <span>🏙️</span>
                 <span className="hidden md:inline">{domain?.name ? `${domain.name}` : "City"} Atlas</span>
@@ -873,7 +873,7 @@ export function ModernDirectoryExplorer({
             <Link
               href="/submit"
               title="Add a New Place"
-              className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-md hover:scale-[1.02] transition-all"
+              className="flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#0284c7] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:shadow-md motion-safe:hover:scale-[1.02] transition-ui"
             >
               <span className="text-sm font-bold leading-none">+</span>
               <span className="hidden sm:inline">Add Place</span>
@@ -1004,7 +1004,7 @@ export function ModernDirectoryExplorer({
                 <div className="flex flex-wrap items-center gap-1 pb-0.5 sm:gap-1.5">
                   <button
                     onClick={() => handleSelectCategory("")}
-                    className={`flex items-center gap-1.5 rounded-full px-3 sm:px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 rounded-full px-3 sm:px-3.5 py-1 text-xs font-bold transition-ui cursor-pointer shrink-0 whitespace-nowrap ${
                       !selectedCategory
                         ? "bg-[#18181b] text-white shadow-xs"
                         : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
@@ -1022,7 +1022,7 @@ export function ModernDirectoryExplorer({
                       <button
                         key={cat.id}
                         onClick={() => handleSelectCategory(cat.id)}
-                        className={`flex items-center gap-1.5 rounded-full px-3 sm:px-3.5 py-1 text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                        className={`flex items-center gap-1.5 rounded-full px-3 sm:px-3.5 py-1 text-xs font-bold transition-ui cursor-pointer shrink-0 whitespace-nowrap ${
                           isSelected
                             ? "bg-[#18181b] text-white shadow-xs"
                             : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
@@ -1392,7 +1392,7 @@ export function ModernDirectoryExplorer({
               <button
                 type="button"
                 onClick={() => setMobileShowMap((prev) => !prev)}
-                className="flex items-center gap-2 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 px-5 py-3 text-xs font-bold shadow-2xl hover:scale-105 transition-all cursor-pointer"
+                className="flex items-center gap-2 rounded-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 px-5 py-3 text-xs font-bold shadow-2xl motion-safe:hover:scale-105 transition-ui cursor-pointer"
               >
                 <span>{mobileShowMap ? "📋" : "🗺️"}</span>
                 <span>{mobileShowMap ? "Show List" : "Show Map"}</span>
@@ -1434,7 +1434,7 @@ export function ModernDirectoryExplorer({
               <div className="flex flex-wrap items-center gap-1 pb-1 max-w-full sm:gap-1.5">
                 <button
                   onClick={() => handleSelectCategory("")}
-                  className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold shadow-md transition-all cursor-pointer ${
+                  className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold shadow-md transition-ui cursor-pointer ${
                     !selectedCategory
                       ? "bg-[#18181b] text-white"
                       : "bg-white/95 text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -1449,7 +1449,7 @@ export function ModernDirectoryExplorer({
                     <button
                       key={cat.id}
                       onClick={() => handleSelectCategory(cat.id)}
-                      className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold shadow-md transition-all cursor-pointer ${
+                      className={`whitespace-nowrap rounded-full px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-bold shadow-md transition-ui cursor-pointer ${
                         isSelected
                           ? "bg-[#18181b] text-white"
                           : "bg-white/95 text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -1478,7 +1478,7 @@ export function ModernDirectoryExplorer({
             <div className="absolute top-4 right-72 z-[400] hidden md:flex items-center gap-2">
               <button
                 onClick={() => setIsFullscreenDrawerOpen(!isFullscreenDrawerOpen)}
-                className="flex items-center gap-1.5 rounded-2xl border border-gray-200/90 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-xl backdrop-blur-md hover:bg-gray-50 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 rounded-2xl border border-gray-200/90 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-xl backdrop-blur-md hover:bg-gray-50 transition-ui cursor-pointer"
               >
                 <span>📋</span>
                 <span>{isFullscreenDrawerOpen ? "Hide List" : `Places (${filteredListings.length})`}</span>
@@ -1489,7 +1489,7 @@ export function ModernDirectoryExplorer({
             <div className="absolute bottom-5 left-3 z-[400] md:hidden">
               <button
                 onClick={() => setIsFullscreenDrawerOpen(!isFullscreenDrawerOpen)}
-                className="flex items-center gap-1.5 rounded-full border border-gray-200/90 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-xl backdrop-blur-md hover:bg-gray-50 transition-all cursor-pointer"
+                className="flex items-center gap-1.5 rounded-full border border-gray-200/90 bg-white/95 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-xl backdrop-blur-md hover:bg-gray-50 transition-ui cursor-pointer"
               >
                 <span>📋</span>
                 <span>{isFullscreenDrawerOpen ? "Hide List" : `Places (${filteredListings.length})`}</span>
@@ -1499,7 +1499,7 @@ export function ModernDirectoryExplorer({
 
           {/* Collapsible Sliding Place Drawer on the Right */}
           {isFullscreenDrawerOpen && (
-            <aside className="absolute inset-0 z-50 sm:relative sm:inset-auto sm:z-30 w-full sm:w-[420px] lg:w-[460px] h-full flex flex-col border-l border-gray-200 bg-white shadow-2xl transition-all duration-300">
+            <aside className="absolute inset-0 z-50 sm:relative sm:inset-auto sm:z-30 w-full sm:w-[420px] lg:w-[460px] h-full flex flex-col border-l border-gray-200 bg-white shadow-2xl transition-ui duration-300">
               <div className="flex items-center justify-between border-b border-gray-100 p-4 bg-gray-50/70">
                 <div>
                   <h3 className="font-serif text-lg font-bold text-gray-950">
@@ -1557,7 +1557,7 @@ export function ModernDirectoryExplorer({
 
       {/* MOBILE DRAGGABLE BOTTOM SHEET (Phones & Small Tablets) */}
       <div
-        className={`md:hidden fixed inset-x-0 bottom-0 z-[500] bg-white dark:bg-slate-900 rounded-t-3xl border-t border-slate-200 dark:border-slate-800 shadow-2xl transition-all duration-300 flex flex-col ${
+        className={`md:hidden fixed inset-x-0 bottom-0 z-[500] bg-white dark:bg-slate-900 rounded-t-3xl border-t border-slate-200 dark:border-slate-800 shadow-2xl transition-ui duration-300 flex flex-col ${
           mobileSheetSnap === "peek"
             ? "h-[74px]"
             : mobileSheetSnap === "half"
@@ -1620,7 +1620,7 @@ export function ModernDirectoryExplorer({
                       setFlyToUserTrigger((prev) => prev + 1);
                     }
                   }}
-                  className={`rounded-xl border p-3 bg-white dark:bg-slate-800 transition-all ${
+                  className={`rounded-xl border p-3 bg-white dark:bg-slate-800 transition-ui ${
                     isSelected
                       ? "border-[#0ea5e9] bg-orange-50/20 ring-1 ring-[#0ea5e9]"
                       : "border-slate-200 dark:border-slate-700"

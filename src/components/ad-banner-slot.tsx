@@ -202,7 +202,7 @@ export function AdBannerSlot({
                     <button
                       key={idx}
                       onClick={() => setCurrentSlide(idx)}
-                      className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                      className={`h-1.5 rounded-full transition-ui cursor-pointer ${
                         (currentSlide % adList.length) === idx
                           ? "w-4 bg-white"
                           : "w-1.5 bg-white/40 hover:bg-white/70"
@@ -316,7 +316,7 @@ export function AdBannerSlot({
         ref={containerRef}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className={`group rounded-2xl border-2 border-amber-300 dark:border-amber-700/60 bg-gradient-to-br from-amber-50/40 via-white to-orange-50/30 dark:from-amber-950/20 dark:via-slate-900 dark:to-orange-950/20 p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between ${className}`}
+        className={`group rounded-2xl border-2 border-amber-300 dark:border-amber-700/60 bg-gradient-to-br from-amber-50/40 via-white to-orange-50/30 dark:from-amber-950/20 dark:via-slate-900 dark:to-orange-950/20 p-4 shadow-sm hover:shadow-md transition-ui relative overflow-hidden flex flex-col justify-between ${className}`}
       >
         <div>
           <div className="flex items-center justify-between gap-2 mb-2.5">
@@ -364,7 +364,7 @@ export function AdBannerSlot({
               <img
                 src={activeSlot.banner_url}
                 alt={activeSlot.title || activeSlot.sponsor_name}
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="h-full w-full object-cover motion-safe:group-hover:scale-105 transition-transform duration-300"
               />
             </div>
           )}
@@ -406,7 +406,7 @@ export function AdBannerSlot({
       return (
         <div
           ref={containerRef}
-          className={`flex items-center gap-1.5 rounded-full bg-slate-950/90 dark:bg-slate-900/90 backdrop-blur-md text-white px-3 py-1.5 text-xs shadow-xl border border-amber-400/80 z-[450] animate-in fade-in duration-200 ${className}`}
+          className={`flex items-center gap-1.5 rounded-full bg-slate-950/90 dark:bg-slate-900/90 backdrop-blur-md text-white px-3 py-1.5 text-xs shadow-xl border border-amber-400/80 z-[450] animate-fade-in ${className}`}
         >
           <span className="text-amber-400 text-xs">📍</span>
           <span className="font-bold text-[11px] text-amber-300 truncate max-w-[120px] sm:max-w-[180px]">
@@ -445,7 +445,7 @@ export function AdBannerSlot({
     return (
       <div
         ref={containerRef}
-        className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-amber-300/80 dark:border-amber-700/80 p-3 shadow-xl max-w-[280px] sm:max-w-xs text-xs z-[450] animate-in fade-in slide-in-from-bottom-2 duration-300 ${className}`}
+        className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl border border-amber-300/80 dark:border-amber-700/80 p-3 shadow-xl max-w-[280px] sm:max-w-xs text-xs z-[450] animate-fade-up ${className}`}
       >
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <span className="rounded bg-amber-400 text-slate-950 font-bold px-2 py-0.5 text-[9px] uppercase tracking-wider flex items-center gap-1">
@@ -633,7 +633,7 @@ export function AdBannerSlot({
             target="_blank"
             rel="noopener noreferrer"
             onClick={handleAdClick}
-            className="rounded-xl bg-white text-slate-950 font-bold px-4 py-2 text-xs hover:bg-slate-100 shadow-md transition-all cursor-pointer whitespace-nowrap"
+            className="rounded-xl bg-white text-slate-950 font-bold px-4 py-2 text-xs hover:bg-slate-100 shadow-md transition-ui cursor-pointer whitespace-nowrap"
           >
             {cta} ↗
           </a>

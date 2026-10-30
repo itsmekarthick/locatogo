@@ -233,7 +233,7 @@ export function AdminOnlinePlaceFetcher({
                 type="button"
                 onClick={() => handleFetch()}
                 disabled={isLoading}
-                className="rounded-xl bg-cyan-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-cyan-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5"
+                className="rounded-xl bg-cyan-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-cyan-700 transition-ui disabled:opacity-50 cursor-pointer shadow-sm shrink-0 flex items-center gap-1.5"
               >
                 {isLoading ? (
                   <>
@@ -333,7 +333,7 @@ export function AdminOnlinePlaceFetcher({
                 type="button"
                 onClick={handleImport}
                 disabled={isPending || selectedIndices.size === 0}
-                className="rounded-full bg-emerald-600 px-6 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all disabled:opacity-50 cursor-pointer shadow-md flex items-center gap-1.5"
+                className="rounded-full bg-emerald-600 px-6 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-ui disabled:opacity-50 cursor-pointer shadow-md flex items-center gap-1.5"
               >
                 {isPending ? (
                   <>
@@ -358,7 +358,7 @@ export function AdminOnlinePlaceFetcher({
                 <div
                   key={`${place.title}-${idx}`}
                   onClick={() => toggleIndex(idx)}
-                  className={`rounded-2xl border p-4 transition-all cursor-pointer flex gap-3.5 ${
+                  className={`rounded-2xl border p-4 transition-ui cursor-pointer flex gap-3.5 ${
                     isSelected
                       ? "border-cyan-500 bg-cyan-50/30 dark:bg-cyan-950/30 shadow-xs"
                       : "border-[var(--line)] bg-[var(--background)] opacity-70"

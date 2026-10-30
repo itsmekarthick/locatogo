@@ -11,7 +11,7 @@ export function BrandLogo({
 }) {
   return (
     <div
-      className={`relative inline-flex items-center justify-center shrink-0 select-none transition-transform hover:scale-105 ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 select-none transition-transform motion-safe:hover:scale-105 ${className}`}
       style={{ width: size, height: size }}
       title="LocaToGo"
     >

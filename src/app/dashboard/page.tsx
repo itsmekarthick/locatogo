@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AdminKpiCard } from "@/components/admin-kpi-card";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
+import { ContentEnter } from "@/components/page-transition";
 import { ResumeOnboarding } from "@/components/resume-onboarding";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
@@ -121,7 +122,7 @@ export default async function DashboardPage() {
     : "Your saved companies and directory activity in one place.";
 
   return (
-    <div className="min-h-dvh bg-surface-0 text-fg">
+    <ContentEnter><div className="min-h-dvh bg-surface-0 text-fg">
       <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
         <div className="mb-5 flex items-center justify-between gap-4">
           <Link href="/map" className="focus-ring inline-flex items-center gap-1.5 rounded text-sm text-fg-muted transition-colors hover:text-fg">
@@ -298,13 +299,13 @@ export default async function DashboardPage() {
                       <span className="block truncate text-xs text-fg-subtle">{place || "Location not listed"}</span>
                       <span className="mt-0.5 block text-xs text-fg-subtle">Saved {date(item.created_at)}</span>
                     </span>
-                    <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
+                    <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 motion-safe:group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
                   </>
                 );
                 return (
                   <li key={item.id}>
                     {company?.slug ? (
-                      <Link href={`/listing/${company.slug}`} className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 transition-ui hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-3/50">
+                      <Link href={`/listing/${company.slug}`} className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 lift hover:border-line-strong hover:bg-surface-3/50">
                         {card}
                       </Link>
                     ) : (
@@ -346,7 +347,7 @@ export default async function DashboardPage() {
           </Activity>
         </section>
       </div>
-    </div>
+    </div></ContentEnter>
   );
 }
 

@@ -41,9 +41,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dt-cover-img {
-    animation: none;
-  }
   .dt-nav-link::after {
     transition: none;
   }

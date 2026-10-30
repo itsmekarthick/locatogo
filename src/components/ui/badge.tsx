@@ -83,7 +83,7 @@ export function Chip({
         disabled={disabled}
         aria-pressed={selected}
         className={cn(
-          "focus-ring inline-flex h-full items-center gap-1.5 rounded-full pl-3 active:scale-[0.98]",
+          "focus-ring inline-flex h-full items-center gap-1.5 rounded-full pl-3 motion-safe:active:scale-[0.98]",
           onRemove ? "pr-1.5" : "pr-3",
         )}
         {...props}

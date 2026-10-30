@@ -77,7 +77,7 @@ export function FavoriteButton({
       title={favorited ? "Remove from favorites" : "Save to favorites"}
       aria-label={favorited ? "Remove from favorites" : "Save to favorites"}
       className={cn(
-        "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm transition-ui active:scale-95 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-h-11",
+        "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-sm transition-ui motion-safe:active:scale-95 disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-h-11",
         favorited
           ? "border-danger/30 bg-danger-soft text-danger"
           : "border-line-strong bg-surface-1 text-fg-muted hover:border-danger/30 hover:bg-danger-soft hover:text-danger",

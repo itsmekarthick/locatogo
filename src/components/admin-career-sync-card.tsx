@@ -116,7 +116,7 @@ export function AdminCareerSyncCard({
                 setProvider(p.provider as any);
                 setBoardToken(p.token);
               }}
-              className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-cyan-50 hover:border-cyan-300 dark:hover:bg-cyan-950/50 transition-all cursor-pointer"
+              className="rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-cyan-50 hover:border-cyan-300 dark:hover:bg-cyan-950/50 transition-ui cursor-pointer"
             >
               {p.label} ({p.provider})
             </button>
@@ -158,7 +158,7 @@ export function AdminCareerSyncCard({
               type="button"
               disabled={isPending}
               onClick={handleSync}
-              className="rounded-2xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2 text-xs font-bold text-white shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              className="rounded-2xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2 text-xs font-bold text-white shadow-md transition-ui flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             >
               {isPending ? (
                 <>

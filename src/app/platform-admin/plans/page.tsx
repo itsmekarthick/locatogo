@@ -23,7 +23,7 @@ export default async function PlatformPlansPage() {
         <ul role="list" className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => (
             <li key={plan.id}>
-              <article className="flex h-full flex-col justify-between rounded-2xl border border-line bg-surface-1 p-6 elev-sm transition-ui hover:-translate-y-0.5 hover:elev-md">
+              <article className="flex h-full flex-col justify-between rounded-2xl border border-line bg-surface-1 p-6 elev-sm lift hover:elev-md">
                 <div>
                   <div className="flex items-center justify-between gap-3">
                     <h2 className="font-display text-xl font-semibold tracking-tight text-fg">{plan.name}</h2>

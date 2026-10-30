@@ -74,7 +74,7 @@ export function PlaceWeatherBadge({ weather, locality, compact = false, id, onSi
           type="button"
           onClick={() => setIsModalOpen(true)}
           title="5-day forecast and hourly timeline"
-          className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-line-strong bg-surface-1 px-3 text-sm font-medium text-fg transition-ui hover:bg-surface-3 active:scale-[0.98] pointer-coarse:h-11"
+          className="focus-ring inline-flex h-9 items-center gap-2 rounded-full border border-line-strong bg-surface-1 px-3 text-sm font-medium text-fg transition-ui hover:bg-surface-3 motion-safe:active:scale-[0.98] pointer-coarse:h-11"
         >
           <WeatherGlyph type={weather.weatherType} className="size-4 text-accent-text" />
           <span>{weather.temperature}°C</span>

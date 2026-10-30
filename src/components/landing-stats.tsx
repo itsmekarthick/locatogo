@@ -10,7 +10,7 @@ import {
   SlidersIcon,
   SparklesIcon,
 } from "@/components/ui/icons";
-import { CountUp } from "@/components/landing/count-up";
+import { CountUp } from "@/components/ui/count-up";
 import { Reveal } from "@/components/landing/reveal";
 import { SpotlightCard } from "@/components/landing/spotlight-card";
 

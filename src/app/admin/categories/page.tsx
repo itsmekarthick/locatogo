@@ -97,7 +97,7 @@ export default async function CategoriesPage() {
               <span>Enable category in directory UI immediately</span>
             </label>
 
-            <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-all cursor-pointer">
+            <button className="rounded-full bg-[var(--foreground)] px-6 py-2.5 text-xs font-bold text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui cursor-pointer">
               + Add Category
             </button>
           </div>

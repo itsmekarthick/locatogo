@@ -146,7 +146,7 @@ export function DetailsAutocompleteSearch() {
 
       {/* Autocomplete Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 top-full z-[var(--z-dropdown)] mt-2 w-[min(28rem,calc(100vw-2rem))] min-w-full overflow-hidden rounded-2xl border border-line bg-surface-2 elev-lg animate-in fade-in-0 zoom-in-95 duration-150">
+        <div className="absolute left-0 top-full z-[var(--z-dropdown)] mt-2 w-[min(28rem,calc(100vw-2rem))] min-w-full overflow-hidden rounded-2xl border border-line bg-surface-2 elev-lg animate-scale-in">
           {results.length > 0 ? (
             <div className="py-2">
               <div className="flex items-center justify-between border-b border-line px-3.5 py-1.5 text-xs text-fg-subtle">

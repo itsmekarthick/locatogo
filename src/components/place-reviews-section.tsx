@@ -53,7 +53,7 @@ function RatingInput({ value, onChange }: { value: number; onChange: (value: num
           aria-label={`${star} ${star === 1 ? "star" : "stars"}`}
           onClick={() => onChange(star)}
           onMouseEnter={() => setHovered(star)}
-          className="focus-ring grid size-9 place-items-center rounded-lg transition-transform duration-150 active:scale-90 pointer-coarse:size-11"
+          className="focus-ring grid size-9 place-items-center rounded-lg transition-transform duration-150 motion-safe:active:scale-90 pointer-coarse:size-11"
         >
           <StarIcon className={cn("size-6 transition-colors", star <= shown ? "fill-current text-warning" : "text-line-strong")} />
         </button>

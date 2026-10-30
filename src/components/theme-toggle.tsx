@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { IconButton } from "@/components/ui/icon-button";
-import { MoonIcon, SunIcon } from "@/components/ui/icons";
+import { ThemeIcon } from "@/components/ui/theme-icon";
 import { applyTheme, type Theme } from "@/lib/utils/theme-transition";
 
 function subscribe(onChange: () => void) {
@@ -24,7 +24,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       className={className}
       onClick={() => applyTheme(next)}
     >
-      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+      <ThemeIcon showSun={theme === "dark"} />
     </IconButton>
   );
 }

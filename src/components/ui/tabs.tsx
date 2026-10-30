@@ -87,9 +87,14 @@ export function TabList({ className, children, ...props }: ComponentPropsWithRef
       });
     }
     indicator.style.opacity = "1";
-    indicator.style.width = `${active.offsetWidth}px`;
-    indicator.style.transform = `translateX(${active.offsetLeft}px)`;
-  }, []);
+    // The underline is 1px wide and scaled, so only transform animates. The pill sets its width directly and only slides.
+    if (variant === "underline") {
+      indicator.style.transform = `translateX(${active.offsetLeft}px) scaleX(${active.offsetWidth})`;
+    } else {
+      indicator.style.width = `${active.offsetWidth}px`;
+      indicator.style.transform = `translateX(${active.offsetLeft}px)`;
+    }
+  }, [variant]);
 
   useLayoutEffect(measure, [value, measure]);
 
@@ -140,8 +145,8 @@ export function TabList({ className, children, ...props }: ComponentPropsWithRef
         aria-hidden="true"
         style={{ opacity: 0 }}
         className={cn(
-          "pointer-events-none absolute left-0 transition-[transform,width,opacity] duration-300 ease-emphasized",
-          variant === "underline" ? "bottom-0 h-0.5 rounded-full bg-accent" : "inset-y-1 rounded-lg bg-surface-1 elev-sm",
+          "pointer-events-none absolute left-0 origin-left transition-[transform,opacity] duration-300 ease-emphasized",
+          variant === "underline" ? "bottom-0 h-0.5 w-px rounded-none bg-accent" : "inset-y-1 rounded-lg bg-surface-1 elev-sm",
         )}
       />
     </div>

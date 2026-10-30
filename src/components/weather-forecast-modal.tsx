@@ -32,7 +32,7 @@ export function WeatherForecastModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-gray-950/75 animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -100,7 +100,7 @@ export function WeatherForecastModal({
                     <button
                       key={mode.label}
                       onClick={() => onSimulateWeather(mode.value)}
-                      className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all cursor-pointer shrink-0 ${
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-ui cursor-pointer shrink-0 ${
                         isActive
                           ? "bg-white text-gray-950 shadow-xs"
                           : "bg-white/15 text-cyan-100 hover:bg-white/25"
@@ -119,7 +119,7 @@ export function WeatherForecastModal({
         <div className="flex border-b border-gray-100 bg-gray-50/80 px-6 pt-3">
           <button
             onClick={() => setActiveTab("hourly")}
-            className={`pb-3 px-4 text-xs font-bold transition-all border-b-2 cursor-pointer ${
+            className={`pb-3 px-4 text-xs font-bold transition-ui border-b-2 cursor-pointer ${
               activeTab === "hourly"
                 ? "border-cyan-600 text-cyan-600"
                 : "border-transparent text-gray-500 hover:text-gray-900"
@@ -129,7 +129,7 @@ export function WeatherForecastModal({
           </button>
           <button
             onClick={() => setActiveTab("daily")}
-            className={`pb-3 px-4 text-xs font-bold transition-all border-b-2 cursor-pointer ${
+            className={`pb-3 px-4 text-xs font-bold transition-ui border-b-2 cursor-pointer ${
               activeTab === "daily"
                 ? "border-cyan-600 text-cyan-600"
                 : "border-transparent text-gray-500 hover:text-gray-900"
@@ -174,7 +174,7 @@ export function WeatherForecastModal({
               {weather.dailyForecast.map((day, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/60 p-3 hover:bg-cyan-50/40 hover:border-cyan-200 transition-all"
+                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/60 p-3 hover:bg-cyan-50/40 hover:border-cyan-200 transition-ui"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{day.icon}</span>
