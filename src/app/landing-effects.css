@@ -124,17 +124,14 @@
   perspective: 1800px;
 }
 .lp-frame {
-  transform: translate3d(0, calc(var(--p, 0.2) * -32px), 0) rotateX(5deg) rotateY(-6deg) rotateZ(0.6deg);
+  transform: translate3d(0, -6px, 0) rotateX(5deg) rotateY(-6deg) rotateZ(0.6deg);
   transform-origin: 50% 0%;
   will-change: transform;
 }
 @media (max-width: 767px) {
   .lp-frame {
-    transform: translate3d(0, calc(var(--p, 0.2) * -16px), 0) rotateX(3deg);
+    transform: translate3d(0, -3px, 0) rotateX(3deg);
   }
-}
-.lp-float {
-  transform: translate3d(0, calc(var(--p, 0.2) * 14px), 0);
 }
 .lp-frame-spot {
   background: radial-gradient(
@@ -206,9 +203,6 @@
   .lp-frame {
     transform: rotateX(5deg) rotateY(-6deg) rotateZ(0.6deg) !important;
   }
-  .lp-float {
-    transform: none !important;
-  }
   .lp-marquee {
     overflow-x: auto;
     -webkit-mask-image: none;
@@ -261,5 +255,223 @@
   .lp-spot:hover::before,
   .lp-spot:hover::after {
     opacity: 1;
+  }
+}
+
+/* ---- Atlas console: three scenes on a shared timeline ----
+   Every animation below is attached to the active scene only, so hidden scenes cost nothing.
+   Elements rest in their final state and the keyframes only describe the way in, which is also what
+   reduced motion shows. Only transform, opacity and stroke-dashoffset are animated. */
+.lp-stage {
+  position: relative;
+  display: grid;
+  height: 19rem;
+}
+@media (min-width: 640px) {
+  .lp-stage {
+    height: 20rem;
+  }
+}
+.lp-scene {
+  grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translate3d(0, calc(var(--motion-distance) * 0.5), 0);
+  transition:
+    opacity var(--dur-base) var(--ease-standard),
+    transform var(--dur-base) var(--ease-standard);
+  pointer-events: none;
+}
+.lp-scene[data-active="true"] {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Paused while the preview is off screen, keyboard focused or the tab is hidden; !important beats the animation shorthands below. */
+.lp-preview[data-run="false"] .lp-scene *,
+.lp-preview[data-run="false"] .lp-tab-bar,
+.lp-preview[data-run="false"] .lp-live {
+  animation-play-state: paused !important;
+}
+
+.lp-tab-bar {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0;
+  left: 0.5rem;
+  height: 2px;
+  border-radius: 9999px;
+  background: var(--accent);
+  transform-origin: left;
+  animation: lp-bar linear both;
+}
+@keyframes lp-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes lp-live {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  80%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+.lp-live {
+  animation: lp-live 2.2s var(--ease-standard) infinite;
+}
+
+/* Explore: each of three hubs takes a third of the scene. */
+@keyframes lp-win {
+  0% {
+    opacity: 0;
+  }
+  4%,
+  30% {
+    opacity: 1;
+  }
+  34%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes lp-tour {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  4%,
+  30% {
+    opacity: 1;
+    transform: none;
+  }
+  34%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0);
+  }
+}
+@keyframes lp-flow {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+.lp-scene[data-active="true"] .lp-win {
+  animation: lp-win var(--d) linear both;
+  animation-delay: calc(var(--k) * var(--d) / 3);
+}
+.lp-scene[data-active="true"] .lp-tour {
+  animation: lp-tour var(--d) var(--ease-standard) both;
+  animation-delay: calc(var(--k) * var(--d) / 3);
+}
+.lp-scene[data-active="true"] .lp-arc {
+  animation: lp-flow 1.6s linear infinite;
+}
+.lp-scene[data-active="false"] .lp-ping {
+  animation: none;
+}
+.lp-tour {
+  grid-area: 1 / 1;
+}
+
+/* Filter and match: timed entrances. */
+@keyframes lp-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+}
+@keyframes lp-gone {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+}
+@keyframes lp-on {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes lp-knob {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes lp-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes lp-scan {
+  from {
+    opacity: 1;
+    transform: translate3d(0, -100%, 0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 100%, 0);
+  }
+}
+.lp-in {
+  animation: lp-in 360ms var(--ease-emphasized) backwards;
+  animation-delay: var(--t, 0s);
+}
+.lp-flip {
+  animation: lp-on 240ms var(--ease-standard) backwards;
+  animation-delay: var(--t, 0s);
+}
+.lp-knob {
+  transform: translate3d(1rem, 0, 0);
+  animation: lp-knob 240ms var(--ease-emphasized) backwards;
+  animation-delay: var(--t, 0s);
+}
+.lp-fill {
+  animation: lp-grow 600ms var(--ease-emphasized) backwards;
+  animation-delay: var(--t, 0s);
+}
+.lp-gone {
+  opacity: 0;
+  animation: lp-gone 240ms var(--ease-standard) backwards;
+  animation-delay: var(--t, 0s);
+}
+.lp-scan {
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent-vivid) 22%, transparent) 50%, transparent);
+  opacity: 0;
+  animation: lp-scan 1.4s var(--ease-standard) backwards;
+}
+.lp-scene[data-active="false"] * {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-scene *,
+  .lp-tab-bar,
+  .lp-live {
+    animation: none !important;
+  }
+  .lp-tab-bar {
+    display: none;
+  }
+  .lp-scene {
+    transition: none;
+  }
+  .lp-tour:not([data-k="0"]),
+  .lp-win:not([data-k="0"]) {
+    display: none;
+  }
+  .lp-scan {
+    display: none;
   }
 }

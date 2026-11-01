@@ -51,6 +51,9 @@ export type UnifiedJob = {
   locality?: string | null;
   city?: string | null;
   country_code?: string | null;
+  role_category?: string | null;
+  role_level?: string | null;
+  is_fresher?: boolean;
 };
 
 export const GLOBAL_TECH_HUBS: TechHub[] = [
@@ -642,4 +645,71 @@ export function matchesHub(
   if (hub.id === "brisbane") return city.includes("brisbane") || loc.includes("brisbane") || addr.includes("brisbane");
 
   return city.includes(hub.name.toLowerCase()) || loc.includes(hub.name.toLowerCase());
+}
+
+/** City names that place a company in a hub; shared by the company list and the filter counts so both agree. */
+const HUB_CITY_TERMS: Record<string, string[]> = {
+  bengaluru: ["bangalore", "bengaluru"],
+  bangalore: ["bangalore", "bengaluru"],
+  "delhi-ncr": ["delhi", "gurugram", "noida"],
+  delhi: ["delhi", "gurugram", "noida"],
+  mumbai: ["mumbai"],
+  chennai: ["chennai"],
+  pune: ["pune"],
+  hyderabad: ["hyderabad"],
+  kolkata: ["kolkata"],
+  kochi: ["kochi"],
+  "silicon-valley": ["san francisco", "palo alto", "mountain view", "sunnyvale", "san jose", "menlo park"],
+  siliconvalley: ["san francisco", "palo alto", "mountain view", "sunnyvale", "san jose", "menlo park"],
+  "new-york": ["new york", "brooklyn", "manhattan"],
+  seattle: ["seattle", "bellevue", "redmond"],
+  austin: ["austin"],
+  boston: ["boston", "cambridge", "somerville"],
+  "los-angeles": ["los angeles", "santa monica", "culver city", "glendale"],
+  chicago: ["chicago"],
+  denver: ["denver", "boulder"],
+  atlanta: ["atlanta"],
+  "san-diego": ["san diego", "la jolla", "san marcos"],
+  london: ["london"],
+  toronto: ["toronto"],
+  berlin: ["berlin"],
+  singapore: ["singapore"],
+  paris: ["paris"],
+  amsterdam: ["amsterdam"],
+  dublin: ["dublin"],
+  tokyo: ["tokyo"],
+  sydney: ["sydney"],
+  dubai: ["dubai"],
+  "abu-dhabi": ["abu dhabi", "abudhabi"],
+  abudhabi: ["abu dhabi", "abudhabi"],
+  sharjah: ["sharjah"],
+  "ras-al-khaimah": ["ras al khaimah", "rak"],
+  melbourne: ["melbourne"],
+  brisbane: ["brisbane"],
+  vancouver: ["vancouver", "burnaby", "richmond"],
+  montreal: ["montreal"],
+  waterloo: ["waterloo", "kitchener"],
+  ottawa: ["ottawa"],
+  calgary: ["calgary"],
+  munich: ["munich"],
+  frankfurt: ["frankfurt"],
+  hamburg: ["hamburg"],
+  rotterdam: ["rotterdam"],
+  eindhoven: ["eindhoven"],
+  cork: ["cork"],
+  osaka: ["osaka"],
+  lyon: ["lyon"],
+  toulouse: ["toulouse"],
+  bordeaux: ["bordeaux"],
+  marseille: ["marseille"],
+  nantes: ["nantes"],
+};
+
+/** Lowercase city terms for a hub id; an unknown id falls back to its own name. */
+export function hubCityTerms(hubId: string): string[] {
+  const id = hubId.trim().toLowerCase();
+  const known = HUB_CITY_TERMS[id];
+  if (known) return known;
+  const fallback = id.replace(/-/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
+  return fallback ? [fallback] : [];
 }

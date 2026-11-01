@@ -16,6 +16,7 @@ import {
   type StoryItem,
 } from "@/components/landing/sections";
 import { GLOBAL_COUNTRIES, GLOBAL_TECH_HUBS } from "@/lib/constants/tech-hubs";
+import { loadLandingLive } from "@/lib/landing/data";
 
 export const metadata: Metadata = {
   title: "Global Tech Atlas: Companies, Startups & Live Jobs | LocaToGo",
@@ -53,27 +54,15 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600; // Cache and revalidate homepage every hour
 
-type PreviewRow = {
-  id: string;
-  title: string;
-  locality: string | null;
-  city: string | null;
-  active_jobs_count: number | null;
-  verification_status: string | null;
-};
-
 export default async function LandingPage() {
   const supabase = await createSupabaseServerClient();
 
   const [
     { count: totalPlaces },
-    { count: totalJobs },
     { data: featuredPlaces },
     { data: blogs },
-    { data: previewRows },
   ] = await Promise.all([
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "published").not("company_type", "is", null),
-    supabase.from("company_jobs").select("id", { count: "exact", head: true }).eq("is_active", true),
     supabase
       .from("listings")
       .select("id, title, slug, short_description, locality, city, is_featured, verification_status, active_jobs_count")
@@ -87,14 +76,9 @@ export default async function LandingPage() {
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(3),
-    supabase
-      .from("listings")
-      .select("id, title, locality, city, active_jobs_count, verification_status")
-      .eq("status", "published")
-      .not("company_type", "is", null)
-      .order("active_jobs_count", { ascending: false })
-      .limit(5),
   ]);
+
+  const live = await loadLandingLive(supabase, { companies: totalPlaces ?? 0 });
 
   const countryCount = GLOBAL_COUNTRIES.filter((country) => country.code !== "ALL").length;
   const hubCount = GLOBAL_TECH_HUBS.length;
@@ -106,15 +90,6 @@ export default async function LandingPage() {
       return hub ? [hub] : [];
     })
     .slice(0, 6);
-  const previewHubs = GLOBAL_TECH_HUBS.map(({ id, name, lat, lng }) => ({ id, name, lat, lng }));
-  const previewCompanies = ((previewRows ?? []) as PreviewRow[]).map((row) => ({
-    id: row.id,
-    title: row.title,
-    locality: row.locality,
-    city: row.city,
-    jobs: row.active_jobs_count ?? 0,
-    verified: row.verification_status === "verified",
-  }));
 
   const examples = [
     "Search companies, hubs and roles",
@@ -178,12 +153,11 @@ export default async function LandingPage() {
       <PublicHeader />
 
       <LandingHero
-        openRoles={totalJobs ?? null}
+        openRoles={live.roles}
         hubs={searchHubs}
         popularHubs={popularHubs}
         examples={examples}
-        previewCompanies={previewCompanies}
-        previewHubs={previewHubs}
+        live={live}
         hubCount={hubCount}
         countryCount={countryCount}
       />
@@ -195,11 +169,11 @@ export default async function LandingPage() {
         <HubMarquee hubs={searchHubs} />
       </section>
 
-      <LandingStats companies={totalPlaces ?? null} roles={totalJobs ?? null} hubs={hubCount} countries={countryCount} />
+      <LandingStats companies={totalPlaces ?? null} roles={live.roles} freshers={live.facets.freshers} weekRoles={live.weekRoles} />
 
-      <LandingFeatures />
+      <LandingFeatures live={live} />
 
-      <HowItWorks hubNames={searchHubs.map((hub) => hub.name)} hubCount={hubCount} countryCount={countryCount} />
+      <HowItWorks hubNames={searchHubs.map((hub) => hub.name)} hubCount={hubCount} countryCount={countryCount} live={live} />
 
       <HubsByCountry />
 

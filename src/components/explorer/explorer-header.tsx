@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
 import { UserProfileMenu } from "@/components/user-profile-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Chip, Tab, TabList, Tabs } from "@/components/ui";
 import {
   BriefcaseIcon,
@@ -14,6 +15,7 @@ import {
   MapIcon,
 } from "@/components/ui/icons";
 import { RollingNumber } from "@/components/explorer/rolling-number";
+import { FreshersSwitch } from "@/components/explorer/filters";
 import type { CountryInfo, TechHub } from "@/lib/constants/tech-hubs";
 import { cn } from "@/lib/utils/cn";
 
@@ -125,6 +127,9 @@ type ExplorerHeaderProps = {
   onViewMode: (mode: ViewMode) => void;
   hiringOnly: boolean;
   totalOpenings: number;
+  freshers: boolean;
+  freshersCount: number;
+  onFreshers: (next: boolean) => void;
   onToggleHiring: () => void;
   countries: CountryInfo[];
   countryCounts: Record<string, number>;
@@ -146,6 +151,9 @@ export function ExplorerHeader({
   onViewMode,
   hiringOnly,
   totalOpenings,
+  freshers,
+  freshersCount,
+  onFreshers,
   onToggleHiring,
   countries,
   countryCounts,
@@ -186,6 +194,8 @@ export function ExplorerHeader({
             <span className="ml-1.5 opacity-70">{totalOpenings.toLocaleString("en-US")}</span>
           </Chip>
 
+          <FreshersSwitch freshers={freshers} count={freshersCount} onChange={onFreshers} className="hidden lg:block" />
+
           <Tabs variant="pill" value={viewMode} onValueChange={(next) => onViewMode(next as ViewMode)} className="hidden md:block">
             <TabList aria-label="View">
               <Tab value="map">
@@ -206,6 +216,7 @@ export function ExplorerHeader({
             </TabList>
           </Tabs>
 
+          <ThemeToggle />
           <UserProfileMenu />
         </div>
       </div>

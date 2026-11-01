@@ -1,0 +1,250 @@
+/* Atlas scan scene for the Matches view. Everything here moves opacity, transform or stroke-dashoffset only. */
+
+@keyframes atlas-pin {
+  from {
+    opacity: 0;
+    transform: scale(var(--pin-from, 0.3));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes atlas-route {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0.2;
+  }
+  to {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes atlas-ring {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
+@keyframes atlas-ripple {
+  from {
+    opacity: 0.5;
+    transform: scale(0.15);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes atlas-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes heat-in {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scan-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ticker-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--motion-distance) * 1.5));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(var(--to, 1));
+  }
+}
+
+@keyframes ring-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes rail-scan {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--motion-slide) * var(--dir, 1) * 0.6));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.atlas-pin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-pin var(--dur-base) var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--d, 0) * 1ms);
+}
+
+.atlas-heat {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: heat-in var(--dur-base) var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--d, 0) * 1ms);
+}
+
+.atlas-route {
+  stroke-dasharray: 1;
+  animation: atlas-route var(--dur-slow) var(--ease-standard) backwards;
+  animation-delay: calc(var(--i, 0) * 260ms);
+}
+
+.atlas-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ring 900ms var(--ease-standard) 600ms 3 backwards;
+}
+
+.atlas-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ripple 2.6s var(--ease-standard) infinite;
+  animation-delay: calc(var(--i, 0) * 860ms);
+}
+
+.atlas-sweep {
+  transform-box: view-box;
+  animation: atlas-sweep 3.2s linear infinite;
+}
+
+/* The map follows the pointer a few pixels per layer; --px and --py are set from -1 to 1 by the scene. */
+.atlas-layer {
+  transform: translate(calc(var(--px, 0) * var(--depth, 1) * 1px), calc(var(--py, 0) * var(--depth, 1) * 1px));
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+/* Zooms toward the best match at the end of the scan. */
+.atlas-world {
+  transform-box: view-box;
+  transition: transform var(--dur-slow) var(--ease-emphasized);
+}
+
+.scan-rise {
+  animation: scan-rise var(--dur-base) var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--i, 0) * var(--motion-stagger));
+}
+
+.ticker-in {
+  animation: ticker-in var(--dur-base) var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+.bar-grow {
+  transform-origin: left;
+  transform: scaleX(var(--to, 1));
+  animation: bar-grow var(--dur-slow) var(--ease-emphasized) backwards;
+  animation-delay: calc(var(--i, 0) * var(--motion-stagger));
+}
+
+.ring-draw {
+  animation: ring-draw 900ms var(--ease-emphasized) backwards;
+}
+
+.rail-scan {
+  animation: rail-scan 1.8s var(--ease-standard) infinite;
+}
+
+.caret {
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+.step-in {
+  animation: step-in var(--dur-base) var(--ease-emphasized) backwards;
+}
+
+/* Pausing the scan freezes the ambient loops too. */
+.scan-paused .atlas-sweep,
+.scan-paused .atlas-ripple,
+.scan-paused .rail-scan,
+.scan-paused .caret {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-pin,
+  .atlas-heat {
+    --pin-from: 1;
+  }
+  .atlas-route {
+    animation-name: fade-in;
+    stroke-dasharray: none;
+  }
+  .atlas-ring,
+  .atlas-ripple,
+  .atlas-sweep,
+  .rail-scan {
+    animation: none !important;
+    opacity: 0;
+  }
+  .atlas-layer,
+  .atlas-world {
+    transform: none !important;
+  }
+  .ring-draw,
+  .bar-grow,
+  .caret {
+    animation: none;
+  }
+}
+
+/* On a short desktop window the stage drops its extras so the left column never needs its own scrollbar. */
+@media (min-width: 1024px) and (max-height: 800px) {
+  .scan-short-hide {
+    display: none;
+  }
+}

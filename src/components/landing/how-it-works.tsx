@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Badge, buttonVariants } from "@/components/ui";
 import { ArrowUpRightIcon } from "@/components/ui/icons";
+import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { Reveal } from "@/components/landing/reveal";
 import { useInView } from "@/components/landing/use-in-view";
+import { LEVELS } from "@/lib/jobs/taxonomy";
+import type { LandingLive } from "@/lib/landing/data";
 import { cn } from "@/lib/utils/cn";
 
 const STEPS = [
@@ -13,8 +16,12 @@ const STEPS = [
     desc: "Start with a country or city hub and see the companies shaping that local ecosystem.",
   },
   {
-    title: "Filter companies",
-    desc: "Compare sectors, stages, stacks, workplace models and the companies that are hiring now.",
+    title: "Filter to your kind of role",
+    desc: "Narrow by level, work mode and role type, or switch on Freshers. Every option shows how many roles it will give you.",
+  },
+  {
+    title: "Match your resume",
+    desc: "Upload a resume once. It becomes a structured profile, and every open role in your hub is scored for fit with a note on why.",
   },
   {
     title: "Open roles and apply",
@@ -22,9 +29,7 @@ const STEPS = [
   },
 ];
 
-function Bar({ className }: { className?: string }) {
-  return <span className={cn("block h-2.5 rounded-full bg-surface-3", className)} />;
-}
+const fmt = (value: number) => value.toLocaleString("en-US");
 
 function Scene({ children }: { children: ReactNode }) {
   return (
@@ -34,9 +39,9 @@ function Scene({ children }: { children: ReactNode }) {
   );
 }
 
-type HowItWorksProps = { hubNames: string[]; hubCount: number; countryCount: number };
+type HowItWorksProps = { hubNames: string[]; hubCount: number; countryCount: number; live: LandingLive };
 
-export function HowItWorks({ hubNames, hubCount, countryCount }: HowItWorksProps) {
+export function HowItWorks({ hubNames, hubCount, countryCount, live }: HowItWorksProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
   const stepRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -94,30 +99,63 @@ export function HowItWorks({ hubNames, hubCount, countryCount }: HowItWorksProps
     </Scene>,
     <Scene key="filter">
       <div className="flex flex-wrap gap-2">
-        <Badge variant="accent">Hiring</Badge>
-        <Badge>Startups</Badge>
-        <Badge>Series B</Badge>
-        <Badge>Remote</Badge>
+        <Badge variant="accent">Freshers {fmt(live.facets.freshers)}</Badge>
+        {LEVELS.filter((level) => ["entry", "mid", "senior"].includes(level.id)).map((level) => (
+          <Badge key={level.id}>
+            {level.label} {fmt(live.facets.levels[level.id] ?? 0)}
+          </Badge>
+        ))}
+        <Badge>Remote {fmt(live.facets.workplaces.remote ?? 0)}</Badge>
       </div>
       <div className="mt-5 space-y-3">
-        {[0, 1, 2, 3].map((row) => (
-          <div key={row} className="flex items-center gap-3 rounded-xl border border-line bg-surface-0 p-3">
-            <span className="size-9 shrink-0 rounded-full bg-surface-3" />
-            <div className="flex-1 space-y-2">
-              <Bar className="w-1/2" />
-              <Bar className="h-2 w-1/3 opacity-60" />
+        {live.fresherRoles.slice(0, 3).map((role) => (
+          <div key={role.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-0 p-3">
+            <CompanyBrandAvatar title={role.company} website={role.website} size={36} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-fg">{role.title}</p>
+              <p className="truncate text-xs text-fg-subtle">{[role.company, role.location].filter(Boolean).join(" · ")}</p>
             </div>
+            <Badge size="sm" variant="success">
+              Fresher
+            </Badge>
+          </div>
+        ))}
+      </div>
+    </Scene>,
+    <Scene key="match">
+      <div className="rounded-xl border border-line bg-surface-0 p-3">
+        <p className="text-xs font-medium text-fg-muted">Sample profile</p>
+        <p className="mt-1 text-sm font-semibold text-fg">{live.demoProfile.headline}</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {live.demoProfile.skills.map((skill) => (
+            <Badge key={skill} size="sm" variant="accent">
+              {skill}
+            </Badge>
+          ))}
+        </div>
+      </div>
+      <div className="mt-3 space-y-2">
+        {live.demoMatches.map((match) => (
+          <div key={match.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-0 p-3">
+            <CompanyBrandAvatar title={match.company} website={match.website} size={36} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-fg">{match.title}</p>
+              <p className="truncate text-xs text-fg-subtle">{match.note ?? match.company}</p>
+            </div>
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-soft text-sm font-semibold tabular-nums text-accent-text">
+              {match.score}
+            </span>
           </div>
         ))}
       </div>
     </Scene>,
     <Scene key="apply">
       <div className="space-y-3">
-        {[0, 1, 2].map((row) => (
-          <div key={row} className="flex items-center gap-3 rounded-xl border border-line bg-surface-0 p-3">
-            <div className="flex-1 space-y-2">
-              <Bar className="w-3/5" />
-              <Bar className="h-2 w-2/5 opacity-60" />
+        {live.demoMatches.slice(0, 3).map((match, row) => (
+          <div key={match.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-0 p-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-fg">{match.title}</p>
+              <p className="truncate text-xs text-fg-subtle">{[match.company, match.location].filter(Boolean).join(" · ")}</p>
             </div>
             {row === 0 ? (
               <span className={buttonVariants({ size: "sm" })}>
@@ -125,7 +163,7 @@ export function HowItWorks({ hubNames, hubCount, countryCount }: HowItWorksProps
                 <ArrowUpRightIcon className="size-3.5" />
               </span>
             ) : (
-              <Badge size="sm">{row === 1 ? "Remote" : "Hybrid"}</Badge>
+              <Badge size="sm">Company site</Badge>
             )}
           </div>
         ))}
@@ -139,11 +177,11 @@ export function HowItWorks({ hubNames, hubCount, countryCount }: HowItWorksProps
         <Reveal className="max-w-2xl">
           <p className="text-sm font-medium text-accent-text">How it works</p>
           <h2 className="mt-3 font-display text-[clamp(1.75rem,3.6vw,3rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-fg">
-            From hub to opportunity in three steps.
+            From hub to opportunity in four steps.
           </h2>
         </Reveal>
 
-        <div className="mt-14 grid gap-10 lg:grid-cols-2 lg:gap-24">
+        <div className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-24">
           <div className="relative hidden lg:block">
             <div className="sticky top-28 h-[26rem]">
               {scenes.map((scene, index) => (

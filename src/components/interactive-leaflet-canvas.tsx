@@ -824,8 +824,8 @@ function ClusteredMarkersLayer({
           const iconAnchor: [number, number] = [iconSize[0] / 2, iconSize[1] / 2];
 
           const label = topLoc ? escapeHtml(topLoc) : String(pointCount);
-          const labelSuffix = topLoc ? String(pointCount) : isTechAtlas ? "tech" : "cos";
-          const clusterHtml = `<div class="lg-cluster${tier === "sm" ? "" : ` lg-cluster--${tier}`}"><span>${label}</span><span class="lg-cluster__label">${labelSuffix}</span>${hasHiring ? '<span class="lg-cluster__hiring" title="Active hiring in cluster"></span>' : ""}</div>`;
+          const labelSuffix = topLoc ? String(pointCount) : "";
+          const clusterHtml = `<div class="lg-cluster${tier === "sm" ? "" : ` lg-cluster--${tier}`}"><span>${label}</span>${labelSuffix ? `<span class="lg-cluster__label">${labelSuffix}</span>` : ""}${hasHiring ? '<span class="lg-cluster__hiring" title="Active hiring in cluster"></span>' : ""}</div>`;
 
           const clusterIcon = L.divIcon({
             className: "lg-marker",

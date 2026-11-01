@@ -3,19 +3,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { PDFParse } from "pdf-parse";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { parseResumeExtraction, RESUME_EXTRACTION_PROMPT } from "@/lib/matching/resume-schema";
 
 const MAX_RESUME_SIZE = 5 * 1024 * 1024;
+const RESUME_MODELS = [process.env.GEMINI_RESUME_MODEL || "gemini-3.8-flash", "gemini-3.5-flash-lite"];
 const resumeSchema = z.object({ location: z.string().trim().min(1).max(120) });
-
-function skillsFromResponse(response: string): string[] {
-  try {
-    const parsed = JSON.parse(response.replace(/```json/g, "").replace(/```/g, "").trim());
-    if (Array.isArray(parsed)) return parsed.filter((skill): skill is string => typeof skill === "string");
-  } catch {
-    // Fall back to a comma-separated response when the model does not return JSON.
-  }
-  return response.replace(/[\[\]"]/g, "").split(",");
-}
 
 export async function POST(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
@@ -72,16 +64,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Resume matching is temporarily unavailable." }, { status: 503 });
     }
 
-    const model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY).getGenerativeModel({ model: "gemini-3.8-flash" });
-    const result = await model.generateContent(`Extract the 10 to 15 most prominent technical skills, tools, and programming languages from this resume. Return only a JSON array of strings. Resume:\n${resumeText.slice(0, 15000)}`);
-    const skills = Array.from(new Map(skillsFromResponse(result.response.text()).map((skill) => skill.trim()).filter(Boolean).slice(0, 15).map((skill) => [skill.toLocaleLowerCase(), skill] as const)).values());
+    const prompt = `${RESUME_EXTRACTION_PROMPT}\n\nResume:\n${resumeText.slice(0, 15000)}`;
+    const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    let responseText: string | null = null;
+    // The primary model sometimes returns 503 under load, so fall back to the lighter one before giving up.
+    for (const name of RESUME_MODELS) {
+      try {
+        responseText = (await client.getGenerativeModel({ model: name }).generateContent(prompt)).response.text();
+        break;
+      } catch (error) {
+        console.error(`Resume model ${name} failed:`, error instanceof Error ? error.message : error);
+      }
+    }
+    if (responseText === null) {
+      return NextResponse.json({ error: "Resume analysis is busy right now. Try again in a moment." }, { status: 503 });
+    }
+    const extraction = parseResumeExtraction(responseText);
+    const { skills } = extraction;
+    const now = new Date().toISOString();
 
     const { error: profileError } = await supabase.from("tech_profiles").upsert({
       id: user.id,
       preferred_location: parsedInput.data.location,
       resume_storage_path: filePath,
       skills,
-      updated_at: new Date().toISOString(),
+      headline: extraction.headline,
+      experience_level: extraction.level,
+      years_experience: extraction.yearsExperience,
+      education: extraction.education,
+      work_history: extraction.workHistory,
+      resume_parsed_at: now,
+      updated_at: now,
     });
     if (profileError) {
       console.error("Tech profile upsert error:", profileError);
@@ -89,7 +102,15 @@ export async function POST(request: NextRequest) {
     }
 
     uploadedPath = null;
-    return NextResponse.json({ success: true, skills, location: parsedInput.data.location, message: "Resume parsed successfully." });
+    return NextResponse.json({
+      success: true,
+      skills,
+      headline: extraction.headline,
+      level: extraction.level,
+      yearsExperience: extraction.yearsExperience,
+      location: parsedInput.data.location,
+      message: "Resume parsed successfully.",
+    });
   } catch (error) {
     console.error("Resume route error:", error);
     return NextResponse.json({ error: "Unable to process the resume right now." }, { status: 500 });

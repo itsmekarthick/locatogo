@@ -537,3 +537,21 @@ export const BellIcon = (props: IconProps) => (
     <path d="M6 16.500V11a6 6 0 0 1 12 0v5.500l1.500 2h-15L6 16.500zM10 20.500a2.200 2.200 0 0 0 4 0" />
   </Svg>
 );
+
+export const PauseIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M9 5.5v13M15 5.5v13" />
+  </Svg>
+);
+
+export const PlayIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M8 5.5v13l10.5-6.5L8 5.5z" />
+  </Svg>
+);
+
+export const SkipForwardIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M6 5.5v13l9-6.5-9-6.5zM18.5 5.5v13" />
+  </Svg>
+);

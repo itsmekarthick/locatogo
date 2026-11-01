@@ -4,17 +4,19 @@ import { redirect } from "next/navigation";
 import { AdminKpiCard } from "@/components/admin-kpi-card";
 import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
 import { ContentEnter } from "@/components/page-transition";
-import { ResumeOnboarding } from "@/components/resume-onboarding";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowLeftIcon, ArrowRightIcon, ArrowUpRightIcon, BriefcaseIcon, BuildingIcon, HeartIcon, MapPinIcon, PlusIcon, ShieldCheckIcon, UploadIcon } from "@/components/ui/icons";
 import { UserProfileMenu } from "@/components/user-profile-menu";
+import { loadMatchesData } from "@/lib/matching/load-matches";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DashboardShell, type DashboardViewDef } from "./dashboard-shell";
+import { MatchesExperience } from "./matches/matches-experience";
 import { ProfileEditor } from "./profile-editor";
 import { ProfileStrength, type StrengthItem } from "./profile-strength";
-import { RolesPanel, type DashboardRole } from "./roles-panel";
 
 export const metadata = {
   title: "My Dashboard | LocaToGo",
@@ -61,21 +63,9 @@ export default async function DashboardPage() {
   const skills: string[] = Array.isArray(techProfile?.skills)
     ? techProfile.skills.filter((skill): skill is string => typeof skill === "string")
     : [];
-  let jobs: any[] = [];
-  if (isTechUser && skills.length) {
-    const filters = skills.slice(0, 12).map((skill) => `title.ilike.%${skill}%,department.ilike.%${skill}%`).join(",");
-    let query = supabase
-      .from("company_jobs")
-      .select("id, title, department, location_name, workplace_type, apply_url, listings(title, slug, city, website)")
-      .eq("is_active", true)
-      .or(filters)
-      .limit(8);
-    if (techProfile?.preferred_location && techProfile.preferred_location !== "Remote") {
-      query = query.or(`location_name.ilike.%${techProfile.preferred_location}%,workplace_type.eq.remote`);
-    }
-    const { data } = await query;
-    jobs = data || [];
-  }
+  const matchesData = isTechUser ? await loadMatchesData(supabase, user.id) : null;
+  const matchItems = matchesData?.status === "ok" ? matchesData.items : [];
+  const topMatches = matchItems.slice(0, 3);
 
   let resumeUrl: string | null = null;
   if (techProfile?.resume_storage_path) {
@@ -92,34 +82,233 @@ export default async function DashboardPage() {
 
   const hasResume = Boolean(techProfile?.resume_storage_path);
   const strengthItems: StrengthItem[] = [
-    { label: "Bio added", done: Boolean(techProfile?.bio?.trim()), href: "#profile", hint: "Write a short bio" },
-    { label: "Skills listed", done: skills.length >= 3, href: "#profile", hint: "Add at least 3 skills" },
-    { label: "Preferred location set", done: Boolean(techProfile?.preferred_location?.trim()), href: "#profile", hint: "Set your preferred location" },
-    { label: "Professional link added", done: Boolean(techProfile?.github_url || techProfile?.linkedin_url || techProfile?.portfolio_url), href: "#profile", hint: "Link GitHub, LinkedIn or a portfolio" },
-    { label: "Resume uploaded", done: hasResume, href: "#resume", hint: "Upload your resume" },
+    { label: "Bio added", done: Boolean(techProfile?.bio?.trim()), href: "?view=profile", hint: "Write a short bio" },
+    { label: "Skills listed", done: skills.length >= 3, href: "?view=profile", hint: "Add at least 3 skills" },
+    { label: "Preferred location set", done: Boolean(techProfile?.preferred_location?.trim()), href: "?view=profile", hint: "Set your preferred location" },
+    { label: "Professional link added", done: Boolean(techProfile?.github_url || techProfile?.linkedin_url || techProfile?.portfolio_url), href: "?view=profile", hint: "Link GitHub, LinkedIn or a portfolio" },
+    { label: "Resume uploaded", done: hasResume, href: "?view=matches&step=upload", hint: "Upload your resume" },
   ];
 
-  const roles: DashboardRole[] = jobs.map((job) => {
-    const company = listing(job.listings as Listing | Listing[] | null);
-    const haystack = `${job.title ?? ""} ${job.department ?? ""}`.toLowerCase();
-    return {
-      id: String(job.id),
-      title: String(job.title),
-      company: company?.title || "Tech company",
-      slug: company?.slug || null,
-      website: company?.website || null,
-      location: job.location_name || company?.city || "Location not listed",
-      workplace: job.workplace_type ? String(job.workplace_type) : null,
-      applyUrl: job.apply_url || null,
-      matched: skills.filter((skill) => haystack.includes(skill.toLowerCase())).slice(0, 4),
-    };
-  });
-
   const subtitle = isTechUser
-    ? roles.length
-      ? `${roles.length} open ${roles.length === 1 ? "role matches" : "roles match"} your ${skills.slice(0, 2).join(" and ") || "profile"}${skills.length > 2 ? " skills" : ""}.`
-      : "Complete your profile to start receiving role matches."
+    ? matchItems.length
+      ? `${matchItems.length} open roles ranked for your profile, with a best fit of ${matchItems[0].score} out of 100.`
+      : "Upload your resume to start receiving role matches."
     : "Your saved companies and directory activity in one place.";
+
+  // Tech users switch between views in place; other accounts keep one page, so their links stay in-page anchors.
+  const savedHref = isTechUser ? "?view=activity" : "#saved";
+  const activityHref = isTechUser ? "?view=activity" : "#activity";
+
+  const kpis = (
+    <section aria-label="Your activity at a glance" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <AdminKpiCard index={1} title="Saved places" value={favorites?.length ?? 0} icon={<HeartIcon />} description="Companies you follow" tone="danger" sparklineData={weeklySeries(savedDates)} trend={monthlyDelta(savedDates)} href={savedHref} />
+      <AdminKpiCard index={2} title="Submissions" value={submissions?.length ?? 0} icon={<BuildingIcon />} description="Companies you suggested" tone="info" sparklineData={weeklySeries(submissionDates)} trend={monthlyDelta(submissionDates)} href={activityHref} />
+      <AdminKpiCard index={3} title="Claims" value={claims?.length ?? 0} icon={<ShieldCheckIcon />} description="Listings you claimed" tone="success" sparklineData={weeklySeries(claimDates)} trend={monthlyDelta(claimDates)} href={activityHref} />
+      {isTechUser && <AdminKpiCard index={4} title="Role matches" value={matchItems.length} icon={<BriefcaseIcon />} description="Ranked for your resume" tone="accent" href="?view=matches" />}
+    </section>
+  );
+
+  const matchesTeaser = (
+    <Panel>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <Eyebrow>Your matches</Eyebrow>
+          <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">{topMatches.length ? "Best fits for your resume" : "Find roles that fit your resume"}</h2>
+        </div>
+        <Link href="?view=matches" className="focus-ring inline-flex items-center gap-1 rounded text-sm font-medium text-accent-text hover:underline">
+          {topMatches.length ? "View all matches" : "Open matches"}
+          <ArrowRightIcon className="size-4" />
+        </Link>
+      </div>
+      {topMatches.length ? (
+        <ol role="list" className="mt-5 divide-y divide-line overflow-hidden rounded-xl border border-line">
+          {topMatches.map((match) => (
+            <li key={match.id} className="flex items-center gap-3 bg-surface-1 p-3.5">
+              <CompanyBrandAvatar title={match.company} website={match.website} size={40} />
+              <p className="min-w-0 flex-1 truncate text-sm">
+                <span className="font-medium">{match.title}</span> <span className="text-fg-subtle">at {match.company}</span>
+              </p>
+              <span className="shrink-0 text-sm font-medium tabular-nums">{match.score}</span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="mt-5 rounded-xl border border-dashed border-line-strong">
+          <EmptyState
+            className="py-8"
+            icon={<BriefcaseIcon />}
+            title="No matches yet"
+            description="Upload your resume and we will rank live openings in your preferred hub."
+            action={
+              <Link href="?view=matches&step=upload" className={buttonVariants()}>
+                Upload resume
+              </Link>
+            }
+          />
+        </div>
+      )}
+    </Panel>
+  );
+
+  const profileView = (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(19rem,0.8fr)]">
+      <Panel id="profile">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <Eyebrow>Professional profile</Eyebrow>
+            <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Show employers the work you do best.</h2>
+          </div>
+          <ProfileEditor
+            displayName={String(displayName)}
+            bio={techProfile?.bio || null}
+            skills={skills}
+            preferredLocation={techProfile?.preferred_location || null}
+            githubUrl={techProfile?.github_url || null}
+            linkedinUrl={techProfile?.linkedin_url || null}
+            portfolioUrl={techProfile?.portfolio_url || null}
+          />
+        </div>
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <div>
+            <p className="text-sm font-medium text-fg-muted">About</p>
+            <p className="mt-2 text-sm leading-6">{techProfile?.bio || <span className="text-fg-subtle">Add a concise bio so the right opportunities can find you.</span>}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-fg-muted">Top skills</p>
+            {skills.length ? (
+              <ul role="list" className="mt-2 flex flex-wrap gap-2">
+                {skills.map((skill) => (
+                  <li key={skill}>
+                    <Badge variant="accent">{skill}</Badge>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-fg-subtle">Add skills to improve your recommendations.</p>
+            )}
+          </div>
+        </div>
+      </Panel>
+
+      <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">
+        <Panel>
+          <p className="text-sm font-medium text-fg-muted">Professional links</p>
+          <div className="mt-4 space-y-3 text-sm">
+            <ProfileLink label="GitHub" href={techProfile?.github_url || null} />
+            <ProfileLink label="LinkedIn" href={techProfile?.linkedin_url || null} />
+            <ProfileLink label="Portfolio" href={techProfile?.portfolio_url || null} />
+            <ProfileLink label="Resume" href={resumeUrl} unavailable="Not uploaded" />
+          </div>
+        </Panel>
+      </aside>
+    </div>
+  );
+
+  const savedPanel = (
+    <Panel id="saved">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <Eyebrow>Saved companies</Eyebrow>
+          <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Your shortlist</h2>
+        </div>
+        <Badge>{(favorites?.length ?? 0).toLocaleString("en-US")}</Badge>
+      </div>
+
+      {favorites?.length ? (
+        <ul role="list" className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {favorites.map((item) => {
+            const company = listing(item.listings as Listing | Listing[] | null);
+            const place = [company?.locality, company?.city].filter(Boolean).join(", ");
+            const card = (
+              <>
+                <CompanyBrandAvatar title={company?.title || "Saved listing"} website={company?.website} size={44} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{company?.title || "Saved listing"}</span>
+                  <span className="block truncate text-xs text-fg-subtle">{place || "Location not listed"}</span>
+                  <span className="mt-0.5 block text-xs text-fg-subtle">Saved {date(item.created_at)}</span>
+                </span>
+                <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 motion-safe:group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
+              </>
+            );
+            return (
+              <li key={item.id}>
+                {company?.slug ? (
+                  <Link href={`/listing/${company.slug}`} className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 lift hover:border-line-strong hover:bg-surface-3/50">
+                    {card}
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5">{card}</div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="mt-6 rounded-xl border border-dashed border-line-strong">
+          <EmptyState
+            className="py-10"
+            icon={<HeartIcon />}
+            title="Nothing saved yet"
+            description="Save a company from the Tech Atlas to find it here."
+            action={
+              <Link href="/map" className={buttonVariants({ variant: "secondary" })}>
+                Explore the atlas
+              </Link>
+            }
+          />
+        </div>
+      )}
+    </Panel>
+  );
+
+  const activityPanels = (
+    <section id="activity" className="grid scroll-mt-24 grid-cols-1 gap-6 lg:grid-cols-2">
+      <Activity title="My submissions" count={submissions?.length || 0} empty="You have not submitted a company yet." action={{ href: "/submit", label: "Suggest a company" }}>
+        {submissions?.map((item) => {
+          const payload = item.payload_json as { name?: string; locality?: string; city?: string } | null;
+          return <ActivityItem key={item.id} title={payload?.name || "Company submission"} detail={[payload?.locality, payload?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} />;
+        })}
+      </Activity>
+      <Activity title="My claims" count={claims?.length || 0} empty="You have not claimed a listing yet.">
+        {claims?.map((item) => {
+          const company = listing(item.listings as Listing | Listing[] | null);
+          return <ActivityItem key={item.id} title={company?.title || "Listing claim"} detail={[company?.locality, company?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} href={company?.slug ? `/listing/${company.slug}` : undefined} />;
+        })}
+      </Activity>
+    </section>
+  );
+
+  const views: DashboardViewDef[] = isTechUser
+    ? [
+        {
+          id: "overview",
+          label: "Overview",
+          content: (
+            <div className="space-y-6">
+              {kpis}
+              {matchesTeaser}
+            </div>
+          ),
+        },
+        {
+          id: "matches",
+          label: "Matches",
+          badge: matchItems.length,
+          content: matchesData && <MatchesExperience data={matchesData} defaultLocation={techProfile?.preferred_location || null} />,
+        },
+        { id: "profile", label: "Profile", content: profileView },
+        {
+          id: "activity",
+          label: "Activity",
+          content: (
+            <div className="space-y-6">
+              {savedPanel}
+              {activityPanels}
+            </div>
+          ),
+        },
+      ]
+    : [];
 
   return (
     <ContentEnter><div className="min-h-dvh bg-surface-0 text-fg">
@@ -129,7 +318,10 @@ export default async function DashboardPage() {
             <ArrowLeftIcon className="size-4" />
             Back to Tech Atlas
           </Link>
-          <UserProfileMenu />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserProfileMenu />
+          </div>
         </div>
 
         <section className="adm-rise relative overflow-hidden rounded-3xl border border-line bg-linear-to-br from-accent-soft via-surface-1 to-surface-1 p-6 elev-sm sm:p-8">
@@ -177,7 +369,7 @@ export default async function DashboardPage() {
                   Suggest a company
                 </Link>
                 {isTechUser && (
-                  <Link href="#resume" className={buttonVariants({ variant: "ghost", size: "lg" })}>
+                  <Link href="?view=matches&step=upload" className={buttonVariants({ variant: "ghost", size: "lg" })}>
                     <UploadIcon className="size-4" />
                     {hasResume ? "Update resume" : "Upload resume"}
                   </Link>
@@ -193,159 +385,15 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section aria-label="Your activity at a glance" className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <AdminKpiCard index={1} title="Saved places" value={favorites?.length ?? 0} icon={<HeartIcon />} description="Companies you follow" tone="danger" sparklineData={weeklySeries(savedDates)} trend={monthlyDelta(savedDates)} href="#saved" />
-          <AdminKpiCard index={2} title="Submissions" value={submissions?.length ?? 0} icon={<BuildingIcon />} description="Companies you suggested" tone="info" sparklineData={weeklySeries(submissionDates)} trend={monthlyDelta(submissionDates)} href="#activity" />
-          <AdminKpiCard index={3} title="Claims" value={claims?.length ?? 0} icon={<ShieldCheckIcon />} description="Listings you claimed" tone="success" sparklineData={weeklySeries(claimDates)} trend={monthlyDelta(claimDates)} href="#activity" />
-          {isTechUser && <AdminKpiCard index={4} title="Role matches" value={roles.length} icon={<BriefcaseIcon />} description="Open roles for your skills" tone="accent" href="#matches" />}
-        </section>
-
-        {isTechUser && (
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(19rem,0.8fr)]">
-            <div className="min-w-0 space-y-6">
-              <Panel id="profile">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <Eyebrow>Professional profile</Eyebrow>
-                    <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Show employers the work you do best.</h2>
-                  </div>
-                  <ProfileEditor
-                    displayName={String(displayName)}
-                    bio={techProfile?.bio || null}
-                    skills={skills}
-                    preferredLocation={techProfile?.preferred_location || null}
-                    githubUrl={techProfile?.github_url || null}
-                    linkedinUrl={techProfile?.linkedin_url || null}
-                    portfolioUrl={techProfile?.portfolio_url || null}
-                  />
-                </div>
-                <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <p className="text-sm font-medium text-fg-muted">About</p>
-                    <p className="mt-2 text-sm leading-6">{techProfile?.bio || <span className="text-fg-subtle">Add a concise bio so the right opportunities can find you.</span>}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-fg-muted">Top skills</p>
-                    {skills.length ? (
-                      <ul role="list" className="mt-2 flex flex-wrap gap-2">
-                        {skills.map((skill) => (
-                          <li key={skill}>
-                            <Badge variant="accent">{skill}</Badge>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-2 text-sm text-fg-subtle">Add skills to improve your recommendations.</p>
-                    )}
-                  </div>
-                </div>
-              </Panel>
-
-              <Panel id="matches">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div>
-                    <Eyebrow>Your matches</Eyebrow>
-                    <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Roles aligned with your stack</h2>
-                    <p className="mt-1 text-sm text-fg-muted">{skills.length ? `Matching ${skills.slice(0, 4).join(", ")}.` : "Upload a resume or add skills to receive matches."}</p>
-                  </div>
-                  <Link href="/map" className="focus-ring rounded text-sm font-medium text-accent-text hover:underline">
-                    Browse the atlas
-                  </Link>
-                </div>
-                {roles.length ? (
-                  <RolesPanel roles={roles} />
-                ) : (
-                  <div className="mt-6 rounded-xl border border-dashed border-line-strong">
-                    <EmptyState className="py-8" icon={<BriefcaseIcon />} title="No matching roles yet" description="Add your skills or upload a current resume to personalize this section." />
-                  </div>
-                )}
-              </Panel>
-            </div>
-
-            <aside className="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
-              <Panel>
-                <p className="text-sm font-medium text-fg-muted">Professional links</p>
-                <div className="mt-4 space-y-3 text-sm">
-                  <ProfileLink label="GitHub" href={techProfile?.github_url || null} />
-                  <ProfileLink label="LinkedIn" href={techProfile?.linkedin_url || null} />
-                  <ProfileLink label="Portfolio" href={techProfile?.portfolio_url || null} />
-                  <ProfileLink label="Resume" href={resumeUrl} unavailable="Upload a PDF below" />
-                </div>
-              </Panel>
-              <ResumeOnboarding hasResume={hasResume} />
-            </aside>
+        {isTechUser ? (
+          <DashboardShell views={views} />
+        ) : (
+          <div className="mt-6 space-y-6">
+            {kpis}
+            {savedPanel}
+            {activityPanels}
           </div>
         )}
-
-        <Panel className="mt-6" id="saved">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <Eyebrow>Saved companies</Eyebrow>
-              <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">Your shortlist</h2>
-            </div>
-            <Badge>{(favorites?.length ?? 0).toLocaleString("en-US")}</Badge>
-          </div>
-
-          {favorites?.length ? (
-            <ul role="list" className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {favorites.map((item) => {
-                const company = listing(item.listings as Listing | Listing[] | null);
-                const place = [company?.locality, company?.city].filter(Boolean).join(", ");
-                const card = (
-                  <>
-                    <CompanyBrandAvatar title={company?.title || "Saved listing"} website={company?.website} size={44} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{company?.title || "Saved listing"}</span>
-                      <span className="block truncate text-xs text-fg-subtle">{place || "Location not listed"}</span>
-                      <span className="mt-0.5 block text-xs text-fg-subtle">Saved {date(item.created_at)}</span>
-                    </span>
-                    <ArrowUpRightIcon className="size-4 shrink-0 text-fg-subtle transition-transform duration-200 motion-safe:group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-fg" />
-                  </>
-                );
-                return (
-                  <li key={item.id}>
-                    {company?.slug ? (
-                      <Link href={`/listing/${company.slug}`} className="focus-ring group flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5 lift hover:border-line-strong hover:bg-surface-3/50">
-                        {card}
-                      </Link>
-                    ) : (
-                      <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-3.5">{card}</div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <div className="mt-6 rounded-xl border border-dashed border-line-strong">
-              <EmptyState
-                className="py-10"
-                icon={<HeartIcon />}
-                title="Nothing saved yet"
-                description="Save a company from the Tech Atlas to find it here."
-                action={
-                  <Link href="/map" className={buttonVariants({ variant: "secondary" })}>
-                    Explore the atlas
-                  </Link>
-                }
-              />
-            </div>
-          )}
-        </Panel>
-
-        <section id="activity" className="mt-6 grid scroll-mt-24 grid-cols-1 gap-6 lg:grid-cols-2">
-          <Activity title="My submissions" count={submissions?.length || 0} empty="You have not submitted a company yet." action={{ href: "/submit", label: "Suggest a company" }}>
-            {submissions?.map((item) => {
-              const payload = item.payload_json as { name?: string; locality?: string; city?: string } | null;
-              return <ActivityItem key={item.id} title={payload?.name || "Company submission"} detail={[payload?.locality, payload?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} />;
-            })}
-          </Activity>
-          <Activity title="My claims" count={claims?.length || 0} empty="You have not claimed a listing yet.">
-            {claims?.map((item) => {
-              const company = listing(item.listings as Listing | Listing[] | null);
-              return <ActivityItem key={item.id} title={company?.title || "Listing claim"} detail={[company?.locality, company?.city, date(item.submitted_at)].filter(Boolean).join(" · ")} status={item.status} href={company?.slug ? `/listing/${company.slug}` : undefined} />;
-            })}
-          </Activity>
-        </section>
       </div>
     </div></ContentEnter>
   );

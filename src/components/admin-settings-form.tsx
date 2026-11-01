@@ -1,7 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { updateTenantSettings } from "@/app/admin/actions";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { AlertCircleIcon, LogOutIcon } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { useToast } from "@/components/ui/toast";
 
 type Props = {
   tenant: { id: string; name: string; slug: string; status: string };
@@ -28,9 +35,40 @@ const currencyOptions = [
   { code: "JPY", label: "Japanese Yen (¥)" },
 ];
 
+function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-line bg-surface-1 p-5 elev-sm sm:p-6">
+      <h2 className="font-display text-lg font-semibold tracking-tight text-fg">{title}</h2>
+      {description && <p className="mt-1 text-sm text-fg-muted">{description}</p>}
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+function ColorField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder: string }) {
+  return (
+    <Input
+      label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="font-mono"
+      trailing={
+        <input
+          type="color"
+          aria-label={`${label} picker`}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="focus-ring size-7 cursor-pointer rounded-md border border-line-strong bg-surface-1 p-0.5"
+        />
+      }
+    />
+  );
+}
+
 export function SettingsForm({ tenant, membership, userEmail, userId, logoutAction }: Props) {
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Editable fields
@@ -45,7 +83,6 @@ export function SettingsForm({ tenant, membership, userEmail, userId, logoutActi
 
   function handleSave() {
     setError(null);
-    setSaved(false);
     startTransition(async () => {
       try {
         const formData = new FormData();
@@ -58,8 +95,7 @@ export function SettingsForm({ tenant, membership, userEmail, userId, logoutActi
         formData.set("defaultLng", defaultLng);
         formData.set("defaultZoom", defaultZoom);
         await updateTenantSettings(formData);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        toast({ title: "Settings saved", variant: "success" });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to save settings.");
       }
@@ -67,259 +103,124 @@ export function SettingsForm({ tenant, membership, userEmail, userId, logoutActi
   }
 
   return (
-    <div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--coral)]">Workspace</p>
-        <h1 className="mt-2 font-display text-4xl font-bold tracking-[-0.06em]">Settings</h1>
-        <p className="mt-3 text-sm text-[var(--ink-muted)]">Manage your workspace details, branding, and account settings.</p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <AdminPageHeader eyebrow="Workspace" title="Settings" description="Manage your workspace details, branding, and account settings." />
 
-      {/* Success/Error banners */}
-      {saved && (
-        <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-700 flex items-center gap-2">
-          <span>✅</span> Settings saved successfully!
-        </div>
-      )}
       {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-xs font-semibold text-red-700 flex items-center gap-2">
-          <span>❌</span> {error}
-        </div>
+        <p role="alert" className="flex items-start gap-2 rounded-xl bg-danger-soft p-3 text-sm text-danger">
+          <AlertCircleIcon className="mt-0.5 size-4 shrink-0" />
+          {error}
+        </p>
       )}
 
-      <div className="mt-8 grid gap-6 max-w-3xl">
-        {/* Workspace Details */}
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6">
-          <h2 className="font-display text-xl font-bold">Workspace Details</h2>
-          <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Core workspace identity and configuration</p>
+      <div className="grid gap-6">
+        <Section title="Workspace details" description="Core workspace identity and configuration">
+          <div className="space-y-5">
+            <Input label="Workspace name" value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} placeholder="My directory" />
 
-          <div className="mt-5 space-y-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                Workspace Name
-              </label>
-              <input
-                value={workspaceName}
-                onChange={(e) => setWorkspaceName(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm focus:border-[var(--foreground)] focus:outline-none transition-colors"
-                placeholder="My Directory"
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
+            <dl className="grid gap-5 sm:grid-cols-3">
               <div>
-                <label className="block text-xs font-medium text-[var(--ink-muted)]">Slug</label>
-                <p className="mt-1.5 rounded-xl bg-[var(--background)] px-4 py-2.5 text-sm font-mono text-[var(--ink-muted)]">
-                  {tenant.slug}
-                </p>
+                <dt className="text-sm text-fg-muted">Slug</dt>
+                <dd className="mt-1.5 font-mono text-sm">{tenant.slug}</dd>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--ink-muted)]">Status</label>
-                <p className="mt-1.5">
-                  <span className="rounded-full bg-[var(--leaf)] px-3 py-1 text-xs font-semibold text-[var(--leaf-dark)] capitalize">
+                <dt className="text-sm text-fg-muted">Status</dt>
+                <dd className="mt-1.5">
+                  <Badge variant={tenant.status === "active" ? "success" : "warning"} dot className="capitalize">
                     {tenant.status}
-                  </span>
-                </p>
+                  </Badge>
+                </dd>
               </div>
+              <div>
+                <dt className="text-sm text-fg-muted">Your role</dt>
+                <dd className="mt-1.5 text-sm font-medium capitalize">{membership.role?.replace(/_/g, " ")}</dd>
+              </div>
+            </dl>
+          </div>
+        </Section>
+
+        <Section title="Branding" description="Customize your directory's visual identity">
+          <div className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <ColorField label="Primary color" value={primaryColor} onChange={setPrimaryColor} placeholder="#0ea5e9" />
+              <ColorField label="Secondary color" value={secondaryColor} onChange={setSecondaryColor} placeholder="#1b5e20" />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-[var(--ink-muted)]">Your Role</label>
-              <p className="mt-1.5 text-sm font-semibold capitalize">{membership.role?.replace("_", " ")}</p>
+            <div className="flex flex-wrap items-center gap-3" aria-label="Color preview">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-line px-3 py-2 text-sm">
+                <span className="size-4 rounded-full border border-line-strong" style={{ backgroundColor: primaryColor }} />
+                Primary
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-xl border border-line px-3 py-2 text-sm">
+                <span className="size-4 rounded-full border border-line-strong" style={{ backgroundColor: secondaryColor }} />
+                Secondary
+              </span>
+              <span className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium text-white" style={{ backgroundColor: primaryColor }}>
+                Sample button
+              </span>
             </div>
           </div>
-        </section>
+        </Section>
 
-        {/* Branding */}
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6">
-          <h2 className="font-display text-xl font-bold">Branding</h2>
-          <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Customize your directory&apos;s visual identity</p>
-
-          <div className="mt-5 space-y-4">
+        <Section title="Directory defaults" description="Default settings for new directories and listings">
+          <div className="space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                  Primary Color
-                </label>
-                <div className="mt-1.5 flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="h-10 w-14 cursor-pointer rounded-lg border border-[var(--line)]"
-                  />
-                  <input
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    className="flex-1 rounded-xl border border-[var(--line)] bg-transparent px-3 py-2 text-sm font-mono focus:outline-none"
-                    placeholder="#0ea5e9"
-                  />
-                </div>
-              </div>
+              <Select label="Default timezone" value={defaultTimezone} onChange={(e) => setDefaultTimezone(e.target.value)}>
+                {timezoneOptions.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz}
+                  </option>
+                ))}
+              </Select>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                  Secondary Color
-                </label>
-                <div className="mt-1.5 flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    className="h-10 w-14 cursor-pointer rounded-lg border border-[var(--line)]"
-                  />
-                  <input
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    className="flex-1 rounded-xl border border-[var(--line)] bg-transparent px-3 py-2 text-sm font-mono focus:outline-none"
-                    placeholder="#1b5e20"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Color preview */}
-            <div className="flex gap-3">
-              <div className="flex items-center gap-2 rounded-xl border border-[var(--line)] px-4 py-2.5">
-                <div className="h-5 w-5 rounded-full shadow-inner" style={{ backgroundColor: primaryColor }} />
-                <span className="text-xs font-medium">Primary</span>
-              </div>
-              <div className="flex items-center gap-2 rounded-xl border border-[var(--line)] px-4 py-2.5">
-                <div className="h-5 w-5 rounded-full shadow-inner" style={{ backgroundColor: secondaryColor }} />
-                <span className="text-xs font-medium">Secondary</span>
-              </div>
-              <div
-                className="flex-1 rounded-xl px-4 py-2.5 text-xs font-bold text-white text-center"
-                style={{ background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})` }}
-              >
-                Gradient Preview
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Directory Defaults */}
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6">
-          <h2 className="font-display text-xl font-bold">Directory Defaults</h2>
-          <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Default settings for new directories and listings</p>
-
-          <div className="mt-5 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                  Default Timezone
-                </label>
-                <select
-                  value={defaultTimezone}
-                  onChange={(e) => setDefaultTimezone(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-sm focus:outline-none"
-                >
-                  {timezoneOptions.map((tz) => (
-                    <option key={tz} value={tz}>{tz}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                  Default Currency
-                </label>
-                <select
-                  value={defaultCurrency}
-                  onChange={(e) => setDefaultCurrency(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-[var(--background)] px-4 py-2.5 text-sm focus:outline-none"
-                >
-                  {currencyOptions.map((c) => (
-                    <option key={c.code} value={c.code}>{c.label}</option>
-                  ))}
-                </select>
-              </div>
+              <Select label="Default currency" value={defaultCurrency} onChange={(e) => setDefaultCurrency(e.target.value)}>
+                {currencyOptions.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.label}
+                  </option>
+                ))}
+              </Select>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                  Default Map Latitude
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={defaultLat}
-                  onChange={(e) => setDefaultLat(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm font-mono focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                  Default Map Longitude
-                </label>
-                <input
-                  type="number"
-                  step="any"
-                  value={defaultLng}
-                  onChange={(e) => setDefaultLng(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm font-mono focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                  Default Map Zoom
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={defaultZoom}
-                  onChange={(e) => setDefaultZoom(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-transparent px-4 py-2.5 text-sm font-mono focus:outline-none"
-                />
-              </div>
+              <Input label="Map latitude" type="number" step="any" inputMode="decimal" value={defaultLat} onChange={(e) => setDefaultLat(e.target.value)} className="font-mono" />
+              <Input label="Map longitude" type="number" step="any" inputMode="decimal" value={defaultLng} onChange={(e) => setDefaultLng(e.target.value)} className="font-mono" />
+              <Input label="Map zoom" type="number" min="1" max="20" value={defaultZoom} onChange={(e) => setDefaultZoom(e.target.value)} className="font-mono" />
             </div>
           </div>
-        </section>
+        </Section>
 
-        {/* Save Button */}
         <div className="flex justify-end">
-          <button
-            onClick={handleSave}
-            disabled={isPending}
-            className="rounded-full bg-[var(--foreground)] px-8 py-3 text-xs font-bold uppercase tracking-wider text-[var(--paper)] shadow-md hover:bg-[var(--foreground)]/90 transition-ui disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isPending ? "Saving..." : "Save Settings"}
-          </button>
+          <Button onClick={handleSave} loading={isPending} size="lg">
+            Save settings
+          </Button>
         </div>
 
-        {/* Account */}
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--paper)] p-6">
-          <h2 className="font-display text-xl font-bold">Account</h2>
-          <div className="mt-4 space-y-3 text-sm">
-            <div className="flex justify-between border-b border-[var(--line)] py-2.5">
-              <span className="text-[var(--ink-muted)]">Signed in as</span>
-              <span className="font-semibold">{userEmail}</span>
+        <Section title="Account">
+          <dl className="divide-y divide-line text-sm">
+            <div className="flex flex-wrap justify-between gap-2 pb-3">
+              <dt className="text-fg-muted">Signed in as</dt>
+              <dd className="font-medium">{userEmail}</dd>
             </div>
-            <div className="flex justify-between border-b border-[var(--line)] py-2.5">
-              <span className="text-[var(--ink-muted)]">User ID</span>
-              <span className="font-mono text-xs text-[var(--ink-muted)]">{userId}</span>
+            <div className="flex flex-wrap justify-between gap-2 pt-3">
+              <dt className="text-fg-muted">User ID</dt>
+              <dd className="break-all font-mono text-xs text-fg-subtle">{userId}</dd>
             </div>
-          </div>
+          </dl>
           <form action={logoutAction} className="mt-6">
-            <button className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--coral)] hover:bg-[var(--coral)]/10 transition-colors">
+            <Button type="submit" variant="secondary" leadingIcon={<LogOutIcon className="size-4" />}>
               Sign out
-            </button>
+            </Button>
           </form>
-        </section>
+        </Section>
 
-        {/* Danger Zone */}
-        <section className="rounded-2xl border border-red-200 bg-red-50/50 p-6">
-          <h2 className="font-display text-xl font-bold text-red-700">Danger Zone</h2>
-          <p className="mt-1 text-[11px] text-red-600/70">Irreversible actions. Proceed with caution.</p>
+        <section className="rounded-2xl border border-danger/30 bg-danger-soft p-5 sm:p-6">
+          <h2 className="font-display text-lg font-semibold tracking-tight text-danger">Danger zone</h2>
+          <p className="mt-1 text-sm text-fg-muted">Irreversible actions. Proceed with caution.</p>
           <div className="mt-4">
-            <button
-              className="rounded-full border border-red-300 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors"
-              disabled
-              title="Contact support to archive this workspace"
-            >
-              Archive Workspace (contact support)
-            </button>
+            <Button variant="secondary" disabled title="Contact support to archive this workspace" className="text-danger">
+              Archive workspace (contact support)
+            </Button>
           </div>
         </section>
       </div>

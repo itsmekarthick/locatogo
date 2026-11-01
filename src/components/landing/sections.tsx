@@ -229,16 +229,16 @@ export function CtaBand() {
             ?
           </h2>
           <p className="mx-auto mt-5 max-w-[52ch] text-base text-fg-muted sm:text-lg">
-            Start with a city, sector or company and follow the signal from discovery to a live opportunity.
+            Start with a city, sector or company, or add your resume and let the atlas rank the roles that fit you.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <a href={APP_URL} className={buttonVariants({ size: "lg" })}>
               Explore Tech Atlas
               <ArrowRightIcon className="size-4" />
             </a>
-            <Link href="/auth/signup" className={buttonVariants({ variant: "secondary", size: "lg" })}>
-              Add a company
-            </Link>
+            <a href={`${APP_URL}/matches`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
+              Match my resume
+            </a>
           </div>
         </div>
       </Reveal>

@@ -1,13 +1,13 @@
 "use client";
 
 import { useRef, type CSSProperties } from "react";
-import Link from "next/link";
 import { Badge, buttonVariants } from "@/components/ui";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { CommandSearch, type SearchHub } from "@/components/landing/command-search";
-import { HeroPreview, type PreviewCompany, type PreviewHub } from "@/components/landing/hero-preview";
+import { HeroPreview } from "@/components/landing/hero-preview";
 import { useInView } from "@/components/landing/use-in-view";
 import { APP_URL } from "@/lib/constants/app-url";
+import type { LandingLive } from "@/lib/landing/data";
 
 const TRENDING = ["AI startups", "SaaS companies", "GCCs", "Fintech", "Remote jobs", "Bengaluru"];
 
@@ -18,8 +18,7 @@ type LandingHeroProps = {
   hubs: SearchHub[];
   popularHubs: SearchHub[];
   examples: string[];
-  previewCompanies: PreviewCompany[];
-  previewHubs: PreviewHub[];
+  live: LandingLive;
   hubCount: number;
   countryCount: number;
 };
@@ -29,8 +28,7 @@ export function LandingHero({
   hubs,
   popularHubs,
   examples,
-  previewCompanies,
-  previewHubs,
+  live,
   hubCount,
   countryCount,
 }: LandingHeroProps) {
@@ -70,8 +68,8 @@ export function LandingHero({
         </h1>
 
         <p className="lp-rise mx-auto mt-[clamp(0.75rem,2.2vh,1.5rem)] max-w-[60ch] text-base text-fg-muted sm:text-lg" style={rise(2)}>
-          Explore technology companies, startups, AI labs and MNC GCCs across the world&apos;s innovation hubs, then
-          follow the signal to a live role.
+          Explore technology companies, startups, AI labs and MNC GCCs across the world&apos;s innovation hubs. Add your
+          resume and see which live roles fit you best, and why.
         </p>
 
         <div className="lp-rise relative z-20 mx-auto mt-[clamp(1.25rem,3.5vh,2.25rem)] max-w-2xl" style={rise(3)}>
@@ -95,18 +93,13 @@ export function LandingHero({
             Explore Tech Atlas
             <ArrowRightIcon className="size-4" />
           </a>
-          <Link href="/submit" className={buttonVariants({ variant: "secondary", size: "lg" })}>
-            Add a company
-          </Link>
+          <a href={`${APP_URL}/matches`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
+            Match my resume
+          </a>
         </div>
 
         <div className="lp-rise mt-10 sm:mt-12" style={rise(6)}>
-          <HeroPreview
-            companies={previewCompanies}
-            hubs={previewHubs}
-            hubCount={hubCount}
-            countryCount={countryCount}
-          />
+          <HeroPreview live={live} hubCount={hubCount} countryCount={countryCount} />
         </div>
       </div>
     </section>

@@ -232,6 +232,7 @@ export function CompanyBrandAvatar({
         width={size - 8}
         height={size - 8}
         loading="lazy"
+        decoding="async"
         className="h-full w-full object-contain rounded-lg"
         onError={() => setSourceIndex((prev) => prev + 1)}
       />

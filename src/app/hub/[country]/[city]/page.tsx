@@ -137,7 +137,7 @@ export default async function HubPage({ params, searchParams }: Props) {
       .limit(1000),
     supabase
       .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active, role_category, role_level, is_fresher")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .limit(10000),
@@ -183,6 +183,9 @@ export default async function HubPage({ params, searchParams }: Props) {
       location_name: j.location_name,
       workplace_type: j.workplace_type,
       experience_level: j.experience_level,
+      role_category: j.role_category ?? null,
+      role_level: j.role_level ?? null,
+      is_fresher: Boolean(j.is_fresher),
       salary_range: j.salary_range,
       apply_url: j.apply_url,
       company_careers_url: matchedComp?.careers_url || null,

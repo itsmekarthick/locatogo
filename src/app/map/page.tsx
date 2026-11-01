@@ -133,28 +133,28 @@ export default async function Home({ searchParams }: Props) {
       .not("company_type", "is", null),
     supabase
       .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active, role_category, role_level, is_fresher")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
       .range(0, 999),
     supabase
       .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active, role_category, role_level, is_fresher")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
       .range(1000, 1999),
     supabase
       .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active, role_category, role_level, is_fresher")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
       .range(2000, 2999),
     supabase
       .from("company_jobs")
-      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active")
+      .select("id, listing_id, title, department, location_name, workplace_type, experience_level, salary_range, apply_url, posted_at, is_active, role_category, role_level, is_fresher")
       .eq("is_active", true)
       .order("posted_at", { ascending: false })
       .order("id", { ascending: true })
@@ -314,6 +314,9 @@ export default async function Home({ searchParams }: Props) {
       location_name: j.location_name || "Remote",
       workplace_type: (j.workplace_type || "hybrid") as "on_site" | "hybrid" | "remote",
       experience_level: j.experience_level || "mid",
+      role_category: j.role_category ?? null,
+      role_level: j.role_level ?? null,
+      is_fresher: Boolean(j.is_fresher),
       salary_range: j.salary_range,
       apply_url: j.apply_url,
       company_careers_url: comp?.careers_url || comp?.website || null,

@@ -236,8 +236,8 @@ export function UserProfileMenu({ className = "", hasWorkspace = false }: { clas
                 ) : isTechUser ? (
                   <>
                     <MenuLink href="/dashboard" icon={<BriefcaseIcon />} label="Tech dashboard" description="Your profile, skills and activity" onSelect={close} />
-                    <MenuLink href="/dashboard#matches" icon={<SparklesIcon />} label="Role matches" description="Open roles for your skills" onSelect={close} />
-                    <MenuLink href="/dashboard#saved" icon={<HeartIcon />} label="Saved companies" description="Your shortlist" onSelect={close} />
+                    <MenuLink href="/dashboard?view=matches" icon={<SparklesIcon />} label="Role matches" description="Ranked for your resume" onSelect={close} />
+                    <MenuLink href="/dashboard?view=activity" icon={<HeartIcon />} label="Saved companies" description="Your shortlist" onSelect={close} />
                     <MenuLink href="/submit" icon={<PlusIcon />} label="Suggest a company" onSelect={close} />
                   </>
                 ) : (

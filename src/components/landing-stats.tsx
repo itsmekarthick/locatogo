@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { CompanyBrandAvatar } from "@/components/company-brand-avatar";
+import { WorldDots } from "@/components/landing/world-dots";
 import { Badge, buttonVariants } from "@/components/ui";
 import {
   ArrowUpRightIcon,
-  BriefcaseIcon,
   BuildingIcon,
   GlobeIcon,
   LinkIcon,
@@ -13,20 +14,24 @@ import {
 import { CountUp } from "@/components/ui/count-up";
 import { Reveal } from "@/components/landing/reveal";
 import { SpotlightCard } from "@/components/landing/spotlight-card";
+import { APP_URL } from "@/lib/constants/app-url";
+import { LEVELS, ROLE_CATEGORIES } from "@/lib/jobs/taxonomy";
+import type { HubTour, LandingLive } from "@/lib/landing/data";
+import { MAP_H, MAP_W, projectToMap } from "@/lib/landing/map";
 
 type StatsProps = {
   companies: number | null;
   roles: number | null;
-  hubs: number;
-  countries: number;
+  freshers: number | null;
+  weekRoles: number | null;
 };
 
-export function LandingStats({ companies, roles, hubs, countries }: StatsProps) {
+export function LandingStats({ companies, roles, freshers, weekRoles }: StatsProps) {
   const stats = [
     { label: "Tech companies", value: companies, desc: "Startups, scaleups and global teams" },
     { label: "Live roles", value: roles, desc: "Linked to company career pages" },
-    { label: "Tech hubs", value: hubs, desc: "Technology clusters around the world" },
-    { label: "Countries", value: countries, desc: "Each with a leading hub to start from" },
+    { label: "Open to freshers", value: freshers, desc: "Internships and entry-level roles, read from the title" },
+    { label: "Posted this week", value: weekRoles, desc: "New openings since the last seven days" },
   ];
 
   return (
@@ -67,81 +72,124 @@ function Bar({ className, width }: { className?: string; width?: number }) {
   );
 }
 
-const PINS = [
-  { left: "18%", top: "38%" },
-  { left: "34%", top: "62%" },
-  { left: "52%", top: "30%" },
-  { left: "63%", top: "58%" },
-  { left: "78%", top: "36%" },
-  { left: "88%", top: "66%" },
-];
+const fmt = (value: number) => value.toLocaleString("en-US");
+const LABEL_LEFT = ["london", "bengaluru"];
 
-export function LandingFeatures() {
+/** The same dotted continents as the hero, with the hubs sized by their open roles. Static: nothing animates here. */
+function HubMap({ tours }: { tours: HubTour[] }) {
+  const maxRoles = Math.max(1, ...tours.map((hub) => hub.roles));
+  return (
+    <div aria-hidden="true" className="relative h-44 overflow-hidden rounded-2xl border border-line bg-surface-0">
+      <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full">
+        <WorldDots />
+        {tours.map((hub) => {
+          const { x, y } = projectToMap(hub.lat, hub.lng);
+          const radius = 2.8 + 3.4 * Math.sqrt(hub.roles / maxRoles);
+          const left = LABEL_LEFT.includes(hub.id);
+          return (
+            <g key={hub.id}>
+              <circle cx={x} cy={y} r={radius} className="fill-accent-500" />
+              <circle cx={x} cy={y} r={radius * 0.38} className="fill-surface-1" />
+              <text
+                x={left ? x - radius - 5 : x + radius + 5}
+                y={y + 3.5}
+                fontSize={11}
+                textAnchor={left ? "end" : "start"}
+                className="fill-fg-muted"
+                stroke="var(--surface-0)"
+                strokeWidth={3}
+                paintOrder="stroke"
+              >
+                {hub.name}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+export function LandingFeatures({ live }: { live: LandingLive }) {
+  const { facets } = live;
+  const level = (id: string) => LEVELS.find((item) => item.id === id)?.label ?? id;
+  const category = (id: string) => ROLE_CATEGORIES.find((item) => item.id === id)?.label ?? id;
+  const filterChips: { label: string; count: number; accent?: boolean }[] = [
+    { label: "Freshers", count: facets.freshers, accent: true },
+    { label: level("entry"), count: facets.levels.entry ?? 0 },
+    { label: level("senior"), count: facets.levels.senior ?? 0 },
+    { label: "Remote", count: facets.workplaces.remote ?? 0, accent: true },
+    { label: category("ml_ai"), count: facets.categories.ml_ai ?? 0 },
+    { label: category("product"), count: facets.categories.product ?? 0 },
+    { label: category("data"), count: facets.categories.data ?? 0 },
+  ];
+
   return (
     <section id="features" className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Reveal className="max-w-2xl">
           <p className="text-sm font-medium text-accent-text">Why Tech Atlas</p>
           <h2 className="mt-3 font-display text-[clamp(1.75rem,3.6vw,3rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-fg">
-            A clearer way to see where technology is being built.
+            A clearer way to see where technology is being built, and where you fit.
           </h2>
           <p className="mt-4 max-w-[60ch] text-base text-fg-muted">
-            LocaToGo brings geographic context, company intelligence and live hiring signals into one searchable atlas.
+            LocaToGo brings geographic context, company intelligence and live hiring signals into one searchable atlas,
+            then scores the roles against your own resume.
           </p>
         </Reveal>
 
-        <div className="mt-12 grid gap-4 lg:grid-cols-12">
+        <div className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-12">
           <Reveal index={0} className="lg:col-span-7">
             <SpotlightCard className="flex h-full flex-col justify-between gap-8 p-6 sm:p-8">
               <FeatureHeader icon={<GlobeIcon />} title="Explore hubs on a live map">
-                Move from country to city to company with geographic context for every technology cluster.
+                Move from country to city to company with geographic context for every technology cluster. Bigger dots
+                mean more open roles.
               </FeatureHeader>
-              <div aria-hidden="true" className="lp-dots relative h-44 overflow-hidden rounded-2xl border border-line bg-surface-0">
-                {PINS.map((pin, index) => (
-                  <span
-                    key={index}
-                    className="absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface-1 bg-accent elev-sm"
-                    style={pin}
-                  />
-                ))}
-              </div>
+              <HubMap tours={live.tours} />
             </SpotlightCard>
           </Reveal>
 
           <Reveal index={1} className="lg:col-span-5">
             <SpotlightCard className="flex h-full flex-col justify-between gap-8 p-6 sm:p-8">
-              <FeatureHeader icon={<SlidersIcon />} title="Filter the ecosystem">
-                Narrow companies by sector, funding stage, workplace model, stack and hiring activity.
+              <FeatureHeader icon={<SlidersIcon />} title="Filter down to your kind of role">
+                Choose a level, a work mode and any of {ROLE_CATEGORIES.length} role types, or switch on Freshers. Every
+                option shows how many roles it will give you before you click.
               </FeatureHeader>
               <div aria-hidden="true" className="flex flex-wrap gap-2">
-                <Badge variant="accent">Hiring</Badge>
-                <Badge>Series B</Badge>
-                <Badge>Remote</Badge>
-                <Badge>Fintech</Badge>
-                <Badge variant="accent">GCC</Badge>
-                <Badge>Rust</Badge>
-                <Badge>Seed</Badge>
+                {filterChips.map((chip) => (
+                  <Badge key={chip.label} variant={chip.accent ? "accent" : "neutral"}>
+                    {chip.label} <span className="tabular-nums opacity-70">{fmt(chip.count)}</span>
+                  </Badge>
+                ))}
               </div>
             </SpotlightCard>
           </Reveal>
 
           <Reveal index={2} className="lg:col-span-4">
             <SpotlightCard className="flex h-full flex-col justify-between gap-8 p-6 sm:p-8">
-              <FeatureHeader icon={<BriefcaseIcon />} title="Find live opportunities">
-                Browse active openings by role, level, department, location and workplace type.
+              <FeatureHeader icon={<SparklesIcon />} title="Match your resume">
+                Upload a resume once. Every open role in your hub is scored for fit, with a short note on why it fits and
+                what to check.
               </FeatureHeader>
-              <div aria-hidden="true" className="space-y-3">
-                {[60, 44, 52].map((width, index) => (
-                  <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface-0 px-3 py-2.5">
-                    <div className="flex-1 space-y-2">
-                      <Bar width={width} />
-                      <Bar className="h-2 w-1/3 opacity-60" />
+              <div className="space-y-3">
+                <div aria-hidden="true" className="space-y-2">
+                  {live.demoMatches.slice(0, 2).map((match) => (
+                    <div key={match.id} className="flex items-center gap-3 rounded-xl border border-line bg-surface-0 p-2.5">
+                      <CompanyBrandAvatar title={match.company} website={match.website} size={32} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-fg">{match.title}</p>
+                        <p className="truncate text-xs text-fg-subtle">{match.company}</p>
+                      </div>
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-sm font-semibold tabular-nums text-accent-text">
+                        {match.score}
+                      </span>
                     </div>
-                    <Badge size="sm" variant={index === 0 ? "accent" : "neutral"}>
-                      {index === 1 ? "Remote" : "Hybrid"}
-                    </Badge>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <a href={`${APP_URL}/matches`} className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                  Match my resume
+                  <ArrowUpRightIcon className="size-3.5" />
+                </a>
               </div>
             </SpotlightCard>
           </Reveal>

@@ -38,6 +38,8 @@ import { RollingNumber } from "@/components/explorer/rolling-number";
 import { useFavorites } from "@/components/explorer/use-favorites";
 import { useLayoutMode } from "@/components/explorer/use-layout-mode";
 import { GridView, JobsView } from "@/components/explorer/views";
+import { useJobFacets } from "@/components/explorer/use-job-facets";
+import { LEVEL_IDS, NO_JOB_FILTERS, parseIdList, ROLE_CATEGORY_IDS, WORK_MODE_IDS, type JobFilters } from "@/lib/jobs/taxonomy";
 
 // Dynamically load interactive Leaflet map canvas without SSR
 const InteractiveLeafletCanvas = dynamic(
@@ -98,7 +100,7 @@ export function GlobalTechExplorer({
   const [hiringOnly, setHiringOnly] = useState<boolean>(false);
   const [selectedType, setSelectedType] = useState<string>(initialType);
   const [selectedStage, setSelectedStage] = useState<string>("all");
-  const [selectedWorkplace, setSelectedWorkplace] = useState<string>("all");
+  const [jobFilters, setJobFilters] = useState<JobFilters>(NO_JOB_FILTERS);
   const [selectedTechStack, setSelectedTechStack] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"map" | "grid" | "jobs">("map");
   const [gridPage, setGridPage] = useState<number>(1);
@@ -143,7 +145,7 @@ export function GlobalTechExplorer({
   useEffect(() => {
     setGridPage(1);
     setSidebarPage(1);
-  }, [searchQuery, hiringOnly, selectedType, selectedStage, selectedWorkplace, selectedTechStack, selectedHub]);
+  }, [searchQuery, hiringOnly, selectedType, selectedStage, jobFilters, selectedTechStack, selectedHub]);
 
   // Request GPS permission and center map on user's nearest tech hub & coordinates
   const requestUserLocation = useCallback((isUserInitiated = false) => {
@@ -433,8 +435,13 @@ export function GlobalTechExplorer({
         return false;
       }
 
+      if (jobFilters.levels.length > 0 && !jobFilters.levels.includes(job.role_level ?? "")) return false;
+      if (jobFilters.workModes.length > 0 && !jobFilters.workModes.includes(job.workplace_type)) return false;
+      if (jobFilters.categories.length > 0 && !jobFilters.categories.includes(job.role_category ?? "")) return false;
+      if (jobFilters.freshers && !job.is_fresher) return false;
+
       if (jobWorkplace !== "all" && job.workplace_type !== jobWorkplace) return false;
-      if (jobExperience !== "all" && job.experience_level?.toLowerCase() !== jobExperience.toLowerCase()) return false;
+      if (jobExperience !== "all" && (job.role_level ?? job.experience_level)?.toLowerCase() !== jobExperience.toLowerCase()) return false;
       if (jobDepartment !== "all" && !job.department?.toLowerCase().includes(jobDepartment.toLowerCase())) return false;
       if (jobSearch.trim()) {
         const q = jobSearch.toLowerCase();
@@ -446,7 +453,7 @@ export function GlobalTechExplorer({
       }
       return true;
     });
-  }, [allJobs, selectedHub, jobWorkplace, jobExperience, jobDepartment, jobSearch]);
+  }, [allJobs, selectedHub, jobWorkplace, jobExperience, jobDepartment, jobSearch, jobFilters]);
 
   const hubCompanyCounts = useMemo(() => {
     const counts: Record<string, number> = { ...(knownHubCounts || {}) };
@@ -518,6 +525,13 @@ export function GlobalTechExplorer({
     return filteredJobs.slice(start, start + JOB_PAGE_SIZE);
   }, [filteredJobs, jobPage]);
 
+  // Role counts and matching companies for the level, work mode, role type and freshers filters, answered by the server for this hub.
+  const { facets, companyCounts, ready: facetsReady, failed: facetsFailed, active: jobFiltersOn, loading: facetsLoading } = useJobFacets(
+    { hubId: selectedHub.id, country: selectedHub.countryCode },
+    jobFilters,
+  );
+  const facetGate = jobFiltersOn && !facetsFailed;
+
   // Map of accurate jobs per company strictly matching the currently selected tech hub
   const hubJobsCountByCompanyId = useMemo(() => {
     const map = new Map<string, number>();
@@ -532,6 +546,9 @@ export function GlobalTechExplorer({
   // Robust location-filtered job count resolver for any company in the active tech hub
   const getCompanyJobCount = useCallback(
     (comp: CompanyDetail): number => {
+      // 0. With role filters on, the count is how many of this company's roles pass them
+      if (facetGate) return companyCounts.get(comp.id) ?? 0;
+
       // 1. If we have filteredJobs for this hub, that is the authoritative verified per-company count
       const fromFiltered = hubJobsCountByCompanyId.get(comp.id);
       if (typeof fromFiltered === "number" && fromFiltered > 0) {
@@ -562,7 +579,7 @@ export function GlobalTechExplorer({
 
       return 0;
     },
-    [selectedHub, hubJobsCountByCompanyId]
+    [selectedHub, hubJobsCountByCompanyId, facetGate, companyCounts]
   );
 
   // Filter companies based on tech hub, search, hiring toggle, and stage
@@ -588,13 +605,8 @@ export function GlobalTechExplorer({
         return false;
       }
 
-      // 4. Workplace filter
-      if (selectedWorkplace !== "all") {
-        if (c.jobs && c.jobs.length > 0) {
-          const hasWorkplace = c.jobs.some((j) => j.workplace_type === selectedWorkplace);
-          if (!hasWorkplace) return false;
-        }
-      }
+      // 4. Role filters: keep companies with at least one open role that passes level, work mode, role type and freshers
+      if (facetGate && !companyCounts.has(c.id)) return false;
 
       // 5. Tech stack tag filter
       if (selectedTechStack !== "all") {
@@ -623,7 +635,7 @@ export function GlobalTechExplorer({
 
       return true;
     });
-  }, [companies, selectedHub, hiringOnly, selectedType, selectedStage, deferredQuery, getCompanyJobCount]);
+  }, [companies, selectedHub, hiringOnly, selectedType, selectedStage, selectedTechStack, deferredQuery, getCompanyJobCount, facetGate, companyCounts]);
 
   const paginatedCompanies = useMemo(() => {
     const start = (gridPage - 1) * GRID_PAGE_SIZE;
@@ -803,21 +815,21 @@ export function GlobalTechExplorer({
   const filters: Filters = {
     type: selectedType,
     stage: selectedStage,
-    workplace: selectedWorkplace,
     stack: selectedTechStack,
     hiring: hiringOnly,
     query: searchQuery,
+    job: jobFilters,
   };
   const filterActions: FilterActions = {
     setType: setSelectedType,
     setStage: setSelectedStage,
-    setWorkplace: setSelectedWorkplace,
     setStack: setSelectedTechStack,
     setHiring: setHiringOnly,
     setQuery: setSearchQuery,
+    setJob: setJobFilters,
   };
   const applied = appliedFilters(filters, filterActions, TECH_SECTORS);
-  const isLoading = isSearchingServer || isHubLoading || companies.length === 0;
+  const isLoading = isSearchingServer || isHubLoading || companies.length === 0 || (facetGate && !facetsReady && companyCounts.size === 0);
 
   // Per-sector counts for the active hub, shown on the sector chips.
   const sectorCounts = useMemo(() => {
@@ -876,7 +888,13 @@ export function GlobalTechExplorer({
     const read = (key: string) => params.get(key);
     if (read("type")) setSelectedType(read("type") as string);
     if (read("stage")) setSelectedStage(read("stage") as string);
-    if (read("workplace")) setSelectedWorkplace(read("workplace") as string);
+    const legacyWork = read("workplace");
+    setJobFilters({
+      levels: parseIdList(read("level"), LEVEL_IDS),
+      workModes: parseIdList(read("work") ?? legacyWork, WORK_MODE_IDS),
+      categories: parseIdList(read("role"), ROLE_CATEGORY_IDS),
+      freshers: read("freshers") === "1",
+    });
     if (read("stack")) setSelectedTechStack(read("stack") as string);
     if (read("hiring") === "1") setHiringOnly(true);
     if (read("q") && !initialSearchQuery) setSearchQuery(read("q") as string);
@@ -897,7 +915,11 @@ export function GlobalTechExplorer({
       };
       sync("type", selectedType, "all");
       sync("stage", selectedStage, "all");
-      sync("workplace", selectedWorkplace, "all");
+      sync("level", jobFilters.levels.join(","), "");
+      sync("work", jobFilters.workModes.join(","), "");
+      sync("role", jobFilters.categories.join(","), "");
+      sync("freshers", jobFilters.freshers ? "1" : "", "");
+      url.searchParams.delete("workplace");
       sync("stack", selectedTechStack, "all");
       sync("hiring", hiringOnly ? "1" : "", "");
       sync("q", searchQuery.trim(), "");
@@ -906,7 +928,7 @@ export function GlobalTechExplorer({
       window.history.replaceState(window.history.state, "", url.toString());
     }, 250);
     return () => window.clearTimeout(timer);
-  }, [selectedType, selectedStage, selectedWorkplace, selectedTechStack, hiringOnly, searchQuery, sidebarSort, viewMode]);
+  }, [selectedType, selectedStage, jobFilters, selectedTechStack, hiringOnly, searchQuery, sidebarSort, viewMode]);
 
   // Leaving for a company page remembers the list position; coming back restores it once.
   const restoredRef = useRef(false);
@@ -998,14 +1020,14 @@ export function GlobalTechExplorer({
       ) : (
         <EmptyState
           icon={<BuildingIcon />}
-          title={filteredCompanies.length === 0 && !searchQuery.trim() ? `Indexing the ${selectedHub.name} ecosystem` : "No matching companies"}
+          title={filteredCompanies.length === 0 && applied.length === 0 ? `Indexing the ${selectedHub.name} ecosystem` : "No matching companies"}
           description={
-            filteredCompanies.length === 0 && !searchQuery.trim()
+            filteredCompanies.length === 0 && applied.length === 0
               ? "This hub is scheduled for ingestion. Explore hubs that already have live data:"
               : "Try clearing your filters or search query."
           }
           action={
-            filteredCompanies.length === 0 && !searchQuery.trim() ? (
+            filteredCompanies.length === 0 && applied.length === 0 ? (
               <div className="flex flex-wrap justify-center gap-2">
                 {GLOBAL_TECH_HUBS.filter((hub) => (hubCompanyCounts[hub.id] || 0) > 0).map((hub) => (
                   <Chip key={hub.id} count={hubCompanyCounts[hub.id]} onClick={() => handleSelectHub(hub)}>
@@ -1061,6 +1083,9 @@ export function GlobalTechExplorer({
         onViewMode={setViewMode}
         hiringOnly={hiringOnly}
         totalOpenings={totalOpenings}
+        freshers={jobFilters.freshers}
+        freshersCount={facets.freshers}
+        onFreshers={(next) => setJobFilters({ ...jobFilters, freshers: next })}
         onToggleHiring={() => {
           if (viewMode === "jobs") setViewMode("map");
           else setHiringOnly(!hiringOnly);
@@ -1229,6 +1254,8 @@ export function GlobalTechExplorer({
         onSortChange={setSidebarSort}
         resultCount={filteredCompanies.length}
         appliedCount={applied.length}
+        facets={facets}
+        facetsLoading={facetsLoading}
       />
 
       <CompanyDetailDrawer

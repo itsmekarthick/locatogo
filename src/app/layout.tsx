@@ -79,6 +79,7 @@ import { Suspense } from "react";
 import { NavigationProgressBar } from "@/components/navigation-progress-bar";
 import { AiCopilot } from "@/components/ai-copilot";
 import { ToastProvider } from "@/components/ui/toast";
+import { GlobalThemeToggle } from "@/components/theme-toggle";
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
@@ -116,6 +117,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             {children}
           </main>
           <AiCopilot />
+          <GlobalThemeToggle />
         </ToastProvider>
         <Analytics />
       </body>

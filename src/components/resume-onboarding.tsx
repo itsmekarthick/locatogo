@@ -5,19 +5,28 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AlertCircleIcon, FileTextIcon, SparklesIcon, UploadIcon, XIcon } from "@/components/ui/icons";
 import { Select } from "@/components/ui/select";
+import type { ExperienceLevel } from "@/lib/matching/types";
 import { cn } from "@/lib/utils/cn";
 
-const HUBS = ["Bangalore", "San Francisco", "New York", "Seattle", "Austin", "London", "Remote"];
+export const HUBS = ["Bangalore", "San Francisco", "New York", "Seattle", "Austin", "London", "Remote"];
+
+export type ParsedResume = {
+  skills: string[];
+  headline: string | null;
+  level: ExperienceLevel | null;
+  yearsExperience: number | null;
+  location: string;
+};
 
 function formatSize(bytes: number) {
   return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function ResumeOnboarding({ hasResume = false }: { hasResume?: boolean }) {
+export function ResumeOnboarding({ hasResume = false, defaultLocation = "Bangalore", onParsed }: { hasResume?: boolean; defaultLocation?: string; onParsed?: (result: ParsedResume) => void }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [location, setLocation] = useState("Bangalore");
+  const [location, setLocation] = useState(HUBS.includes(defaultLocation) ? defaultLocation : "Bangalore");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,10 +62,20 @@ export function ResumeOnboarding({ hasResume = false }: { hasResume?: boolean })
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to process resume");
 
-      // Reload dashboard to show recommended jobs
+      // Hand the parsed profile to the wizard for review, or reload the page when used on its own
       clearSelectedFile();
       setIsProcessing(false);
-      router.refresh();
+      if (onParsed) {
+        onParsed({
+          skills: Array.isArray(data.skills) ? data.skills : [],
+          headline: data.headline ?? null,
+          level: data.level ?? null,
+          yearsExperience: data.yearsExperience ?? null,
+          location: data.location ?? location,
+        });
+      } else {
+        router.refresh();
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to process resume");
       clearSelectedFile();
@@ -74,7 +93,7 @@ export function ResumeOnboarding({ hasResume = false }: { hasResume?: boolean })
         </span>
         <h2 className="mt-4 font-display text-xl font-semibold tracking-tight">{hasResume ? "Refresh your matches" : "Unlock personalized matches"}</h2>
         <p className="mt-1.5 text-sm leading-6 text-fg-muted">
-          {hasResume ? "Upload an updated resume and we will re-read your skills and refresh the roles on this page." : "Upload your resume and we will extract your core skills to find open roles in your preferred city."}
+          {hasResume ? "Upload an updated resume and we will re-read your skills and refresh your ranked matches." : "Upload your resume and we will extract your core skills to find open roles in your preferred city."}
         </p>
 
         {isProcessing ? (
