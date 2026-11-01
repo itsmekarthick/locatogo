@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["pdf-parse"],
+  // pdf-parse needs @napi-rs/canvas for DOMMatrix; the native binary is chosen at runtime, so file tracing cannot see it.
+  outputFileTracingIncludes: {
+    "/api/parse-resume": ["./node_modules/@napi-rs/**/*", "./node_modules/pdfjs-dist/**/*"],
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "25mb",
