@@ -353,7 +353,7 @@ function SkeletonRows({ at }: { at: number }) {
   return (
     <div className="lp-gone flex flex-col gap-2" style={vars({ "--t": `${at}s`, gridArea: "1 / 1" })}>
       {[0, 1, 2].map((row) => (
-        <div key={row} className="flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-2.5">
+        <div key={row} className={cn("flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-2", row === 2 && "max-sm:hidden")}>
           <span className="size-8 shrink-0 rounded-xl bg-surface-3" />
           <span className="flex-1 space-y-2">
             <span className="block h-2.5 w-3/5 rounded-full bg-surface-3" />
@@ -382,7 +382,7 @@ const FilterScene = memo(function FilterScene({ live }: { live: LandingLive }) {
             ))}
           </div>
         </div>
-        <div>
+        <div className="lp-short-hide">
           <p className="mb-2 text-xs font-medium text-fg-muted">Role type</p>
           <div className="flex flex-wrap gap-1.5">
             {categories.map((category) => (
@@ -414,8 +414,8 @@ const FilterScene = memo(function FilterScene({ live }: { live: LandingLive }) {
           <SkeletonRows at={flipAt + 0.3} />
           <div className="flex flex-col gap-2" style={{ gridArea: "1 / 1" }}>
             {live.fresherRoles.slice(0, 3).map((role, index) => (
-              <div key={role.id} className={cn("lp-in flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-2.5", index === 2 && "max-sm:hidden")} style={vars({ "--t": `${flipAt + 0.6 + index * 0.16}s` })}>
-                <CompanyBrandAvatar title={role.company} website={role.website} size={32} />
+              <div key={role.id} className={cn("lp-in flex items-center gap-3 rounded-xl border border-line bg-surface-1 p-2", index === 2 && "max-sm:hidden")} style={vars({ "--t": `${flipAt + 0.6 + index * 0.16}s` })}>
+                <CompanyBrandAvatar title={role.company} website={role.website} size={28} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-fg">{role.title}</p>
                   <p className="truncate text-xs text-fg-subtle">{[role.company, role.location].filter(Boolean).join(" · ")}</p>
@@ -465,9 +465,9 @@ const MatchScene = memo(function MatchScene({ live }: { live: LandingLive }) {
           <SkeletonRows at={revealAt} />
           <div className="flex flex-col gap-2" style={{ gridArea: "1 / 1" }}>
             {demoMatches.map((match, index) => (
-              <div key={match.id} className={cn("lp-in rounded-xl border border-line bg-surface-1 p-2.5", index === 2 && "max-sm:hidden")} style={vars({ "--t": `${revealAt + index * 0.22}s` })}>
+              <div key={match.id} className={cn("lp-in rounded-xl border border-line bg-surface-1 p-2", index === 2 && "max-sm:hidden")} style={vars({ "--t": `${revealAt + index * 0.22}s` })}>
                 <div className="flex items-center gap-3">
-                  <CompanyBrandAvatar title={match.company} website={match.website} size={32} />
+                  <CompanyBrandAvatar title={match.company} website={match.website} size={28} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-fg">{match.title}</p>
                     <p className="truncate text-xs text-fg-subtle">{[match.company, match.location].filter(Boolean).join(" · ")}</p>

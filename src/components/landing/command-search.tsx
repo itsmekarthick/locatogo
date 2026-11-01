@@ -299,7 +299,7 @@ export function CommandSearch({ hubs, popularHubs, examples }: CommandSearchProp
         if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
       }}
     >
-      <div className="glass elev-lg flex h-14 items-center gap-3 rounded-2xl pl-4 pr-2 transition-ui focus-within:ring-4 focus-within:ring-accent/20">
+      <div className="glass elev-lg flex h-11 items-center gap-3 rounded-2xl pl-4 pr-1.5 transition-ui focus-within:ring-4 focus-within:ring-accent/20">
         <SearchIcon className="size-5 shrink-0 text-fg-subtle" />
         <div className="relative h-full min-w-0 flex-1">
           <input
