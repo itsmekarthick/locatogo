@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { GlobalTechExplorer, type UnifiedJob } from "@/components/global-tech-explorer";
 import { CompanyDetailDrawer, type CompanyDetail, type CompanyJob } from "@/components/company-detail-drawer";
 import { jobMatchesLocation } from "@/lib/jobs/location-matcher";
@@ -104,16 +103,11 @@ type Props = {
   searchParams: Promise<{ q?: string; type?: string; stage?: string; hub?: string }>;
 };
 
-export const revalidate = 3600; // Cache and revalidate map page every hour
+export const revalidate = 300;
 
 export default async function Home({ searchParams }: Props) {
   const params = await searchParams;
-  let supabase: any;
-  try {
-    supabase = createSupabaseAdminClient();
-  } catch {
-    supabase = await createSupabaseServerClient();
-  }
+  const supabase = createSupabasePublicClient();
 
   // 1. Get exact total count, all active jobs (bypassing PostgREST 1000-row cap via parallel ranges), and listings in parallel
   const [

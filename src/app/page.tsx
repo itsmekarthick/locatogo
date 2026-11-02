@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./landing-effects.css";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabasePublicClient } from "@/lib/supabase/public";
 import { LandingHero } from "@/components/landing-hero";
 import { LandingStats, LandingFeatures } from "@/components/landing-stats";
 import { PublicHeader } from "@/components/public-header";
@@ -52,10 +52,10 @@ export const metadata: Metadata = {
   },
 };
 
-export const revalidate = 3600; // Cache and revalidate homepage every hour
+export const revalidate = 300;
 
 export default async function LandingPage() {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabasePublicClient();
 
   const [
     { count: totalPlaces },

@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:local": "supabase start && node scripts/local/supabase.mjs configure && next dev",
+    "local:stop": "supabase stop",
+    "local:restore": "node scripts/local/supabase.mjs restore",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -30,6 +33,7 @@
     "react-email": "^6.9.5",
     "react-leaflet": "^5.0.0",
     "resend": "^6.28.1",
+    "standardwebhooks": "^1.1.1",
     "supercluster": "^9.0.0",
     "zod": "^4.4.3"
   },
@@ -42,6 +46,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "supabase": "2.122.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

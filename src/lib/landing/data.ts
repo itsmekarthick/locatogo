@@ -166,8 +166,9 @@ export const DEMO_PROFILE_LABEL: DemoProfile = {
 
 /** Every number on the landing hero comes from here; nothing is typed in by hand. */
 export async function loadLandingLive(supabase: SupabaseClient, totals: { companies: number }): Promise<LandingLive> {
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const now = Math.floor(Date.now() / 300000) * 300000;
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const dayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
   const [{ data: facets }, { count: weekRoles }, { count: dayRoles }, tours, fresherRoles, demo] = await Promise.all([
     supabase.rpc("tech_atlas_job_facets", { p_city_terms: null, p_country: null, p_levels: [], p_workplaces: [], p_categories: [], p_freshers: false }),
     supabase.from("company_jobs").select("id", { count: "exact", head: true }).eq("is_active", true).gte("posted_at", weekAgo),

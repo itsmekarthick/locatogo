@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const locality = searchParams.get("locality") || "India";
     const jobs = searchParams.get("jobs");
 
-    return new ImageResponse(
+    const image = new ImageResponse(
       (
         <div
           style={{
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
               >
                 📍
               </div>
-              <div style={{ color: "#ffffff", fontSize: "32px", fontWeight: "900", letterSpacing: "-0.5px" }}>
+              <div style={{ display: "flex", color: "#ffffff", fontSize: "32px", fontWeight: "900", letterSpacing: "-0.5px" }}>
                 LocaToGo<span style={{ color: "#0ea5e9" }}>.</span>
               </div>
             </div>
@@ -130,8 +130,10 @@ export async function GET(request: NextRequest) {
       {
         width: 1200,
         height: 630,
+        headers: { "Cache-Control": "public, max-age=3600, s-maxage=86400, stale-while-revalidate=86400" },
       }
     );
+    return new Response(await image.arrayBuffer(), { headers: image.headers });
   } catch (e: any) {
     return new Response(`Failed to generate the image: ${e.message}`, {
       status: 500,
